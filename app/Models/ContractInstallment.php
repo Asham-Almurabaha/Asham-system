@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ContractInstallment extends Model
+{
+    use HasFactory;
+
+    protected $table = 'contract_installments';
+
+    protected $fillable = [
+        'contract_id',
+        'installment_number',
+        'due_date',
+        'due_amount',
+        'payment_date',
+        'payment_amount',
+        'installment_status_id',
+        'notes',
+    ];
+        protected $casts  = [
+        'due_date' => 'date',
+        'payment_date' => 'date',
+        ];
+
+    // علاقة العقد
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class);
+    }
+
+    // علاقة حالة القسط
+    public function installmentStatus()
+    {
+        return $this->belongsTo(InstallmentStatus::class);
+    }
+
+    public function payments()
+{
+    return $this->hasMany(InstallmentPayment::class, 'contract_installment_id');
+}
+
+}

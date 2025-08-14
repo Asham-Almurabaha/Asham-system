@@ -1,0 +1,34 @@
+{
+  "Welcome": "Welcome",
+  "Please enter your credentials to continue": "Please enter your credentials to continue",
+
+  "Login": "Login",
+  "Log in": "Log in",
+  "Register": "Register",
+
+  "Email Address": "Email Address",
+  "Password": "Password",
+  "Confirm Password": "Confirm Password",
+  "Phone Number": "Phone Number",
+
+  "Remember Me": "Remember Me",
+  "Forgot Your Password?": "Forgot Your Password?",
+  "Create an account": "Create an account",
+  "Don't have an account?": "Don't have an account?",
+  "Already have an account?": "Already have an account?",
+
+  "Enter your email & password to login": "Enter your email & password to login",
+  "Fill the fields below to create your account": "Fill the fields below to create your account",
+
+  "Show/Hide password": "Show/Hide password",
+
+  "Please enter your name.": "Please enter your name.",
+  "Please enter a valid email address.": "Please enter a valid email address.",
+  "Password is required.": "Password is required.",
+  "Password must be at least 8 characters.": "Password must be at least 8 characters.",
+  "Passwords do not match.": "Passwords do not match.",
+  "Please enter a valid phone number.": "Please enter a valid phone number.",
+
+  "Save": "Save",
+  "Cancel": "Cancel"
+}

@@ -1,0 +1,45 @@
+<?php
+    return[
+        'Action'=>'تعديل/حذف',
+        'Details' =>'التفاصيل',
+        'Add'=>'اضافة',
+        'Update'=> 'تحديث',    
+        'Edit'=>'تعديل',
+        'Delete'=>'حذف',
+        'Receive'=>'تسليم',
+        'Hand Over'=>'استلام',
+        'Confirm Delete' =>  'هل متاكد من حذف ؟',
+        'Save Changes'=>'حفظ التغيرات',
+
+
+        'Table'=>'جدول',
+        'Name'=>'الاسم',
+        'EN Name'=>'الاسم بالانجليزي',
+        'AR Name'=>'الاسم بالعربي',
+        
+        'Partners'=>'الشركاء',
+        'Partner'=>'الشريك',
+        'Partners Table'=>'جدول الشركاء',
+        'Add Partner'=>'اضافة شريك',
+        'Edit Partner'=>'تعديل شريك',
+        'Delete Partner'=>'حذف شريك',
+
+        'Companies'=>'الشركات',
+        'Company'=>'شركة',
+        'Companies Table'=>'جدول الشركات',
+        'Add Company'=>'اضافة شركة',
+        'Edit Company'=>'تعديل شركة',
+        'Delete Company'=>'حذف شركة',
+
+        'Cities'=>'المدن',
+        'City'=>'مدينة',
+        'Cities Table'=>'جدول المدن',
+        'Add City'=>'اضافة مدينة',
+        'Edit City'=>'تعديل مدينة',
+        'Delete City'=>'حذف مدينة',
+
+
+        'Bank'=>'البنك',
+        'Account Number'=>'رقم الحساب',
+        'Account IPAN'=>'ايبان الحساب',
+    ];
