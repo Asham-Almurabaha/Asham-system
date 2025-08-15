@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class ContractController extends Controller
@@ -136,9 +137,75 @@ class ContractController extends Controller
         return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
     }
 
+    public function storeInvestors(Request $request)
+    {
+        if ($request->ajax()) {
+            $validator = Validator::make($request->all(), [
+                'contract_id' => 'required|exists:contracts,id',
+                'investors'   => 'required|array|min:1',
+                'investors.*.id' => 'required|distinct|exists:investors,id',
+                'investors.*.share_percentage' => 'required|numeric|min:0.01|max:100',
+                'investors.*.share_value' => 'required|numeric|min:0.01',
+            ], [
+                'investors.*.id.distinct' => 'لا يمكن اختيار نفس المستثمر أكثر من مرة.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
+
+            $contract = Contract::findOrFail($request->contract_id);
+
+            // التأكد من أن مجموع النسب لا يتجاوز 100%
+            $totalPercentage = collect($request->investors)->sum(function ($inv) {
+                return (float)$inv['share_percentage'];
+            });
+
+            $currentPercentage = (float) $contract->investors()->sum('contract_investor.share_percentage');
+            $newTotal = $currentPercentage + $totalPercentage;
+
+            if ($newTotal > 100.0001) {
+                return response()->json([
+                    'success' => false,
+                    'errors'  => ['general' => ["مجموع نسب المستثمرين لا يجوز أن يتجاوز 100%. المجموع الحالي بعد الإضافة: {$newTotal}%"]]
+                ], 422);
+            }
+
+            // تجهيز بيانات pivot
+            $investorsData = collect($request->investors)->mapWithKeys(function ($inv) {
+                return [
+                    $inv['id'] => [
+                        'share_percentage' => $inv['share_percentage'],
+                        'share_value'      => $inv['share_value']
+                    ]
+                ];
+            });
+
+            // إضافة المستثمرين بدون إزالة الموجودين
+            $contract->investors()->syncWithoutDetaching($investorsData);
+
+            // إعادة تحميل بيانات العقد بالمستثمرين
+            $contract->load('investors');
+
+            // إعادة بناء الجدول
+            $html = view('contracts.partials.investors_table', compact('contract'))->render();
+
+            return response()->json([
+                'success' => true,
+                'html'    => $html
+            ]);
+        }
+
+        abort(404);
+    }
 
     public function show(Contract $contract)
     {
+        $this->updateInstallmentsStatuses($contract);
+        
         $contract->load([
             'customer',
             'guarantor',
@@ -149,9 +216,11 @@ class ContractController extends Controller
             'installments.installmentStatus'
         ]);
         
-            $this->updateInstallmentsStatuses($contract);
+            // تمرير قائمة كل المستثمرين
+            $investors = Investor::all();
 
-        return view('contracts.show', compact('contract'));
+            return view('contracts.show', compact('contract', 'investors'));
+
     }
 
     public function edit(Contract $contract)
@@ -431,87 +500,86 @@ class ContractController extends Controller
     }
 
     private function updateInstallmentsStatuses(Contract $contract)
-    {
-        $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب'];
+{
+    $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب'];
 
-        // استبعاد العقود اللي حالتها من الحالات دي
-        if (in_array($contract->contractStatus->name ?? '', $excludedContractStatuses)) {
-            return;
-        }
-
-        $today    = now();
-        $statuses = InstallmentStatus::pluck('id', 'name');
-
-        $lateCount     = 0; // عدد المتأخر
-        $maatherCount  = 0; // عدد المعتذر
-        $allPaid       = true;
-        $anyLate       = false;
-        $allNotDueYet  = true; // كل الأقساط لم يحل
-
-        // تحديث حالات الأقساط
-        foreach ($contract->installments as $installment) {
-            $statusName = $installment->installmentStatus->name ?? null;
-
-            // استبعاد الأقساط المدفوعة من التحديث
-            if (in_array($statusName, ['مدفوع كامل', 'مدفوع مبكر', 'مدفوع متأخر', 'مدفوع جزئي', 'مؤجل'])) {
-                $allNotDueYet = false;
-                continue;
-            }
-
-            $dueDate   = Carbon::parse($installment->due_date);
-            $paid      = $installment->payment_amount ?? 0;
-            $dueAmount = $installment->due_amount ?? 0;
-
-            // لو القسط مش مدفوع بالكامل
-            if ($paid < $dueAmount) {
-                $allPaid = false;
-
-                if ($dueDate->between($today->copy()->subDays(7), $today->copy()->addDays(7))) {
-                    $installment->installment_status_id = $statuses['مستحق'] ?? null;
-                    $allNotDueYet = false;
-                }
-                elseif ($dueDate->greaterThan($today->copy()->addDays(7))) {
-                    $installment->installment_status_id = $statuses['لم يحل'] ?? null;
-                }
-                elseif ($dueDate->lessThan($today->copy()->subDays(7))) {
-                    $installment->installment_status_id = $statuses['متأخر'] ?? null;
-                    $lateCount++;
-                    $anyLate = true;
-                    $allNotDueYet = false;
-                }
-            }
-
-            // عدّ الأقساط المعتذر
-            if ($statusName === 'معتذر') {
-                $maatherCount++;
-                $allNotDueYet = false;
-            }
-
-            $installment->save();
-        }
-
-        // تحديث حالة العقد حسب الأولوية
-        if ($allPaid) {
-            $contract->contract_status_id = ContractStatus::where('name', 'منتهي')->value('id');
-        }
-        elseif ($allNotDueYet) {
-            $contract->contract_status_id = ContractStatus::where('name', 'جديد')->value('id');
-        }
-        elseif ($maatherCount > 2) {
-            $contract->contract_status_id = ContractStatus::where('name', 'غير منتظم')->value('id');
-        }
-        elseif ($lateCount >= 3) {
-            $contract->contract_status_id = ContractStatus::where('name', 'متعثر')->value('id');
-        }
-        elseif ($anyLate) {
-            $contract->contract_status_id = ContractStatus::where('name', 'متأخر')->value('id');
-        }
-        else {
-            $contract->contract_status_id = ContractStatus::where('name', 'منتظم')->value('id');
-        }
-
-        $contract->save();
+    if (in_array($contract->contractStatus->name ?? '', $excludedContractStatuses)) {
+        return;
     }
+
+    $today             = now();
+    $statuses          = InstallmentStatus::pluck('id', 'name');
+    $contractStatuses  = ContractStatus::pluck('id', 'name');
+
+    $lateCount     = 0;
+    $maatherCount  = 0;
+    $allPaid       = true;
+    $anyLate       = false;
+    $allNotDueYet  = true;
+
+    foreach ($contract->installments as $installment) {
+        $statusName = $installment->installmentStatus->name ?? null;
+
+        // 🔹 العد بناءً على وجود كلمة "معتذر" في الملاحظات
+        if (!empty($installment->notes) && stripos($installment->notes, 'معتذر') !== false) {
+            $maatherCount++;
+        }
+
+        // الحالات المدفوعة أو المؤجلة تبقى كما هي
+        if (in_array($statusName, ['مدفوع كامل', 'مدفوع مبكر', 'مدفوع متأخر', 'مدفوع جزئي', 'مؤجل', 'معتذر'])) {
+            $allNotDueYet = false;
+            continue;
+        }
+
+        $dueDate   = Carbon::parse($installment->due_date);
+        $paid      = $installment->payment_amount ?? 0;
+        $dueAmount = $installment->due_amount ?? 0;
+
+        if ($paid < $dueAmount) {
+            $allPaid = false;
+
+            if ($dueDate->between($today->copy()->subDays(7), $today->copy()->addDays(7))) {
+                $installment->installment_status_id = $statuses['مستحق'] ?? $installment->installment_status_id;
+                $allNotDueYet = false;
+            }
+            elseif ($dueDate->greaterThan($today->copy()->addDays(7))) {
+                $installment->installment_status_id = $statuses['لم يحل'] ?? $installment->installment_status_id;
+            }
+            elseif ($dueDate->lessThan($today->copy()->subDays(7))) {
+                $installment->installment_status_id = $statuses['متأخر'] ?? $installment->installment_status_id;
+                $lateCount++;
+                $anyLate = true;
+                $allNotDueYet = false;
+            }
+        }
+
+        $installment->save();
+    }
+
+    // 🔹 تحديد حالة العقد
+    if ($allPaid) {
+        $contract->contract_status_id = $contractStatuses['منتهي'] ?? $contract->contract_status_id;
+    }
+    elseif ($allNotDueYet) {
+        $contract->contract_status_id = $contractStatuses['جديد'] ?? $contract->contract_status_id;
+    }
+    elseif ($maatherCount > 2) {
+        $contract->contract_status_id = $contractStatuses['غير منتظم'] ?? $contract->contract_status_id;
+    }
+    elseif ($lateCount >= 3) {
+        $contract->contract_status_id = $contractStatuses['متعثر'] ?? $contract->contract_status_id;
+    }
+    elseif ($anyLate) {
+        $contract->contract_status_id = $contractStatuses['متأخر'] ?? $contract->contract_status_id;
+    }
+    else {
+        $contract->contract_status_id = $contractStatuses['منتظم'] ?? $contract->contract_status_id;
+    }
+
+    $contract->save();
+}
+
+
 
 
 

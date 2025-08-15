@@ -109,17 +109,17 @@ Route::prefix('installments')->name('installments.')->group(function () {
         ->name('payment.delete');
 });
 
+Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])
+    ->name('contracts.investors.store');
+
+
 Route::post('/installments/pay', [ContractInstallmentController::class, 'payInstallment'])
     ->name('installments.pay');
 
-Route::post('/installments/{id}/defer', [ContractInstallmentController::class, 'defer'])
-    ->name('installments.defer');
-
-Route::post('/installments/{id}/defer-ajax', [ContractInstallmentController::class, 'deferAjax'])->name('installments.defer.ajax');
-Route::post('/installments/{id}/excuse-ajax', [ContractInstallmentController::class, 'excuseAjax'])->name('installments.excuse.ajax');
 
 
-
+Route::post('/installments/defer/{id}', [ContractInstallmentController::class, 'deferAjax']);
+Route::post('/installments/excuse/{id}', [ContractInstallmentController::class, 'excuseAjax']);
 /*
 |--------------------------------------------------------------------------
 | البروفايل (Profile)

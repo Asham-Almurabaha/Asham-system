@@ -77,13 +77,11 @@ class ContractInstallmentController extends Controller
         $remainingPayment = $validated['payment_amount'];
         $paymentDate      = $validated['payment_date'];
 
-        // أول قسط ناقصه فلوس
         $currentInstallment = ContractInstallment::where('contract_id', $validated['contract_id'])
             ->whereColumn('payment_amount', '<', 'due_amount')
             ->orderBy('installment_number')
             ->first();
 
-        // لو العقد متسدد بالكامل
         if (!$currentInstallment) {
             throw new \Exception('🚫 لا يوجد أقساط بحاجة إلى سداد.');
         }
@@ -95,17 +93,18 @@ class ContractInstallmentController extends Controller
 
             $paymentForThisInstallment = min($remainingDue, $remainingPayment);
 
-            // تجهيز النص الحالي للملاحظات
+            // تجهيز الملاحظات السابقة بدون مسحها
             $currentNotes = trim($currentInstallment->notes ?? '');
             if (empty($currentNotes)) {
                 $currentNotes = "تفاصيل الدفعات:";
             }
 
-            // تنسيق المبلغ بدون أصفار زائدة
+            // صيغة المبلغ
             $amountFormatted = rtrim(rtrim(number_format($paymentForThisInstallment, 2, '.', ''), '0'), '.');
 
-            // إضافة الدفعة الجديدة كسطر جديد
-            $currentNotes .= "\n- دفع مبلغ {$amountFormatted} بتاريخ {$paymentDate}";
+            // إضافة تفاصيل الدفع مع حالة القسط قبل الدفع
+            $previousStatus = $currentInstallment->installmentStatus->name ?? 'غير محدد';
+            $currentNotes .= "\n- دفع مبلغ {$amountFormatted} بتاريخ {$paymentDate} (الحالة قبل الدفع: {$previousStatus})";
 
             // تحديث القسط
             $currentInstallment->update([
@@ -119,7 +118,6 @@ class ContractInstallmentController extends Controller
 
             $remainingPayment -= $paymentForThisInstallment;
 
-            // الانتقال للقسط التالي الناقصه فلوس
             $currentInstallment = ContractInstallment::where('contract_id', $validated['contract_id'])
                 ->where('installment_number', '>', $currentInstallment->installment_number)
                 ->whereColumn('payment_amount', '<', 'due_amount')
@@ -128,39 +126,63 @@ class ContractInstallmentController extends Controller
         }
     });
 
-    return redirect()->back()->with('success', '✅ تم تسجيل السداد بنجاح.');
+    return response()->json(['success' => true]);
 }
 
 
-
-    
+ 
     public function deferAjax($id)
-    {
-        $installment = ContractInstallment::findOrFail($id);
-        $statusId = InstallmentStatus::where('name', 'مؤجل')->value('id');
-        $installment->installment_status_id = $statusId;
-        $installment->save();
+{
+    $installment = ContractInstallment::findOrFail($id);
+    $statusId = InstallmentStatus::where('name', 'مؤجل')->value('id');
 
-        return response()->json([
-            'success' => true,
-            'status_name' => 'مؤجل',
-            'badge_class' => 'warning'
-        ]);
+    // الاحتفاظ بالملاحظات السابقة
+    $currentNotes = trim($installment->notes ?? '');
+    if (!empty($currentNotes)) {
+        $currentNotes .= "\n";
+    } else {
+        $currentNotes = "تفاصيل الدفعات:\n";
     }
+    $currentNotes .= "- تم تأجيل القسط بتاريخ " . now()->format('Y-m-d');
 
-    public function excuseAjax($id)
-    {
-        $installment = ContractInstallment::findOrFail($id);
-        $statusId = InstallmentStatus::where('name', 'معتذر')->value('id');
-        $installment->installment_status_id = $statusId;
-        $installment->save();
+    $installment->installment_status_id = $statusId;
+    $installment->notes = $currentNotes;
+    $installment->save();
 
-        return response()->json([
-            'success' => true,
-            'status_name' => 'معتذر',
-            'badge_class' => 'secondary'
-        ]);
+    return response()->json([
+        'success' => true,
+        'status_name' => 'مؤجل',
+        'badge_class' => 'warning',
+        'notes' => $currentNotes
+    ]);
+}
+
+public function excuseAjax($id)
+{
+    $installment = ContractInstallment::findOrFail($id);
+    $statusId = InstallmentStatus::where('name', 'معتذر')->value('id');
+
+    // الاحتفاظ بالملاحظات السابقة
+    $currentNotes = trim($installment->notes ?? '');
+    if (!empty($currentNotes)) {
+        $currentNotes .= "\n";
+    } else {
+        $currentNotes = "تفاصيل الدفعات:\n";
     }
+    $currentNotes .= "- أنا معتذر بتاريخ " . now()->format('Y-m-d');
+
+    $installment->installment_status_id = $statusId;
+    $installment->notes = $currentNotes;
+    $installment->save();
+
+    return response()->json([
+        'success' => true,
+        'status_name' => 'معتذر',
+        'badge_class' => 'secondary',
+        'notes' => $currentNotes
+    ]);
+}
+
 
 
 
