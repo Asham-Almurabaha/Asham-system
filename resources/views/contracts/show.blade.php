@@ -15,14 +15,14 @@
 
 {{-- أزرار الإجراء --}}
 <div class="d-flex flex-wrap gap-2 mb-3">
-    <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-primary">✏️ تعديل</a>
+    {{-- <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-primary">✏️ تعديل</a> --}}
     <a href="{{ route('contracts.index') }}" class="btn btn-secondary">↩ رجوع للقائمة</a>
-    <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="ms-auto" 
+    {{-- <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="ms-auto" 
           onsubmit="return confirm('⚠️ هل أنت متأكد من حذف هذا العقد؟');">
         @csrf
         @method('DELETE')
         <button type="submit" class="btn btn-danger">🗑 حذف</button>
-    </form>
+    </form> --}}
 </div>
 
 {{-- بيانات أساسية --}}
