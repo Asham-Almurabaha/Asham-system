@@ -1,10 +1,12 @@
 @php
+  // Helpers بسيطة للـ active/collapse
   $isRoute = fn($pattern) => Request::routeIs($pattern);
   $isPath  = fn($pattern) => Request::is($pattern);
   $active  = fn($cond) => $cond ? 'active' : '';
   $open    = fn($cond) => $cond ? 'show' : '';
   $coll    = fn($cond) => $cond ? '' : 'collapsed';
 
+  // هل مجموعة الإعدادات مفتوحة؟
   $settingsOpen = $isPath('*/setting*')
       || $isRoute('settings.*') || $isRoute('nationalities.*') || $isRoute('titles.*')
       || $isRoute('contract_statuses.*') || $isRoute('contract_types.*')
@@ -16,32 +18,50 @@
 
 <ul class="sidebar-nav" id="sidebar-nav">
 
+  {{-- لوحة التحكم --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('customers.*')) }}" href="{{ route('customers.index') }}">
+    <a class="nav-link {{ $coll($isRoute('dashboard')) }} {{ $active($isRoute('dashboard')) }}"
+       href="{{ route('dashboard') }}">
+      <i class="bi bi-speedometer2"></i><span>لوحة التحكم</span>
+    </a>
+  </li>
+
+  {{-- العملاء --}}
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('customers.*')) }} {{ $active($isRoute('customers.*')) }}"
+       href="{{ route('customers.index') }}">
       <i class="bi bi-people"></i><span>العملاء</span>
     </a>
   </li>
 
+  {{-- الكفلاء --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('guarantors.*')) }}" href="{{ route('guarantors.index') }}">
+    <a class="nav-link {{ $coll($isRoute('guarantors.*')) }} {{ $active($isRoute('guarantors.*')) }}"
+       href="{{ route('guarantors.index') }}">
       <i class="bi bi-person-bounding-box"></i><span>الكفلاء</span>
     </a>
   </li>
 
+  {{-- المستثمرين --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('investors.*')) }}" href="{{ route('investors.index') }}">
+    <a class="nav-link {{ $coll($isRoute('investors.*')) }} {{ $active($isRoute('investors.*')) }}"
+       href="{{ route('investors.index') }}">
       <i class="bi bi-briefcase"></i><span>المستثمرين</span>
     </a>
   </li>
 
+  {{-- العقود --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('contracts.*')) }}" href="{{ route('contracts.index') }}">
+    <a class="nav-link {{ $coll($isRoute('contracts.*')) }} {{ $active($isRoute('contracts.*')) }}"
+       href="{{ route('contracts.index') }}">
       <i class="bi bi-file-earmark-text"></i><span>العقود</span>
     </a>
   </li>
 
+  {{-- الإعدادات (قابلة للطي) --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($settingsOpen) }}" data-bs-target="#settings-nav" data-bs-toggle="collapse" href="#"
+    <a class="nav-link {{ $coll($settingsOpen) }}"
+       data-bs-target="#settings-nav" data-bs-toggle="collapse" href="#"
        aria-expanded="{{ $settingsOpen ? 'true' : 'false' }}">
       <i class="bi bi-gear"></i><span>@lang('sidebar.Settings')</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
@@ -49,7 +69,7 @@
     <ul id="settings-nav" class="nav-content collapse {{ $open($settingsOpen) }}" data-bs-parent="#sidebar-nav">
       <li class="nav-heading">الإعدادات العامة</li>
       <li>
-        <a class="{{ $active($isRoute('settings.*')) }}" href="{{ route('settings.index') }}">
+        <a class="{{ $active($isRoute('settings.index')) }}" href="{{ route('settings.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
         </a>
       </li>

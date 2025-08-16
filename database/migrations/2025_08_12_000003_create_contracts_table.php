@@ -25,6 +25,7 @@ class CreateContractsTable extends Migration
             $table->decimal('contract_value', 15, 2); // قيمة العقد
             $table->decimal('investor_profit', 15, 2); // ربح المستثمر من العقد
             $table->decimal('total_value', 15, 2); // إجمالي قيمة العقد
+            $table->decimal('discount_amount', 15, 2)->default(0); // مبلغ الخصم على العقد
             
             $table->foreignId('installment_type_id')->constrained('installment_types')->onDelete('restrict'); // نوع القسط
             $table->decimal('installment_value', 15, 2); // قيمة القسط
@@ -36,6 +37,7 @@ class CreateContractsTable extends Migration
             $table->string('contract_image')->nullable(); // صورة العقد
             $table->string('contract_customer_image')->nullable(); // صورة سند الأمر للعقد
             $table->string('contract_guarantor_image')->nullable(); // صورة سند الأمر للكفيل
+
 
             $table->timestamps();
         });

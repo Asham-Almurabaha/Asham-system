@@ -34,6 +34,9 @@
     $defaultPaymentAmount = $firstUnpaidInstallment
         ? max(0, $firstUnpaidInstallment->due_amount - $firstUnpaidInstallment->payment_amount)
         : $remainingContract;
+
+    // خصم السداد المبكر
+    $discountAmount = (float) ($contract->discount_amount ?? 0); 
 @endphp
 
 <div class="card shadow-sm mb-4">
@@ -50,18 +53,36 @@
                     🙏 مرات الاعتذار: {{ $excuseCount }}
                 </span>
             @endif
+             @if($discountAmount > 0)
+                <span class="badge bg-light text-dark me-2">
+                    🟡 خصم السداد المبكر: {{ number_format($discountAmount, 2) }}
+                </span>
+            @endif
         </div>
     </div>
 
+    @php
+        $contractStatusName = $contract->contractStatus->name ?? '';
+    @endphp
+
     <div class="card-body p-0">
-        {{-- زر سداد --}}
-        @if($remainingContract > 0)
-            <div class="p-3">
+        <div class="p-3">
+            @if($remainingContract > 0 && !in_array($contractStatusName, ['سداد مبكر']) && (float)$discountAmount <= 0)
+            {{-- زر سداد --}}
+            @if($remainingContract > 0)
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#payContractModal">
                     💰 سداد
                 </button>
-            </div>
-        @endif
+            @endif
+            {{-- زر سداد مبكر --}}
+                <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#earlySettleModal">
+                    ⚡ سداد مبكر
+                </button>
+            @endif
+        </div>
+    </div>
+
+
 
         @if($contract->installments->count())
             <table class="table table-bordered table-striped mb-0 text-center align-middle">
@@ -194,6 +215,37 @@
     </div>
 </div>
 
+{{-- مودال سداد مبكر --}}
+<div class="modal fade" id="earlySettleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="earlySettleForm" action="{{ route('contracts.early_settle', $contract->id) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">⚡ سداد مبكر</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">قيمة الخصم (ريال)</label>
+                        <input type="number" name="discount_amount" step="0.01" min="0" class="form-control" value="0" required>
+                        <small class="text-muted d-block mt-1">
+                            سيتم حفظ قيمة الخصم في العقد وتحديث الإجمالي تلقائيًا، وتعيين الحالة: <strong>مدفوع مبكر</strong>.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-warning">💾 حفظ</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     flatpickr(".js-date", {
@@ -278,5 +330,38 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+
+// سداد مبكر
+const earlyForm = document.getElementById("earlySettleForm");
+if (earlyForm) {
+    earlyForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        let form = e.target;
+        let formData = new FormData(form);
+        fetch(form.action, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+                "Accept": "application/json"
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                location.reload(); // يخفي الزر بعد حفظ الخصم بتحديث الصفحة
+            } else {
+                alert(data.message || "حدث خطأ أثناء السداد المبكر");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("تعذر الاتصال بالخادم");
+        });
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById("earlySettleModal"));
+        modal && modal.hide();
+    });
+}
 </script>
 @endif

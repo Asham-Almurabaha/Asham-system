@@ -21,6 +21,7 @@ class Contract extends Model
         'contract_value',
         'investor_profit',
         'total_value',
+        'discount_amount',
         'installment_type_id',
         'installment_value',
         'installments_count',
@@ -35,6 +36,18 @@ class Contract extends Model
         'start_date' => 'date',
         'first_installment_date' => 'date',
         ];
+
+    // protected static function booted()
+    // {
+    //     static::saving(function (self $contract) {
+    //         $contract->total_value = max(
+    //             0,
+    //             (float) $contract->contract_value
+    //           + (float) $contract->investor_profit
+    //           - (float) $contract->discount_amount
+    //         );
+    //     });
+    // }
 
     // العلاقات
     public function customer()
@@ -85,4 +98,6 @@ class Contract extends Model
 {
     return $this->hasMany(OfficeTransaction::class, 'contract_id');
 }
+
+
 }

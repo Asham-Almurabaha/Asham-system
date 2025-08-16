@@ -3,6 +3,7 @@
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuarantorController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\InvestorController;
@@ -24,6 +25,7 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
 
 
 /*
@@ -53,8 +55,7 @@ Route::get('/home', function () {
         : redirect()->route('settings.create');
 })->middleware('auth')->name('home');
 
-Route::get('/dashboard', fn() => view('dashboard'))
-    ->middleware('auth')->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 
 /*
@@ -108,6 +109,9 @@ Route::prefix('installments')->name('installments.')->group(function () {
     Route::delete('/{installment}/payment/{paymentId}', [InstallmentController::class, 'deletePayment'])
         ->name('payment.delete');
 });
+
+Route::post('/contracts/{contract}/early-settle', [ContractController::class, 'earlySettle'])
+    ->name('contracts.early_settle');
 
 
 Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])

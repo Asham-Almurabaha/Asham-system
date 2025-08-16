@@ -185,9 +185,9 @@ class ContractInstallmentController extends Controller
             $effectivePayDate = $payDate ?: $today;
             $diffDays = $effectivePayDate->diffInDays($dueDate, false); // سالب = قبل الاستحقاق
 
-            if ($diffDays < -7) {
+            if ($diffDays > 7) {
                 $statusName = 'مدفوع مبكر';
-            } elseif ($diffDays > 7) {
+            } elseif ($diffDays < -7) {
                 $statusName = 'مدفوع متأخر';
             } else {
                 $statusName = 'مدفوع كامل';

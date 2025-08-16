@@ -69,115 +69,175 @@ class ContractController extends Controller
     }
 
     public function store(Request $request)
-{
-    $data = $this->validateContract($request, false);
-    $this->backfillCalculatedFields($data, $request);
+    {
+        $data = $this->validateContract($request, false);
+        $this->backfillCalculatedFields($data, $request);
 
-    $data['contract_number'] = date('Ymd') . rand(10, 99);
+        $data['contract_number'] = date('Ymd') . rand(10, 99);
 
-    $investors = $this->normalizeInvestors($request->input('investors', []));
+        $investors = $this->normalizeInvestors($request->input('investors', []));
 
-    $data['contract_image']           = $this->putImage($request, 'contract_image',           self::DIR_CONTRACT_MAIN);
-    $data['contract_customer_image']  = $this->putImage($request, 'contract_customer_image',  self::DIR_CONTRACT_CUSTOMERS);
-    $data['contract_guarantor_image'] = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS);
+        $data['contract_image']           = $this->putImage($request, 'contract_image',           self::DIR_CONTRACT_MAIN);
+        $data['contract_customer_image']  = $this->putImage($request, 'contract_customer_image',  self::DIR_CONTRACT_CUSTOMERS);
+        $data['contract_guarantor_image'] = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS);
 
-    try {
-        DB::transaction(function () use ($data, $investors, $request) {
-            unset($data['contract_status_id']);
+        try {
+            DB::transaction(function () use ($data, $investors, $request) {
+                unset($data['contract_status_id']);
 
-            $contract = Contract::create($data);
+                $contract = Contract::create($data);
 
-            $statuses = InstallmentStatus::pluck('id', 'name');
+                $statuses = InstallmentStatus::pluck('id', 'name');
 
-            // ✅ توليد الأقساط بأمان
-            $totalValue       = (float) $data['total_value'];
-            $installmentValue = (float) $request->installment_value;
+                // ✅ قيم الحساب الأساسية
+                $totalValue       = (float) ($data['total_value'] ?? 0);
+                $installmentValue = (float) ($request->installment_value ?? 0);
 
-            $baseDate = $request->first_installment_date
-                ? Carbon::parse($request->first_installment_date)
-                : Carbon::parse($data['start_date'] ?? now());
+                $baseDate = $request->first_installment_date
+                    ? Carbon::parse($request->first_installment_date)
+                    : Carbon::parse($data['start_date'] ?? now());
 
-            if ($installmentValue > 0.0) {
-                $installmentsCount = (int) floor($totalValue / $installmentValue);
-                $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
+                // ✅ جلب اسم نوع القسط (يومي/أسبوعي/شهري/سنوي)
+                $installmentTypeName = optional(
+                    InstallmentType::find($data['installment_type_id'] ?? null)
+                )->name;
 
-                for ($i = 1; $i <= $installmentsCount; $i++) {
-                    $dueDate = $baseDate->copy()->addMonths($i - 1);
+                /**
+                 * احسب تاريخ الاستحقاق للقسط رقم $i
+                 * القاعدة: القسط الأول = تاريخ أول قسط نفسه (0 فترة)،
+                 * ثم 2 = +1 فترة، 3 = +2 فترات، وهكذا...
+                 */
+                $computeDueDate = function (Carbon $base, int $i) use ($installmentTypeName) {
+                    $type = mb_strtolower(trim((string) $installmentTypeName));
+                    $step = max(0, $i - 1); // 👈 هنا الفرق
+
+                    if (str_contains($type, 'يوم') || str_contains($type, 'daily')) {
+                        return $base->copy()->addDays($step);
+                    } elseif (str_contains($type, 'أسبوع') || str_contains($type, 'اسبوع') || str_contains($type, 'week')) {
+                        return $base->copy()->addWeeks($step);
+                    } elseif (str_contains($type, 'سنة') || str_contains($type, 'سنوي') || str_contains($type, 'year')) {
+                        return $base->copy()->addYears($step);
+                    } elseif (str_contains($type, 'شهر') || str_contains($type, 'month')) {
+                        return $base->copy()->addMonthsNoOverflow($step);
+                    } else {
+                        // افتراضي: شهري
+                        return $base->copy()->addMonthsNoOverflow($step);
+                    }
+                };
+
+                // ✅ توليد الأقساط حسب قيمة القسط ونوعه
+                if ($installmentValue > 0.0) {
+                    $installmentsCount = (int) floor($totalValue / $installmentValue);
+                    $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
+
+                    for ($i = 1; $i <= $installmentsCount; $i++) {
+                        $dueDate = $computeDueDate($baseDate, $i); // 1 => baseDate, 2 => +1 فترة ...
+
+                        ContractInstallment::create([
+                            'contract_id'           => $contract->id,
+                            'installment_number'    => $i,
+                            'due_date'              => $dueDate,
+                            'due_amount'            => $installmentValue,
+                            'payment_amount'        => 0,
+                            'installment_status_id' => $statuses['لم يحل'] ?? null,
+                        ]);
+                    }
+
+                    if ($remaining > 0) {
+                        // القسط الأخير للباقي = + (عدد الأقساط) فترات (لأن الأول = 0)
+                        $dueDate = $computeDueDate($baseDate, $installmentsCount + 1);
+
+                        ContractInstallment::create([
+                            'contract_id'           => $contract->id,
+                            'installment_number'    => $installmentsCount + 1,
+                            'due_date'              => $dueDate,
+                            'due_amount'            => $remaining,
+                            'payment_amount'        => 0,
+                            'installment_status_id' => $statuses['لم يحل'] ?? null,
+                        ]);
+                    }
+                } elseif ($totalValue > 0.0) {
+                    // قسط واحد بكل المبلغ في نفس تاريخ أول قسط
                     ContractInstallment::create([
                         'contract_id'           => $contract->id,
-                        'installment_number'    => $i,
-                        'due_date'              => $dueDate,
-                        'due_amount'            => $installmentValue,
+                        'installment_number'    => 1,
+                        'due_date'              => $baseDate,
+                        'due_amount'            => $totalValue,
                         'payment_amount'        => 0,
                         'installment_status_id' => $statuses['لم يحل'] ?? null,
                     ]);
                 }
 
-                if ($remaining > 0) {
-                    $dueDate = $baseDate->copy()->addMonths($installmentsCount);
-                    ContractInstallment::create([
-                        'contract_id'           => $contract->id,
-                        'installment_number'    => $installmentsCount + 1,
-                        'due_date'              => $dueDate,
-                        'due_amount'            => $remaining,
-                        'payment_amount'        => 0,
-                        'installment_status_id' => $statuses['لم يحل'] ?? null,
-                    ]);
+                // ✅ ربط المستثمرين + تحديث حالة العقد
+                $this->syncInvestorsAndRecalcStatus($contract, $investors);
+
+                // ✅ تسجيل عملية للمستثمرين لو فيه مستثمرين
+                if (!empty($investors)) {
+                    $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
                 }
-            } elseif ($totalValue > 0.0) {
-                // لو القسط = 0 لكن في إجمالي، اعمل قسط واحد بكل المبلغ
-                ContractInstallment::create([
-                    'contract_id'           => $contract->id,
-                    'installment_number'    => 1,
-                    'due_date'              => $baseDate,
-                    'due_amount'            => $totalValue,
-                    'payment_amount'        => 0,
-                    'installment_status_id' => $statuses['لم يحل'] ?? null,
-                ]);
-            }
 
-            // ✅ ربط المستثمرين + تحديث حالة العقد
-            $this->syncInvestorsAndRecalcStatus($contract, $investors);
+                // ✅ تسجيل "ربح فرق البيع" في معاملات المكتب
+                $salePrice     = (float) ($data['sale_price'] ?? 0);
+                $purchasePrice = (float) ($data['purchase_price'] ?? 0);
+                $diff          = round($salePrice - $purchasePrice, 2);
 
-            // ✅ تسجيل عملية للمستثمرين لو فيه مستثمرين
-            if (!empty($investors)) {
-                $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
-            }
+                if ($diff > 0) {
+                    $statusId = TransactionStatus::where('name', 'ربح فرق البيع')->value('id');
 
-            // ✅ تسجيل "ربح فرق البيع" في معاملات المكتب
-            // الفرق = سعر البيع - سعر الشراء (لو > 0 فقط)
-            $salePrice     = (float) ($data['sale_price'] ?? 0);
-            $purchasePrice = (float) ($data['purchase_price'] ?? 0);
-            $diff          = round($salePrice - $purchasePrice, 2);
-
-            if ($diff > 0) {
-                $statusId = TransactionStatus::where('name', 'ربح فرق البيع')->value('id');
-
-                if ($statusId) {
-                    OfficeTransaction::create([
-                        'investor_id'      => null, // ليس مرتبطًا بمستثمر محدد
-                        'contract_id'      => $contract->id,
-                        'installment_id'   => null, // ليس مرتبطًا بقسط
-                        'status_id'        => $statusId,
-                        'amount'           => $diff,
-                        'transaction_date' => now(),
-                        'notes'            => "ربح فرق البيع للعقد رقم {$contract->contract_number}",
-                    ]);
+                    if ($statusId) {
+                        OfficeTransaction::create([
+                            'investor_id'      => null,
+                            'contract_id'      => $contract->id,
+                            'installment_id'   => null,
+                            'status_id'        => $statusId,
+                            'amount'           => $diff,
+                            'transaction_date' => now(),
+                            'notes'            => "ربح فرق البيع للعقد رقم {$contract->contract_number}",
+                        ]);
+                    }
                 }
-                // لو الحالة مش موجودة، بنتجاهل التسجيل بدون فشل
-            }
-        });
+            });
 
-    } catch (\Throwable $e) {
-        report($e);
-        return back()
-            ->withInput()
-            ->withErrors(['general' => 'خطأ أثناء إنشاء العقد: ' . $e->getMessage()]);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()
+                ->withInput()
+                ->withErrors(['general' => 'خطأ أثناء إنشاء العقد: ' . $e->getMessage()]);
+        }
+
+        return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
     }
 
-    return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
-}
+    public function earlySettle(Request $request, Contract $contract)
+    {
+        $data = $request->validate([
+            'discount_amount' => ['required', 'numeric', 'min:0'],
+        ]);
 
+        try {
+            DB::transaction(function () use ($contract, $data) {
+                // الحصول على ID حالة "مدفوع مبكر"
+                $statusId = ContractStatus::where('name', 'سداد مبكر')->value('id');
+
+                // حفظ الخصم وتغيير الحالة
+                $contract->discount_amount = (float) $data['discount_amount'];
+
+                if ($statusId) {
+                    $contract->contract_status_id = $statusId;
+                }
+
+                $contract->save();
+            });
+
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذّر إتمام السداد المبكر'
+            ], 500);
+        }
+    }
 
     public function storeInvestors(StoreContractInvestorsRequest $request): JsonResponse
     {
@@ -413,6 +473,7 @@ class ContractController extends Controller
             'contract_value'         => ['nullable','numeric','min:0'],
             'investor_profit'        => ['required','numeric','min:0'],
             'total_value'            => ['nullable','numeric','min:0'],
+            'discount_amount'        => ['nullable','numeric','min:0'],
             'installment_type_id'    => ['required','exists:installment_types,id'],
             // ✅ لازم يكون > 0 علشان القسمة
             'installment_value'      => ['required','numeric','min:0.01'],
