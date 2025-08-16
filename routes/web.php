@@ -50,11 +50,13 @@ Route::get('/home', function () {
         : redirect()->route('settings.create');
 })->middleware('auth')->name('home');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware('can:view-dashboard')
+    ->name('dashboard');
 
 
 
-Route::prefix('settings')->middleware('auth')->group(function () {
+Route::prefix('settings')->middleware('can:manage-settings')->group(function () {
     Route::resource('settings', SettingController::class);
     Route::resource('nationalities', NationalityController::class);
     Route::resource('titles', TitleController::class);

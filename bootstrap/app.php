@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\SetLocale;
+use App\Providers\AppServiceProvider;
+use App\Providers\AuthServiceProvider;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -11,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withProviders([
+        AppServiceProvider::class,
+        AuthServiceProvider::class,
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
         // ضيف SetLocale في web (append = يشتغل بعد وسطاء الويب الافتراضيين)
         $middleware->web(append: [
