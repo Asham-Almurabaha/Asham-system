@@ -15,7 +15,7 @@ class CreateOfficeTransactionsTable   extends Migration
             $table->id();
 
             // ربط بالمستثمر
-            $table->foreignId('investor_id')->constrained('investors')->onDelete('cascade');
+            $table->foreignId('investor_id')->nullable()->constrained('investors')->onDelete('cascade');
 
             // ربط بالعقد (اختياري)
             $table->foreignId('contract_id')->nullable()->constrained('contracts')->onDelete('set null');
