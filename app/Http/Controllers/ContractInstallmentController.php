@@ -221,134 +221,221 @@ class ContractInstallmentController extends Controller
     }
 
     private function logInvestorInstallmentTransactions($contractId, $installmentId, $amount, $statusName, $transactionDate)
-    {
-        $contract = Contract::with('investors')->find($contractId);
-        if (!$contract || $contract->investors->isEmpty()) {
-            return;
+{
+    $amount = round((float) $amount, 2);
+    if ($amount <= 0) return;
+
+    $contract = Contract::with('investors')->find($contractId);
+    if (!$contract || $contract->investors->isEmpty()) return;
+
+    $statusId = TransactionStatus::where('name', $statusName)->value('id');
+    if (!$statusId) throw new \Exception("🚫 لم يتم العثور على حالة باسم: {$statusName}");
+
+    $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
+    if (!$officeStatusId) throw new \Exception("🚫 لم يتم العثور على حالة 'ربح المكتب'");
+
+    $installment       = ContractInstallment::find($installmentId);
+    $installmentNumber = $installment ? $installment->installment_number : null;
+    $now               = $transactionDate ?: now();
+
+    // 1) حساب ربح المكتب لكل مستثمر + نسب المشاركة
+    $investorMeta = []; // [id => ['office_profit'=>, 'share_pct'=>, 'name'=>]]
+    $totalOfficeProfit = 0.0;
+
+    foreach ($contract->investors as $inv) {
+        $sharePct = (float) ($inv->pivot->share_percentage ?? 0);
+        if ($sharePct <= 0) continue;
+
+        $investorTotalProfit   = max(0, (float) $contract->investor_profit * ($sharePct / 100));
+        // لو النسبة مخزنة على الـpivot استخدم $inv->pivot->office_share_percentage بدل السطر التالي
+        $officeSharePercentage = (float) ($inv->office_share_percentage ?? 0);
+
+        $officeProfit = $officeSharePercentage > 0
+            ? round($investorTotalProfit * ($officeSharePercentage / 100), 2)
+            : 0.0;
+
+        $investorMeta[$inv->id] = [
+            'office_profit' => $officeProfit,
+            'share_pct'     => $sharePct,
+            'name'          => $inv->name,
+        ];
+        $totalOfficeProfit = round($totalOfficeProfit + $officeProfit, 2);
+    }
+    if (empty($investorMeta)) return;
+
+    // 2) المبالغ المحصلة سابقاً لربح المكتب لكل مستثمر
+    $collectedOfficeByInvestor = OfficeTransaction::where('contract_id', $contract->id)
+        ->where('status_id', $officeStatusId)
+        ->selectRaw('investor_id, COALESCE(SUM(amount),0) as total')
+        ->groupBy('investor_id')
+        ->pluck('total', 'investor_id')
+        ->toArray();
+
+    $collectedOfficeProfit = round(array_sum($collectedOfficeByInvestor), 2);
+    $remainingOfficeProfit = max(0, round($totalOfficeProfit - $collectedOfficeProfit, 2));
+
+    // ================= الحالة 1: في تحصيل سابق ومازال فيه باقي =================
+    $usePerInvestorDeduct = ($collectedOfficeProfit > 0) && ($remainingOfficeProfit > 0);
+
+    if ($usePerInvestorDeduct) {
+        // وزّع مبلغ السداد على المستثمرين حسب نسب المشاركة
+        $weights = [];
+        $sumW = 0.0;
+        foreach ($investorMeta as $id => $m) {
+            $w = (float) $m['share_pct'];
+            if ($w > 0) { $weights[$id] = $w; $sumW += $w; }
         }
+        if ($sumW <= 0) return;
 
-        // حالة المستثمرين من الباراميتر
-        $statusId = TransactionStatus::where('name', $statusName)->value('id');
-        if (!$statusId) {
-            throw new \Exception("🚫 لم يتم العثور على حالة باسم: {$statusName}");
-        }
+        $allocatedSum = 0.0;
+        $ids  = array_keys($weights);
+        $last = end($ids);
 
-        // حالة المكتب ثابتة "ربح المكتب"
-        $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
-        if (!$officeStatusId) {
-            throw new \Exception("🚫 لم يتم العثور على حالة 'ربح المكتب'");
-        }
+        foreach ($weights as $invId => $w) {
+            $alloc = ($invId === $last)
+                ? round($amount - $allocatedSum, 2)
+                : round($amount * $w / $sumW, 2);
 
-        $installment = ContractInstallment::find($installmentId);
-        $installmentNumber = $installment ? $installment->installment_number : null;
-
-        // 1️⃣ حساب ربح المكتب لكل مستثمر + إجمالي ربح المكتب
-        $totalOfficeProfit = 0;
-        $investorOfficeProfits = [];
-
-        foreach ($contract->investors as $inv) {
-            $sharePercentage = (float) ($inv->pivot->share_percentage ?? 0);
-            $investorTotalProfit = ($sharePercentage > 0 && $contract->investor_profit > 0)
-                ? ($contract->investor_profit * ($sharePercentage / 100))
-                : 0;
-
-            $officeSharePercentage = (float) ($inv->office_share_percentage ?? 0);
-            $officeProfit = ($officeSharePercentage > 0)
-                ? ($investorTotalProfit * ($officeSharePercentage / 100))
-                : 0;
-
-            $investorOfficeProfits[$inv->id] = [
-                'office_profit' => $officeProfit,
-                'total_profit'  => $investorTotalProfit
-            ];
-
-            $totalOfficeProfit += $officeProfit;
-        }
-
-        // 2️⃣ جلب المبالغ المحصلة مسبقاً للمكتب
-        $collectedOfficeByInvestor = OfficeTransaction::where('contract_id', $contract->id)
-            ->selectRaw('investor_id, SUM(amount) as total')
-            ->groupBy('investor_id')
-            ->pluck('total', 'investor_id')
-            ->toArray();
-
-        $collectedOfficeProfit = array_sum($collectedOfficeByInvestor);
-        $remainingOfficeProfit = max(0, $totalOfficeProfit - $collectedOfficeProfit);
-
-        // 3️⃣ لو لسه ربح المكتب ما اكتمل
-        if ($remainingOfficeProfit > 0) {
-            if ($amount <= $remainingOfficeProfit) {
-                foreach ($contract->investors as $inv) {
-                    $officeProfit = $investorOfficeProfits[$inv->id]['office_profit'];
-                    if ($officeProfit <= 0) continue;
-
-                    $alreadyCollected = (float) ($collectedOfficeByInvestor[$inv->id] ?? 0);
-                    $remainingForThisInvestor = max(0, $officeProfit - $alreadyCollected);
-
-                    if ($remainingForThisInvestor > 0) {
-                        $investorShare = ($remainingOfficeProfit > 0)
-                            ? ($remainingForThisInvestor / $remainingOfficeProfit)
-                            : 0;
-
-                        $amountForThisInvestorOffice = $amount * $investorShare;
-
-                        OfficeTransaction::create([
-                            'investor_id'      => $inv->id,
-                            'contract_id'      => $contract->id,
-                            'installment_id'   => $installmentId,
-                            'status_id'        => $officeStatusId, // ربح المكتب
-                            'amount'           => round($amountForThisInvestorOffice, 2),
-                            'transaction_date' => $transactionDate,
-                            'notes'            => "تحصيل ربح المكتب من {$inv->name} - قسط رقم {$installmentNumber} للعقد رقم {$contract->contract_number}"
-                        ]);
-                    }
-                }
-                return;
+            if ($allocatedSum + $alloc > $amount) {
+                $alloc = round($amount - $allocatedSum, 2);
             }
+            $allocatedSum = round($allocatedSum + $alloc, 2);
+            if ($alloc <= 0) continue;
 
-            foreach ($contract->investors as $inv) {
-                $officeProfit = $investorOfficeProfits[$inv->id]['office_profit'];
-                if ($officeProfit <= 0) continue;
+            // المتبقي من ربح المكتب لهذا المستثمر
+            $alreadyCollected = (float) ($collectedOfficeByInvestor[$invId] ?? 0);
+            $invOfficeTarget  = (float) ($investorMeta[$invId]['office_profit'] ?? 0);
+            $officeRemForInv  = max(0, round($invOfficeTarget - $alreadyCollected, 2));
 
-                $alreadyCollected = (float) ($collectedOfficeByInvestor[$inv->id] ?? 0);
-                $remainingForThisInvestor = max(0, $officeProfit - $alreadyCollected);
+            // نخصم المتبقي من حصة هذا المستثمر من الدفعة
+            $officeTake   = min($alloc, $officeRemForInv);
+            $investorTake = round($alloc - $officeTake, 2);
 
-                if ($remainingForThisInvestor > 0) {
-                    OfficeTransaction::create([
-                        'investor_id'      => $inv->id,
-                        'contract_id'      => $contract->id,
-                        'installment_id'   => $installmentId,
-                        'status_id'        => $officeStatusId, // ربح المكتب
-                        'amount'           => round($remainingForThisInvestor, 2),
-                        'transaction_date' => $transactionDate,
-                        'notes'            => "تحصيل باقي ربح المكتب من {$inv->name} - قسط رقم {$installmentNumber} للعقد رقم {$contract->contract_number}"
-                    ]);
-                }
-            }
-
-            $amount -= $remainingOfficeProfit;
-        }
-
-        // 4️⃣ توزيع الباقي على المستثمرين
-        foreach ($contract->investors as $inv) {
-            $sharePercentage = (float) ($inv->pivot->share_percentage ?? 0);
-            $investorProfitFromThisPayment = ($sharePercentage > 0)
-                ? ($amount * ($sharePercentage / 100))
-                : 0;
-
-            if ($investorProfitFromThisPayment > 0) {
-                InvestorTransaction::create([
-                    'investor_id'      => $inv->id,
+            if ($officeTake > 0) {
+                OfficeTransaction::create([
+                    'investor_id'      => $invId,
                     'contract_id'      => $contract->id,
                     'installment_id'   => $installmentId,
-                    'status_id'        => $statusId, // الحالة من الباراميتر
-                    'amount'           => round($investorProfitFromThisPayment, 2),
-                    'transaction_date' => $transactionDate,
-                    'notes'            => "سداد قسط رقم {$installmentNumber} بعد سداد كامل ربح المكتب - العقد رقم {$contract->contract_number}"
+                    'status_id'        => $officeStatusId,
+                    'amount'           => $officeTake,
+                    'transaction_date' => $now,
+                    'notes'            => "تحصيل ربح المكتب من {$investorMeta[$invId]['name']}"
+                        . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
+                        . " - العقد رقم {$contract->contract_number}",
+                ]);
+            }
+
+            if ($investorTake > 0) {
+                InvestorTransaction::create([
+                    'investor_id'      => $invId,
+                    'contract_id'      => $contract->id,
+                    'installment_id'   => $installmentId,
+                    'status_id'        => $statusId,
+                    'amount'           => $investorTake,
+                    'transaction_date' => $now,
+                    'notes'            => ($installmentNumber
+                        ? "سداد قسط رقم {$installmentNumber} بعد خصم المتبقّي من ربح المكتب"
+                        : "سداد بعد خصم المتبقّي من ربح المكتب")
+                        . " - العقد رقم {$contract->contract_number}",
                 ]);
             }
         }
+        return;
     }
+
+    // ================= الحالة 2: المنطق القديم (مفيش تحصيل سابق أو ربح المكتب خلص) =================
+    // (أ) نسدد ربح المكتب أولاً حتى يكتمل — موزع حسب المتبقّي لكل مستثمر
+    if ($remainingOfficeProfit > 0) {
+        $payOffice = min($amount, $remainingOfficeProfit);
+
+        if ($payOffice > 0) {
+            // وزن كل مستثمر = المتبقّي له من ربح المكتب
+            $weights = [];
+            $sumW    = 0.0;
+
+            foreach ($investorMeta as $invId => $m) {
+                $already = (float) ($collectedOfficeByInvestor[$invId] ?? 0);
+                $rem     = max(0, round(($m['office_profit'] ?? 0) - $already, 2));
+                if ($rem > 0) { $weights[$invId] = $rem; $sumW += $rem; }
+            }
+
+            if ($sumW > 0) {
+                $allocatedSum = 0.0;
+                $ids  = array_keys($weights);
+                $last = end($ids);
+
+                foreach ($weights as $invId => $w) {
+                    $alloc = ($invId === $last)
+                        ? round($payOffice - $allocatedSum, 2)
+                        : round($payOffice * $w / $sumW, 2);
+
+                    if ($allocatedSum + $alloc > $payOffice) {
+                        $alloc = round($payOffice - $allocatedSum, 2);
+                    }
+
+                    if ($alloc > 0) {
+                        OfficeTransaction::create([
+                            'investor_id'      => $invId,
+                            'contract_id'      => $contract->id,
+                            'installment_id'   => $installmentId,
+                            'status_id'        => $officeStatusId,
+                            'amount'           => $alloc,
+                            'transaction_date' => $now,
+                            'notes'            => "تحصيل ربح المكتب من {$investorMeta[$invId]['name']}"
+                                . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
+                                . " - العقد رقم {$contract->contract_number}",
+                        ]);
+                        $allocatedSum = round($allocatedSum + $alloc, 2);
+                    }
+                }
+            }
+
+            $amount = round($amount - $payOffice, 2);
+            if ($amount <= 0) return;
+        }
+    }
+
+    // (ب) نوزع الباقي على المستثمرين حسب نسب المشاركة (مكافئ للنقطة الأولى لأن ربح المكتب خلص)
+    $weights = [];
+    $sumW = 0.0;
+    foreach ($investorMeta as $invId => $m) {
+        $w = (float) $m['share_pct'];
+        if ($w > 0) { $weights[$invId] = $w; $sumW += $w; }
+    }
+    if ($sumW <= 0) return;
+
+    $allocatedSum = 0.0;
+    $ids  = array_keys($weights);
+    $last = end($ids);
+
+    foreach ($weights as $invId => $w) {
+        $alloc = ($invId === $last)
+            ? round($amount - $allocatedSum, 2)
+            : round($amount * $w / $sumW, 2);
+
+        if ($allocatedSum + $alloc > $amount) {
+            $alloc = round($amount - $allocatedSum, 2);
+        }
+
+        if ($alloc > 0) {
+            InvestorTransaction::create([
+                'investor_id'      => $invId,
+                'contract_id'      => $contract->id,
+                'installment_id'   => $installmentId,
+                'status_id'        => $statusId,
+                'amount'           => $alloc,
+                'transaction_date' => $now,
+                'notes'            => ($installmentNumber
+                        ? "سداد قسط رقم {$installmentNumber} بعد سداد كامل ربح المكتب"
+                        : "سداد بعد سداد كامل ربح المكتب")
+                    . " - العقد رقم {$contract->contract_number}",
+            ]);
+            $allocatedSum = round($allocatedSum + $alloc, 2);
+        }
+    }
+}
+
+
 
     public function deferAjax($id)
     {
