@@ -10,81 +10,80 @@ use Illuminate\Support\Facades\Validator;
 
 class SettingController extends Controller
 {
-    // عرض جميع الإعدادات
     public function index()
     {
-        $settings = Setting::all();
-        return view('settings.index', compact('settings'));
+        $setting = Setting::latest('id')->first();
+        return view('settings.index', compact('setting'));
     }
 
-    // عرض صفحة إنشاء إعداد جديد
     public function create()
     {
         return view('settings.create');
     }
 
-    // حفظ إعداد جديد
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+        $rules = [
+            'name'    => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,ico|max:1024',
-        ]);
+            'logo'    => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+            // ⚠️ بدون قاعدة "image" حتى يقبل ico
+            'favicon' => 'nullable|mimes:ico,png,jpg,jpeg,gif,webp,svg'
+                       .'|mimetypes:image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg,image/gif,image/webp,image/svg+xml'
+                       .'|max:1024',
+        ];
 
+        $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return back()->withErrors($validator)->withInput();
         }
 
         $setting = new Setting();
         $setting->name = $request->name;
         $setting->name_ar = $request->name_ar;
 
-        // رفع صورة اللوغو
         if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('settings', 'public');
-            $setting->logo = $logoPath;
+            $setting->logo = $request->file('logo')->store('settings', 'public');
         }
 
-        // رفع صورة الأيقونة (favicon)
         if ($request->hasFile('favicon')) {
-            $faviconPath = $request->file('favicon')->store('settings', 'public');
-            $setting->favicon = $faviconPath;
+            $setting->favicon = $request->file('favicon')->store('settings', 'public');
         }
 
         $setting->save();
 
-        // بعد الإنشاء ارجع للاندكس مع رسالة نجاح
-        return redirect()->route('settings.index')->with('success', 'تم إنشاء الإعداد بنجاح');
+        return redirect()->route('settings.show', $setting->id)
+            ->with('success', 'تم إنشاء الإعداد بنجاح');
     }
 
-    // عرض تفاصيل إعداد معين
     public function show($id)
     {
-        $setting = Setting::findOrFail($id);
+        // استخدم find بدل findOrFail للسماح بحالة عدم وجود السجل وعرض رسالة داخل الـ Blade
+        $setting = Setting::find($id);
         return view('settings.show', compact('setting'));
     }
 
-    // عرض صفحة تعديل الإعداد
     public function edit($id)
     {
         $setting = Setting::findOrFail($id);
         return view('settings.edit', compact('setting'));
     }
 
-    // تحديث الإعداد
     public function update(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+        $rules = [
+            'name'    => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,ico|max:1024',
-        ]);
+            'logo'    => 'nullable|image|mimes:jpeg,png,jpg,gif,webp,svg|max:2048',
+            // ⚠️ بدون "image"
+            'favicon' => 'nullable|mimes:ico,png,jpg,jpeg,gif,webp,svg'
+                       .'|mimetypes:image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg,image/gif,image/webp,image/svg+xml'
+                       .'|max:1024',
+        ];
 
+        $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return back()->withErrors($validator)->withInput();
         }
 
         $setting = Setting::findOrFail($id);
@@ -92,39 +91,32 @@ class SettingController extends Controller
         $setting->name_ar = $request->name_ar;
 
         if ($request->hasFile('logo')) {
-            // حذف اللوغو القديم لو موجود
             if ($setting->logo) {
                 Storage::disk('public')->delete($setting->logo);
             }
-            $logoPath = $request->file('logo')->store('settings', 'public');
-            $setting->logo = $logoPath;
+            $setting->logo = $request->file('logo')->store('settings', 'public');
         }
 
         if ($request->hasFile('favicon')) {
-            // حذف الأيقونة القديمة لو موجودة
             if ($setting->favicon) {
                 Storage::disk('public')->delete($setting->favicon);
             }
-            $faviconPath = $request->file('favicon')->store('settings', 'public');
-            $setting->favicon = $faviconPath;
+            $setting->favicon = $request->file('favicon')->store('settings', 'public');
         }
 
         $setting->save();
 
-        // بعد التحديث ارجع للاندكس مع رسالة نجاح
-        return redirect()->route('settings.index')->with('success', 'تم تحديث الإعداد بنجاح');
+        return redirect()->route('settings.show', $setting->id)
+            ->with('success', 'تم تحديث الإعداد بنجاح');
     }
 
-    // حذف إعداد
     public function destroy($id)
     {
         $setting = Setting::findOrFail($id);
 
-        // حذف الملفات المرتبطة
         if ($setting->logo) {
             Storage::disk('public')->delete($setting->logo);
         }
-
         if ($setting->favicon) {
             Storage::disk('public')->delete($setting->favicon);
         }
