@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuarantorController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\InvestorTransactionController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Setting\BankCashAccountController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -82,6 +84,7 @@ Route::resource('customers', CustomerController::class);
 Route::resource('guarantors', GuarantorController::class);
 Route::resource('investors', InvestorController::class);
 Route::resource('contracts', ContractController::class);
+Route::resource('investor-transactions', InvestorTransactionController::class)->only(['index','create','store']);
 
 
 

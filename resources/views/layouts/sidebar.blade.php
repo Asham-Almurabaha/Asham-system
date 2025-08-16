@@ -50,6 +50,14 @@
     </a>
   </li>
 
+  {{-- عمليات المستثمرين --}}
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('investor-transactions.*')) }} {{ $active($isRoute('investor-transactions.*')) }}"
+       href="{{ route('investor-transactions.index') }}">
+      <i class="bi bi-cash"></i><span>عمليات المستثمرين</span>
+    </a>
+  </li>
+
   {{-- العقود --}}
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('contracts.*')) }} {{ $active($isRoute('contracts.*')) }}"
