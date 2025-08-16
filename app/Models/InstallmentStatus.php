@@ -15,4 +15,9 @@ class InstallmentStatus extends Model
     {
         return $this->hasMany(ContractInstallment::class);
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(InvestorTransaction::class, 'status_id');
+    }
 }

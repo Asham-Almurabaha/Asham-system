@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreContractInvestorsRequest;
 use App\Models\Contract;
 use App\Models\ContractInstallment;
 use App\Models\ContractStatus;
@@ -9,13 +10,16 @@ use App\Models\ContractType;
 use App\Models\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentStatus;
+use Illuminate\Http\JsonResponse;
+use App\DTOs\InvestorShare;
 use App\Models\InstallmentType;
 use App\Models\Investor;
+use App\Models\InvestorTransaction;
+use App\Models\TransactionStatus;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class ContractController extends Controller
@@ -44,8 +48,6 @@ class ContractController extends Controller
             ->when($request->to,     fn($q) => $q->whereDate('start_date', '<=', $request->to))
             ->latest()
             ->paginate(10);
-
-        
 
         $contractTypes    = ContractType::all();
         $contractStatuses = ContractStatus::all();
@@ -86,45 +88,59 @@ class ContractController extends Controller
 
                 $statuses = InstallmentStatus::pluck('id', 'name');
 
-                // 🔹 إجمالي مبلغ العقد (الاعتماد على total_value)
-                $totalValue       = $data['total_value'];
-                $installmentValue = $request->installment_value;
+                // ✅ توليد الأقساط بأمان
+                $totalValue       = (float) $data['total_value'];
+                $installmentValue = (float) $request->installment_value;
 
-                // عدد الأقساط الكاملة (بدون الباقي)
-                $installmentsCount = floor($totalValue / $installmentValue);
+                $baseDate = $request->first_installment_date
+                    ? Carbon::parse($request->first_installment_date)
+                    : Carbon::parse($data['start_date'] ?? now());
 
-                // المبلغ المتبقي
-                $remaining = round($totalValue - ($installmentsCount * $installmentValue), 2);
+                if ($installmentValue > 0.0) {
+                    $installmentsCount = (int) floor($totalValue / $installmentValue);
+                    $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
 
-                // إنشاء الأقساط الكاملة
-                for ($i = 1; $i <= $installmentsCount; $i++) {
-                    $dueDate = Carbon::parse($request->first_installment_date)->addMonths($i - 1);
+                    for ($i = 1; $i <= $installmentsCount; $i++) {
+                        $dueDate = $baseDate->copy()->addMonths($i - 1);
+                        ContractInstallment::create([
+                            'contract_id'           => $contract->id,
+                            'installment_number'    => $i,
+                            'due_date'              => $dueDate,
+                            'due_amount'            => $installmentValue,
+                            'payment_amount'        => 0,
+                            'installment_status_id' => $statuses['لم يحل'] ?? null,
+                        ]);
+                    }
 
+                    if ($remaining > 0) {
+                        $dueDate = $baseDate->copy()->addMonths($installmentsCount);
+                        ContractInstallment::create([
+                            'contract_id'           => $contract->id,
+                            'installment_number'    => $installmentsCount + 1,
+                            'due_date'              => $dueDate,
+                            'due_amount'            => $remaining,
+                            'payment_amount'        => 0,
+                            'installment_status_id' => $statuses['لم يحل'] ?? null,
+                        ]);
+                    }
+                } elseif ($totalValue > 0.0) {
+                    // لو القسط = 0 لكن في إجمالي، اعمل قسط واحد بكل المبلغ
                     ContractInstallment::create([
                         'contract_id'           => $contract->id,
-                        'installment_number'    => $i,
-                        'due_date'              => $dueDate,
-                        'due_amount'            => $installmentValue,
+                        'installment_number'    => 1,
+                        'due_date'              => $baseDate,
+                        'due_amount'            => $totalValue,
                         'payment_amount'        => 0,
-                        'installment_status_id' => $statuses['لم يحل'] ?? null
-                    ]);
-                }
-
-                // 🔹 إضافة آخر قسط لو فيه مبلغ متبقي
-                if ($remaining > 0) {
-                    $dueDate = Carbon::parse($request->first_installment_date)->addMonths($installmentsCount);
-
-                    ContractInstallment::create([
-                        'contract_id'           => $contract->id,
-                        'installment_number'    => $installmentsCount + 1,
-                        'due_date'              => $dueDate,
-                        'due_amount'            => $remaining,
-                        'payment_amount'        => 0,
-                        'installment_status_id' => $statuses['لم يحل'] ?? null
+                        'installment_status_id' => $statuses['لم يحل'] ?? null,
                     ]);
                 }
 
                 $this->syncInvestorsAndRecalcStatus($contract, $investors);
+
+                // ✅ تسجيل العملية لو فيه مستثمرين
+                if (!empty($investors)) {
+                    $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
+                }
             });
 
         } catch (\Throwable $e) {
@@ -137,75 +153,148 @@ class ContractController extends Controller
         return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
     }
 
-    public function storeInvestors(Request $request)
+    public function storeInvestors(StoreContractInvestorsRequest $request): JsonResponse
     {
-        if ($request->ajax()) {
-            $validator = Validator::make($request->all(), [
-                'contract_id' => 'required|exists:contracts,id',
-                'investors'   => 'required|array|min:1',
-                'investors.*.id' => 'required|distinct|exists:investors,id',
-                'investors.*.share_percentage' => 'required|numeric|min:0.01|max:100',
-                'investors.*.share_value' => 'required|numeric|min:0.01',
-            ], [
-                'investors.*.id.distinct' => 'لا يمكن اختيار نفس المستثمر أكثر من مرة.',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'errors'  => $validator->errors()
-                ], 422);
-            }
-
-            $contract = Contract::findOrFail($request->contract_id);
-
-            // التأكد من أن مجموع النسب لا يتجاوز 100%
-            $totalPercentage = collect($request->investors)->sum(function ($inv) {
-                return (float)$inv['share_percentage'];
-            });
-
-            $currentPercentage = (float) $contract->investors()->sum('contract_investor.share_percentage');
-            $newTotal = $currentPercentage + $totalPercentage;
-
-            if ($newTotal > 100.0001) {
-                return response()->json([
-                    'success' => false,
-                    'errors'  => ['general' => ["مجموع نسب المستثمرين لا يجوز أن يتجاوز 100%. المجموع الحالي بعد الإضافة: {$newTotal}%"]]
-                ], 422);
-            }
-
-            // تجهيز بيانات pivot
-            $investorsData = collect($request->investors)->mapWithKeys(function ($inv) {
-                return [
-                    $inv['id'] => [
-                        'share_percentage' => $inv['share_percentage'],
-                        'share_value'      => $inv['share_value']
-                    ]
-                ];
-            });
-
-            // إضافة المستثمرين بدون إزالة الموجودين
-            $contract->investors()->syncWithoutDetaching($investorsData);
-
-            // إعادة تحميل بيانات العقد بالمستثمرين
-            $contract->load('investors');
-
-            // إعادة بناء الجدول
-            $html = view('contracts.partials.investors_table', compact('contract'))->render();
-
-            return response()->json([
-                'success' => true,
-                'html'    => $html
-            ]);
+        if (!$request->ajax()) {
+            abort(404);
         }
 
-        abort(404);
+        /** @var int $contractId */
+        $contractId = (int) $request->validated('contract_id');
+        /** @var array<int, array{id:int,share_percentage:float,share_value?:float|null}> $incomingRaw */
+        $incomingRaw = $request->validated('investors');
+
+        // حوّل الـ array لـ DTOs واضحة
+        /** @var array<int, InvestorShare> $incoming */
+        $incoming = array_map(
+            fn (array $row) => InvestorShare::fromArray($row),
+            $incomingRaw
+        );
+
+        $contract = Contract::with('investors')->findOrFail($contractId);
+        $contractValue = (float) $contract->contract_value;
+
+        // IDs الموجودين حالياً على العقد
+        /** @var array<int,int> $existingIds */
+        $existingIds = $contract->investors->pluck('id')->map(fn($id)=>(int)$id)->all();
+        /** @var array<int,int> $incomingIds */
+        $incomingIds = array_map(fn(InvestorShare $s) => $s->id, $incoming);
+
+        // منع تمرير أي مستثمر موجود مسبقاً
+        $intersection = array_values(array_intersect($incomingIds, $existingIds));
+        if (!empty($intersection)) {
+            return response()->json([
+                'success' => false,
+                'errors'  => ['general' => ['بعض المستثمرين مختارين بالفعل على هذا العقد ولا يمكن إضافتهم مرة أخرى.']]
+            ], 422);
+        }
+
+        // حساب المجاميع
+        $currentPct = (float) $contract->investors()->sum('contract_investor.share_percentage');
+        $newPct     = array_reduce($incoming, fn($c, InvestorShare $s) => $c + $s->sharePercentage, 0.0);
+        $afterAdd   = $currentPct + $newPct;
+
+        // لا تتجاوز 100
+        if ($afterAdd > 100 + self::EPS) {
+            return response()->json([
+                'success' => false,
+                'errors'  => ['general' => ["مجموع نسب المستثمرين لا يجوز أن يتجاوز 100%. المجموع بعد الإضافة: " . round($afterAdd, 2) . "%"]]
+            ], 422);
+        }
+
+        // لازم يبقى = 100% بعد الإضافة (متوافق مع منطق الفرونت)
+        if (abs($afterAdd - 100) > self::EPS) {
+            $remaining = max(0, 100 - $afterAdd);
+            return response()->json([
+                'success' => false,
+                'errors'  => ['general' => ["لا يمكن الحفظ إلا إذا أصبح المجموع 100%. المتبقي الآن: " . round($remaining, 2) . "%"]]
+            ], 422);
+        }
+
+        /**
+         * @var array<int, array{
+         *   share_percentage: float,
+         *   share_value: float,
+         *   created_at: \Illuminate\Support\Carbon,
+         *   updated_at: \Illuminate\Support\Carbon
+         * }> $pivotData
+         */
+        $pivotData = [];
+        foreach ($incoming as $s) {
+            // نحسب القيمة من السيرفر لضمان الاتساق
+            $value = round(($contractValue * $s->sharePercentage) / 100, 2);
+            if ($value <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'errors'  => ['general' => ['قيمة مشاركة المستثمر المحسوبة لا بد أن تكون أكبر من صفر.']]
+                ], 422);
+            }
+
+            $pivotData[$s->id] = [
+                'share_percentage' => (float) $s->sharePercentage,
+                'share_value'      => (float) $value,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ];
+        }
+
+        DB::transaction(function () use ($contract, $pivotData) {
+            // إضافة بدون نزع الموجودين
+            $contract->investors()->sync($pivotData, false);
+
+            // تسجيل معاملات "إضافة عقد" للمستثمرين المضافين
+            $this->logInvestorTransaction(
+                $contract->fresh('investors'),
+                collect($pivotData)
+                    ->map(fn($v, $id) => ['id' => (int) $id, 'share_value' => (float) $v['share_value']])
+                    ->values()
+                    ->all(),
+                'إضافة عقد'
+            );
+
+            // تحديث حالة العقد حسب المجموع (سيصير "جديد" لو 100%)
+            $pivotTable = 'contract_investor';
+            $dbSum      = (float) $contract->investors()->sum("$pivotTable.share_percentage");
+            $rows       = $contract->investors()->pluck('investors.id')->map(fn($id)=>['id'=>(int)$id])->all();
+
+            $tmp = [];
+            $this->applyAutoStatusBySum($tmp, $dbSum, $rows);
+            if (!empty($tmp['contract_status_id']) && $tmp['contract_status_id'] != $contract->contract_status_id) {
+                $contract->update(['contract_status_id' => $tmp['contract_status_id']]);
+            }
+        });
+
+        // أعِد تحميل العقد وجدول المستثمرين
+        $contract->load('investors');
+        $html = view('contracts.partials.investors_table', compact('contract'))->render();
+
+        return response()->json([
+            'success' => true,
+            'html'    => $html
+        ]);
+    }
+
+    private function logInvestorTransaction(Contract $contract, array $investors, string $statusName = 'إضافة عقد'): void
+    {
+        $statusId = TransactionStatus::where('name', $statusName)->value('id');
+        if (!$statusId) return;
+
+        foreach ($investors as $inv) {
+            InvestorTransaction::create([
+                'investor_id'      => $inv['id'],
+                'contract_id'      => $contract->id,
+                'status_id'        => $statusId,
+                'amount'           => (float)($inv['share_value'] ?? 0),
+                'transaction_date' => now(),
+                'notes'            => "عملية {$statusName} للعقد رقم {$contract->contract_number}",
+            ]);
+        }
     }
 
     public function show(Contract $contract)
     {
         $this->updateInstallmentsStatuses($contract);
-        
+
         $contract->load([
             'customer',
             'guarantor',
@@ -215,12 +304,9 @@ class ContractController extends Controller
             'investors',
             'installments.installmentStatus'
         ]);
-        
-            // تمرير قائمة كل المستثمرين
-            $investors = Investor::all();
 
-            return view('contracts.show', compact('contract', 'investors'));
-
+        $investors = Investor::all();
+        return view('contracts.show', compact('contract', 'investors'));
     }
 
     public function edit(Contract $contract)
@@ -244,8 +330,7 @@ class ContractController extends Controller
 
         unset($data['contract_status_id']);
 
-        $investors = $this->normalizeInvestors($request->input('investors', []));
-
+        // صور
         if ($img = $this->putImage($request, 'contract_image', self::DIR_CONTRACT_MAIN, $contract->contract_image)) {
             $data['contract_image'] = $img;
         }
@@ -257,9 +342,14 @@ class ContractController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($contract, $data, $investors) {
+            DB::transaction(function () use ($contract, $data, $request) {
                 $contract->update($data);
-                $this->syncInvestorsAndRecalcStatus($contract->fresh(), $investors);
+
+                // ✅ ما نعدلش المستثمرين إلا لو بعتهم فعلًا
+                if ($request->has('investors')) {
+                    $investors = $this->normalizeInvestors($request->input('investors', []));
+                    $this->syncInvestorsAndRecalcStatus($contract->fresh(), $investors);
+                }
             });
         } catch (\Throwable $e) {
             report($e);
@@ -298,13 +388,15 @@ class ContractController extends Controller
             'investor_profit'        => ['required','numeric','min:0'],
             'total_value'            => ['nullable','numeric','min:0'],
             'installment_type_id'    => ['required','exists:installment_types,id'],
-            'installment_value'      => ['required','numeric','min:0'],
+            // ✅ لازم يكون > 0 علشان القسمة
+            'installment_value'      => ['required','numeric','min:0.01'],
             'installments_count'     => ['required','integer','min:1'],
             'start_date'             => ['required','date'],
             'first_installment_date' => ['nullable','date'],
             'contract_image'           => ['nullable','image','mimes:jpg,jpeg,png,webp','max:4096'],
             'contract_customer_image'  => ['nullable','image','mimes:jpg,jpeg,png,webp','max:4096'],
             'contract_guarantor_image' => ['nullable','image','mimes:jpg,jpeg,png,webp','max:4096'],
+
             'investors'                    => [$isUpdate ? 'sometimes' : 'nullable','array'],
             'investors.*.id'               => ['nullable','exists:investors,id'],
             'investors.*.share_percentage' => ['nullable','numeric','min:0','max:100'],
@@ -499,89 +591,90 @@ class ContractController extends Controller
         }
     }
 
-    private function updateInstallmentsStatuses(Contract $contract)
-{
-    $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب'];
+    private function updateInstallmentsStatuses(Contract $contract): void
+    {
+        // ✅ اشتغل بس لما مجموع نسب المستثمرين = 100%
+        $contract->loadMissing('investors', 'installments.installmentStatus', 'contractStatus');
 
-    if (in_array($contract->contractStatus->name ?? '', $excludedContractStatuses)) {
-        return;
-    }
+        $sumPct = (float) $contract->investors
+            ->sum(fn($i) => (float) ($i->pivot->share_percentage ?? 0));
 
-    $today             = now();
-    $statuses          = InstallmentStatus::pluck('id', 'name');
-    $contractStatuses  = ContractStatus::pluck('id', 'name');
-
-    $lateCount     = 0;
-    $maatherCount  = 0;
-    $allPaid       = true;
-    $anyLate       = false;
-    $allNotDueYet  = true;
-
-    foreach ($contract->installments as $installment) {
-        $statusName = $installment->installmentStatus->name ?? null;
-
-        // 🔹 العد بناءً على وجود كلمة "معتذر" في الملاحظات
-        if (!empty($installment->notes) && stripos($installment->notes, 'معتذر') !== false) {
-            $maatherCount++;
+        if (round($sumPct, 2) !== 100.00) {
+            return;
         }
 
-        // الحالات المدفوعة أو المؤجلة تبقى كما هي
-        if (in_array($statusName, ['مدفوع كامل', 'مدفوع مبكر', 'مدفوع متأخر', 'مدفوع جزئي', 'مؤجل', 'معتذر'])) {
-            $allNotDueYet = false;
-            continue;
+        // عقود مُستثناة
+        $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب'];
+        if (in_array($contract->contractStatus->name ?? '', $excludedContractStatuses, true)) {
+            return;
         }
 
-        $dueDate   = Carbon::parse($installment->due_date);
-        $paid      = $installment->payment_amount ?? 0;
-        $dueAmount = $installment->due_amount ?? 0;
+        $today            = now();
+        $statuses         = InstallmentStatus::pluck('id', 'name');
+        $contractStatuses = ContractStatus::pluck('id', 'name');
 
-        if ($paid < $dueAmount) {
-            $allPaid = false;
+        $lateCount     = 0;
+        $maatherCount  = 0;
+        $allPaid       = true;
+        $anyLate       = false;
+        $allNotDueYet  = true;
 
-            if ($dueDate->between($today->copy()->subDays(7), $today->copy()->addDays(7))) {
-                $installment->installment_status_id = $statuses['مستحق'] ?? $installment->installment_status_id;
+        foreach ($contract->installments as $installment) {
+            $statusName = $installment->installmentStatus->name ?? null;
+
+            if (!empty($installment->notes) && stripos($installment->notes, 'معتذر') !== false) {
+                $maatherCount++;
+            }
+
+            if (in_array($statusName, ['مدفوع كامل', 'مدفوع مبكر', 'مدفوع متأخر', 'مدفوع جزئي', 'مؤجل', 'معتذر'], true)) {
                 $allNotDueYet = false;
+                continue;
             }
-            elseif ($dueDate->greaterThan($today->copy()->addDays(7))) {
-                $installment->installment_status_id = $statuses['لم يحل'] ?? $installment->installment_status_id;
+
+            $dueDate   = Carbon::parse($installment->due_date);
+            $paid      = (float) ($installment->payment_amount ?? 0);
+            $dueAmount = (float) ($installment->due_amount ?? 0);
+
+            if ($paid < $dueAmount) {
+                $allPaid = false;
+
+                if ($dueDate->between($today->copy()->subDays(7), $today->copy()->addDays(7))) {
+                    $installment->installment_status_id = $statuses['مستحق'] ?? $installment->installment_status_id;
+                    $allNotDueYet = false;
+                }
+                elseif ($dueDate->greaterThan($today->copy()->addDays(7))) {
+                    $installment->installment_status_id = $statuses['لم يحل'] ?? $installment->installment_status_id;
+                }
+                elseif ($dueDate->lessThan($today->copy()->subDays(7))) {
+                    $installment->installment_status_id = $statuses['متأخر'] ?? $installment->installment_status_id;
+                    $lateCount++;
+                    $anyLate = true;
+                    $allNotDueYet = false;
+                }
             }
-            elseif ($dueDate->lessThan($today->copy()->subDays(7))) {
-                $installment->installment_status_id = $statuses['متأخر'] ?? $installment->installment_status_id;
-                $lateCount++;
-                $anyLate = true;
-                $allNotDueYet = false;
-            }
+
+            $installment->save();
         }
 
-        $installment->save();
+        if ($allPaid) {
+            $contract->contract_status_id = $contractStatuses['منتهي'] ?? $contract->contract_status_id;
+        }
+        elseif ($allNotDueYet) {
+            $contract->contract_status_id = $contractStatuses['جديد'] ?? $contract->contract_status_id;
+        }
+        elseif ($maatherCount > 2) {
+            $contract->contract_status_id = $contractStatuses['غير منتظم'] ?? $contract->contract_status_id;
+        }
+        elseif ($lateCount >= 3) {
+            $contract->contract_status_id = $contractStatuses['متعثر'] ?? $contract->contract_status_id;
+        }
+        elseif ($anyLate) {
+            $contract->contract_status_id = $contractStatuses['متأخر'] ?? $contract->contract_status_id;
+        }
+        else {
+            $contract->contract_status_id = $contractStatuses['منتظم'] ?? $contract->contract_status_id;
+        }
+
+        $contract->save();
     }
-
-    // 🔹 تحديد حالة العقد
-    if ($allPaid) {
-        $contract->contract_status_id = $contractStatuses['منتهي'] ?? $contract->contract_status_id;
-    }
-    elseif ($allNotDueYet) {
-        $contract->contract_status_id = $contractStatuses['جديد'] ?? $contract->contract_status_id;
-    }
-    elseif ($maatherCount > 2) {
-        $contract->contract_status_id = $contractStatuses['غير منتظم'] ?? $contract->contract_status_id;
-    }
-    elseif ($lateCount >= 3) {
-        $contract->contract_status_id = $contractStatuses['متعثر'] ?? $contract->contract_status_id;
-    }
-    elseif ($anyLate) {
-        $contract->contract_status_id = $contractStatuses['متأخر'] ?? $contract->contract_status_id;
-    }
-    else {
-        $contract->contract_status_id = $contractStatuses['منتظم'] ?? $contract->contract_status_id;
-    }
-
-    $contract->save();
-}
-
-
-
-
-
-
 }

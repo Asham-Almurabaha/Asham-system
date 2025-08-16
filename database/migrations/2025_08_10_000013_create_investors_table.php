@@ -23,7 +23,7 @@ class CreateInvestorsTable extends Migration
         });
         // ✅ إضافة مستثمر افتراضي
         DB::table('investors')->insert([
-            'name' => 'مستثمر افتراضي',
+            ['name' => 'مستثمر افتراضي 1',
             'national_id' => '0000000000',
             'phone' => '0500000000',
             'email' => 'default@example.com',
@@ -32,8 +32,18 @@ class CreateInvestorsTable extends Migration
             'title_id' => null,
             'id_card_image' => null,
             'contract_image' => null,
-            'office_share_percentage' => 0,
-            ]);
+            'office_share_percentage' => 25,],
+            ['name' => 'مستثمر افتراضي 2',
+            'national_id' => '0000000000',
+            'phone' => '0500000000',
+            'email' => 'default@example.com',
+            'address' => 'الرياض - السعودية',
+            'nationality_id' => null,
+            'title_id' => null,
+            'id_card_image' => null,
+            'contract_image' => null,
+            'office_share_percentage' => 30,]
+        ]);
             
 
 

@@ -75,4 +75,14 @@ class Contract extends Model
     {
         return $this->hasMany(ContractInstallment::class);
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(InvestorTransaction::class);
+    }
+
+    public function officeTransactions()
+{
+    return $this->hasMany(OfficeTransaction::class, 'contract_id');
+}
 }

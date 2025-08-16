@@ -30,6 +30,7 @@ class CreateTransactionStatusesTable extends Migration
             ['name' => 'سداد قسط', 'transaction_type_id' => 1, 'is_protected' => true],
             ['name' => 'مكاتبة عقد', 'transaction_type_id' => 1, 'is_protected' => true],
             ['name' => 'ربح فرق البيع', 'transaction_type_id' => 1, 'is_protected' => true],
+            ['name' => 'ربح المكتب', 'transaction_type_id' => 1, 'is_protected' => true],
             ['name' => 'سحب سيولة', 'transaction_type_id' => 2, 'is_protected' => true],
             ['name' => 'إضافة سيولة', 'transaction_type_id' => 1, 'is_protected' => true],
             ['name'=> 'إيداع حسابات', 'transaction_type_id' => 1, 'is_protected' => true],

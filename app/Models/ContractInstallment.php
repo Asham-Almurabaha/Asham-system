@@ -32,6 +32,12 @@ class ContractInstallment extends Model
         return $this->belongsTo(Contract::class);
     }
 
+    // علاقة السداد
+    public function transactions()
+    {
+        return $this->hasMany(InvestorTransaction::class, 'installment_id');
+    }
+
     // علاقة حالة القسط
     public function installmentStatus()
     {
@@ -39,8 +45,14 @@ class ContractInstallment extends Model
     }
 
     public function payments()
-{
-    return $this->hasMany(InstallmentPayment::class, 'contract_installment_id');
-}
+    {
+        return $this->hasMany(InstallmentPayment::class, 'contract_installment_id');
+    }
+
+    public function officeTransactions()
+    {
+        return $this->hasMany(OfficeTransaction::class, 'installment_id');
+    }
+
 
 }

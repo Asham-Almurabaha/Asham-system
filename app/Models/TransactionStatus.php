@@ -25,4 +25,15 @@ class TransactionStatus extends Model
     {
         return $this->belongsToMany(Category::class, 'category_transaction_status');
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(InvestorTransaction::class, 'status_id');
+    }
+
+    public function officeTransactions()
+{
+    return $this->hasMany(OfficeTransaction::class, 'status_id');
+}
+
 }

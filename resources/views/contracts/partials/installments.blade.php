@@ -1,3 +1,11 @@
+@php
+    // مجموع نسب المستثمرين
+    $investorsTotalPct = $contract->investors->sum(fn($i) => (float)$i->pivot->share_percentage);
+@endphp
+
+@if($investorsTotalPct == 100)
+
+
 <style>
 .tooltip.wide-tooltip .tooltip-inner {
     max-width: 400px;
@@ -271,3 +279,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
+@endif

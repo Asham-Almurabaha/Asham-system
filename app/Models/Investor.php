@@ -43,4 +43,15 @@ class Investor extends Model
                     ])
                     ->withTimestamps();
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(InvestorTransaction::class);
+    }
+
+    public function officeTransactions()
+{
+    return $this->hasMany(OfficeTransaction::class, 'investor_id');
+}
+
 }
