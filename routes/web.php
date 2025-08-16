@@ -28,26 +28,21 @@ use Illuminate\Support\Facades\Route;
 
 
 
-/*
-|--------------------------------------------------------------------------
-| تغيير اللغة
-|--------------------------------------------------------------------------
-*/
+
 Route::post('/lang/toggle', [LanguageController::class, 'toggle'])->name('lang.toggle');
 Route::get('/lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
-Route::middleware('auth')->group(function () {
 
-/*
-|--------------------------------------------------------------------------
-| الصفحة الرئيسية + الهوم
-|--------------------------------------------------------------------------
-*/
-Route::get('/', function () {
+Route::view('/', 'welcome');
+
+
+Route::get('/d', function () {
     return User::count() == 0
         ? redirect()->route('register')
         : redirect()->route('login');
 });
+
+Route::middleware('auth')->group(function () {
 
 Route::get('/home', function () {
     return Setting::count() > 0
@@ -58,11 +53,7 @@ Route::get('/home', function () {
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 
-/*
-|--------------------------------------------------------------------------
-| الإعدادات (Settings)
-|--------------------------------------------------------------------------
-*/
+
 Route::prefix('settings')->middleware('auth')->group(function () {
     Route::resource('settings', SettingController::class);
     Route::resource('nationalities', NationalityController::class);
@@ -91,40 +82,36 @@ Route::resource('investors', InvestorController::class);
 Route::resource('contracts', ContractController::class);
 
 
-/*
-|--------------------------------------------------------------------------
-| الأقساط (Installments)
-|--------------------------------------------------------------------------
-*/
+
 Route::prefix('installments')->name('installments.')->group(function () {
     // عرض قسط واحد
     Route::get('/{installment}', [InstallmentController::class, 'show'])
         ->name('show');
 
     // تنفيذ السداد
-    Route::post('/{installment}/pay', [InstallmentController::class, 'pay'])
+    Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])
         ->name('pay');
 
+    
+    Route::post('/installments/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])
+    ->name('early_settle');
+    
     // حذف السداد
     Route::delete('/{installment}/payment/{paymentId}', [InstallmentController::class, 'deletePayment'])
         ->name('payment.delete');
 });
 
-Route::post('/contracts/{contract}/early-settle', [ContractController::class, 'earlySettle'])
-    ->name('contracts.early_settle');
 
 
 Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])
     ->name('contracts.investors.store');
-
-
-Route::post('/installments/pay', [ContractInstallmentController::class, 'payInstallment'])
-    ->name('installments.pay');
-
-
-
+    
 Route::post('/installments/defer/{id}', [ContractInstallmentController::class, 'deferAjax']);
 Route::post('/installments/excuse/{id}', [ContractInstallmentController::class, 'excuseAjax']);
+
+
+
+
 /*
 |--------------------------------------------------------------------------
 | البروفايل (Profile)
@@ -136,9 +123,4 @@ Route::post('/installments/excuse/{id}', [ContractInstallmentController::class, 
 });
 
 
-/*
-|--------------------------------------------------------------------------
-| المصادقة
-|--------------------------------------------------------------------------
-*/
 require __DIR__.'/auth.php';

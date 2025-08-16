@@ -219,7 +219,7 @@
 <div class="modal fade" id="earlySettleModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form id="earlySettleForm" action="{{ route('contracts.early_settle', $contract->id) }}" method="POST">
+            <form id="earlySettleForm" action="{{ route('installments.early_settle', $contract->id) }}" method="POST">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">⚡ سداد مبكر</h5>

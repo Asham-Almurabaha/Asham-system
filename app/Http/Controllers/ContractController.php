@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use App\Http\Controllers\ContractInstallmentController;
 
 class ContractController extends Controller
 {
@@ -208,36 +209,7 @@ class ContractController extends Controller
         return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
     }
 
-    public function earlySettle(Request $request, Contract $contract)
-    {
-        $data = $request->validate([
-            'discount_amount' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        try {
-            DB::transaction(function () use ($contract, $data) {
-                // الحصول على ID حالة "مدفوع مبكر"
-                $statusId = ContractStatus::where('name', 'سداد مبكر')->value('id');
-
-                // حفظ الخصم وتغيير الحالة
-                $contract->discount_amount = (float) $data['discount_amount'];
-
-                if ($statusId) {
-                    $contract->contract_status_id = $statusId;
-                }
-
-                $contract->save();
-            });
-
-            return response()->json(['success' => true]);
-        } catch (\Throwable $e) {
-            report($e);
-            return response()->json([
-                'success' => false,
-                'message' => 'تعذّر إتمام السداد المبكر'
-            ], 500);
-        }
-    }
+    
 
     public function storeInvestors(StoreContractInvestorsRequest $request): JsonResponse
     {

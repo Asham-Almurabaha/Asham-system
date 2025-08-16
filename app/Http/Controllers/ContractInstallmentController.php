@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Contract;
 use App\Models\ContractInstallment;
+use App\Models\ContractStatus;
 use App\Models\InstallmentStatus;
 use App\Models\InvestorTransaction;
 use App\Models\OfficeTransaction;
@@ -147,6 +148,117 @@ class ContractInstallmentController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function earlySettle(Request $request, Contract $contract)
+{
+    $data = $request->validate([
+        'discount_amount' => ['required', 'numeric', 'min:0'],
+    ]);
+
+    try {
+        DB::transaction(function () use ($contract, $data) {
+            // أقساط العقد (قفل للتناسق)
+            $installments = ContractInstallment::where('contract_id', $contract->id)
+                ->orderBy('installment_number')
+                ->lockForUpdate()
+                ->get();
+
+            // إجمالي المتبقي نقدًا على الأقساط
+            $totalOutstanding = round($installments->sum(function ($i) {
+                return max(0, round((float)$i->due_amount - (float)$i->payment_amount, 2));
+            }), 2);
+
+            // لو مفيش متبقي مفيش حاجة تتعمل
+            if ($totalOutstanding <= 0) {
+                // حدّث حالة العقد فقط لو حابب (اختياري)
+                $earlyContractStatusId = ContractStatus::whereIn('name', ['سداد مبكر','مدفوع مبكر'])
+                    ->orderByRaw("FIELD(name,'سداد مبكر','مدفوع مبكر')")
+                    ->value('id');
+
+                $contract->discount_amount = 0;
+                if ($earlyContractStatusId) {
+                    $contract->contract_status_id = $earlyContractStatusId;
+                }
+                $contract->save();
+
+                return;
+            }
+
+            // طبّق الخصم بحد أقصى المتبقي
+            $discount = min(round((float)$data['discount_amount'], 2), $totalOutstanding);
+
+            // المبلغ النقدي الفعلي اللي هيتسدد
+            $toPay = round($totalOutstanding - $discount, 2);
+
+            // حالة "مدفوع" للأقساط (بنفضّل "مدفوع كامل" إن وُجد)
+            $paidStatusId = InstallmentStatus::whereIn('name', ['مدفوع كامل','مدفوع مبكر','مدفوع','مسدد'])
+                ->orderByRaw("FIELD(name,'مدفوع كامل','مدفوع مبكر','مدفوع','مسدد')")
+                ->value('id');
+
+            $paymentDate = now()->toDateString();
+
+            // وزّع السداد النقدي على الأقساط
+            if ($toPay > 0) {
+                foreach ($installments as $inst) {
+                    if ($toPay <= 0) break;
+
+                    $remain = max(0, round((float)$inst->due_amount - (float)$inst->payment_amount, 2));
+                    if ($remain <= 0) continue;
+
+                    $pay = min($toPay, $remain);
+
+                    // حدّث القسط
+                    $inst->payment_amount = round((float)$inst->payment_amount + $pay, 2);
+                    if ($pay > 0) {
+                        $inst->payment_date = $paymentDate;
+                    }
+                    if ($paidStatusId && round($inst->payment_amount, 2) >= round($inst->due_amount, 2)) {
+                        $inst->installment_status_id = $paidStatusId;
+                    }
+                    $inst->save();
+
+                    // سجّل توزيع الدفعة حسب السيناريو (تحصيل المتبقّي من ربح المكتب لكل مستثمر إن وجد)
+                    if ($pay > 0) {
+                        $this->logInvestorInstallmentTransactions(
+                            $contract->id,
+                            $inst->id,
+                            $pay,
+                            'سداد قسط',
+                            $paymentDate
+                        );
+                    }
+
+                    $toPay = round($toPay - $pay, 2);
+                }
+            }
+
+            // علّم كل الأقساط كـ "مدفوعة" لأن الخصم بيكمل تسوية المتبقي
+            if ($paidStatusId) {
+                ContractInstallment::where('contract_id', $contract->id)
+                    ->update(['installment_status_id' => $paidStatusId]);
+            }
+
+            // حدّث العقد: خصم + حالة سداد مبكر
+            $earlyContractStatusId = ContractStatus::whereIn('name', ['سداد مبكر','مدفوع مبكر'])
+                ->orderByRaw("FIELD(name,'سداد مبكر','مدفوع مبكر')")
+                ->value('id');
+
+            $contract->discount_amount = $discount; // الـ booted على الموديل هيعيد حساب total_value لو شغّال
+            if ($earlyContractStatusId) {
+                $contract->contract_status_id = $earlyContractStatusId;
+            }
+            $contract->save();
+        });
+
+        return response()->json(['success' => true]);
+    } catch (\Throwable $e) {
+        report($e);
+        return response()->json([
+            'success' => false,
+            'message' => 'تعذّر إتمام السداد المبكر: '.$e->getMessage(),
+        ], 500);
+    }
+}
 
     
     /**
