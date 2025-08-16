@@ -3,12 +3,13 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreContractInvestorsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // أو منطق الصلاحيات عندك
+        return Auth::user()?->can('contracts.investors.store') ?? false;
     }
 
     public function rules(): array

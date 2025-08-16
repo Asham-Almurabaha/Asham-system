@@ -58,7 +58,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 
 
-Route::prefix('settings')->middleware('can:manage-settings')->group(function () {
+Route::prefix('settings')->group(function () {
     Route::resource('settings', SettingController::class);
     Route::resource('nationalities', NationalityController::class);
     Route::resource('titles', TitleController::class);
