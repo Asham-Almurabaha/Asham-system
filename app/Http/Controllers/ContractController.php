@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DTOs\InvestorShare;
 use App\Http\Requests\StoreContractInvestorsRequest;
 use App\Models\Contract;
 use App\Models\ContractInstallment;
@@ -10,13 +11,13 @@ use App\Models\ContractType;
 use App\Models\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentStatus;
-use Illuminate\Http\JsonResponse;
-use App\DTOs\InvestorShare;
 use App\Models\InstallmentType;
 use App\Models\Investor;
 use App\Models\InvestorTransaction;
+use App\Models\OfficeTransaction;
 use App\Models\TransactionStatus;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -68,90 +69,115 @@ class ContractController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $data = $this->validateContract($request, false);
-        $this->backfillCalculatedFields($data, $request);
+{
+    $data = $this->validateContract($request, false);
+    $this->backfillCalculatedFields($data, $request);
 
-        $data['contract_number'] = date('Ymd') . rand(10, 99);
+    $data['contract_number'] = date('Ymd') . rand(10, 99);
 
-        $investors = $this->normalizeInvestors($request->input('investors', []));
+    $investors = $this->normalizeInvestors($request->input('investors', []));
 
-        $data['contract_image']           = $this->putImage($request, 'contract_image',           self::DIR_CONTRACT_MAIN);
-        $data['contract_customer_image']  = $this->putImage($request, 'contract_customer_image',  self::DIR_CONTRACT_CUSTOMERS);
-        $data['contract_guarantor_image'] = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS);
+    $data['contract_image']           = $this->putImage($request, 'contract_image',           self::DIR_CONTRACT_MAIN);
+    $data['contract_customer_image']  = $this->putImage($request, 'contract_customer_image',  self::DIR_CONTRACT_CUSTOMERS);
+    $data['contract_guarantor_image'] = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS);
 
-        try {
-            DB::transaction(function () use ($data, $investors, $request) {
-                unset($data['contract_status_id']);
+    try {
+        DB::transaction(function () use ($data, $investors, $request) {
+            unset($data['contract_status_id']);
 
-                $contract = Contract::create($data);
+            $contract = Contract::create($data);
 
-                $statuses = InstallmentStatus::pluck('id', 'name');
+            $statuses = InstallmentStatus::pluck('id', 'name');
 
-                // ✅ توليد الأقساط بأمان
-                $totalValue       = (float) $data['total_value'];
-                $installmentValue = (float) $request->installment_value;
+            // ✅ توليد الأقساط بأمان
+            $totalValue       = (float) $data['total_value'];
+            $installmentValue = (float) $request->installment_value;
 
-                $baseDate = $request->first_installment_date
-                    ? Carbon::parse($request->first_installment_date)
-                    : Carbon::parse($data['start_date'] ?? now());
+            $baseDate = $request->first_installment_date
+                ? Carbon::parse($request->first_installment_date)
+                : Carbon::parse($data['start_date'] ?? now());
 
-                if ($installmentValue > 0.0) {
-                    $installmentsCount = (int) floor($totalValue / $installmentValue);
-                    $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
+            if ($installmentValue > 0.0) {
+                $installmentsCount = (int) floor($totalValue / $installmentValue);
+                $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
 
-                    for ($i = 1; $i <= $installmentsCount; $i++) {
-                        $dueDate = $baseDate->copy()->addMonths($i - 1);
-                        ContractInstallment::create([
-                            'contract_id'           => $contract->id,
-                            'installment_number'    => $i,
-                            'due_date'              => $dueDate,
-                            'due_amount'            => $installmentValue,
-                            'payment_amount'        => 0,
-                            'installment_status_id' => $statuses['لم يحل'] ?? null,
-                        ]);
-                    }
-
-                    if ($remaining > 0) {
-                        $dueDate = $baseDate->copy()->addMonths($installmentsCount);
-                        ContractInstallment::create([
-                            'contract_id'           => $contract->id,
-                            'installment_number'    => $installmentsCount + 1,
-                            'due_date'              => $dueDate,
-                            'due_amount'            => $remaining,
-                            'payment_amount'        => 0,
-                            'installment_status_id' => $statuses['لم يحل'] ?? null,
-                        ]);
-                    }
-                } elseif ($totalValue > 0.0) {
-                    // لو القسط = 0 لكن في إجمالي، اعمل قسط واحد بكل المبلغ
+                for ($i = 1; $i <= $installmentsCount; $i++) {
+                    $dueDate = $baseDate->copy()->addMonths($i - 1);
                     ContractInstallment::create([
                         'contract_id'           => $contract->id,
-                        'installment_number'    => 1,
-                        'due_date'              => $baseDate,
-                        'due_amount'            => $totalValue,
+                        'installment_number'    => $i,
+                        'due_date'              => $dueDate,
+                        'due_amount'            => $installmentValue,
                         'payment_amount'        => 0,
                         'installment_status_id' => $statuses['لم يحل'] ?? null,
                     ]);
                 }
 
-                $this->syncInvestorsAndRecalcStatus($contract, $investors);
-
-                // ✅ تسجيل العملية لو فيه مستثمرين
-                if (!empty($investors)) {
-                    $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
+                if ($remaining > 0) {
+                    $dueDate = $baseDate->copy()->addMonths($installmentsCount);
+                    ContractInstallment::create([
+                        'contract_id'           => $contract->id,
+                        'installment_number'    => $installmentsCount + 1,
+                        'due_date'              => $dueDate,
+                        'due_amount'            => $remaining,
+                        'payment_amount'        => 0,
+                        'installment_status_id' => $statuses['لم يحل'] ?? null,
+                    ]);
                 }
-            });
+            } elseif ($totalValue > 0.0) {
+                // لو القسط = 0 لكن في إجمالي، اعمل قسط واحد بكل المبلغ
+                ContractInstallment::create([
+                    'contract_id'           => $contract->id,
+                    'installment_number'    => 1,
+                    'due_date'              => $baseDate,
+                    'due_amount'            => $totalValue,
+                    'payment_amount'        => 0,
+                    'installment_status_id' => $statuses['لم يحل'] ?? null,
+                ]);
+            }
 
-        } catch (\Throwable $e) {
-            report($e);
-            return back()
-                ->withInput()
-                ->withErrors(['general' => 'خطأ أثناء إنشاء العقد: ' . $e->getMessage()]);
-        }
+            // ✅ ربط المستثمرين + تحديث حالة العقد
+            $this->syncInvestorsAndRecalcStatus($contract, $investors);
 
-        return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
+            // ✅ تسجيل عملية للمستثمرين لو فيه مستثمرين
+            if (!empty($investors)) {
+                $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
+            }
+
+            // ✅ تسجيل "ربح فرق البيع" في معاملات المكتب
+            // الفرق = سعر البيع - سعر الشراء (لو > 0 فقط)
+            $salePrice     = (float) ($data['sale_price'] ?? 0);
+            $purchasePrice = (float) ($data['purchase_price'] ?? 0);
+            $diff          = round($salePrice - $purchasePrice, 2);
+
+            if ($diff > 0) {
+                $statusId = TransactionStatus::where('name', 'ربح فرق البيع')->value('id');
+
+                if ($statusId) {
+                    OfficeTransaction::create([
+                        'investor_id'      => null, // ليس مرتبطًا بمستثمر محدد
+                        'contract_id'      => $contract->id,
+                        'installment_id'   => null, // ليس مرتبطًا بقسط
+                        'status_id'        => $statusId,
+                        'amount'           => $diff,
+                        'transaction_date' => now(),
+                        'notes'            => "ربح فرق البيع للعقد رقم {$contract->contract_number}",
+                    ]);
+                }
+                // لو الحالة مش موجودة، بنتجاهل التسجيل بدون فشل
+            }
+        });
+
+    } catch (\Throwable $e) {
+        report($e);
+        return back()
+            ->withInput()
+            ->withErrors(['general' => 'خطأ أثناء إنشاء العقد: ' . $e->getMessage()]);
     }
+
+    return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
+}
+
 
     public function storeInvestors(StoreContractInvestorsRequest $request): JsonResponse
     {
