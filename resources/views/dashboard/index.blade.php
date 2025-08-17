@@ -78,6 +78,66 @@
         </form>
     </div>
 
+    {{-- ====== حسابات تفصيلية للمكتب (ربح المكتب/فرق البيع/المكاتبة) ====== --}}
+    @php
+        use Illuminate\Support\Facades\DB;
+        $from = request('from'); $to = request('to');
+
+        $statusMap = \App\Models\TransactionStatus::whereIn('name', ['ربح المكتب','ربح فرق البيع','المكاتبة'])
+            ->pluck('id','name');
+
+        $officeProfitId = $statusMap['ربح المكتب']    ?? null;
+        $saleDiffId     = $statusMap['ربح فرق البيع'] ?? null;
+        $mukatabaId     = $statusMap['المكاتبة']      ?? null;
+
+        $baseOT = \App\Models\OfficeTransaction::query();
+        if ($from) $baseOT->whereDate('transaction_date', '>=', $from);
+        if ($to)   $baseOT->whereDate('transaction_date', '<=', $to);
+
+        $officeProfitTotal = $officeProfitId ? (clone $baseOT)->where('status_id', $officeProfitId)->sum('amount') : 0.0;
+        $saleDiffTotal     = $saleDiffId     ? (clone $baseOT)->where('status_id', $saleDiffId)->sum('amount') : 0.0;
+        $mukatabaTotal     = $mukatabaId     ? (clone $baseOT)->where('status_id', $mukatabaId)->sum('amount') : 0.0;
+
+        // أحدث 10 معاملات مكتب
+        $officeRecent = (clone $baseOT)->with('investor')
+            ->orderByDesc('transaction_date')->orderByDesc('id')
+            ->limit(10)->get();
+
+        // سلاسل شهرية لربح المكتب + فرق البيع
+        $monthRows = (clone $baseOT)
+            ->when($officeProfitId || $saleDiffId, function($q) use($officeProfitId, $saleDiffId){
+                $ids = array_values(array_filter([$officeProfitId, $saleDiffId], fn($v)=>!is_null($v)));
+                return $q->whereIn('status_id', $ids);
+            })
+            ->selectRaw("DATE_FORMAT(transaction_date, '%Y-%m') as ym, status_id, SUM(amount) as total")
+            ->groupBy('ym','status_id')
+            ->orderBy('ym')
+            ->get();
+
+        $months = $monthRows->pluck('ym')->unique()->values()->all();
+        $seriesOffice = []; $seriesSaleDiff = [];
+        foreach ($months as $m) {
+            $rowOffice = $monthRows->firstWhere(fn($r)=>$r->ym===$m && (int)$r->status_id === (int)$officeProfitId);
+            $rowSale   = $monthRows->firstWhere(fn($r)=>$r->ym===$m && (int)$r->status_id === (int)$saleDiffId);
+            $seriesOffice[] = (float)($rowOffice->total ?? 0);
+            $seriesSaleDiff[] = (float)($rowSale->total ?? 0);
+        }
+
+        // أعلى 10 مستثمرين في ربح المكتب
+        $topOfficeByInvestor = $officeProfitId
+            ? (clone $baseOT)->where('status_id', $officeProfitId)
+                ->selectRaw('investor_id, SUM(amount) as total')
+                ->groupBy('investor_id')
+                ->orderByDesc('total')->limit(10)->get()
+            : collect();
+
+        $invNames = \App\Models\Investor::whereIn('id', $topOfficeByInvestor->pluck('investor_id')->filter()->values())
+            ->pluck('name','id');
+
+        $topOfficeLabels = $topOfficeByInvestor->map(fn($r)=> $invNames[$r->investor_id] ?? ('#'.$r->investor_id));
+        $topOfficeData   = $topOfficeByInvestor->pluck('total')->map(fn($v)=> (float)$v);
+    @endphp
+
     {{-- ====== HERO ====== --}}
     <div class="dashboard-hero mb-3">
         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
@@ -104,6 +164,18 @@
                 <span class="badge-chip" data-bs-toggle="tooltip" title="الصافي = داخل − خارج">
                     <i class="bi bi-building me-1"></i> صافي سيولة المكتب: {{ number_format(($officeTotals->net ?? 0), 2) }}
                 </span>
+                {{-- إضافات المكتب --}}
+                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي ربح المكتب ضمن الفترة">
+                    <i class="bi bi-briefcase me-1"></i> ربح المكتب: {{ number_format($officeProfitTotal, 2) }}
+                </span>
+                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي ربح فرق البيع ضمن الفترة">
+                    <i class="bi bi-percent me-1"></i> فرق البيع: {{ number_format($saleDiffTotal, 2) }}
+                </span>
+                @if(($mukatabaId ?? null))
+                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي المكاتبة ضمن الفترة">
+                    <i class="bi bi-journal-text me-1"></i> المكاتبة: {{ number_format($mukatabaTotal, 2) }}
+                </span>
+                @endif
             </div>
         </div>
     </div>
@@ -115,7 +187,6 @@
         $invCls  = $invNet >= 0 ? 'text-pos' : 'text-neg';
         $offCls  = $offNet >= 0 ? 'text-pos' : 'text-neg';
 
-        // تقديرات آمنة لو مش متوفرة من الكنترولر:
         $kpi = (object) [
             'entries_count' => (int)($entriesCount ?? ($contractsTotal ?? 0)),
             'avg_amount'    => (float)($avgAmount ?? 0),
@@ -166,7 +237,7 @@
         </div>
     </div>
 
-    {{-- ====== الحالات + توزيع (كما هو) ====== --}}
+    {{-- ====== توزيع حالات العقود + مخططها ====== --}}
     <div class="row g-3 mt-1">
         <div class="col-lg-6">
             <div class="section-card card h-100 border-0">
@@ -217,13 +288,139 @@
         </div>
     </div>
 
-    {{-- ====== تحليلات إضافية ====== --}}
+    {{-- ====== ملخص المكتب التفصيلي ====== --}}
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="section-card card border-0">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>ملخص معاملات المكتب</span>
+                    <span class="text-muted small">
+                        <i class="bi bi-funnel"></i>
+                        نطاق: {{ $from ?: 'الكل' }} — {{ $to ?: 'الكل' }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <div class="kpi-card p-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="kpi-icon"><i class="bi bi-briefcase fs-5 text-primary"></i></div>
+                                    <div class="fw-bold text-muted">إجمالي ربح المكتب</div>
+                                </div>
+                                <div class="kpi-value fw-bold">{{ number_format($officeProfitTotal, 2) }}</div>
+                                <div class="small text-muted mt-2">تحصيلات حالة "ربح المكتب"</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="kpi-card p-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="kpi-icon"><i class="bi bi-percent fs-5 text-primary"></i></div>
+                                    <div class="fw-bold text-muted">إجمالي ربح فرق البيع</div>
+                                </div>
+                                <div class="kpi-value fw-bold">{{ number_format($saleDiffTotal, 2) }}</div>
+                                <div class="small text-muted mt-2">حالة "ربح فرق البيع"</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="kpi-card p-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="kpi-icon"><i class="bi bi-journal-text fs-5 text-primary"></i></div>
+                                    <div class="fw-bold text-muted">إجمالي المكاتبة</div>
+                                </div>
+                                <div class="kpi-value fw-bold">{{ number_format($mukatabaTotal, 2) }}</div>
+                                <div class="small text-muted mt-2">إن وُجدت حالة "المكاتبة"</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-lg-6">
+                            <div class="section-card card border-0 chart-card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>شهريًا: ربح المكتب مقابل فرق البيع</span>
+                                    <span class="small text-muted"><i class="bi bi-bar-chart"></i></span>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="officeMonthlyChart" height="240"
+                                        data-months='@json($months)'
+                                        data-office='@json($seriesOffice)'
+                                        data-sale='@json($seriesSaleDiff)'></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="section-card card border-0 chart-card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>أعلى المستثمرين مساهمة في ربح المكتب</span>
+                                    <span class="small text-muted"><i class="bi bi-graph-up-arrow"></i></span>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="officeTopInvestorsChart" height="240"
+                                        data-labels='@json($topOfficeLabels)'
+                                        data-data='@json($topOfficeData)'></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            <div class="section-card card border-0">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>أحدث 10 معاملات مكتب</span>
+                                    <span class="small text-muted"><i class="bi bi-clock"></i></span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead>
+                                                <tr class="text-center">
+                                                    <th class="text-start">التاريخ</th>
+                                                    <th>الحالة</th>
+                                                    <th>المستثمر</th>
+                                                    <th>العقد</th>
+                                                    <th>القسط</th>
+                                                    <th>المبلغ</th>
+                                                    <th class="text-start">ملاحظات</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($officeRecent as $r)
+                                                    <tr class="text-center">
+                                                        <td class="text-start">{{ \Illuminate\Support\Carbon::parse($r->transaction_date)->format('Y-m-d') }}</td>
+                                                        <td>
+                                                            {{ optional(\App\Models\TransactionStatus::find($r->status_id))->name ?? '-' }}
+                                                        </td>
+                                                        <td>{{ optional($r->investor)->name ?? '—' }}</td>
+                                                        <td>{{ $r->contract_id ? '#'.$r->contract_id : '—' }}</td>
+                                                        <td>{{ $r->installment_id ? '#'.$r->installment_id : '—' }}</td>
+                                                        <td class="fw-semibold">{{ number_format((float)$r->amount, 2) }}</td>
+                                                        <td class="text-start">{{ $r->notes }}</td>
+                                                    </tr>
+                                                @empty
+                                                    <tr><td colspan="7" class="text-muted text-center py-4">لا توجد معاملات مكتب حديثة.</td></tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="card-footer small text-muted">
+                                    * الجدول يعرض آخر 10 قيود على معاملات المكتب ضمن نطاق التاريخ المحدد.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div> {{-- /card-body --}}
+            </div>
+        </div>
+    </div>
+
+    {{-- ====== تحليلات إضافية (كما كانت) ====== --}}
     @php
-        // بيانات اختيارية آمنة للرسم
         $ts = (object)($timeSeries ?? ['labels'=>[], 'in'=>[], 'out'=>[], 'net'=>[]]);
         $ms = (object)($monthlySeries ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
         $dist = (object)($distribution ?? ['labels'=>['بنوك','خزن'], 'data'=>[(float)($banksTotal ?? 0), (float)($safesTotal ?? 0)]]);
-        // أفضل الأرصدة من ملخص البنوك والخزن (أعلى 7)
         $banksColl = collect($bankAccountsSummary ?? []);
         $safesColl = collect($safesSummary ?? []);
         $topBalances = $banksColl->map(function($b){
@@ -254,7 +451,7 @@
         </div>
         <div class="col-xl-6">
             <div class="section-card card border-0 chart-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content بين align-items-center">
                     <span>التدفق الشهري (داخل/خارج)</span>
                     <span class="small text-muted"><i class="bi bi-bar-chart-steps" data-bs-toggle="tooltip"
                         title="قِيَم مكدّسة لكل شهر"></i></span>
@@ -578,6 +775,51 @@ document.addEventListener('DOMContentLoaded', function(){
                 indexAxis: 'y',
                 responsive:true,
                 plugins:{ legend:{ display:false }, tooltip:{ rtl:true } },
+                scales:{ x:{ beginAtZero:true } }
+            }
+        });
+    })();
+
+    // Line: Office profit vs Sale difference (monthly)
+    (function(){
+        const el = document.getElementById('officeMonthlyChart');
+        if (!el) return;
+        const labels = JSON.parse(el.dataset.months || '[]');
+        const office = JSON.parse(el.dataset.office || '[]');
+        const sale   = JSON.parse(el.dataset.sale || '[]');
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات شهرية للمكتب.</div>'; return; }
+        new Chart(el, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'ربح المكتب', data: office, tension:.3, borderWidth:2, fill:false },
+                    { label: 'فرق البيع',  data: sale,   tension:.3, borderWidth:2, fill:false }
+                ]
+            },
+            options: {
+                responsive:true,
+                plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } },
+                interaction:{ mode:'index', intersect:false },
+                scales:{ y:{ beginAtZero:true } }
+            }
+        });
+    })();
+
+    // Horizontal Bar: Top Investors by office profit
+    (function(){
+        const el = document.getElementById('officeTopInvestorsChart');
+        if (!el) return;
+        const labels = JSON.parse(el.dataset.labels || '[]');
+        const data   = JSON.parse(el.dataset.data   || '[]');
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات كافية.</div>'; return; }
+        new Chart(el, {
+            type: 'bar',
+            data: { labels, datasets: [{ label:'ربح المكتب', data, borderWidth:1 }] },
+            options: {
+                indexAxis: 'y',
+                responsive:true,
+                plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } },
                 scales:{ x:{ beginAtZero:true } }
             }
         });

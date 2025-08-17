@@ -3,32 +3,28 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
 
 class StoreContractInvestorsRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Auth::user()?->can('contracts.investors.store') ?? false;
+        // لو عندك صلاحيات محددة استخدم Gate::allows(..) هنا، وإلا اسمح طالما المستخدم داخل
+        return auth()->check();
     }
 
     public function rules(): array
     {
         return [
-            'contract_id' => ['required','exists:contracts,id'],
-            'investors'   => ['required','array','min:1'],
+            'contract_id' => ['required','integer','exists:contracts,id'],
 
-            'investors.*.id'               => ['required','distinct','exists:investors,id'],
-            'investors.*.share_percentage' => ['required','numeric','min:0.01','max:100'],
-            // هنحسب share_value في السيرفر، نخليها اختيارية لو جاية من الفرونت
-            'investors.*.share_value'      => ['nullable','numeric','min:0.01'],
-        ];
-    }
+            'investors' => ['required','array','min:1'],
+            'investors.*.id' => ['required','integer','distinct','exists:investors,id'],
 
-    public function messages(): array
-    {
-        return [
-            'investors.*.id.distinct' => 'لا يمكن اختيار نفس المستثمر أكثر من مرة.',
+            // المتصفح بيبعته صحيح، والسيرفر بيعيد حساب القيمة.. بس خلّيه مطلوب وصحيح
+            'investors.*.share_percentage' => ['required','numeric','min:1','max:100'],
+
+            // لو بتبعته مع الطلب خلّيه اختياري وصحيح
+            'investors.*.share_value' => ['nullable','numeric','min:0'],
         ];
     }
 }

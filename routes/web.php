@@ -18,7 +18,7 @@ use App\Http\Controllers\Setting\InstallmentStatusController;
 use App\Http\Controllers\Setting\InstallmentTypeController;
 use App\Http\Controllers\Setting\NationalityController;
 use App\Http\Controllers\Setting\ProductController;
-use App\Http\Controllers\Setting\ProductEntryController;
+use App\Http\Controllers\Setting\ProductTransactionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\TitleController;
 use App\Http\Controllers\Setting\TransactionStatusController;
@@ -53,11 +53,7 @@ Route::get('/home', function () {
         : redirect()->route('settings.create');
 })->middleware('auth')->name('home');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware('can:view-dashboard')
-    ->name('dashboard');
-
-
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('can:view-dashboard')->name('dashboard');
 
 Route::prefix('settings')->group(function () {
     Route::resource('settings', SettingController::class);
@@ -68,18 +64,17 @@ Route::prefix('settings')->group(function () {
     Route::resource('installment_statuses', InstallmentStatusController::class);
     Route::resource('installment_types', InstallmentTypeController::class);
     Route::resource('products', ProductController::class);
-    Route::resource('product_entries', ProductEntryController::class);
+    Route::resource('product_entries', ProductTransactionController::class);
     Route::resource('transaction_types', TransactionTypeController::class);
     Route::resource('transaction_statuses', TransactionStatusController::class);
     Route::resource('categories', CategoryController::class);
 });
 
-
 Route::resource('customers', CustomerController::class);
 Route::resource('guarantors', GuarantorController::class);
 Route::resource('investors', InvestorController::class);
 Route::resource('contracts', ContractController::class);
-Route::resource('investor-transactions', InvestorTransactionController::class)->only(['index','create','store']);
+Route::resource('investor-transactions', InvestorTransactionController::class);
 
 Route::prefix('ledger')->name('ledger.')->group(function () {
     Route::get('/',            [LedgerController::class, 'index'])->name('index');
@@ -99,28 +94,19 @@ Route::prefix('ledger')->name('ledger.')->group(function () {
 
 
 Route::prefix('installments')->name('installments.')->group(function () {
-    Route::get('/{installment}', [InstallmentController::class, 'show'])
-        ->name('show');
+    Route::get('/{installment}', [InstallmentController::class, 'show'])->name('show');
 
-    Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])
-        ->name('pay');
+    Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
     
-    Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])
-    ->name('early_settle');
+    Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
     
-    Route::delete('/{installment}/payment/{paymentId}', [InstallmentController::class, 'deletePayment'])
-        ->name('payment.delete');
+    Route::delete('/{installment}/payment/{paymentId}', [InstallmentController::class, 'deletePayment'])->name('payment.delete');
 });
 
-
-
-Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])
-    ->name('contracts.investors.store');
+Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');
     
 Route::post('/installments/defer/{id}', [ContractInstallmentController::class, 'deferAjax']);
 Route::post('/installments/excuse/{id}', [ContractInstallmentController::class, 'excuseAjax']);
-
-
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

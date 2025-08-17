@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Setting;
 use App\Http\Controllers\Controller;
 
 use App\Models\Product;
-use App\Models\ProductEntry;
+use App\Models\ProductTransaction;
 use Illuminate\Http\Request;
 
-class ProductEntryController extends Controller
+class ProductTransactionController extends Controller
 {
     public function index()
     {
-        $entries = ProductEntry::with('product')->get();
+        $entries = ProductTransaction::with('product')->get();
         return view('product_entries.index', compact('entries'));
     }
 
@@ -30,18 +30,18 @@ class ProductEntryController extends Controller
             'entry_date'     => 'required|date',
         ]);
 
-        ProductEntry::create($request->all());
+        ProductTransaction::create($request->all());
 
         return redirect()->route('product_entries.index')->with('success', 'تم إضافة الإدخال بنجاح');
     }
 
-    public function edit(ProductEntry $productEntry)
+    public function edit(ProductTransaction $productEntry)
     {
         $products = Product::all();
         return view('product_entries.edit', compact('productEntry', 'products'));
     }
 
-    public function update(Request $request, ProductEntry $productEntry)
+    public function update(Request $request, ProductTransaction $productEntry)
     {
         $request->validate([
             'product_id'     => 'required|exists:products,id',
@@ -55,7 +55,7 @@ class ProductEntryController extends Controller
         return redirect()->route('product_entries.index')->with('success', 'تم تحديث الإدخال بنجاح');
     }
 
-    public function destroy(ProductEntry $productEntry)
+    public function destroy(ProductTransaction $productEntry)
     {
         $productEntry->delete();
         return redirect()->route('product_entries.index')->with('success', 'تم حذف الإدخال بنجاح');

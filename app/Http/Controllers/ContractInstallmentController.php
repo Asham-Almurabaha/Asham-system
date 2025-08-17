@@ -7,8 +7,10 @@ use App\Models\ContractInstallment;
 use App\Models\ContractStatus;
 use App\Models\InstallmentStatus;
 use App\Models\InvestorTransaction;
+use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;
 use App\Models\TransactionStatus;
+use App\Models\TransactionType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -44,29 +46,12 @@ class ContractInstallmentController extends Controller
             'due_date'              => $validated['due_date'],
             'due_amount'            => $validated['due_amount'],
             'payment_amount'        => 0,
-            'installment_status_id' => InstallmentStatus::where('name', 'معلق')->value('id'), // الحالة الافتراضية
+            'installment_status_id' => InstallmentStatus::where('name', 'لم يحل')->value('id'), // الحالة الافتراضية
         ]);
 
         return redirect()->back()->with('success', '✅ تم إضافة القسط بنجاح.');
     }
-
-    /**
-     * تعديل بيانات القسط
-     */
-    public function update(Request $request, $installmentId)
-    {
-        $installment = ContractInstallment::findOrFail($installmentId);
-
-        $validated = $request->validate([
-            'due_date'    => 'required|date',
-            'due_amount'  => 'required|numeric|min:0.01',
-        ]);
-
-        $installment->update($validated);
-
-        return redirect()->back()->with('success', '✏️ تم تعديل بيانات القسط بنجاح.');
-    }
-
+    
     /**
      * تسجيل سداد قسط
      */
@@ -149,117 +134,119 @@ class ContractInstallmentController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * تسجيل السداد المبكر
+     */
     public function earlySettle(Request $request, Contract $contract)
-{
-    $data = $request->validate([
-        'discount_amount' => ['required', 'numeric', 'min:0'],
-    ]);
+    {
+        $data = $request->validate([
+            'discount_amount' => ['required', 'numeric', 'min:0'],
+        ]);
 
-    try {
-        DB::transaction(function () use ($contract, $data) {
-            // أقساط العقد (قفل للتناسق)
-            $installments = ContractInstallment::where('contract_id', $contract->id)
-                ->orderBy('installment_number')
-                ->lockForUpdate()
-                ->get();
+        try {
+            DB::transaction(function () use ($contract, $data) {
+                // أقساط العقد (قفل للتناسق)
+                $installments = ContractInstallment::where('contract_id', $contract->id)
+                    ->orderBy('installment_number')
+                    ->lockForUpdate()
+                    ->get();
 
-            // إجمالي المتبقي نقدًا على الأقساط
-            $totalOutstanding = round($installments->sum(function ($i) {
-                return max(0, round((float)$i->due_amount - (float)$i->payment_amount, 2));
-            }), 2);
+                // إجمالي المتبقي نقدًا على الأقساط
+                $totalOutstanding = round($installments->sum(function ($i) {
+                    return max(0, round((float)$i->due_amount - (float)$i->payment_amount, 2));
+                }), 2);
 
-            // لو مفيش متبقي مفيش حاجة تتعمل
-            if ($totalOutstanding <= 0) {
-                // حدّث حالة العقد فقط لو حابب (اختياري)
+                // لو مفيش متبقي مفيش حاجة تتعمل
+                if ($totalOutstanding <= 0) {
+                    // حدّث حالة العقد فقط لو حابب (اختياري)
+                    $earlyContractStatusId = ContractStatus::whereIn('name', ['سداد مبكر','مدفوع مبكر'])
+                        ->orderByRaw("FIELD(name,'سداد مبكر','مدفوع مبكر')")
+                        ->value('id');
+
+                    $contract->discount_amount = 0;
+                    if ($earlyContractStatusId) {
+                        $contract->contract_status_id = $earlyContractStatusId;
+                    }
+                    $contract->save();
+
+                    return;
+                }
+
+                // طبّق الخصم بحد أقصى المتبقي
+                $discount = min(round((float)$data['discount_amount'], 2), $totalOutstanding);
+
+                // المبلغ النقدي الفعلي اللي هيتسدد
+                $toPay = round($totalOutstanding - $discount, 2);
+
+                // حالة "مدفوع" للأقساط (بنفضّل "مدفوع كامل" إن وُجد)
+                $paidStatusId = InstallmentStatus::whereIn('name', ['مدفوع كامل','مدفوع مبكر','مدفوع','مسدد'])
+                    ->orderByRaw("FIELD(name,'مدفوع كامل','مدفوع مبكر','مدفوع','مسدد')")
+                    ->value('id');
+
+                $paymentDate = now()->toDateString();
+
+                // وزّع السداد النقدي على الأقساط
+                if ($toPay > 0) {
+                    foreach ($installments as $inst) {
+                        if ($toPay <= 0) break;
+
+                        $remain = max(0, round((float)$inst->due_amount - (float)$inst->payment_amount, 2));
+                        if ($remain <= 0) continue;
+
+                        $pay = min($toPay, $remain);
+
+                        // حدّث القسط
+                        $inst->payment_amount = round((float)$inst->payment_amount + $pay, 2);
+                        if ($pay > 0) {
+                            $inst->payment_date = $paymentDate;
+                        }
+                        if ($paidStatusId && round($inst->payment_amount, 2) >= round($inst->due_amount, 2)) {
+                            $inst->installment_status_id = $paidStatusId;
+                        }
+                        $inst->save();
+
+                        // سجّل توزيع الدفعة حسب السيناريو (تحصيل المتبقّي من ربح المكتب لكل مستثمر إن وجد)
+                        if ($pay > 0) {
+                            $this->logInvestorInstallmentTransactions(
+                                $contract->id,
+                                $inst->id,
+                                $pay,
+                                'سداد قسط',
+                                $paymentDate
+                            );
+                        }
+
+                        $toPay = round($toPay - $pay, 2);
+                    }
+                }
+
+                // علّم كل الأقساط كـ "مدفوعة" لأن الخصم بيكمل تسوية المتبقي
+                if ($paidStatusId) {
+                    ContractInstallment::where('contract_id', $contract->id)
+                        ->update(['installment_status_id' => $paidStatusId]);
+                }
+
+                // حدّث العقد: خصم + حالة سداد مبكر
                 $earlyContractStatusId = ContractStatus::whereIn('name', ['سداد مبكر','مدفوع مبكر'])
                     ->orderByRaw("FIELD(name,'سداد مبكر','مدفوع مبكر')")
                     ->value('id');
 
-                $contract->discount_amount = 0;
+                $contract->discount_amount = $discount; // الـ booted على الموديل هيعيد حساب total_value لو شغّال
                 if ($earlyContractStatusId) {
                     $contract->contract_status_id = $earlyContractStatusId;
                 }
                 $contract->save();
+            });
 
-                return;
-            }
-
-            // طبّق الخصم بحد أقصى المتبقي
-            $discount = min(round((float)$data['discount_amount'], 2), $totalOutstanding);
-
-            // المبلغ النقدي الفعلي اللي هيتسدد
-            $toPay = round($totalOutstanding - $discount, 2);
-
-            // حالة "مدفوع" للأقساط (بنفضّل "مدفوع كامل" إن وُجد)
-            $paidStatusId = InstallmentStatus::whereIn('name', ['مدفوع كامل','مدفوع مبكر','مدفوع','مسدد'])
-                ->orderByRaw("FIELD(name,'مدفوع كامل','مدفوع مبكر','مدفوع','مسدد')")
-                ->value('id');
-
-            $paymentDate = now()->toDateString();
-
-            // وزّع السداد النقدي على الأقساط
-            if ($toPay > 0) {
-                foreach ($installments as $inst) {
-                    if ($toPay <= 0) break;
-
-                    $remain = max(0, round((float)$inst->due_amount - (float)$inst->payment_amount, 2));
-                    if ($remain <= 0) continue;
-
-                    $pay = min($toPay, $remain);
-
-                    // حدّث القسط
-                    $inst->payment_amount = round((float)$inst->payment_amount + $pay, 2);
-                    if ($pay > 0) {
-                        $inst->payment_date = $paymentDate;
-                    }
-                    if ($paidStatusId && round($inst->payment_amount, 2) >= round($inst->due_amount, 2)) {
-                        $inst->installment_status_id = $paidStatusId;
-                    }
-                    $inst->save();
-
-                    // سجّل توزيع الدفعة حسب السيناريو (تحصيل المتبقّي من ربح المكتب لكل مستثمر إن وجد)
-                    if ($pay > 0) {
-                        $this->logInvestorInstallmentTransactions(
-                            $contract->id,
-                            $inst->id,
-                            $pay,
-                            'سداد قسط',
-                            $paymentDate
-                        );
-                    }
-
-                    $toPay = round($toPay - $pay, 2);
-                }
-            }
-
-            // علّم كل الأقساط كـ "مدفوعة" لأن الخصم بيكمل تسوية المتبقي
-            if ($paidStatusId) {
-                ContractInstallment::where('contract_id', $contract->id)
-                    ->update(['installment_status_id' => $paidStatusId]);
-            }
-
-            // حدّث العقد: خصم + حالة سداد مبكر
-            $earlyContractStatusId = ContractStatus::whereIn('name', ['سداد مبكر','مدفوع مبكر'])
-                ->orderByRaw("FIELD(name,'سداد مبكر','مدفوع مبكر')")
-                ->value('id');
-
-            $contract->discount_amount = $discount; // الـ booted على الموديل هيعيد حساب total_value لو شغّال
-            if ($earlyContractStatusId) {
-                $contract->contract_status_id = $earlyContractStatusId;
-            }
-            $contract->save();
-        });
-
-        return response()->json(['success' => true]);
-    } catch (\Throwable $e) {
-        report($e);
-        return response()->json([
-            'success' => false,
-            'message' => 'تعذّر إتمام السداد المبكر: '.$e->getMessage(),
-        ], 500);
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذّر إتمام السداد المبكر: '.$e->getMessage(),
+            ], 500);
+        }
     }
-}
-
     
     /**
      * تحديث حالة القسط — يشتغل فقط لو نسب المستثمرين = 100%
@@ -349,6 +336,23 @@ class ContractInstallmentController extends Controller
     $installment       = ContractInstallment::find($installmentId);
     $installmentNumber = $installment ? $installment->installment_number : null;
     $now               = $transactionDate ?: now();
+    $entryDate         = $now instanceof Carbon
+        ? $now->toDateString()
+        : Carbon::parse($now)->toDateString();
+
+    // دالة محلّية صغيرة لتحديد transaction_type_id من اسم الحالة مع مرادفات
+    $resolveTypeId = function (string $main, array $alts = []) {
+        $id = TransactionType::where('name', $main)->value('id');
+        if ($id) return (int) $id;
+        foreach ($alts as $alt) {
+            $id = TransactionType::where('name', $alt)->value('id');
+            if ($id) return (int) $id;
+        }
+        return TransactionType::query()->orderBy('id')->value('id'); // Fallback
+    };
+
+    $payTypeId    = $resolveTypeId('سداد قسط',   ['تحصيل قسط','تحصيل','وارد','ايداع','إيداع']);
+    $officeTypeId = $resolveTypeId('ربح المكتب', ['أرباح','تحصيل','وارد']);
 
     // 1) حساب ربح المكتب لكل مستثمر + نسب المشاركة
     $investorMeta = []; // [id => ['office_profit'=>, 'share_pct'=>, 'name'=>]]
@@ -424,7 +428,7 @@ class ContractInstallmentController extends Controller
             $investorTake = round($alloc - $officeTake, 2);
 
             if ($officeTake > 0) {
-                OfficeTransaction::create([
+                $officeTrx = OfficeTransaction::create([
                     'investor_id'      => $invId,
                     'contract_id'      => $contract->id,
                     'installment_id'   => $installmentId,
@@ -435,10 +439,29 @@ class ContractInstallmentController extends Controller
                         . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
                         . " - العقد رقم {$contract->contract_number}",
                 ]);
+
+                // ← قيد دفتر القيود (مكتب)
+                if ($officeTypeId) {
+                    LedgerEntry::create([
+                        'entry_date'            => $entryDate,
+                        'investor_id'           => null, // قيد مكتب فقط
+                        'is_office'             => true,
+                        'transaction_status_id' => $officeStatusId,
+                        'transaction_type_id'   => $officeTypeId,
+                        'bank_account_id'       => null,
+                        'safe_id'               => null,
+                        'contract_id'           => $contract->id,
+                        'installment_id'        => $installmentId,
+                        'amount'                => $officeTake,
+                        'ref'                   => 'OT-'.$officeTrx->id,
+                        'notes'                 => "قيد ربح المكتب — عقد #{$contract->contract_number}"
+                            . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
+                    ]);
+                }
             }
 
             if ($investorTake > 0) {
-                InvestorTransaction::create([
+                $trx = InvestorTransaction::create([
                     'investor_id'      => $invId,
                     'contract_id'      => $contract->id,
                     'installment_id'   => $installmentId,
@@ -450,6 +473,26 @@ class ContractInstallmentController extends Controller
                         : "سداد بعد خصم المتبقّي من ربح المكتب")
                         . " - العقد رقم {$contract->contract_number}",
                 ]);
+
+                // ← قيد دفتر القيود (مستثمر)
+                if ($payTypeId) {
+                    $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
+                    LedgerEntry::create([
+                        'entry_date'            => $entryDate,
+                        'investor_id'           => $invId,
+                        'is_office'             => false,
+                        'transaction_status_id' => $statusId,     // سداد قسط
+                        'transaction_type_id'   => $payTypeId,
+                        'bank_account_id'       => null,
+                        'safe_id'               => null,
+                        'contract_id'           => $contract->id,
+                        'installment_id'        => $installmentId,
+                        'amount'                => $investorTake,
+                        'ref'                   => 'IT-'.$trx->id,
+                        'notes'                 => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
+                            . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
+                    ]);
+                }
             }
         }
         return;
@@ -486,7 +529,7 @@ class ContractInstallmentController extends Controller
                     }
 
                     if ($alloc > 0) {
-                        OfficeTransaction::create([
+                        $officeTrx = OfficeTransaction::create([
                             'investor_id'      => $invId,
                             'contract_id'      => $contract->id,
                             'installment_id'   => $installmentId,
@@ -497,6 +540,26 @@ class ContractInstallmentController extends Controller
                                 . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
                                 . " - العقد رقم {$contract->contract_number}",
                         ]);
+
+                        // ← قيد دفتر القيود (مكتب)
+                        if ($officeTypeId) {
+                            LedgerEntry::create([
+                                'entry_date'            => $entryDate,
+                                'investor_id'           => null, // مكتب
+                                'is_office'             => true,
+                                'transaction_status_id' => $officeStatusId,
+                                'transaction_type_id'   => $officeTypeId,
+                                'bank_account_id'       => null,
+                                'safe_id'               => null,
+                                'contract_id'           => $contract->id,
+                                'installment_id'        => $installmentId,
+                                'amount'                => $alloc,
+                                'ref'                   => 'OT-'.$officeTrx->id,
+                                'notes'                 => "قيد ربح المكتب — عقد #{$contract->contract_number}"
+                                    . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
+                            ]);
+                        }
+
                         $allocatedSum = round($allocatedSum + $alloc, 2);
                     }
                 }
@@ -530,7 +593,7 @@ class ContractInstallmentController extends Controller
         }
 
         if ($alloc > 0) {
-            InvestorTransaction::create([
+            $trx = InvestorTransaction::create([
                 'investor_id'      => $invId,
                 'contract_id'      => $contract->id,
                 'installment_id'   => $installmentId,
@@ -542,12 +605,56 @@ class ContractInstallmentController extends Controller
                         : "سداد بعد سداد كامل ربح المكتب")
                     . " - العقد رقم {$contract->contract_number}",
             ]);
+
+            // ← قيد دفتر القيود (مستثمر)
+            if ($payTypeId) {
+                $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
+                LedgerEntry::create([
+                    'entry_date'            => $entryDate,
+                    'investor_id'           => $invId,
+                    'is_office'             => false,
+                    'transaction_status_id' => $statusId,     // سداد قسط
+                    'transaction_type_id'   => $payTypeId,
+                    'bank_account_id'       => null,
+                    'safe_id'               => null,
+                    'contract_id'           => $contract->id,
+                    'installment_id'        => $installmentId,
+                    'amount'                => $alloc,
+                    'ref'                   => 'IT-'.$trx->id,
+                    'notes'                 => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
+                        . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
+                ]);
+            }
+
             $allocatedSum = round($allocatedSum + $alloc, 2);
         }
     }
 }
 
 
+    /**
+ * يرجّع transaction_type_id المناسب لاسم حالة معيّن.
+ * يحاول: نفس الاسم → مرادفات بسيطة → أول نوع موجود.
+ */
+    private function typeIdForStatusName(string $statusName): ?int
+    {
+        // 1) نفس الاسم
+        $id = TransactionType::where('name', $statusName)->value('id');
+        if ($id) return (int) $id;
+
+        // 2) مرادفات بسيطة
+        $syn = [
+            'سداد قسط'   => ['تحصيل قسط','تحصيل','وارد','ايداع','إيداع'],
+            'ربح المكتب' => ['أرباح','تحصيل','وارد'],
+        ];
+        foreach (($syn[$statusName] ?? []) as $alt) {
+            $id = TransactionType::where('name', $alt)->value('id');
+            if ($id) return (int) $id;
+        }
+
+        // 3) Fallback
+        return TransactionType::query()->orderBy('id')->value('id');
+    }
 
     public function deferAjax($id)
     {
@@ -600,27 +707,46 @@ class ContractInstallmentController extends Controller
             'notes' => $currentNotes
         ]);
     }
+}
+    
+    /**
+     * تعديل بيانات القسط
+     */
+    // public function update(Request $request, $installmentId)
+    // {
+    //     $installment = ContractInstallment::findOrFail($installmentId);
+
+    //     $validated = $request->validate([
+    //         'due_date'    => 'required|date',
+    //         'due_amount'  => 'required|numeric|min:0.01',
+    //     ]);
+
+    //     $installment->update($validated);
+
+    //     return redirect()->back()->with('success', '✏️ تم تعديل بيانات القسط بنجاح.');
+    // }
+
 
     /**
      * حذف مبلغ سداد من القسط
      */
-    public function removePayment($installmentId, $amount)
-    {
-        $installment = ContractInstallment::findOrFail($installmentId);
 
-        DB::transaction(function () use ($installment, $amount) {
-            $newTotalPaid = max(0, (float)$installment->payment_amount - (float)$amount);
+    // public function removePayment($installmentId, $amount)
+    // {
+    //     $installment = ContractInstallment::findOrFail($installmentId);
 
-            $installment->update([
-                'payment_amount' => $newTotalPaid,
-                'payment_date'   => $newTotalPaid > 0 ? $installment->payment_date : null,
-            ]);
+    //     DB::transaction(function () use ($installment, $amount) {
+    //         $newTotalPaid = max(0, (float)$installment->payment_amount - (float)$amount);
 
-            // updateStatus نفسها فيها شرط 100% وبتخرج لو مش مكتمّلة
-            $this->updateStatus($installment);
-        });
+    //         $installment->update([
+    //             'payment_amount' => $newTotalPaid,
+    //             'payment_date'   => $newTotalPaid > 0 ? $installment->payment_date : null,
+    //         ]);
 
-        return redirect()->back()->with('success', '🗑 تم تعديل مبلغ السداد بنجاح.');
-    }
+    //         // updateStatus نفسها فيها شرط 100% وبتخرج لو مش مكتمّلة
+    //         $this->updateStatus($installment);
+    //     });
 
-}
+    //     return redirect()->back()->with('success', '🗑 تم تعديل مبلغ السداد بنجاح.');
+    // }
+

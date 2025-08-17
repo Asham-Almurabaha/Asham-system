@@ -41,7 +41,7 @@
                     </select>
                 </div>
 
-                <div class="col-12 col-md-3" id="investorWrap">
+                <div class="col-12 col-md-2" id="investorWrap">
                     <label class="form-label mb-1">المستثمر</label>
                     <select name="investor_id" id="investor_id" class="form-select form-select-sm">
                         <option value="">الكل</option>
@@ -51,7 +51,7 @@
                     </select>
                 </div>
 
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label mb-1">الحالة</label>
                     <select name="status_id" id="status_id" class="form-select form-select-sm">
                         <option value="">الكل</option>
@@ -83,17 +83,17 @@
                     </select>
                 </div>
 
-                <div class="col-6 col-md-1">
+                <div class="col-6 col-md-1 js-date">
                     <label class="form-label mb-1">من</label>
                     <input type="date" name="from" id="from" value="{{ $filters['from'] ?? '' }}" class="form-control form-control-sm">
                 </div>
-                <div class="col-6 col-md-1">
+                <div class="col-6 col-md-1 js-date">
                     <label class="form-label mb-1">إلى</label>
                     <input type="date" name="to" id="to" value="{{ $filters['to'] ?? '' }}" class="form-control form-control-sm">
                 </div>
 
-                <div class="col-12 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm">تصفية</button>
+                <div class="col-12 col-md-2 d-flex gap-2">
+                    {{-- <button class="btn btn-primary btn-sm">تصفية</button> --}}
                     <a href="{{ route('ledger.index') }}" class="btn btn-outline-secondary btn-sm" id="btnClear">مسح</a>
                 </div>
             </form>
@@ -102,7 +102,7 @@
 </div>
 
 {{-- بطاقات مجاميع --}}
-<div class="row g-3 mb-3">
+<div class="row">
     <div class="col-md-4">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
