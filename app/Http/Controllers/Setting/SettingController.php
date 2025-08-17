@@ -17,9 +17,13 @@ class SettingController extends Controller
     }
 
     public function create()
-    {
-        return view('settings.create');
+{
+    if (Setting::count() > 0) {
+        return redirect()->route('settings.index')
+            ->with('success', 'هناك إعداد محفوظ بالفعل.');
     }
+    return view('settings.create');
+}
 
     public function store(Request $request)
     {
@@ -59,7 +63,7 @@ class SettingController extends Controller
     public function show($id)
     {
         // استخدم find بدل findOrFail للسماح بحالة عدم وجود السجل وعرض رسالة داخل الـ Blade
-        $setting = Setting::find($id);
+        $setting = Setting::findOrFail($id);
         return view('settings.show', compact('setting'));
     }
 

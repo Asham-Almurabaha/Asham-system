@@ -1,14 +1,13 @@
 @extends('layouts.master')
 
-@section('title')
-    لوحة التحكم
-@endsection
+@section('title', 'لوحة التحكم')
 
 @section('content')
 <div class="container py-4" dir="rtl">
 
-    {{-- ====== Styles (تنسيق مخصص) ====== --}}
+    {{-- Bootstrap Icons (لو مش محمّل في الـ layout) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
     <style>
         :root {
             --card-radius: 1.2rem;
@@ -53,10 +52,12 @@
         }
         .text-pos { color: #16a34a !important; } /* أخضر */
         .text-neg { color: #dc2626 !important; } /* أحمر */
+        .help-item { margin-bottom: .35rem; }
+        .help-item i { width: 1.2rem; display: inline-block; }
     </style>
 
     {{-- ====== HERO ====== --}}
-    <div class="dashboard-hero mb-4">
+    <div class="dashboard-hero mb-3">
         <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-speedometer2 fs-4 text-primary"></i></div>
@@ -65,10 +66,47 @@
                     <div class="text-muted small">آخر تحديث: {{ now()->format('Y-m-d H:i') }}</div>
                 </div>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <span class="badge-chip"><i class="bi bi-files me-1"></i> إجمالي العقود: {{ number_format($contractsTotal) }}</span>
-                <span class="badge-chip"><i class="bi bi-wallet2 me-1"></i> صافي سيولة المستثمرين: {{ number_format($invTotals->net ?? 0, 2) }}</span>
-                <span class="badge-chip"><i class="bi bi-building me-1"></i> صافي سيولة المكتب: {{ number_format($officeTotals->net ?? 0, 2) }}</span>
+
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي عدد العقود المسجلة بالنظام">
+                    <i class="bi bi-files me-1"></i> إجمالي العقود: {{ number_format($contractsTotal ?? 0) }}
+                </span>
+
+                <span class="badge-chip" data-bs-toggle="tooltip"
+                      title="الصافي = داخل − خارج (التحويلات بين حسابات محايدة ولا تدخل في الصافي)">
+                    <i class="bi bi-people me-1"></i> صافي سيولة المستثمرين: {{ number_format(($invTotals->net ?? 0), 2) }}
+                </span>
+
+                <span class="badge-chip" data-bs-toggle="tooltip"
+                      title="الصافي = داخل − خارج (التحويلات بين حسابات محايدة ولا تدخل في الصافي)">
+                    <i class="bi bi-building me-1"></i> صافي سيولة المكتب: {{ number_format(($officeTotals->net ?? 0), 2) }}
+                </span>
+
+                <button class="btn btn-outline-secondary btn-sm ms-2" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#kpiHelp" aria-expanded="false">
+                    <i class="bi bi-info-circle"></i> شرح المؤشرات
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- مربع شرح المؤشرات --}}
+    <div class="collapse mb-3" id="kpiHelp">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="help-item"><i class="bi bi-arrow-down-circle text-success"></i>
+                    <strong>داخل</strong>: مجموع الحركات ذات نوع العملية <u>إيداع</u>.
+                </div>
+                <div class="help-item"><i class="bi bi-arrow-up-circle text-danger"></i>
+                    <strong>خارج</strong>: مجموع الحركات ذات نوع العملية <u>سحب</u>.
+                </div>
+                <div class="help-item"><i class="bi bi-shuffle text-muted"></i>
+                    <strong>تحويل بين حسابات</strong>: حركات داخلية بين حسابات (بنك/خزنة) تُسجَّل لقيدين (مصدر/وجهة) وتُعتبر
+                    <u>محايدة في الصافي</u> لكنها تظهر في أرصدة كل حساب على حدة.
+                </div>
+                <div class="help-item"><i class="bi bi-calculator"></i>
+                    <strong>الصافي</strong> = داخل − خارج (مع تجاهل التحويلات).
+                </div>
             </div>
         </div>
     </div>
@@ -89,8 +127,10 @@
                         <div class="kpi-icon"><i class="bi bi-files fs-5 text-primary"></i></div>
                         <div class="fw-bold text-muted">إجمالي العقود</div>
                     </div>
+                    <i class="bi bi-question-circle text-muted"
+                       data-bs-toggle="tooltip" title="إجمالي السجلات في جدول العقود"></i>
                 </div>
-                <div class="kpi-value fw-bold">{{ number_format($contractsTotal) }}</div>
+                <div class="kpi-value fw-bold">{{ number_format($contractsTotal ?? 0) }}</div>
                 <div class="small text-muted mt-2">إجمالي السجلات في النظام</div>
             </div>
         </div>
@@ -102,10 +142,12 @@
                         <div class="kpi-icon"><i class="bi bi-people fs-5 text-primary"></i></div>
                         <div class="fw-bold text-muted">سيولة المستثمرين</div>
                     </div>
+                    <i class="bi bi-question-circle text-muted"
+                       data-bs-toggle="tooltip" title="داخل/خارج بناءً على نوع العملية، والتحويلات محايدة"></i>
                 </div>
                 <div class="kpi-value fw-bold {{ $invClass }}">{{ number_format($invNet, 2) }}</div>
                 <div class="small text-muted mt-2">
-                    داخل: {{ number_format($invTotals->inflow ?? 0, 2) }} — خارج: {{ number_format($invTotals->outflow ?? 0, 2) }}
+                    داخل: {{ number_format(($invTotals->inflow ?? 0), 2) }} — خارج: {{ number_format(($invTotals->outflow ?? 0), 2) }}
                 </div>
             </div>
         </div>
@@ -117,10 +159,12 @@
                         <div class="kpi-icon"><i class="bi bi-building fs-5 text-primary"></i></div>
                         <div class="fw-bold text-muted">سيولة المكتب</div>
                     </div>
+                    <i class="bi bi-question-circle text-muted"
+                       data-bs-toggle="tooltip" title="داخل/خارج بناءً على نوع العملية، والتحويلات محايدة"></i>
                 </div>
                 <div class="kpi-value fw-bold {{ $offClass }}">{{ number_format($offNet, 2) }}</div>
                 <div class="small text-muted mt-2">
-                    داخل: {{ number_format($officeTotals->inflow ?? 0, 2) }} — خارج: {{ number_format($officeTotals->outflow ?? 0, 2) }}
+                    داخل: {{ number_format(($officeTotals->inflow ?? 0), 2) }} — خارج: {{ number_format(($officeTotals->outflow ?? 0), 2) }}
                 </div>
             </div>
         </div>
@@ -130,7 +174,13 @@
     <div class="row g-3 mt-1">
         <div class="col-lg-6">
             <div class="section-card card h-100 border-0">
-                <div class="card-header">توزيع حالات العقود</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>توزيع حالات العقود</span>
+                    <span class="small text-muted" data-bs-toggle="tooltip"
+                          title="النِّسب محسوبة من إجمالي العقود الحالي">
+                        <i class="bi bi-info-circle"></i>
+                    </span>
+                </div>
                 <div class="card-body p-0">
                     @if(($statuses->count() ?? 0) > 0)
                         <div class="list-group list-group-flush">
@@ -154,14 +204,20 @@
                     @endif
                 </div>
                 <div class="card-footer text-end small text-muted">
-                    إجمالي الحالات: {{ number_format($contractsTotal) }}
+                    إجمالي الحالات: {{ number_format($contractsTotal ?? 0) }}
                 </div>
             </div>
         </div>
 
         <div class="col-lg-6">
             <div class="section-card card h-100 border-0">
-                <div class="card-header">مخطط الحالات (Doughnut)</div>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>مخطط الحالات (Doughnut)</span>
+                    <span class="small text-muted" data-bs-toggle="tooltip"
+                          title="المخطط يعكس نفس التوزيع المعروض يمينًا">
+                        <i class="bi bi-graph-up"></i>
+                    </span>
+                </div>
                 <div class="card-body">
                     <canvas id="statusChart" height="220"></canvas>
                 </div>
@@ -175,7 +231,10 @@
             <div class="section-card card border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>أعلى 10 مستثمرين حسب الصافي</span>
-                    <span class="text-muted small">إجمالي صافي: {{ number_format($invTotals->net ?? 0, 2) }}</span>
+                    <span class="text-muted small" data-bs-toggle="tooltip"
+                          title="الصافي لكل مستثمر = داخل − خارج (التحويلات محايدة)">
+                        إجمالي صافي: {{ number_format(($invTotals->net ?? 0), 2) }}
+                    </span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -192,14 +251,15 @@
                             <tbody>
                             @forelse($invByInvestor as $idx => $row)
                                 @php
-                                    $rowClass = ($row->net ?? 0) >= 0 ? 'text-pos' : 'text-neg';
+                                    $rowNet = (float)($row->net ?? 0);
+                                    $rowClass = $rowNet >= 0 ? 'text-pos' : 'text-neg';
                                 @endphp
                                 <tr class="text-center">
                                     <td>{{ $idx + 1 }}</td>
                                     <td class="text-start fw-semibold">{{ $row->name }}</td>
-                                    <td>{{ number_format($row->inflow ?? 0, 2) }}</td>
-                                    <td>{{ number_format($row->outflow ?? 0, 2) }}</td>
-                                    <td class="fw-bold {{ $rowClass }}">{{ number_format($row->net ?? 0, 2) }}</td>
+                                    <td>{{ number_format(($row->inflow ?? 0), 2) }}</td>
+                                    <td>{{ number_format(($row->outflow ?? 0), 2) }}</td>
+                                    <td class="fw-bold {{ $rowClass }}">{{ number_format($rowNet, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="5" class="text-muted text-center py-4">لا توجد بيانات للمستثمرين.</td></tr>
@@ -210,7 +270,8 @@
                 </div>
                 @if(($invByInvestor->count() ?? 0) > 0)
                 <div class="card-footer small text-muted">
-                    * الأرقام أعلاه مبنية على مجموع الحركات (قيمة موجبة = داخل، سالبة = خارج).
+                    * الأرقام أعلاه مبنية على نوع العملية: <span class="text-success">إيداع</span> يُحتسب داخل،
+                    <span class="text-danger">سحب</span> يُحتسب خارج، و<span class="text-muted">تحويل بين حسابات</span> محايد في الصافي.
                 </div>
                 @endif
             </div>
@@ -223,20 +284,29 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-    const ctx = document.getElementById('statusChart');
-    if (!ctx) return;
+    // Tooltips
+    const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
 
-    const labels = @json($chartLabels ?? []);
-    const data   = @json($chartData ?? []);
+    // Chart
+    const canvas = document.getElementById('statusChart');
+    if (!canvas) return;
 
-    new Chart(ctx, {
+    const labels = @json(($chartLabels ?? collect())->values());
+    const data   = @json(($chartData ?? collect())->values());
+
+    if (!labels.length || !data.length) {
+        canvas.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات للمخطط.</div>';
+        return;
+    }
+
+    new Chart(canvas, {
         type: 'doughnut',
         data: {
             labels,
             datasets: [{
                 data,
-                borderWidth: 1,
-                // نترك الألوان الافتراضية؛ Chart.js يختار لوحة افتراضية متناسقة
+                borderWidth: 1
             }]
         },
         options: {

@@ -53,5 +53,8 @@ class Investor extends Model
 {
     return $this->hasMany(OfficeTransaction::class, 'investor_id');
 }
+public function ledgerEntries() {
+    return $this->hasMany(LedgerEntry::class); 
+}
 
 }

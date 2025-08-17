@@ -36,4 +36,8 @@ class TransactionStatus extends Model
     return $this->hasMany(OfficeTransaction::class, 'status_id');
 }
 
+public function ledgerEntries() { 
+    return $this->hasMany(LedgerEntry::class, 'status_id'); 
+}
+
 }

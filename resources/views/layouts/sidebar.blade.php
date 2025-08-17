@@ -58,6 +58,14 @@
     </a>
   </li>
 
+  {{-- دفتر القيود --}}
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('ledger.*')) }} {{ $active($isRoute('ledger.*')) }}"
+       href="{{ route('ledger.index') }}">
+      <i class="bi bi-journal"></i><span>دفتر القيود</span>
+    </a>
+  </li>
+
   {{-- العقود --}}
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('contracts.*')) }} {{ $active($isRoute('contracts.*')) }}"
@@ -128,12 +136,6 @@
         </a>
       </li>
 
-      <li class="nav-heading">إعدادات الحسابات</li>
-      <li>
-        <a class="{{ $active($isRoute('bank_cash_accounts.*')) }}" href="{{ route('bank_cash_accounts.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Bank Cash Accounts')</span>
-        </a>
-      </li>
       <li>
         <a class="{{ $active($isRoute('transaction_types.*')) }}" href="{{ route('transaction_types.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Transaction Types')</span>

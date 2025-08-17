@@ -17,28 +17,29 @@ class DashboardController extends Controller
             ->groupBy('contract_status_id')
             ->get();
 
-        $statusNames = ContractStatus::whereIn('id', $statusCounts->pluck('contract_status_id'))
-            ->get()->keyBy('id');
+        // أسماء الحالات مرة واحدة
+        $statusNames = ContractStatus::pluck('name', 'id');
 
         $statuses = $statusCounts->map(function ($row) use ($statusNames, $contractsTotal) {
-            $name = $statusNames[$row->contract_status_id]->name ?? 'غير محدد';
+            $name = $statusNames[$row->contract_status_id] ?? 'غير محدد';
             $cnt  = (int) $row->cnt;
             $pct  = $contractsTotal > 0 ? round(($cnt / $contractsTotal) * 100, 2) : 0;
+
             return [
-                'id'    => $row->contract_status_id,
+                'id'    => (int) $row->contract_status_id,
                 'name'  => $name,
                 'count' => $cnt,
                 'pct'   => $pct,
             ];
         })->sortByDesc('count')->values();
 
-        // ====== IDs لأنواع العمليات (إيداع/سحب/تحويل) من جدول transaction_types ======
-        $typeIds = DB::table('transaction_types')->pluck('id', 'name'); // ['إيداع' => 1, 'سحب' => 2, 'تحويل بين حسابات' => 3]
+        // ====== IDs لأنواع العمليات (إيداع/سحب/تحويل) ======
+        $typeIds  = DB::table('transaction_types')->pluck('id', 'name');
         $TYPE_IN   = (int) ($typeIds['إيداع'] ?? -1);
         $TYPE_OUT  = (int) ($typeIds['سحب'] ?? -1);
         $TYPE_XFER = (int) ($typeIds['تحويل بين حسابات'] ?? -1);
 
-        // ====== سيولة المستثمرين (حسب نوع العملية) ======
+        // ====== سيولة المستثمرين ======
         $invTotals = DB::table('investor_transactions as it')
             ->leftJoin('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
             ->selectRaw("
@@ -48,9 +49,12 @@ class DashboardController extends Controller
             ")
             ->first();
 
-        $invTotals->net = (float)$invTotals->inflow - (float)$invTotals->outflow; // التحويلات محايدة
+        $invTotals->inflow    = (float)$invTotals->inflow;
+        $invTotals->outflow   = (float)$invTotals->outflow;
+        $invTotals->transfers = (float)$invTotals->transfers;
+        $invTotals->net       = (float)$invTotals->inflow - (float)$invTotals->outflow; // التحويلات محايدة
 
-        // أعلى 10 مستثمرين بالصافي
+        // أعلى 10 مستثمرين بالصافي (حساب الصافي داخل SQL + ترتيب وحدّ أعلى)
         $invByInvestor = DB::table('investor_transactions as it')
             ->join('investors as i', 'i.id', '=', 'it.investor_id')
             ->leftJoin('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
@@ -59,19 +63,21 @@ class DashboardController extends Controller
                 i.name,
                 COALESCE(SUM(CASE WHEN ts.transaction_type_id = {$TYPE_IN}   THEN ABS(it.amount) ELSE 0 END), 0) AS inflow,
                 COALESCE(SUM(CASE WHEN ts.transaction_type_id = {$TYPE_OUT}  THEN ABS(it.amount) ELSE 0 END), 0) AS outflow,
-                COALESCE(SUM(CASE WHEN ts.transaction_type_id = {$TYPE_XFER} THEN ABS(it.amount) ELSE 0 END), 0) AS transfers
+                COALESCE(SUM(CASE WHEN ts.transaction_type_id = {$TYPE_XFER} THEN ABS(it.amount) ELSE 0 END), 0) AS transfers,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN ts.transaction_type_id = {$TYPE_IN}  THEN  ABS(it.amount)
+                        WHEN ts.transaction_type_id = {$TYPE_OUT} THEN -ABS(it.amount)
+                        ELSE 0
+                    END
+                ), 0) AS net
             ")
             ->groupBy('i.id','i.name')
-            ->get()
-            ->map(function ($row) {
-                $row->net = (float)$row->inflow - (float)$row->outflow; // تجاهل التحويلات في الصافي
-                return $row;
-            })
-            ->sortByDesc('net')
-            ->take(10)
-            ->values();
+            ->orderByDesc('net')
+            ->limit(10)
+            ->get();
 
-        // ====== سيولة المكتب (حسب نوع العملية) ======
+        // ====== سيولة المكتب ======
         $officeTotals = DB::table('office_transactions as ot')
             ->leftJoin('transaction_statuses as ts', 'ts.id', '=', 'ot.status_id')
             ->selectRaw("
@@ -81,11 +87,14 @@ class DashboardController extends Controller
             ")
             ->first();
 
-        $officeTotals->net = (float)$officeTotals->inflow - (float)$officeTotals->outflow;
+        $officeTotals->inflow    = (float)$officeTotals->inflow;
+        $officeTotals->outflow   = (float)$officeTotals->outflow;
+        $officeTotals->transfers = (float)$officeTotals->transfers;
+        $officeTotals->net       = (float)$officeTotals->inflow - (float)$officeTotals->outflow;
 
         // ====== بيانات المخطط ======
-        $chartLabels = $statuses->pluck('name');
-        $chartData   = $statuses->pluck('count');
+        $chartLabels = $statuses->pluck('name')->values();
+        $chartData   = $statuses->pluck('count')->values();
 
         return view('dashboard.index', [
             'contractsTotal' => $contractsTotal,
