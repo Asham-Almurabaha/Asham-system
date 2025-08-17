@@ -13,111 +13,121 @@
     </nav>
 </div>
 
+@if ($errors->any())
+<div class="alert alert-danger">
+    <div class="fw-semibold mb-1">تحقّق من الحقول التالية:</div>
+    <ul class="mb-0">
+        @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+    </ul>
+</div>
+@endif
+
+@php
+    $oldCat = old('party_category', 'investors');
+    $oldAccountPicker = old('bank_account_id') ? 'bank:'.old('bank_account_id') : (old('safe_id') ? 'safe:'.old('safe_id') : '');
+@endphp
+
 <div class="card shadow-sm">
     <div class="card-body">
-        <form action="{{ route('ledger.store') }}" method="POST" class="row g-3 mt-1">
+        <form action="{{ route('ledger.store') }}" method="POST" class="row g-3 mt-1" id="createForm">
             @csrf
 
-            {{-- الفئة --}}
-            <div class="col-md-4">
-                <label class="form-label">الفئة</label>
-                <select name="party_category" id="party_category" class="form-select" required>
-                    <option value="investors" @selected(old('party_category','investors')==='investors')>المستثمرون</option>
-                    <option value="office"    @selected(old('party_category')==='office')>المكتب</option>
-                </select>
-            </div>
+            <div class="row">
+                {{-- الفئة --}}
+                <div class="col-md-4">
+                    <label class="form-label" for="party_category">الفئة</label>
+                    <select name="party_category" id="party_category" class="form-select" required>
+                        <option value="investors" @selected($oldCat==='investors')>المستثمرون</option>
+                        <option value="office"    @selected($oldCat==='office')>المكتب</option>
+                    </select>
+                </div>
 
-            {{-- المستثمر (شرطي) --}}
-            <div class="col-md-8" id="investorWrap">
-                <label class="form-label">المستثمر</label>
-                <select name="investor_id" class="form-select">
-                    <option value="" disabled {{ old('investor_id') ? '' : 'selected' }}>اختر المستثمر</option>
-                    @foreach ($investors as $investor)
-                        <option value="{{ $investor->id }}" @selected(old('investor_id') == $investor->id)>{{ $investor->name }}</option>
-                    @endforeach
-                </select>
-                @error('investor_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-            </div>
+                {{-- المستثمر (شرطي عند investors) --}}
+                <div class="col-md-4" id="investorWrap">
+                    <label class="form-label" for="investor_id">المستثمر</label>
+                    <select name="investor_id" id="investor_id" class="form-select" aria-describedby="investorHelp">
+                        <option value="" disabled {{ old('investor_id') ? '' : 'selected' }}>اختر المستثمر</option>
+                        @foreach ($investors as $investor)
+                            <option value="{{ $investor->id }}" @selected(old('investor_id') == $investor->id)>{{ $investor->name }}</option>
+                        @endforeach
+                    </select>
+                    <div id="investorHelp" class="form-text">إلزامي عند اختيار فئة المستثمرين.</div>
+                    @error('investor_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
 
-            {{-- الحالة (مجموعتان) --}}
-            <div class="col-md-6">
-                <label class="form-label">الحالة</label>
-                <select name="status_id" id="status_id" class="form-select" required>
-                    <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة</option>
+                {{-- الحالة: قائمتان منفصلتان + حقل مخفي يوحّد الإرسال --}}
+                <div class="col-md-4">
+                    <label class="form-label">الحالة</label>
 
-                    <optgroup label="حالات المستثمرين" data-cat="investors">
+                    <select id="status_investors" class="form-select mb-2" {{ $oldCat==='investors' ? '' : 'hidden' }}>
+                        <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (مستثمر)</option>
                         @foreach(($statusesByCategory['investors'] ?? []) as $st)
-                            <option value="{{ $st->id }}" data-cat="investors" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
+                            <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
                         @endforeach
-                    </optgroup>
+                    </select>
 
-                    <optgroup label="حالات المكتب" data-cat="office">
+                    <select id="status_office" class="form-select mb-2" {{ $oldCat==='office' ? '' : 'hidden' }}>
+                        <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (المكتب)</option>
                         @foreach(($statusesByCategory['office'] ?? []) as $st)
-                            <option value="{{ $st->id }}" data-cat="office" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
+                            <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
+                        @endforeach
+                    </select>
+
+                    <input type="hidden" name="status_id" id="status_id_hidden" value="{{ old('status_id') }}">
+                    <div class="mt-1">
+                        <span class="badge rounded-pill bg-secondary" id="dirBadge">—</span>
+                    </div>
+                    @error('status_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                </div>
+            </div>
+            {{-- مُلتقط الحساب (يجمع البنك والخزنة) + حقول مخفية --}}
+            <div class="col-md-4 mt-0">
+                <label class="form-label" for="account_picker">الحساب</label>
+                <select id="account_picker" class="form-select" required>
+                    <option value="" disabled {{ $oldAccountPicker ? '' : 'selected' }}>اختر حسابًا</option>
+                    <optgroup label="الحسابات البنكية">
+                        @foreach ($banks as $bank)
+                            <option value="bank:{{ $bank->id }}" @selected($oldAccountPicker==='bank:'.$bank->id)>{{ $bank->name }}</option>
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="الخزن">
+                        @foreach ($safes as $safe)
+                            <option value="safe:{{ $safe->id }}" @selected($oldAccountPicker==='safe:'.$safe->id)>{{ $safe->name }}</option>
                         @endforeach
                     </optgroup>
                 </select>
-                @error('status_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-            </div>
 
-            {{-- اختيار الحساب: بنك أو خزنة (فرونت فقط) --}}
-            <div class="col-md-6">
-                <label class="form-label d-block">نوع الحساب</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="__account_type" id="acc_bank" value="bank" checked>
-                    <label class="form-check-label" for="acc_bank">حساب بنكي</label>
-                </div>
-                <div class="form-check form-check-inline me-3">
-                    <input class="form-check-input" type="radio" name="__account_type" id="acc_safe" value="safe">
-                    <label class="form-check-label" for="acc_safe">خزنة</label>
-                </div>
-            </div>
+                <input type="hidden" name="bank_account_id" id="bank_account_id" value="{{ old('bank_account_id') }}">
+                <input type="hidden" name="safe_id"         id="safe_id"         value="{{ old('safe_id') }}">
 
-            {{-- الحساب البنكي --}}
-            <div class="col-md-6" id="bankWrap">
-                <label class="form-label">الحساب البنكي</label>
-                <select name="bank_account_id" class="form-select">
-                    <option value="" disabled {{ old('bank_account_id') ? '' : 'selected' }}>اختر الحساب البنكي</option>
-                    @foreach ($banks as $bank)
-                        <option value="{{ $bank->id }}" @selected(old('bank_account_id') == $bank->id)>{{ $bank->name }}</option>
-                    @endforeach
-                </select>
                 @error('bank_account_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-            </div>
-
-            {{-- الخزنة --}}
-            <div class="col-md-6 d-none" id="safeWrap">
-                <label class="form-label">الخزنة</label>
-                <select name="safe_id" class="form-select">
-                    <option value="" disabled {{ old('safe_id') ? '' : 'selected' }}>اختر الخزنة</option>
-                    @foreach ($safes as $safe)
-                        <option value="{{ $safe->id }}" @selected(old('safe_id') == $safe->id)>{{ $safe->name }}</option>
-                    @endforeach
-                </select>
-                @error('safe_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                @error('safe_id')         <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
             {{-- المبلغ + التاريخ --}}
-            <div class="col-md-6">
-                <label class="form-label">المبلغ</label>
-                <input type="number" step="0.01" name="amount" class="form-control" value="{{ old('amount') }}" required>
+            <div class="col-md-4 mt-0">
+                <label class="form-label" for="amount">المبلغ</label>
+                <input type="number" step="0.01" min="0.01" name="amount" id="amount" class="form-control" value="{{ old('amount') }}" required>
                 @error('amount') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
-            <div class="col-md-6">
-                <label class="form-label">تاريخ العملية</label>
-                <input type="date" name="transaction_date" class="form-control js-date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
+            <div class="col-md-4 mt-0">
+                <label class="form-label" for="transaction_date">تاريخ العملية</label>
+                <input type="date" name="transaction_date" id="transaction_date" class="form-control js-date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
                 @error('transaction_date') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
             {{-- ملاحظات --}}
             <div class="col-12">
-                <label class="form-label">ملاحظات</label>
-                <textarea name="notes" rows="3" class="form-control">{{ old('notes') }}</textarea>
+                <label class="form-label" for="notes">ملاحظات</label>
+                <textarea name="notes" id="notes" rows="3" class="form-control" maxlength="1000">{{ old('notes') }}</textarea>
             </div>
 
             <div class="col-12 d-flex gap-2 mt-2">
-                <button class="btn btn-primary">حفظ</button>
+                <button class="btn btn-primary" id="btnSave">
+                    <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
+                    حفظ
+                </button>
                 <a href="{{ route('ledger.index') }}" class="btn btn-secondary">إلغاء</a>
 
                 <div class="ms-auto d-flex gap-2">
@@ -132,50 +142,70 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const catSelect   = document.getElementById('party_category');
-    const investorDiv = document.getElementById('investorWrap');
-    const statusSel   = document.getElementById('status_id');
+    const catSel = document.getElementById('party_category');
+    const investorWrap = document.getElementById('investorWrap');
 
-    const accBank = document.getElementById('acc_bank');
-    const accSafe = document.getElementById('acc_safe');
-    const bankWrap = document.getElementById('bankWrap');
-    const safeWrap = document.getElementById('safeWrap');
+    const statusInv = document.getElementById('status_investors');
+    const statusOff = document.getElementById('status_office');
+    const statusHidden = document.getElementById('status_id_hidden');
+    const dirBadge = document.getElementById('dirBadge');
 
-    function syncCategoryUI() {
-        const cat = catSelect.value;
-        // المستثمر يظهر فقط مع investors
-        investorDiv.style.display = (cat === 'investors') ? '' : 'none';
+    const accountPicker = document.getElementById('account_picker');
+    const bankHidden = document.getElementById('bank_account_id');
+    const safeHidden = document.getElementById('safe_id');
 
-        // فلترة الحالات بحسب الفئة
-        [...statusSel.querySelectorAll('optgroup, option')].forEach(el => {
-            if (!el.dataset.cat) return;
-            const show = el.dataset.cat === cat;
-            el.disabled = !show;
-            el.style.display = show ? '' : 'none';
-        });
+    const btnSave = document.getElementById('btnSave');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const form = document.getElementById('createForm');
 
-        // لو الحالة المختارة مش ضمن الفئة، صفّرها
-        if (statusSel.selectedOptions.length) {
-            const sel = statusSel.selectedOptions[0];
-            if (sel && sel.dataset.cat && sel.dataset.cat !== cat) {
-                statusSel.value = '';
-            }
-        }
+    function currentStatusSelect(){
+        return catSel.value === 'investors' ? statusInv : statusOff;
     }
 
-    function syncAccountUI() {
-        const isBank = accBank.checked;
-        bankWrap.classList.toggle('d-none', !isBank);
-        safeWrap.classList.toggle('d-none',  isBank);
+    function syncCategoryUI(){
+        investorWrap.style.display = (catSel.value === 'investors') ? '' : 'none';
+        statusInv.hidden = !(catSel.value === 'investors');
+        statusOff.hidden = !(catSel.value === 'office');
+        syncStatusHiddenAndBadge();
     }
 
-    catSelect.addEventListener('change', syncCategoryUI);
-    accBank.addEventListener('change', syncAccountUI);
-    accSafe.addEventListener('change', syncAccountUI);
+    function syncStatusHiddenAndBadge(){
+        const sel = currentStatusSelect();
+        const opt = sel.options[sel.selectedIndex];
+        statusHidden.value = opt ? (opt.value || '') : '';
+        const t = opt ? (opt.dataset.type || '') : '';
+        let text='—', cls='bg-secondary';
+        if (t==='1'){ text='داخل (إيداع)'; cls='bg-success'; }
+        else if (t==='2'){ text='خارج (سحب)'; cls='bg-danger'; }
+        else if (t==='3'){ text='تحويل'; cls='bg-warning text-dark'; }
+        dirBadge.textContent = text; dirBadge.className = 'badge rounded-pill ' + cls;
+    }
+
+    function syncAccountHidden(){
+        const val = accountPicker.value || '';
+        if (!val){ bankHidden.value=''; safeHidden.value=''; return; }
+        const [type, id] = val.split(':');
+        if (type === 'bank'){ bankHidden.value = id; safeHidden.value = ''; }
+        else if (type === 'safe'){ safeHidden.value = id; bankHidden.value = ''; }
+    }
+
+    catSel.addEventListener('change', syncCategoryUI);
+    statusInv.addEventListener('change', syncStatusHiddenAndBadge);
+    statusOff.addEventListener('change', syncStatusHiddenAndBadge);
+    accountPicker.addEventListener('change', syncAccountHidden);
+
+    form.addEventListener('submit', function(){
+        btnSave.disabled = true;
+        btnSpinner.classList.remove('d-none');
+        // تأكيد المزامنة قبل الإرسال
+        syncStatusHiddenAndBadge();
+        syncAccountHidden();
+    });
 
     // init
     syncCategoryUI();
-    syncAccountUI();
+    syncStatusHiddenAndBadge();
+    syncAccountHidden();
 });
 </script>
 @endpush

@@ -105,7 +105,7 @@ Route::prefix('installments')->name('installments.')->group(function () {
     Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])
         ->name('pay');
     
-    Route::post('/installments/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])
+    Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])
     ->name('early_settle');
     
     Route::delete('/{installment}/payment/{paymentId}', [InstallmentController::class, 'deletePayment'])

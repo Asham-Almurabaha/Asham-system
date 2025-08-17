@@ -46,15 +46,37 @@
             font-weight: 700;
         }
         .status-row + .status-row { border-top: 1px dashed #eef2f7; }
-        .table thead th { position: sticky; top: 0; background: #f8f9fb; z-index: 1; }
         .badge-chip {
             background: #f1f4f9; color: #3c4a5d; border-radius: 999px; padding: .35rem .7rem; font-weight: 600;
         }
-        .text-pos { color: #16a34a !important; } /* أخضر */
-        .text-neg { color: #dc2626 !important; } /* أحمر */
+        .text-pos { color: #16a34a !important; }
+        .text-neg { color: #dc2626 !important; }
         .help-item { margin-bottom: .35rem; }
         .help-item i { width: 1.2rem; display: inline-block; }
+        .table thead th { position: sticky; top: 0; background: #f8f9fb; z-index: 1; }
+        .chart-card canvas { max-height: 280px; }
     </style>
+
+    {{-- ====== فلاتر التاريخ (اختياري) ====== --}}
+    <div class="card border-0 shadow-sm mb-3">
+        <form method="GET" action="{{ url()->current() }}" class="card-body row gy-2 gx-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1">من</label>
+                <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm">
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label mb-1">إلى</label>
+                <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm">
+            </div>
+            <div class="col-12 col-md-3">
+                <button class="btn btn-primary btn-sm">تحديث</button>
+                <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm">مسح</a>
+            </div>
+            <div class="col-12 col-md-5 text-end small text-muted">
+                آخر تحديث: {{ now()->format('Y-m-d H:i') }}
+            </div>
+        </form>
+    </div>
 
     {{-- ====== HERO ====== --}}
     <div class="dashboard-hero mb-3">
@@ -63,123 +85,95 @@
                 <div class="kpi-icon"><i class="bi bi-speedometer2 fs-4 text-primary"></i></div>
                 <div>
                     <h3 class="mb-1">لوحة التحكم</h3>
-                    <div class="text-muted small">آخر تحديث: {{ now()->format('Y-m-d H:i') }}</div>
+                    <div class="text-muted small">
+                        نطاق البيانات:
+                        {{ request('from') ? e(request('from')) : '—' }}
+                        —
+                        {{ request('to') ? e(request('to')) : '—' }}
+                    </div>
                 </div>
             </div>
 
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي عدد العقود المسجلة بالنظام">
+                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي عدد العقود في النظام">
                     <i class="bi bi-files me-1"></i> إجمالي العقود: {{ number_format($contractsTotal ?? 0) }}
                 </span>
-
-                <span class="badge-chip" data-bs-toggle="tooltip"
-                      title="الصافي = داخل − خارج (التحويلات بين حسابات محايدة ولا تدخل في الصافي)">
+                <span class="badge-chip" data-bs-toggle="tooltip" title="الصافي = داخل − خارج">
                     <i class="bi bi-people me-1"></i> صافي سيولة المستثمرين: {{ number_format(($invTotals->net ?? 0), 2) }}
                 </span>
-
-                <span class="badge-chip" data-bs-toggle="tooltip"
-                      title="الصافي = داخل − خارج (التحويلات بين حسابات محايدة ولا تدخل في الصافي)">
+                <span class="badge-chip" data-bs-toggle="tooltip" title="الصافي = داخل − خارج">
                     <i class="bi bi-building me-1"></i> صافي سيولة المكتب: {{ number_format(($officeTotals->net ?? 0), 2) }}
                 </span>
-
-                <button class="btn btn-outline-secondary btn-sm ms-2" type="button"
-                        data-bs-toggle="collapse" data-bs-target="#kpiHelp" aria-expanded="false">
-                    <i class="bi bi-info-circle"></i> شرح المؤشرات
-                </button>
             </div>
         </div>
     </div>
 
-    {{-- مربع شرح المؤشرات --}}
-    <div class="collapse mb-3" id="kpiHelp">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="help-item"><i class="bi bi-arrow-down-circle text-success"></i>
-                    <strong>داخل</strong>: مجموع الحركات ذات نوع العملية <u>إيداع</u>.
-                </div>
-                <div class="help-item"><i class="bi bi-arrow-up-circle text-danger"></i>
-                    <strong>خارج</strong>: مجموع الحركات ذات نوع العملية <u>سحب</u>.
-                </div>
-                <div class="help-item"><i class="bi bi-shuffle text-muted"></i>
-                    <strong>تحويل بين حسابات</strong>: حركات داخلية بين حسابات (بنك/خزنة) تُسجَّل لقيدين (مصدر/وجهة) وتُعتبر
-                    <u>محايدة في الصافي</u> لكنها تظهر في أرصدة كل حساب على حدة.
-                </div>
-                <div class="help-item"><i class="bi bi-calculator"></i>
-                    <strong>الصافي</strong> = داخل − خارج (مع تجاهل التحويلات).
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ====== KPIs ====== --}}
+    {{-- ====== KPIs إضافية ====== --}}
     @php
-        $invNet = (float)($invTotals->net ?? 0);
-        $offNet = (float)($officeTotals->net ?? 0);
-        $invClass = $invNet >= 0 ? 'text-pos' : 'text-neg';
-        $offClass = $offNet >= 0 ? 'text-pos' : 'text-neg';
+        $invNet  = (float)($invTotals->net ?? 0);
+        $offNet  = (float)($officeTotals->net ?? 0);
+        $invCls  = $invNet >= 0 ? 'text-pos' : 'text-neg';
+        $offCls  = $offNet >= 0 ? 'text-pos' : 'text-neg';
+
+        // تقديرات آمنة لو مش متوفرة من الكنترولر:
+        $kpi = (object) [
+            'entries_count' => (int)($entriesCount ?? ($contractsTotal ?? 0)),
+            'avg_amount'    => (float)($avgAmount ?? 0),
+            'active_investors' => (int)($activeInvestors ?? ($invByInvestor->count() ?? 0)),
+        ];
     @endphp
 
     <div class="row g-3">
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="kpi-icon"><i class="bi bi-files fs-5 text-primary"></i></div>
-                        <div class="fw-bold text-muted">إجمالي العقود</div>
-                    </div>
-                    <i class="bi bi-question-circle text-muted"
-                       data-bs-toggle="tooltip" title="إجمالي السجلات في جدول العقود"></i>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-collection fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">عدد القيود</div>
                 </div>
-                <div class="kpi-value fw-bold">{{ number_format($contractsTotal ?? 0) }}</div>
-                <div class="small text-muted mt-2">إجمالي السجلات في النظام</div>
+                <div class="kpi-value fw-bold">{{ number_format($kpi->entries_count) }}</div>
+                <div class="small text-muted mt-2">إجمالي قيود دفتر القيود</div>
             </div>
         </div>
-
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="kpi-icon"><i class="bi bi-people fs-5 text-primary"></i></div>
-                        <div class="fw-bold text-muted">سيولة المستثمرين</div>
-                    </div>
-                    <i class="bi bi-question-circle text-muted"
-                       data-bs-toggle="tooltip" title="داخل/خارج بناءً على نوع العملية، والتحويلات محايدة"></i>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-cash-coin fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">متوسط القيد</div>
                 </div>
-                <div class="kpi-value fw-bold {{ $invClass }}">{{ number_format($invNet, 2) }}</div>
-                <div class="small text-muted mt-2">
-                    داخل: {{ number_format(($invTotals->inflow ?? 0), 2) }} — خارج: {{ number_format(($invTotals->outflow ?? 0), 2) }}
-                </div>
+                <div class="kpi-value fw-bold">{{ number_format($kpi->avg_amount, 2) }}</div>
+                <div class="small text-muted mt-2">قيمة متوسّطة لكل عملية</div>
             </div>
         </div>
-
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="kpi-icon"><i class="bi bi-building fs-5 text-primary"></i></div>
-                        <div class="fw-bold text-muted">سيولة المكتب</div>
-                    </div>
-                    <i class="bi bi-question-circle text-muted"
-                       data-bs-toggle="tooltip" title="داخل/خارج بناءً على نوع العملية، والتحويلات محايدة"></i>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-people fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">مستثمرون نشطون</div>
                 </div>
-                <div class="kpi-value fw-bold {{ $offClass }}">{{ number_format($offNet, 2) }}</div>
-                <div class="small text-muted mt-2">
-                    داخل: {{ number_format(($officeTotals->inflow ?? 0), 2) }} — خارج: {{ number_format(($officeTotals->outflow ?? 0), 2) }}
+                <div class="kpi-value fw-bold">{{ number_format($kpi->active_investors) }}</div>
+                <div class="small text-muted mt-2">عدد المستثمرين ذوي الحركة</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-graph-up-arrow fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">صافي إجمالي</div>
                 </div>
+                <div class="kpi-value fw-bold {{ ($invNet+$offNet)>=0 ? 'text-pos':'text-neg' }}">{{ number_format($invNet + $offNet, 2) }}</div>
+                <div class="small text-muted mt-2">مستثمرين + مكتب</div>
             </div>
         </div>
     </div>
 
-    {{-- ====== الحالات + الرسم ====== --}}
+    {{-- ====== الحالات + توزيع (كما هو) ====== --}}
     <div class="row g-3 mt-1">
         <div class="col-lg-6">
             <div class="section-card card h-100 border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>توزيع حالات العقود</span>
-                    <span class="small text-muted" data-bs-toggle="tooltip"
-                          title="النِّسب محسوبة من إجمالي العقود الحالي">
-                        <i class="bi bi-info-circle"></i>
-                    </span>
+                    <span class="small text-muted"><i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                        title="النِّسب محسوبة من إجمالي العقود الحالي"></i></span>
                 </div>
                 <div class="card-body p-0">
                     @if(($statuses->count() ?? 0) > 0)
@@ -210,13 +204,11 @@
         </div>
 
         <div class="col-lg-6">
-            <div class="section-card card h-100 border-0">
+            <div class="section-card card h-100 border-0 chart-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>مخطط الحالات (Doughnut)</span>
-                    <span class="small text-muted" data-bs-toggle="tooltip"
-                          title="المخطط يعكس نفس التوزيع المعروض يمينًا">
-                        <i class="bi bi-graph-up"></i>
-                    </span>
+                    <span class="small text-muted"><i class="bi bi-graph-up" data-bs-toggle="tooltip"
+                        title="المخطط يعكس نفس التوزيع المعروض يمينًا"></i></span>
                 </div>
                 <div class="card-body">
                     <canvas id="statusChart" height="220"></canvas>
@@ -225,7 +217,83 @@
         </div>
     </div>
 
-    {{-- ====== أعلى المستثمرين ====== --}}
+    {{-- ====== تحليلات إضافية ====== --}}
+    @php
+        // بيانات اختيارية آمنة للرسم
+        $ts = (object)($timeSeries ?? ['labels'=>[], 'in'=>[], 'out'=>[], 'net'=>[]]);
+        $ms = (object)($monthlySeries ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
+        $dist = (object)($distribution ?? ['labels'=>['بنوك','خزن'], 'data'=>[(float)($banksTotal ?? 0), (float)($safesTotal ?? 0)]]);
+        // أفضل الأرصدة من ملخص البنوك والخزن (أعلى 7)
+        $banksColl = collect($bankAccountsSummary ?? []);
+        $safesColl = collect($safesSummary ?? []);
+        $topBalances = $banksColl->map(function($b){
+            $opening=(float)($b->opening_balance ?? 0); $in=(float)($b->inflow ?? 0); $out=(float)($b->outflow ?? 0);
+            return ['label'=>$b->name ?? ('#'.$b->id), 'bal'=>$opening + ($in-$out)];
+        })->merge(
+            $safesColl->map(function($s){
+                $opening=(float)($s->opening_balance ?? 0); $in=(float)($s->inflow ?? 0); $out=(float)($s->outflow ?? 0);
+                return ['label'=>$s->name ?? ('#'.$s->id), 'bal'=>$opening + ($in-$out)];
+            })
+        )->sortByDesc('bal')->take(7)->values();
+        $topBalLabels = $topBalances->pluck('label');
+        $topBalData   = $topBalances->pluck('bal');
+    @endphp
+
+    <div class="row g-3 mt-1">
+        <div class="col-xl-6">
+            <div class="section-card card border-0 chart-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>التدفق النقدي اليومي</span>
+                    <span class="small text-muted"><i class="bi bi-calendar-range" data-bs-toggle="tooltip"
+                        title="عرض يومي: داخل/خارج/صافي"></i></span>
+                </div>
+                <div class="card-body">
+                    <canvas id="cashLineChart" height="240"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-6">
+            <div class="section-card card border-0 chart-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>التدفق الشهري (داخل/خارج)</span>
+                    <span class="small text-muted"><i class="bi bi-bar-chart-steps" data-bs-toggle="tooltip"
+                        title="قِيَم مكدّسة لكل شهر"></i></span>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyBarChart" height="240"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-xl-4">
+            <div class="section-card card border-0 chart-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>توزيع الرصيد (بنوك/خزن)</span>
+                    <span class="small text-muted"><i class="bi bi-pie-chart" data-bs-toggle="tooltip"
+                        title="توزيع إجمالي الأرصدة التقديرية"></i></span>
+                </div>
+                <div class="card-body">
+                    <canvas id="acctDistChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-8">
+            <div class="section-card card border-0 chart-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>أفضل الأرصدة على الحسابات</span>
+                    <span class="small text-muted"><i class="bi bi-arrow-up-right-circle" data-bs-toggle="tooltip"
+                        title="أعلى 7 أرصدة من البنوك والخزن"></i></span>
+                </div>
+                <div class="card-body">
+                    <canvas id="topBalancesChart" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ====== أعلى المستثمرين (كما هو) ====== --}}
     <div class="row g-3 mt-1">
         <div class="col-12">
             <div class="section-card card border-0">
@@ -270,10 +338,130 @@
                 </div>
                 @if(($invByInvestor->count() ?? 0) > 0)
                 <div class="card-footer small text-muted">
-                    * الأرقام أعلاه مبنية على نوع العملية: <span class="text-success">إيداع</span> يُحتسب داخل،
-                    <span class="text-danger">سحب</span> يُحتسب خارج، و<span class="text-muted">تحويل بين حسابات</span> محايد في الصافي.
+                    * الأرقام أعلاه مبنية على اتجاه القيود (داخل/خارج). التحويلات الداخلية محايدة في الصافي العام.
                 </div>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- ====== حالة كل حساب (بنوك + خزن) ====== --}}
+    <div class="row g-3 mt-1">
+        {{-- البنوك --}}
+        <div class="col-lg-6">
+            <div class="section-card card border-0">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>حالة الحسابات البنكية</span>
+                    <span class="small text-muted" data-bs-toggle="tooltip"
+                          title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
+                        <i class="bi bi-calculator"></i>
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-center">
+                                    <th class="text-start">الحساب</th>
+                                    <th>افتتاحي</th>
+                                    <th>داخل</th>
+                                    <th>خارج</th>
+                                    <th>صافي حركة</th>
+                                    <th>رصيد تقديري</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @php $banks = $bankAccountsSummary ?? collect(); @endphp
+                            @forelse($banks as $b)
+                                @php
+                                    $opening = (float)($b->opening_balance ?? 0);
+                                    $in      = (float)($b->inflow ?? 0);
+                                    $out     = (float)($b->outflow ?? 0);
+                                    $net     = $in - $out;
+                                    $bal     = $opening + $net;
+                                    $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
+                                    $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
+                                @endphp
+                                <tr class="text-center">
+                                    <td class="text-start">
+                                        <i class="bi bi-bank"></i>
+                                        {{ $b->name ?? ('#'.$b->id) }}
+                                    </td>
+                                    <td>{{ number_format($opening, 2) }}</td>
+                                    <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
+                                    <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
+                                    <td class="fw-bold {{ $netClass }}">{{ number_format($net, 2) }}</td>
+                                    <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" class="text-muted text-center py-4">لا توجد حسابات بنكية.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer small text-muted">
+                    * الأرقام محسوبة من دفتر القيود، وتشمل التحويلات الداخلية حسب اتجاهها (داخل/خارج).
+                </div>
+            </div>
+        </div>
+
+        {{-- الخزن --}}
+        <div class="col-lg-6">
+            <div class="section-card card border-0">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>حالة الخزن</span>
+                    <span class="small text-muted" data-bs-toggle="tooltip"
+                          title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
+                        <i class="bi bi-safe2"></i>
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-center">
+                                    <th class="text-start">الخزنة</th>
+                                    <th>افتتاحي</th>
+                                    <th>داخل</th>
+                                    <th>خارج</th>
+                                    <th>صافي حركة</th>
+                                    <th>رصيد تقديري</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @php $safes = $safesSummary ?? collect(); @endphp
+                            @forelse($safes as $s)
+                                @php
+                                    $opening = (float)($s->opening_balance ?? 0);
+                                    $in      = (float)($s->inflow ?? 0);
+                                    $out     = (float)($s->outflow ?? 0);
+                                    $net     = $in - $out;
+                                    $bal     = $opening + $net;
+                                    $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
+                                    $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
+                                @endphp
+                                <tr class="text-center">
+                                    <td class="text-start">
+                                        <i class="bi bi-safe2"></i>
+                                        {{ $s->name ?? ('#'.$s->id) }}
+                                    </td>
+                                    <td>{{ number_format($opening, 2) }}</td>
+                                    <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
+                                    <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
+                                    <td class="fw-bold {{ $netClass }}">{{ number_format($net, 2) }}</td>
+                                    <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="6" class="text-muted text-center py-4">لا توجد خزن.</td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer small text-muted">
+                    * الأرقام محسوبة من دفتر القيود، وتشمل التحويلات الداخلية حسب اتجاهها (داخل/خارج).
+                </div>
             </div>
         </div>
     </div>
@@ -288,37 +476,112 @@ document.addEventListener('DOMContentLoaded', function(){
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
 
-    // Chart
-    const canvas = document.getElementById('statusChart');
-    if (!canvas) return;
-
-    const labels = @json(($chartLabels ?? collect())->values());
-    const data   = @json(($chartData ?? collect())->values());
-
-    if (!labels.length || !data.length) {
-        canvas.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات للمخطط.</div>';
-        return;
-    }
-
-    new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-            labels,
-            datasets: [{
-                data,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            cutout: '58%',
-            plugins: {
-                legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10 } },
-                tooltip: { rtl: true, bodySpacing: 6, padding: 10 }
-            },
-            animation: { animateScale: true, animateRotate: true }
+    // Doughnut (statuses)
+    (function(){
+        const el = document.getElementById('statusChart');
+        if (!el) return;
+        const labels = @json(($chartLabels ?? collect())->values());
+        const data   = @json(($chartData ?? collect())->values());
+        if (!labels.length || !data.length) {
+            el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات للمخطط.</div>';
+            return;
         }
-    });
+        new Chart(el, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data, borderWidth: 1 }] },
+            options: {
+                responsive: true, cutout: '58%',
+                plugins: { legend: { position:'bottom', labels:{ usePointStyle:true, boxWidth:10 } }, tooltip:{ rtl:true } },
+                animation: { animateScale:true, animateRotate:true }
+            }
+        });
+    })();
+
+    // Line: Daily cashflow
+    (function(){
+        const el = document.getElementById('cashLineChart');
+        if (!el) return;
+        const labels = @json(($timeSeries['labels'] ?? ($timeSeries->labels ?? [])));
+        const inflow = @json(($timeSeries['in']     ?? ($timeSeries->in     ?? [])));
+        const outflow= @json(($timeSeries['out']    ?? ($timeSeries->out    ?? [])));
+        const net    = @json(($timeSeries['net']    ?? ($timeSeries->net    ?? [])));
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات يومية.</div>'; return; }
+        new Chart(el, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'داخل', data: inflow, tension:.3, borderWidth:2, fill:false },
+                    { label: 'خارج', data: outflow, tension:.3, borderWidth:2, fill:false },
+                    { label: 'صافي', data: net, tension:.3, borderWidth:2, fill:false }
+                ]
+            },
+            options: {
+                responsive:true,
+                interaction:{ mode:'index', intersect:false },
+                plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } },
+                scales:{ y:{ beginAtZero:true } }
+            }
+        });
+    })();
+
+    // Bar (stacked): Monthly in/out
+    (function(){
+        const el = document.getElementById('monthlyBarChart');
+        if (!el) return;
+        const labels = @json(($monthlySeries['labels'] ?? ($monthlySeries->labels ?? [])));
+        const inflow = @json(($monthlySeries['in']     ?? ($monthlySeries->in     ?? [])));
+        const outflow= @json(($monthlySeries['out']    ?? ($monthlySeries->out    ?? [])));
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات شهرية.</div>'; return; }
+        new Chart(el, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    { label:'داخل', data: inflow, borderWidth:1, stack:'s' },
+                    { label:'خارج', data: outflow, borderWidth:1, stack:'s' }
+                ]
+            },
+            options: {
+                responsive:true,
+                plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } },
+                scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } }
+            }
+        });
+    })();
+
+    // Doughnut: Account distribution (banks vs safes)
+    (function(){
+        const el = document.getElementById('acctDistChart');
+        if (!el) return;
+        const labels = @json(($distribution['labels'] ?? ($distribution->labels ?? ['بنوك','خزن'])));
+        const data   = @json(($distribution['data']   ?? ($distribution->data   ?? [0,0])));
+        if (!data.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات توزيع.</div>'; return; }
+        new Chart(el, {
+            type: 'doughnut',
+            data: { labels, datasets:[{ data, borderWidth:1 }] },
+            options: { responsive:true, cutout:'58%', plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } } }
+        });
+    })();
+
+    // Horizontal Bar: Top balances
+    (function(){
+        const el = document.getElementById('topBalancesChart');
+        if (!el) return;
+        const labels = @json($topBalLabels ?? []);
+        const data   = @json($topBalData ?? []);
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد أرصدة كافية للعرض.</div>'; return; }
+        new Chart(el, {
+            type: 'bar',
+            data: { labels, datasets: [{ label:'رصيد تقديري', data, borderWidth:1 }] },
+            options: {
+                indexAxis: 'y',
+                responsive:true,
+                plugins:{ legend:{ display:false }, tooltip:{ rtl:true } },
+                scales:{ x:{ beginAtZero:true } }
+            }
+        });
+    })();
 });
 </script>
 @endsection

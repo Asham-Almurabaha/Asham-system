@@ -17,7 +17,6 @@ class DashboardController extends Controller
             ->groupBy('contract_status_id')
             ->get();
 
-        // أسماء الحالات مرة واحدة
         $statusNames = ContractStatus::pluck('name', 'id');
 
         $statuses = $statusCounts->map(function ($row) use ($statusNames, $contractsTotal) {
@@ -39,7 +38,7 @@ class DashboardController extends Controller
         $TYPE_OUT  = (int) ($typeIds['سحب'] ?? -1);
         $TYPE_XFER = (int) ($typeIds['تحويل بين حسابات'] ?? -1);
 
-        // ====== سيولة المستثمرين ======
+        // ====== سيولة المستثمرين (جداول المستثمرين كما هي) ======
         $invTotals = DB::table('investor_transactions as it')
             ->leftJoin('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
             ->selectRaw("
@@ -52,9 +51,8 @@ class DashboardController extends Controller
         $invTotals->inflow    = (float)$invTotals->inflow;
         $invTotals->outflow   = (float)$invTotals->outflow;
         $invTotals->transfers = (float)$invTotals->transfers;
-        $invTotals->net       = (float)$invTotals->inflow - (float)$invTotals->outflow; // التحويلات محايدة
+        $invTotals->net       = (float)$invTotals->inflow - (float)$invTotals->outflow;
 
-        // أعلى 10 مستثمرين بالصافي (حساب الصافي داخل SQL + ترتيب وحدّ أعلى)
         $invByInvestor = DB::table('investor_transactions as it')
             ->join('investors as i', 'i.id', '=', 'it.investor_id')
             ->leftJoin('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
@@ -77,7 +75,7 @@ class DashboardController extends Controller
             ->limit(10)
             ->get();
 
-        // ====== سيولة المكتب ======
+        // ====== سيولة المكتب (جداول المكتب كما هي) ======
         $officeTotals = DB::table('office_transactions as ot')
             ->leftJoin('transaction_statuses as ts', 'ts.id', '=', 'ot.status_id')
             ->selectRaw("
@@ -92,18 +90,50 @@ class DashboardController extends Controller
         $officeTotals->transfers = (float)$officeTotals->transfers;
         $officeTotals->net       = (float)$officeTotals->inflow - (float)$officeTotals->outflow;
 
+        // ====== ملخص كل حساب (من دفتر القيود) ======
+        // البنوك
+        $bankAccountsSummary = DB::table('bank_accounts as b')
+            ->leftJoin('ledger_entries as le', 'le.bank_account_id', '=', 'b.id')
+            ->select(
+                'b.id',
+                'b.name',
+                'b.opening_balance',
+                DB::raw("COALESCE(SUM(CASE WHEN le.direction = 'in'  THEN le.amount ELSE 0 END), 0) AS inflow"),
+                DB::raw("COALESCE(SUM(CASE WHEN le.direction = 'out' THEN le.amount ELSE 0 END), 0) AS outflow")
+            )
+            ->groupBy('b.id', 'b.name', 'b.opening_balance')
+            ->orderBy('b.name')
+            ->get();
+
+        // الخزن
+        $safesSummary = DB::table('safes as s')
+            ->leftJoin('ledger_entries as le', 'le.safe_id', '=', 's.id')
+            ->select(
+                's.id',
+                's.name',
+                's.opening_balance',
+                DB::raw("COALESCE(SUM(CASE WHEN le.direction = 'in'  THEN le.amount ELSE 0 END), 0) AS inflow"),
+                DB::raw("COALESCE(SUM(CASE WHEN le.direction = 'out' THEN le.amount ELSE 0 END), 0) AS outflow")
+            )
+            ->groupBy('s.id', 's.name', 's.opening_balance')
+            ->orderBy('s.name')
+            ->get();
+
         // ====== بيانات المخطط ======
         $chartLabels = $statuses->pluck('name')->values();
         $chartData   = $statuses->pluck('count')->values();
 
         return view('dashboard.index', [
-            'contractsTotal' => $contractsTotal,
-            'statuses'       => $statuses,
-            'invTotals'      => $invTotals,
-            'invByInvestor'  => $invByInvestor,
-            'officeTotals'   => $officeTotals,
-            'chartLabels'    => $chartLabels,
-            'chartData'      => $chartData,
+            'contractsTotal'      => $contractsTotal,
+            'statuses'            => $statuses,
+            'invTotals'           => $invTotals,
+            'invByInvestor'       => $invByInvestor,
+            'officeTotals'        => $officeTotals,
+            'chartLabels'         => $chartLabels,
+            'chartData'           => $chartData,
+            // جديدة للواجهة:
+            'bankAccountsSummary' => $bankAccountsSummary,
+            'safesSummary'        => $safesSummary,
         ]);
     }
 }

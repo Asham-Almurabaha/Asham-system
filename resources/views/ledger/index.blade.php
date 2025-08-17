@@ -31,7 +31,7 @@
 
     <div class="collapse @if(($filters['party_category'] ?? '') || ($filters['investor_id'] ?? '') || ($filters['status_id'] ?? '') || ($filters['account_type'] ?? '') || ($filters['from'] ?? '') || ($filters['to'] ?? '')) show @endif border-top" id="filterBar">
         <div class="card-body">
-            <form method="GET" action="{{ route('ledger.index') }}" class="row gy-2 gx-2 align-items-end">
+            <form method="GET" action="{{ route('ledger.index') }}" class="row gy-2 gx-2 align-items-end" id="filtersForm">
                 <div class="col-12 col-md-2">
                     <label class="form-label mb-1">الفئة</label>
                     <select name="party_category" id="party_category" class="form-select form-select-sm">
@@ -43,7 +43,7 @@
 
                 <div class="col-12 col-md-3" id="investorWrap">
                     <label class="form-label mb-1">المستثمر</label>
-                    <select name="investor_id" class="form-select form-select-sm">
+                    <select name="investor_id" id="investor_id" class="form-select form-select-sm">
                         <option value="">الكل</option>
                         @foreach($investors as $inv)
                             <option value="{{ $inv->id }}" @selected((string)($filters['investor_id'] ?? '') === (string)$inv->id)>{{ $inv->name }}</option>
@@ -58,13 +58,17 @@
 
                         <optgroup label="حالات المستثمرين" data-cat="investors">
                             @foreach($statusesInvestors as $st)
-                                <option value="{{ $st->id }}" data-cat="investors" @selected((string)($filters['status_id'] ?? '') === (string)$st->id)>{{ $st->name }}</option>
+                                @if(($st->transaction_type_id ?? null) != 3)
+                                    <option value="{{ $st->id }}" data-cat="investors" data-type="{{ $st->transaction_type_id }}" @selected((string)($filters['status_id'] ?? '') === (string)$st->id)>{{ $st->name }}</option>
+                                @endif
                             @endforeach
                         </optgroup>
 
                         <optgroup label="حالات المكتب" data-cat="office">
                             @foreach($statusesOffice as $st)
-                                <option value="{{ $st->id }}" data-cat="office" @selected((string)($filters['status_id'] ?? '') === (string)$st->id)>{{ $st->name }}</option>
+                                @if(($st->transaction_type_id ?? null) != 3)
+                                    <option value="{{ $st->id }}" data-cat="office" data-type="{{ $st->transaction_type_id }}" @selected((string)($filters['status_id'] ?? '') === (string)$st->id)>{{ $st->name }}</option>
+                                @endif
                             @endforeach
                         </optgroup>
                     </select>
@@ -72,7 +76,7 @@
 
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">نوع الحساب</label>
-                    <select name="account_type" class="form-select form-select-sm">
+                    <select name="account_type" id="account_type" class="form-select form-select-sm">
                         <option value="">الكل</option>
                         <option value="bank" @selected(($filters['account_type'] ?? '') === 'bank')>حساب بنكي</option>
                         <option value="safe" @selected(($filters['account_type'] ?? '') === 'safe')>خزنة</option>
@@ -81,16 +85,16 @@
 
                 <div class="col-6 col-md-1">
                     <label class="form-label mb-1">من</label>
-                    <input type="date" name="from" value="{{ $filters['from'] ?? '' }}" class="form-control form-control-sm">
+                    <input type="date" name="from" id="from" value="{{ $filters['from'] ?? '' }}" class="form-control form-control-sm">
                 </div>
                 <div class="col-6 col-md-1">
                     <label class="form-label mb-1">إلى</label>
-                    <input type="date" name="to" value="{{ $filters['to'] ?? '' }}" class="form-control form-control-sm">
+                    <input type="date" name="to" id="to" value="{{ $filters['to'] ?? '' }}" class="form-control form-control-sm">
                 </div>
 
                 <div class="col-12 d-flex gap-2">
                     <button class="btn btn-primary btn-sm">تصفية</button>
-                    <a href="{{ route('ledger.index') }}" class="btn btn-outline-secondary btn-sm">مسح</a>
+                    <a href="{{ route('ledger.index') }}" class="btn btn-outline-secondary btn-sm" id="btnClear">مسح</a>
                 </div>
             </form>
         </div>
@@ -128,9 +132,9 @@
 
 {{-- الجدول --}}
 <div class="card shadow-sm">
-    <div class="card-body table-responsive">
+    <div class="card-body table-responsive p-0">
         <table class="table table-hover align-middle text-center mb-0">
-            <thead class="table-light">
+            <thead class="table-light" style="position: sticky; top: 0; z-index: 2;">
                 <tr>
                     <th style="width:120px">التاريخ</th>
                     <th>الجهة</th>
@@ -139,7 +143,6 @@
                     <th>الاتجاه</th>
                     <th class="text-end">المبلغ</th>
                     <th>الحساب</th>
-                    <th>ملاحظات</th>
                 </tr>
             </thead>
             <tbody>
@@ -153,7 +156,20 @@
                                 {{ $e->investor->name ?? '-' }}
                             @endif
                         </td>
-                        <td>{{ $e->status->name ?? '-' }}</td>
+                        <td>
+                            @php $statusText = $e->status->name ?? '-'; @endphp
+                            @if(!empty($e->notes))
+                                <span
+                                    data-bs-toggle="tooltip"
+                                    data-bs-container="body"
+                                    data-bs-placement="top"
+                                    title="{{ $e->notes }}">
+                                    {{ $statusText }}
+                                </span>
+                            @else
+                                {{ $statusText }}
+                            @endif
+                        </td>
                         <td>{{ $e->type->name ?? '-' }}</td>
                         <td>
                             @if($e->direction === 'in')
@@ -175,54 +191,112 @@
                                 -
                             @endif
                         </td>
-                        <td class="text-muted">
-                            {{ \Illuminate\Support\Str::limit($e->notes, 60) }}
-                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="py-5 text-muted">لا توجد قيود مطابقة للبحث.</td>
+                        <td colspan="7" class="py-5 text-muted">لا توجد قيود مطابقة للبحث.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
 
         @if($entries->hasPages())
-        <div class="mt-3">
+        <div class="mt-3 p-3">
             {{ $entries->withQueryString()->links('pagination::bootstrap-5') }}
         </div>
         @endif
     </div>
 </div>
 
+@push('styles')
+<style>
+/* تحسين تمرير الجدول */
+.table-responsive { max-height: 65vh; }
+</style>
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const catSelect   = document.getElementById('party_category');
-    const investorDiv = document.getElementById('investorWrap');
-    const statusSel   = document.getElementById('status_id');
+    const form         = document.getElementById('filtersForm');
+    const catSelect    = document.getElementById('party_category');
+    const investorWrap = document.getElementById('investorWrap');
+    const investorSel  = document.getElementById('investor_id');
+    const statusSel    = document.getElementById('status_id');
+    const accountType  = document.getElementById('account_type');
+    const fromDate     = document.getElementById('from');
+    const toDate       = document.getElementById('to');
 
-    function applyCategoryUI() {
+    // --- Debounce helper ---
+    let timer = null;
+    function autosubmit() {
+        clearTimeout(timer);
+        timer = setTimeout(() => form.requestSubmit(), 300);
+    }
+
+    // --- إظهار/إخفاء المستثمر بدون تحريك الشبكة (نحافظ على المساحة) ---
+    function syncInvestorVisibility() {
+        const isInv = (catSelect.value === 'investors' || catSelect.value === '');
+        investorWrap.classList.toggle('invisible', !isInv);
+        investorSel.disabled = !isInv;
+        if (!isInv) investorSel.value = '';
+    }
+
+    // --- فلترة الحالات حسب الفئة + إخفاء حالات التحويل (type=3) ---
+    const allStatusOptions = Array.from(statusSel.querySelectorAll('option[data-cat]'));
+    function filterStatusesByCategory() {
         const cat = catSelect.value;
-        investorDiv.style.display = (cat === 'investors' || cat === '') ? '' : 'none';
+        let keepSelected = false;
 
-        // إظهار/إخفاء الحالات بحسب الفئة
-        [...statusSel.querySelectorAll('optgroup, option')].forEach(el => {
-            if (!el.dataset.cat) return;
-            if (cat === '') {
-                el.disabled = false; el.style.display = '';
+        allStatusOptions.forEach(op => {
+            const isTransfer = (op.dataset.type === '3'); // اخفاء التحويل نهائيا
+            const show = (cat === '' ? true : (op.dataset.cat === cat));
+            if (isTransfer || !show) {
+                op.disabled = true;
+                op.hidden   = true;
+                if (op.selected) keepSelected = true;
             } else {
-                const show = el.dataset.cat === cat;
-                el.disabled = !show;
-                el.style.display = show ? '' : 'none';
+                op.disabled = false;
+                op.hidden   = false;
             }
+        });
+
+        if (keepSelected) statusSel.value = '';
+    }
+
+    // --- تفعيل التولتيب لكل عناصر tooltip ---
+    if (window.bootstrap && bootstrap.Tooltip) {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+            new bootstrap.Tooltip(el);
         });
     }
 
-    if (catSelect) {
-        catSelect.addEventListener('change', applyCategoryUI);
-        applyCategoryUI();
+    // --- ربط الأحداث مع Auto-submit سريع ---
+    [catSelect, investorSel, statusSel, accountType].forEach(el => {
+        el && el.addEventListener('change', () => { 
+            if (el === catSelect) { syncInvestorVisibility(); filterStatusesByCategory(); }
+            autosubmit();
+        });
+    });
+
+    [fromDate, toDate].forEach(el => {
+        el && el.addEventListener('change', autosubmit);
+        el && el.addEventListener('keyup', (e)=> { if (e.key === 'Enter') autosubmit(); });
+    });
+
+    // زر مسح
+    const btnClear = document.getElementById('btnClear');
+    if (btnClear) {
+        btnClear.addEventListener('click', function (e) {
+            e.preventDefault();
+            [catSelect, investorSel, statusSel, accountType, fromDate, toDate].forEach(el => { if (el) el.value = ''; });
+            form.requestSubmit();
+        });
     }
+
+    // init
+    syncInvestorVisibility();
+    filterStatusesByCategory();
 });
 </script>
 @endpush

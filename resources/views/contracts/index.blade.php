@@ -16,7 +16,7 @@
 {{-- شريط الأدوات --}}
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <a href="{{ route('contracts.create') }}" class="btn btn-success">
+        <a href="{{ route('contracts.create') }}" class="btn btn-outline-success">
             + إضافة عقد جديد
         </a>
 
