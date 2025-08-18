@@ -62,11 +62,11 @@
         <form method="GET" action="{{ url()->current() }}" class="card-body row gy-2 gx-2 align-items-end">
             <div class="col-6 col-md-2">
                 <label class="form-label mb-1">من</label>
-                <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm">
+                <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm js-date">
             </div>
             <div class="col-6 col-md-2">
                 <label class="form-label mb-1">إلى</label>
-                <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm">
+                <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm js-date">
             </div>
             <div class="col-12 col-md-3">
                 <button class="btn btn-primary btn-sm">تحديث</button>
@@ -78,16 +78,19 @@
         </form>
     </div>
 
-    {{-- ====== حسابات تفصيلية للمكتب (ربح المكتب/فرق البيع/المكاتبة) ====== --}}
+    {{-- ====== حسابات تفصيلية + KPIs إضافية ====== --}}
     @php
         use Illuminate\Support\Facades\DB;
+        use Illuminate\Support\Facades\Schema;
+
         $from = request('from'); $to = request('to');
 
-        $statusMap = \App\Models\TransactionStatus::whereIn('name', ['ربح المكتب','ربح فرق البيع','المكاتبة'])
+        // ===== معاملات المكتب =====
+        $statusMap = \App\Models\TransactionStatus::whereIn('name', ['ربح المكتب','فرق البيع','المكاتبة'])
             ->pluck('id','name');
 
         $officeProfitId = $statusMap['ربح المكتب']    ?? null;
-        $saleDiffId     = $statusMap['ربح فرق البيع'] ?? null;
+        $saleDiffId     = $statusMap['فرق البيع'] ?? null;
         $mukatabaId     = $statusMap['المكاتبة']      ?? null;
 
         $baseOT = \App\Models\OfficeTransaction::query();
@@ -98,12 +101,10 @@
         $saleDiffTotal     = $saleDiffId     ? (clone $baseOT)->where('status_id', $saleDiffId)->sum('amount') : 0.0;
         $mukatabaTotal     = $mukatabaId     ? (clone $baseOT)->where('status_id', $mukatabaId)->sum('amount') : 0.0;
 
-        // أحدث 10 معاملات مكتب
         $officeRecent = (clone $baseOT)->with('investor')
             ->orderByDesc('transaction_date')->orderByDesc('id')
             ->limit(10)->get();
 
-        // سلاسل شهرية لربح المكتب + فرق البيع
         $monthRows = (clone $baseOT)
             ->when($officeProfitId || $saleDiffId, function($q) use($officeProfitId, $saleDiffId){
                 $ids = array_values(array_filter([$officeProfitId, $saleDiffId], fn($v)=>!is_null($v)));
@@ -123,7 +124,6 @@
             $seriesSaleDiff[] = (float)($rowSale->total ?? 0);
         }
 
-        // أعلى 10 مستثمرين في ربح المكتب
         $topOfficeByInvestor = $officeProfitId
             ? (clone $baseOT)->where('status_id', $officeProfitId)
                 ->selectRaw('investor_id, SUM(amount) as total')
@@ -136,6 +136,115 @@
 
         $topOfficeLabels = $topOfficeByInvestor->map(fn($r)=> $invNames[$r->investor_id] ?? ('#'.$r->investor_id));
         $topOfficeData   = $topOfficeByInvestor->pluck('total')->map(fn($v)=> (float)$v);
+
+        // ===== دفتر القيود العام =====
+        $baseLE = \App\Models\LedgerEntry::query();
+        if ($from) $baseLE->whereDate('entry_date', '>=', $from);
+        if ($to)   $baseLE->whereDate('entry_date', '<=', $to);
+
+        $invIn   = (float) (clone $baseLE)->where('is_office', false)->where('direction', 'in')->sum('amount');
+        $invOut  = (float) (clone $baseLE)->where('is_office', false)->where('direction', 'out')->sum('amount');
+        $invNetK = $invIn - $invOut;
+
+        $offIn   = (float) (clone $baseLE)->where('is_office', true)->where('direction', 'in')->sum('amount');
+        $offOut  = (float) (clone $baseLE)->where('is_office', true)->where('direction', 'out')->sum('amount');
+        $offNetK = $offIn - $offOut;
+
+        $transfersCount = (int) (clone $baseLE)->where('transaction_type_id', 3)->count();
+        $avgTicketAll   = (float) (clone $baseLE)->avg('amount'); // (لم يعد مستخدمًا في العرض)
+
+        $recentLedger = (clone $baseLE)->with(['investor','bankAccount','safe','status'])
+            ->orderByDesc('entry_date')->orderByDesc('id')->limit(10)->get();
+
+        // ===== البضائع (اختياري) =====
+        $goodsEnabled = Schema::hasTable('product_transactions') && Schema::hasTable('products');
+        $topProducts = collect(); $goodsBuyQty = 0; $goodsSellQty = 0; $goodsMonths = []; $goodsBuySeries = []; $goodsSellSeries = [];
+
+        if ($goodsEnabled) {
+            $buyStatusId  = DB::table('transaction_statuses')->where('name','شراء بضائع')->value('id');
+            $sellStatusId = DB::table('transaction_statuses')->where('name','بيع بضائع')->value('id');
+
+            $goodsBase = DB::table('product_transactions as pt')
+                ->join('ledger_entries as le', 'le.id', '=', 'pt.ledger_entry_id');
+
+            if ($from) $goodsBase->whereDate('le.entry_date', '>=', $from);
+            if ($to)   $goodsBase->whereDate('le.entry_date', '<=', $to);
+
+            $goodsBuyQty  = $buyStatusId  ? (clone $goodsBase)->where('le.transaction_status_id', $buyStatusId)->sum('pt.quantity')  : 0;
+            $goodsSellQty = $sellStatusId ? (clone $goodsBase)->where('le.transaction_status_id', $sellStatusId)->sum('pt.quantity') : 0;
+
+            $topProducts = (clone $goodsBase)
+                ->join('products as p','p.id','=','pt.product_id')
+                ->selectRaw('p.name as name, SUM(pt.quantity) as qty')
+                ->groupBy('p.name')
+                ->orderByDesc('qty')
+                ->limit(10)->get();
+
+            $goodsMonthRows = (clone $goodsBase)
+                ->selectRaw("DATE_FORMAT(le.entry_date, '%Y-%m') as ym, le.transaction_status_id as sid, SUM(pt.quantity) as qty")
+                ->when($buyStatusId || $sellStatusId, function($q) use($buyStatusId, $sellStatusId){
+                    $ids = array_values(array_filter([$buyStatusId, $sellStatusId], fn($v)=>!is_null($v)));
+                    return $q->whereIn('le.transaction_status_id', $ids);
+                })
+                ->groupBy('ym','sid')->orderBy('ym')->get();
+
+            $goodsMonths = $goodsMonthRows->pluck('ym')->unique()->values()->all();
+            foreach ($goodsMonths as $m) {
+                $rb = $goodsMonthRows->firstWhere(fn($r)=>$r->ym === $m && (int)$r->sid === (int)$buyStatusId);
+                $rs = $goodsMonthRows->firstWhere(fn($r)=>$r->ym === $m && (int)$r->sid === (int)$sellStatusId);
+                $goodsBuySeries[]  = (int)($rb->qty ?? 0);
+                $goodsSellSeries[] = (int)($rs->qty ?? 0);
+            }
+        }
+
+        // ===== مخزون متاح حسب نوع البضاعة (غير خاضع للفترة) =====
+        $inventoryByType = collect();
+        $totalAvailableUnits = 0;
+
+        if ($goodsEnabled && Schema::hasTable('product_types')) {
+            $buyId  = DB::table('transaction_statuses')->where('name','شراء بضائع')->value('id');
+            $sellId = DB::table('transaction_statuses')->where('name','بيع بضائع')->value('id');
+
+            $invRows = DB::table('product_transactions as pt')
+                ->join('ledger_entries as le','le.id','=','pt.ledger_entry_id')
+                ->join('products as p','p.id','=','pt.product_id')
+                ->leftJoin('product_types as t','t.id','=','p.product_type_id')
+                ->selectRaw("
+                    COALESCE(t.id, 0) as type_id,
+                    COALESCE(t.name, 'غير محدد') as type_name,
+                    SUM(CASE WHEN le.transaction_status_id = ? THEN pt.quantity ELSE 0 END) as buy_qty,
+                    SUM(CASE WHEN le.transaction_status_id = ? THEN pt.quantity ELSE 0 END) as sell_qty
+                ", [$buyId ?: 0, $sellId ?: 0])
+                ->groupBy('type_id','type_name')
+                ->orderBy('type_name')
+                ->get();
+
+            $inventoryByType = $invRows->map(function($r){
+                $buy  = (int)($r->buy_qty ?? 0);
+                $sell = (int)($r->sell_qty ?? 0);
+                return (object)[
+                    'type_id'   => (int)$r->type_id,
+                    'type_name' => $r->type_name,
+                    'bought'    => $buy,
+                    'sold'      => $sell,
+                    'available' => $buy - $sell,
+                ];
+            });
+
+            $totalAvailableUnits = $inventoryByType->sum(fn($x) => max(0, (int)$x->available));
+        }
+
+        // ===== ملخصات جاهزة للعرض =====
+        $invNet  = (float)($invTotals->net ?? 0);
+        $offNet  = (float)($officeTotals->net ?? 0);
+        $invCls  = $invNet >= 0 ? 'text-pos' : 'text-neg';
+        $offCls  = $offNet >= 0 ? 'text-pos' : 'text-neg';
+
+        $kpi = (object) [
+            'entries_count'        => (int)($entriesCount ?? ($contractsTotal ?? 0)),
+            'active_investors'     => (int)($activeInvestors ?? ($invByInvestor->count() ?? 0)),
+            'stock_available_total'=> (int)$totalAvailableUnits,
+        ];
     @endphp
 
     {{-- ====== HERO ====== --}}
@@ -168,7 +277,7 @@
                 <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي ربح المكتب ضمن الفترة">
                     <i class="bi bi-briefcase me-1"></i> ربح المكتب: {{ number_format($officeProfitTotal, 2) }}
                 </span>
-                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي ربح فرق البيع ضمن الفترة">
+                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي فرق البيع ضمن الفترة">
                     <i class="bi bi-percent me-1"></i> فرق البيع: {{ number_format($saleDiffTotal, 2) }}
                 </span>
                 @if(($mukatabaId ?? null))
@@ -180,20 +289,7 @@
         </div>
     </div>
 
-    {{-- ====== KPIs إضافية ====== --}}
-    @php
-        $invNet  = (float)($invTotals->net ?? 0);
-        $offNet  = (float)($officeTotals->net ?? 0);
-        $invCls  = $invNet >= 0 ? 'text-pos' : 'text-neg';
-        $offCls  = $offNet >= 0 ? 'text-pos' : 'text-neg';
-
-        $kpi = (object) [
-            'entries_count' => (int)($entriesCount ?? ($contractsTotal ?? 0)),
-            'avg_amount'    => (float)($avgAmount ?? 0),
-            'active_investors' => (int)($activeInvestors ?? ($invByInvestor->count() ?? 0)),
-        ];
-    @endphp
-
+    {{-- ====== KPIs عامة (أعدنا ترتيبها: شِلنا متوسط القيد، أضفنا المخزون المتاح) ====== --}}
     <div class="row g-3">
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
@@ -208,11 +304,11 @@
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-cash-coin fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">متوسط القيد</div>
+                    <div class="kpi-icon"><i class="bi bi-boxes fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">المخزون المتاح</div>
                 </div>
-                <div class="kpi-value fw-bold">{{ number_format($kpi->avg_amount, 2) }}</div>
-                <div class="small text-muted mt-2">قيمة متوسّطة لكل عملية</div>
+                <div class="kpi-value fw-bold">{{ number_format($kpi->stock_available_total) }}</div>
+                <div class="small text-muted mt-2">إجمالي الوحدات (كل الأنواع)</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
@@ -233,6 +329,65 @@
                 </div>
                 <div class="kpi-value fw-bold {{ ($invNet+$offNet)>=0 ? 'text-pos':'text-neg' }}">{{ number_format($invNet + $offNet, 2) }}</div>
                 <div class="small text-muted mt-2">مستثمرين + مكتب</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ====== بطاقات إضافية للمستثمرين والمكتب ====== --}}
+    <div class="row g-3 mt-1">
+        <div class="col-12 col-md-6">
+            <div class="kpi-card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="kpi-icon"><i class="bi bi-person-lines-fill fs-5 text-primary"></i></div>
+                        <div class="fw-bold text-muted">حركة المستثمرين</div>
+                    </div>
+                    <span class="badge bg-light text-dark">ضمن الفترة</span>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="small text-muted">داخل</div>
+                        <div class="fw-bold text-pos">{{ number_format($invIn, 2) }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-muted">خارج</div>
+                        <div class="fw-bold text-neg">{{ number_format($invOut, 2) }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-muted">صافي</div>
+                        <div class="fw-bold {{ $invNetK>=0 ? 'text-pos':'text-neg' }}">{{ number_format($invNetK, 2) }}</div>
+                    </div>
+                </div>
+                <div class="small text-muted mt-2">اعتمادًا على اتجاه القيود للمستثمرين فقط.</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="kpi-card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="kpi-icon"><i class="bi bi-building fs-5 text-primary"></i></div>
+                        <div class="fw-bold text-muted">حركة المكتب</div>
+                    </div>
+                    <span class="badge bg-light text-dark">ضمن الفترة</span>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="small text-muted">داخل</div>
+                        <div class="fw-bold text-pos">{{ number_format($offIn, 2) }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-muted">خارج</div>
+                        <div class="fw-bold text-neg">{{ number_format($offOut, 2) }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-muted">صافي</div>
+                        <div class="fw-bold {{ $offNetK>=0 ? 'text-pos':'text-neg' }}">{{ number_format($offNetK, 2) }}</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between small text-muted mt-2">
+                    <span><i class="bi bi-arrow-left-right"></i> التحويلات الداخلية: <strong>{{ number_format($transfersCount) }}</strong></span>
+                    <span><i class="bi bi-cash-stack"></i> متوسط القيد: <strong>{{ number_format($avgTicketAll, 2) }}</strong></span>
+                </div>
             </div>
         </div>
     </div>
@@ -315,10 +470,10 @@
                             <div class="kpi-card p-3">
                                 <div class="d-flex align-items-center gap-2 mb-2">
                                     <div class="kpi-icon"><i class="bi bi-percent fs-5 text-primary"></i></div>
-                                    <div class="fw-bold text-muted">إجمالي ربح فرق البيع</div>
+                                    <div class="fw-bold text-muted">إجمالي فرق البيع</div>
                                 </div>
                                 <div class="kpi-value fw-bold">{{ number_format($saleDiffTotal, 2) }}</div>
-                                <div class="small text-muted mt-2">حالة "ربح فرق البيع"</div>
+                                <div class="small text-muted mt-2">حالة "فرق البيع"</div>
                             </div>
                         </div>
                         <div class="col-12 col-md-4">
@@ -363,6 +518,7 @@
                         </div>
                     </div>
 
+                    {{-- أحدث 10 معاملات مكتب --}}
                     <div class="row g-3 mt-1">
                         <div class="col-12">
                             <div class="section-card card border-0">
@@ -388,9 +544,7 @@
                                                 @forelse($officeRecent as $r)
                                                     <tr class="text-center">
                                                         <td class="text-start">{{ \Illuminate\Support\Carbon::parse($r->transaction_date)->format('Y-m-d') }}</td>
-                                                        <td>
-                                                            {{ optional(\App\Models\TransactionStatus::find($r->status_id))->name ?? '-' }}
-                                                        </td>
+                                                        <td>{{ optional(\App\Models\TransactionStatus::find($r->status_id))->name ?? '-' }}</td>
                                                         <td>{{ optional($r->investor)->name ?? '—' }}</td>
                                                         <td>{{ $r->contract_id ? '#'.$r->contract_id : '—' }}</td>
                                                         <td>{{ $r->installment_id ? '#'.$r->installment_id : '—' }}</td>
@@ -412,6 +566,61 @@
                     </div>
 
                 </div> {{-- /card-body --}}
+            </div>
+        </div>
+    </div>
+
+    {{-- ====== أحدث 10 قيود عامة (دفتر القيود) ====== --}}
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="section-card card border-0">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>أحدث 10 قيود في دفتر القيود</span>
+                    <span class="small text-muted"><i class="bi bi-clock-history"></i></span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr class="text-center">
+                                    <th class="text-start">التاريخ</th>
+                                    <th>الجهة</th>
+                                    <th>الحالة</th>
+                                    <th>الحساب</th>
+                                    <th>الاتجاه</th>
+                                    <th>المبلغ</th>
+                                    <th class="text-start">ملاحظات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentLedger as $e)
+                                    <tr class="text-center">
+                                        <td class="text-start">{{ \Illuminate\Support\Carbon::parse($e->entry_date)->format('Y-m-d') }}</td>
+                                        <td>{{ $e->is_office ? 'المكتب' : (optional($e->investor)->name ?? '—') }}</td>
+                                        <td>{{ optional($e->status)->name ?? '—' }}</td>
+                                        <td>
+                                            @if($e->bankAccount) <i class="bi bi-bank"></i> {{ $e->bankAccount->name }}
+                                            @elseif($e->safe)   <i class="bi bi-safe2"></i> {{ $e->safe->name }}
+                                            @else — @endif
+                                        </td>
+                                        <td>
+                                            @if($e->direction === 'in') <span class="badge bg-success">داخل</span>
+                                            @elseif($e->direction === 'out') <span class="badge bg-danger">خارج</span>
+                                            @else <span class="badge bg-secondary">—</span>@endif
+                                        </td>
+                                        <td class="fw-semibold">{{ number_format((float)$e->amount, 2) }}</td>
+                                        <td class="text-start">{{ $e->notes }}</td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="7" class="text-muted text-center py-4">لا توجد قيود حديثة.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer small text-muted">
+                    * يشمل قيود المستثمرين والمكتب (حسب نطاق التاريخ).
+                </div>
             </div>
         </div>
     </div>
@@ -451,7 +660,7 @@
         </div>
         <div class="col-xl-6">
             <div class="section-card card border-0 chart-card">
-                <div class="card-header d-flex justify-content بين align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <span>التدفق الشهري (داخل/خارج)</span>
                     <span class="small text-muted"><i class="bi bi-bar-chart-steps" data-bs-toggle="tooltip"
                         title="قِيَم مكدّسة لكل شهر"></i></span>
@@ -490,57 +699,132 @@
         </div>
     </div>
 
-    {{-- ====== أعلى المستثمرين (كما هو) ====== --}}
+    {{-- ====== (اختياري) قسم البضائع لو الجداول متوفرة ====== --}}
+    @if($goodsEnabled)
     <div class="row g-3 mt-1">
         <div class="col-12">
             <div class="section-card card border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>أعلى 10 مستثمرين حسب الصافي</span>
-                    <span class="text-muted small" data-bs-toggle="tooltip"
-                          title="الصافي لكل مستثمر = داخل − خارج (التحويلات محايدة)">
-                        إجمالي صافي: {{ number_format(($invTotals->net ?? 0), 2) }}
-                    </span>
+                    <span>ملخص البضائع</span>
+                    <span class="text-muted small"><i class="bi bi-box-seam"></i> إجمالي الكميات ضمن الفترة</span>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr class="text-center">
-                                    <th style="width:60px;">#</th>
-                                    <th class="text-start">المستثمر</th>
-                                    <th>داخل</th>
-                                    <th>خارج</th>
-                                    <th>صافي</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            @forelse($invByInvestor as $idx => $row)
-                                @php
-                                    $rowNet = (float)($row->net ?? 0);
-                                    $rowClass = $rowNet >= 0 ? 'text-pos' : 'text-neg';
-                                @endphp
-                                <tr class="text-center">
-                                    <td>{{ $idx + 1 }}</td>
-                                    <td class="text-start fw-semibold">{{ $row->name }}</td>
-                                    <td>{{ number_format(($row->inflow ?? 0), 2) }}</td>
-                                    <td>{{ number_format(($row->outflow ?? 0), 2) }}</td>
-                                    <td class="fw-bold {{ $rowClass }}">{{ number_format($rowNet, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="5" class="text-muted text-center py-4">لا توجد بيانات للمستثمرين.</td></tr>
-                            @endforelse
-                            </tbody>
-                        </table>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <div class="kpi-card p-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="kpi-icon"><i class="bi bi-cart-plus fs-5 text-primary"></i></div>
+                                    <div class="fw-bold text-muted">كميات مُشتراة</div>
+                                </div>
+                                <div class="kpi-value fw-bold">{{ number_format((int)$goodsBuyQty) }}</div>
+                                <div class="small text-muted mt-2">حالة "شراء بضائع"</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="kpi-card p-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="kpi-icon"><i class="bi bi-cart-dash fs-5 text-primary"></i></div>
+                                    <div class="fw-bold text-muted">كميات مُباعة</div>
+                                </div>
+                                <div class="kpi-value fw-bold">{{ number_format((int)$goodsSellQty) }}</div>
+                                <div class="small text-muted mt-2">حالة "بيع بضائع"</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="kpi-card p-3">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <div class="kpi-icon"><i class="bi bi-boxes fs-5 text-primary"></i></div>
+                                    <div class="fw-bold text-muted">صافي حركة الكميات</div>
+                                </div>
+                                <div class="kpi-value fw-bold {{ ($goodsBuyQty-$goodsSellQty)>=0 ? 'text-pos':'text-neg' }}">
+                                    {{ number_format((int)($goodsBuyQty - $goodsSellQty)) }}
+                                </div>
+                                <div class="small text-muted mt-2">مُشتراة − مُباعة</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                @if(($invByInvestor->count() ?? 0) > 0)
-                <div class="card-footer small text-muted">
-                    * الأرقام أعلاه مبنية على اتجاه القيود (داخل/خارج). التحويلات الداخلية محايدة في الصافي العام.
-                </div>
-                @endif
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-lg-6">
+                            <div class="section-card card border-0 chart-card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>شهريًا: شراء vs بيع (كميات)</span>
+                                    <span class="small text-muted"><i class="bi bi-bar-chart-steps"></i></span>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="goodsInOutChart" height="220"
+                                        data-months='@json($goodsMonths)'
+                                        data-buy='@json($goodsBuySeries)'
+                                        data-sell='@json($goodsSellSeries)'></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="section-card card border-0 chart-card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>أفضل الأصناف (بالكمية)</span>
+                                    <span class="small text-muted"><i class="bi bi-bar-chart"></i></span>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="topProductsChart" height="220"
+                                        data-labels='@json($topProducts->pluck("name"))'
+                                        data-data='@json($topProducts->pluck("qty")->map(fn($q)=>(int)$q))'></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ====== المخزون المتاح حسب نوع البضاعة (تفاصيل كل نوع) ====== --}}
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            <div class="section-card card border-0">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>المخزون المتاح حسب نوع البضاعة</span>
+                                    <span class="text-muted small"><i class="bi bi-info-circle"></i> الأرقام إجمالية (غير خاضعة لفلاتر التاريخ)</span>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle mb-0">
+                                            <thead>
+                                                <tr class="text-center">
+                                                    <th class="text-start">نوع البضاعة</th>
+                                                    <th>مُشتراة</th>
+                                                    <th>مُباعة</th>
+                                                    <th>المتاح</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($inventoryByType as $row)
+                                                    @php
+                                                        $avail = (int)$row->available;
+                                                        $cls   = $avail >= 0 ? 'text-pos' : 'text-neg';
+                                                    @endphp
+                                                    <tr class="text-center">
+                                                        <td class="text-start">{{ $row->type_name }}</td>
+                                                        <td class="text-pos fw-semibold">{{ number_format((int)$row->bought) }}</td>
+                                                        <td class="text-neg fw-semibold">{{ number_format((int)$row->sold) }}</td>
+                                                        <td class="fw-bold {{ $cls }}">{{ number_format($avail) }}</td>
+                                                    </tr>
+                                                @empty
+                                                    <tr><td colspan="4" class="text-muted text-center py-4">لا توجد بيانات مخزون حسب النوع.</td></tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="card-footer small text-muted d-flex justify-content-between align-items-center">
+                                    <span>* المتاح = مُشتراة − مُباعة</span>
+                                    <span><strong>إجمالي المخزون المتاح:</strong> {{ number_format($totalAvailableUnits) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div> {{-- /card-body --}}
             </div>
         </div>
     </div>
+    @endif
 
     {{-- ====== حالة كل حساب (بنوك + خزن) ====== --}}
     <div class="row g-3 mt-1">
@@ -732,8 +1016,7 @@ document.addEventListener('DOMContentLoaded', function(){
         if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات شهرية.</div>'; return; }
         new Chart(el, {
             type: 'bar',
-            data: {
-                labels,
+            data: { labels,
                 datasets: [
                     { label:'داخل', data: inflow, borderWidth:1, stack:'s' },
                     { label:'خارج', data: outflow, borderWidth:1, stack:'s' }
@@ -823,6 +1106,53 @@ document.addEventListener('DOMContentLoaded', function(){
                 scales:{ x:{ beginAtZero:true } }
             }
         });
+    })();
+
+    // ===== (اختياري) مخططات البضائع =====
+    (function(){
+        const el1 = document.getElementById('goodsInOutChart');
+        if (el1) {
+            const labels = JSON.parse(el1.dataset.months || '[]');
+            const buy    = JSON.parse(el1.dataset.buy    || '[]');
+            const sell   = JSON.parse(el1.dataset.sell   || '[]');
+            if (!labels.length) {
+                el1.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات كافية.</div>';
+            } else {
+                new Chart(el1, {
+                    type: 'bar',
+                    data: { labels,
+                        datasets: [
+                            { label:'شراء', data: buy,  borderWidth:1, stack:'g' },
+                            { label:'بيع',  data: sell, borderWidth:1, stack:'g' }
+                        ]
+                    },
+                    options: {
+                        responsive:true,
+                        plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } },
+                        scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } }
+                    }
+                });
+            }
+        }
+        const el2 = document.getElementById('topProductsChart');
+        if (el2) {
+            const labels = JSON.parse(el2.dataset.labels || '[]');
+            const data   = JSON.parse(el2.dataset.data   || '[]');
+            if (!labels.length) {
+                el2.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات أصناف.</div>';
+            } else {
+                new Chart(el2, {
+                    type: 'bar',
+                    data: { labels, datasets: [{ label:'كميات', data, borderWidth:1 }] },
+                    options: {
+                        indexAxis:'y',
+                        responsive:true,
+                        plugins:{ legend:{ display:false }, tooltip:{ rtl:true } },
+                        scales:{ x:{ beginAtZero:true } }
+                    }
+                });
+            }
+        }
     })();
 });
 </script>

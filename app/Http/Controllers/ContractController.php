@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\DTOs\InvestorShare;
-use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Requests\StoreContractInvestorsRequest;
 use App\Models\Contract;
 use App\Models\ContractInstallment;
@@ -16,13 +15,13 @@ use App\Models\InstallmentType;
 use App\Models\Investor;
 use App\Models\InvestorTransaction;
 use App\Models\LedgerEntry;
-use App\Models\OfficeTransaction;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -92,7 +91,7 @@ class ContractController extends Controller
 
             $statuses = InstallmentStatus::pluck('id', 'name');
 
-            // ✅ قيم الحساب الأساسية
+            // === إعدادات الأقساط ===
             $totalValue       = (float) ($data['total_value'] ?? 0);
             $installmentValue = (float) ($request->installment_value ?? 0);
 
@@ -100,46 +99,28 @@ class ContractController extends Controller
                 ? Carbon::parse($request->first_installment_date)
                 : Carbon::parse($data['start_date'] ?? now());
 
-            // ✅ جلب اسم نوع القسط (يومي/أسبوعي/شهري/سنوي)
             $installmentTypeName = optional(
                 InstallmentType::find($data['installment_type_id'] ?? null)
             )->name;
 
-            /**
-             * احسب تاريخ الاستحقاق للقسط رقم $i
-             * القاعدة: القسط الأول = تاريخ أول قسط نفسه (0 فترة)،
-             * ثم 2 = +1 فترة، 3 = +2 فترات، وهكذا...
-             */
             $computeDueDate = function (Carbon $base, int $i) use ($installmentTypeName) {
                 $type = mb_strtolower(trim((string) $installmentTypeName));
                 $step = max(0, $i - 1);
-
-                if (str_contains($type, 'يوم') || str_contains($type, 'daily')) {
-                    return $base->copy()->addDays($step);
-                } elseif (str_contains($type, 'أسبوع') || str_contains($type, 'اسبوع') || str_contains($type, 'week')) {
-                    return $base->copy()->addWeeks($step);
-                } elseif (str_contains($type, 'سنة') || str_contains($type, 'سنوي') || str_contains($type, 'year')) {
-                    return $base->copy()->addYears($step);
-                } elseif (str_contains($type, 'شهر') || str_contains($type, 'month')) {
-                    return $base->copy()->addMonthsNoOverflow($step);
-                } else {
-                    // افتراضي: شهري
-                    return $base->copy()->addMonthsNoOverflow($step);
-                }
+                if (str_contains($type, 'يوم') || str_contains($type, 'daily'))  return $base->copy()->addDays($step);
+                if (str_contains($type, 'أسبوع') || str_contains($type, 'week')) return $base->copy()->addWeeks($step);
+                if (str_contains($type, 'سنة') || str_contains($type, 'year'))   return $base->copy()->addYears($step);
+                /* شهر */                                                        return $base->copy()->addMonthsNoOverflow($step);
             };
 
-            // ✅ توليد الأقساط حسب قيمة القسط ونوعه
             if ($installmentValue > 0.0) {
                 $installmentsCount = (int) floor($totalValue / $installmentValue);
                 $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
 
                 for ($i = 1; $i <= $installmentsCount; $i++) {
-                    $dueDate = $computeDueDate($baseDate, $i);
-
                     ContractInstallment::create([
                         'contract_id'           => $contract->id,
                         'installment_number'    => $i,
-                        'due_date'              => $dueDate,
+                        'due_date'              => $computeDueDate($baseDate, $i),
                         'due_amount'            => $installmentValue,
                         'payment_amount'        => 0,
                         'installment_status_id' => $statuses['لم يحل'] ?? null,
@@ -147,20 +128,16 @@ class ContractController extends Controller
                 }
 
                 if ($remaining > 0) {
-                    // القسط الأخير للباقي = + (عدد الأقساط) فترات (لأن الأول = 0)
-                    $dueDate = $computeDueDate($baseDate, $installmentsCount + 1);
-
                     ContractInstallment::create([
                         'contract_id'           => $contract->id,
                         'installment_number'    => $installmentsCount + 1,
-                        'due_date'              => $dueDate,
+                        'due_date'              => $computeDueDate($baseDate, $installmentsCount + 1),
                         'due_amount'            => $remaining,
                         'payment_amount'        => 0,
                         'installment_status_id' => $statuses['لم يحل'] ?? null,
                     ]);
                 }
             } elseif ($totalValue > 0.0) {
-                // قسط واحد بكل المبلغ في نفس تاريخ أول قسط
                 ContractInstallment::create([
                     'contract_id'           => $contract->id,
                     'installment_number'    => 1,
@@ -171,48 +148,114 @@ class ContractController extends Controller
                 ]);
             }
 
-            // ✅ ربط المستثمرين + تحديث حالة العقد
+            // ربط المستثمرين + لوج ترانزاكشن
             $this->syncInvestorsAndRecalcStatus($contract, $investors);
-
-            // ✅ تسجيل عملية للمستثمرين لو فيه مستثمرين
             if (!empty($investors)) {
                 $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
             }
 
-            // ✅ تسجيل "ربح فرق البيع" في معاملات المكتب + قيد دفتر القيود (مكتب)
+            // === قيد فرق البيع (مكتب) + تسجيل في product_transactions ===
             $salePrice     = (float) ($data['sale_price'] ?? 0);
             $purchasePrice = (float) ($data['purchase_price'] ?? 0);
             $diff          = round($salePrice - $purchasePrice, 2);
 
             if ($diff > 0) {
-                // نجلب الصف (للحصول على id و transaction_type_id إن وُجد)
-                $statusRow = TransactionStatus::where('name', 'فرق البيع')->first(['id', 'transaction_type_id']);
+                $statusRow = TransactionStatus::whereIn('name', ['فرق البيع', 'ربح فرق البيع'])
+                    ->first(['id', 'transaction_type_id']);
 
                 if ($statusRow) {
                     $typeId =
                         ($statusRow->transaction_type_id ?? null)
-                        ?: TransactionType::where('name', 'ربح فرق البيع')->value('id')
-                        ?: TransactionType::where('name', 'فرق البيع')->value('id')
-                        ?: TransactionType::where('name', 'أرباح')->value('id')
-                        ?: TransactionType::where('name', 'تحصيل')->value('id')
-                        ?: TransactionType::query()->orderBy('id')->value('id'); // حل أخير
+                        ?: TransactionType::whereIn('name', ['ربح فرق البيع','فرق البيع','أرباح','تحصيل'])->value('id')
+                        ?: TransactionType::query()->orderBy('id')->value('id');
 
                     if ($typeId) {
-                        LedgerEntry::create([
-                            'entry_date'            => now()->toDateString(),   // التاريخ
-                            'investor_id'           => null,                    // مكتب
-                            'is_office'             => true,                    // ← تصنيف مكتب
-                            'transaction_status_id' => $statusRow->id,          // الحالة: ربح فرق البيع
-                            'transaction_type_id'   => $typeId,                 // النوع (ملتزم بجدول الأنواع قدر الإمكان)
+                        $saleDiffEntry = LedgerEntry::create([
+                            'entry_date'            => now()->toDateString(),
+                            'investor_id'           => null,
+                            'is_office'             => true,
+                            'transaction_status_id' => $statusRow->id,
+                            'transaction_type_id'   => $typeId,
                             'bank_account_id'       => null,
                             'safe_id'               => null,
-                            'contract_id'           => $contract->id,           // ربط بالعقد
+                            'contract_id'           => $contract->id,
                             'installment_id'        => null,
-                            'amount'                => $diff,                    // المبلغ
-                            // لا نرسل direction لأن العمود غير مستخدم لديك
-                            'ref'                   => 'CT-'.$contract->id,      // مرجع
+                            'amount'                => $diff,
+                            'ref'                   => 'CT-'.$contract->id,
                             'notes'                 => "قيد فرق البيع للعقد #{$contract->contract_number}",
                         ]);
+
+                        // === عدد البضائع من products_count + النوع = contract_type_id (من جدول product_types) ===
+                        try {
+                            if (Schema::hasTable('product_transactions') &&
+                                Schema::hasColumn('product_transactions', 'ledger_entry_id')) {
+
+                                $qty = (int) (
+                                    $data['products_count']
+                                    ?? $request->input('products_count')
+                                    ?? 0
+                                );
+
+                                $productTypeId = (int) (
+                                    $data['contract_type_id']
+                                    ?? $request->input('contract_type_id')
+                                    ?? 0
+                                );
+
+                                // تأكُّد سريع إن الـ type موجود في product_types (اختياري)
+                                if ($productTypeId > 0 && Schema::hasTable('product_types')) {
+                                    $exists = DB::table('product_types')->where('id', $productTypeId)->exists();
+                                    if (!$exists) { $productTypeId = 0; }
+                                }
+
+                                $payload = [
+                                    'product_id'=> $productTypeId,
+                                    'ledger_entry_id' => $saleDiffEntry->id,
+                                    'created_at'      => now(),
+                                    'updated_at'      => now(),
+                                ];
+
+                                if (Schema::hasColumn('product_transactions', 'quantity')) {
+                                    $payload['quantity'] = max(0, $qty);
+                                }
+
+                                // نحاول نكتب النوع في عمود نوع البضائع المناسب
+                                if (Schema::hasColumn('product_transactions', 'product_type_id')) {
+                                    $payload['product_type_id'] = $productTypeId > 0 ? $productTypeId : null;
+                                } elseif (Schema::hasColumn('product_transactions', 'goods_type_id')) {
+                                    $payload['goods_type_id'] = $productTypeId > 0 ? $productTypeId : null;
+                                } else {
+                                    // لو مفيش أعمدة ID للنوع — نحفظه نصّيًا في عمود مناسب لو موجود
+                                    foreach (['type','goods_type','product_type','note','description'] as $col) {
+                                        if (Schema::hasColumn('product_transactions', $col)) {
+                                            $payload[$col] = $productTypeId > 0 ? ('type#'.$productTypeId) : 'غير محدد';
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // حالة "إضافة عقد"
+                                if (Schema::hasColumn('product_transactions', 'transaction_status_id')) {
+                                    $addContractStatusId = TransactionStatus::where('name', 'إضافة عقد')->value('id');
+                                    if ($addContractStatusId) $payload['transaction_status_id'] = $addContractStatusId;
+                                } else {
+                                    foreach (['status','action','note','description'] as $col) {
+                                        if (Schema::hasColumn('product_transactions', $col)) {
+                                            $payload[$col] = 'إضافة عقد';
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (Schema::hasColumn('product_transactions', 'contract_id')) {
+                                    $payload['contract_id'] = $contract->id;
+                                }
+
+                                DB::table('product_transactions')->insert($payload);
+                            }
+                        } catch (\Throwable $ignore) {
+                            // اختلافات السكيمة لا تكسر العملية
+                        }
                     }
                 }
             }
@@ -227,6 +270,9 @@ class ContractController extends Controller
 
     return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
 }
+
+
+
 
 
     public function storeInvestors(StoreContractInvestorsRequest $request): JsonResponse
@@ -350,8 +396,7 @@ class ContractController extends Controller
         ]);
     }
     
-
-    private function logInvestorTransaction(Contract $contract, array $investors, string $statusName = 'إضافة عقد'): void
+    private function logInvestorTransaction(Contract $contract, array $investors, string $statusName = 'إضافة عقد'): void 
     {
         $status = TransactionStatus::where('name', $statusName)
             ->first(['id', 'transaction_type_id']);
@@ -365,7 +410,6 @@ class ContractController extends Controller
             throw new \RuntimeException("تعذّر تحديد نوع الحركة للحالة '{$statusName}'.");
         }
 
-        // الاتجاه من اسم النوع (ايداع/سحب). لو غير معروف نوقف التنفيذ بدل افتراض قيمة.
         $direction = $this->directionFromTypeId($typeId);
         if (!in_array($direction, ['in','out'], true)) {
             $typeName = TransactionType::whereKey($typeId)->value('name') ?? ('#'.$typeId);
@@ -378,7 +422,6 @@ class ContractController extends Controller
                 $amount     = (float) (is_array($inv) ? ($inv['share_value'] ?? 0) : ($inv->share_value ?? 0));
                 if (!$investorId || $amount <= 0) continue;
 
-                // 1) حركة المستثمر
                 $trx = InvestorTransaction::create([
                     'investor_id'      => $investorId,
                     'contract_id'      => $contract->id,
@@ -388,7 +431,6 @@ class ContractController extends Controller
                     'notes'            => "عملية {$statusName} للعقد رقم {$contract->contract_number}",
                 ]);
 
-                // 2) قيد دفتر القيود
                 LedgerEntry::create([
                     'entry_date'             => now()->toDateString(),
                     'investor_id'            => $investorId,

@@ -39,6 +39,8 @@ class LedgerEntry extends Model
     public function safe()             { return $this->belongsTo(Safe::class); }
     public function status()           { return $this->belongsTo(TransactionStatus::class, 'transaction_status_id'); }
     public function type()             { return $this->belongsTo(TransactionType::class, 'transaction_type_id'); }
+    public function productTransactions(){return $this->hasMany(ProductTransaction::class);}
+
 
     // مقدار موقّع (مفيد للعرض)
     public function getSignedAmountAttribute(): string

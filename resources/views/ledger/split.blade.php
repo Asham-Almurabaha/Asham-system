@@ -22,7 +22,14 @@
 </div>
 @endif
 
-@php $oldCat = old('party_category', 'investors'); @endphp
+@php
+    $oldCat = old('party_category', 'investors');
+
+    // متغيرات البضائع (fallback لو الكنترولر لسه مبعتهومش)
+    $goodsStatusIds = $goodsStatusIds ?? [];
+    $products       = $products ?? collect();
+    $oldProducts    = old('products', []);
+@endphp
 
 <div class="card shadow-sm">
     <div class="card-body">
@@ -49,11 +56,12 @@
                     @error('investor_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- الحالة: قائمتان منفصلتان + حقل مخفي (مع إخفاء حالات التحويل) --}}
+                {{-- الحالة: قائمتان منفصلتان + حقل مخفي (ونخفي التحويل) --}}
                 <div class="col-md-4">
                     <label class="form-label">الحالة</label>
 
-                    <select id="status_investors" class="form-select mb-2" {{ $oldCat==='investors' ? '' : 'hidden' }}>
+                    <select id="status_investors" class="form-select mb-2" {{ $oldCat==='investors' ? '' : 'hidden' }}
+                            data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (مستثمر)</option>
                         @foreach(($statusesByCategory['investors'] ?? []) as $st)
                             @if(($st->transaction_type_id ?? null) != 3)
@@ -62,7 +70,8 @@
                         @endforeach
                     </select>
 
-                    <select id="status_office" class="form-select mb-2" {{ $oldCat==='office' ? '' : 'hidden' }}>
+                    <select id="status_office" class="form-select mb-2" {{ $oldCat==='office' ? '' : 'hidden' }}
+                            data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (المكتب)</option>
                         @foreach(($statusesByCategory['office'] ?? []) as $st)
                             @if(($st->transaction_type_id ?? null) != 3)
@@ -158,6 +167,62 @@
                 </div>
             </div>
 
+            {{-- ====== قسم البضائع (يظهر تلقائيًا لحالات شراء/بيع بضائع) ====== --}}
+            <div class="col-12" id="goods_section" style="display:none;">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddProduct">إضافة صنف</button>
+                    </div>
+                    <div class="card-body" id="products_wrapper">
+                        @if(!empty($oldProducts))
+                            @foreach($oldProducts as $i => $row)
+                                <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
+                                    <div class="col-md-8">
+                                        <label class="form-label small mb-1">الصنف</label>
+                                        <select name="products[{{ $i }}][product_id]" class="form-select">
+                                            <option value="">— اختر —</option>
+                                            @foreach($products as $p)
+                                                <option value="{{ $p->id }}" @selected(($row['product_id'] ?? null)==$p->id)>{{ $p->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small mb-1">الكمية</label>
+                                        <div class="input-group">
+                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
+                                            <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="row g-2 product-row align-items-end">
+                                <div class="col-md-8">
+                                    <label class="form-label small mb-1">الصنف</label>
+                                    <select name="products[0][product_id]" class="form-select">
+                                        <option value="">— اختر —</option>
+                                        @foreach($products as $p)
+                                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small mb-1">الكمية</label>
+                                    <div class="input-group">
+                                        <input type="number" min="1" name="products[0][quantity]" class="form-control" placeholder="0">
+                                        <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="card-footer small text-muted">
+                        * يتم طلب إدخال البضائع فقط إذا كانت الحالة شراء/بيع بضائع.
+                    </div>
+                </div>
+            </div>
+
             {{-- ملاحظات --}}
             <div class="col-12">
                 <label class="form-label" for="notes">ملاحظات</label>
@@ -175,173 +240,257 @@
     </div>
 </div>
 
+{{-- قالب صف بضاعة جديد --}}
+<template id="product_row_tpl">
+    <div class="row g-2 product-row align-items-end mt-2">
+        <div class="col-md-8">
+            <label class="form-label small mb-1">الصنف</label>
+            <select class="form-select js-product-select">
+                <option value="">— اختر —</option>
+                @foreach($products as $p)
+                    <option value="{{ $p->id }}">{{ $p->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small mb-1">الكمية</label>
+            <div class="input-group">
+                <input type="number" min="1" class="form-control js-qty-input" placeholder="0">
+                <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+            </div>
+        </div>
+    </div>
+</template>
+
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // عناصر عامة
-    const catSel     = document.getElementById('party_category');
-    const invWrap    = document.getElementById('investorWrap');
-    const statusInv  = document.getElementById('status_investors');
-    const statusOff  = document.getElementById('status_office');
-    const statusHid  = document.getElementById('status_id_hidden');
-    const dirBadge   = document.getElementById('dirBadge');
+    document.addEventListener('DOMContentLoaded', function () {
+        // عناصر عامة
+        const catSel     = document.getElementById('party_category');
+        const invWrap    = document.getElementById('investorWrap');
+        const statusInv  = document.getElementById('status_investors');
+        const statusOff  = document.getElementById('status_office');
+        const statusHid  = document.getElementById('status_id_hidden');
+        const dirBadge   = document.getElementById('dirBadge');
 
-    const amount     = document.getElementById('amount');
-    const bankShare  = document.getElementById('bank_share');
-    const safeShare  = document.getElementById('safe_share');
-    const bankSel    = document.getElementById('bank_account_id');
-    const safeSel    = document.getElementById('safe_id');
-    const sumHint    = document.getElementById('sumHint');
-    const ratioHint  = document.getElementById('ratioHint');
-    const btnSubmit  = document.getElementById('btnSubmit');
-    const btnSpinner = document.getElementById('btnSpinner');
-    const form       = document.getElementById('splitForm');
+        const amount     = document.getElementById('amount');
+        const bankShare  = document.getElementById('bank_share');
+        const safeShare  = document.getElementById('safe_share');
+        const bankSel    = document.getElementById('bank_account_id');
+        const safeSel    = document.getElementById('safe_id');
+        const sumHint    = document.getElementById('sumHint');
+        const ratioHint  = document.getElementById('ratioHint');
+        const btnSubmit  = document.getElementById('btnSubmit');
+        const btnSpinner = document.getElementById('btnSpinner');
+        const form       = document.getElementById('splitForm');
 
-    let lastEdited = null;     // 'bank' | 'safe' | null
-    let programmatic = false;  // منع حلقات التحديث
+        // ===== البضائع
+        const goodsSection    = document.getElementById('goods_section');
+        const productsWrapper = document.getElementById('products_wrapper');
+        const btnAddProduct   = document.getElementById('btnAddProduct');
+        const rowTpl          = document.getElementById('product_row_tpl');
 
-    // ===== فئة/حالات =====
-    function currentStatusSelect(){ return catSel.value==='investors' ? statusInv : statusOff; }
+        let lastEdited = null;     // 'bank' | 'safe' | null
+        let programmatic = false;  // منع حلقات التحديث
 
-    function syncCategoryUI(){
-        invWrap.style.display = (catSel.value==='investors') ? '' : 'none';
-        statusInv.hidden = !(catSel.value==='investors');
-        statusOff.hidden = !(catSel.value==='office');
+        // ===== فئة/حالات =====
+        function goodsIdsFrom(el){
+            try { return JSON.parse(el.dataset.goodsIds || '[]').map(Number); }
+            catch(e){ return []; }
+        }
+        function currentStatusSelect(){ return catSel.value==='investors' ? statusInv : statusOff; }
+
+        function syncCategoryUI(){
+            invWrap.style.display = (catSel.value==='investors') ? '' : 'none';
+            statusInv.hidden = !(catSel.value==='investors');
+            statusOff.hidden = !(catSel.value==='office');
+            syncStatusHiddenAndBadge();
+            toggleGoodsSection();
+        }
+
+        function syncStatusHiddenAndBadge(){
+            const sel = currentStatusSelect();
+            let idx = sel.selectedIndex;
+            // حماية إضافية: اخفاء أي option نوعه تحويل (type=3)
+            for (let i=0; i<sel.options.length; i++){
+                const o = sel.options[i];
+                if (o.dataset && o.dataset.type === '3') { o.hidden = true; o.disabled = true; if (i === idx) idx = 0; }
+            }
+            if (sel.options.length > 0) sel.selectedIndex = idx;
+
+            const opt = sel.options[sel.selectedIndex];
+            statusHid.value = opt ? (opt.value || '') : '';
+
+            const t = opt ? (opt.dataset.type || '') : '';
+            let text='—', cls='bg-secondary';
+            if (t==='1'){ text='داخل (إيداع)'; cls='bg-success'; }
+            else if (t==='2'){ text='خارج (سحب)'; cls='bg-danger'; }
+            else { text='—'; cls='bg-secondary'; }
+            dirBadge.textContent = text; dirBadge.className = 'badge rounded-pill ' + cls;
+
+            toggleGoodsSection();
+        }
+
+        // ===== عرض/إخفاء قسم البضائع حسب الحالة المختارة
+        function selectedStatusId(){
+            const sel = currentStatusSelect();
+            const opt = sel.options[sel.selectedIndex];
+            return opt ? Number(opt.value || 0) : 0;
+        }
+        function isGoodsStatus(){
+            const sel = currentStatusSelect();
+            const ids = goodsIdsFrom(sel);
+            const cur = selectedStatusId();
+            return ids.includes(cur);
+        }
+        function toggleGoodsSection(){
+            goodsSection.style.display = isGoodsStatus() ? '' : 'none';
+        }
+
+        // ===== إدارة صفوف البضائع
+        function nextProductIndex(){
+            const rows = productsWrapper.querySelectorAll('.product-row');
+            return rows.length ? Math.max(...Array.from(rows).map(r => {
+                const sel = r.querySelector('select[name^="products["]');
+                if (!sel) return -1;
+                const m = sel.name.match(/^products\[(\d+)\]/);
+                return m ? Number(m[1]) : -1;
+            })) + 1 : 0;
+        }
+
+        function wireRowNames(row, index){
+            const sel = row.querySelector('.js-product-select');
+            const qty = row.querySelector('.js-qty-input');
+            if (sel) sel.setAttribute('name', `products[${index}][product_id]`);
+            if (qty) qty.setAttribute('name', `products[${index}][quantity]`);
+        }
+
+        function addProductRow(){
+            const frag = rowTpl.content.cloneNode(true);
+            const row = frag.querySelector('.product-row');
+            wireRowNames(row, nextProductIndex());
+            productsWrapper.appendChild(frag);
+        }
+
+        function handleRemoveClick(e){
+            if (!e.target.classList.contains('js-remove-product')) return;
+            const row = e.target.closest('.product-row');
+            if (!row) return;
+            // سيب صف واحد على الأقل
+            if (productsWrapper.querySelectorAll('.product-row').length > 1){
+                row.remove();
+            }
+        }
+
+        // ===== أرقام (من غير تغيير اللوجيك الحالي)
+        function parseDec(v){
+            if (v == null) return null;
+            const s = String(v).trim().replace(',', '.');
+            if (s === '' || s === '.' || s === '-.' ) return null;
+            const n = Number(s);
+            return Number.isFinite(n) ? n : null;
+        }
+        function r2(n){ return Math.round(n * 100) / 100; }
+        function fmt2(n){ return (Number.isFinite(n) ? n : 0).toFixed(2); }
+        function formatOnBlur(el){
+            const n = parseDec(el.value);
+            if (n == null) return;
+            el.value = fmt2(Math.max(0, n));
+        }
+
+        function updateFromBank(){
+            if (programmatic) return;
+            lastEdited = 'bank';
+            const a = parseDec(amount.value);
+            const b = parseDec(bankShare.value);
+            programmatic = true;
+            if (a == null || b == null){ safeShare.value = ''; programmatic = false; return validate(); }
+            const s = a - b;
+            safeShare.value = s >= 0 ? String(r2(s)) : '';
+            programmatic = false;
+            validate();
+        }
+
+        function updateFromSafe(){
+            if (programmatic) return;
+            lastEdited = 'safe';
+            const a = parseDec(amount.value);
+            const s = parseDec(safeShare.value);
+            programmatic = true;
+            if (a == null || s == null){ bankShare.value = ''; programmatic = false; return validate(); }
+            const b = a - s;
+            bankShare.value = b >= 0 ? String(r2(b)) : '';
+            programmatic = false;
+            validate();
+        }
+
+        function updateFromAmount(){
+            if (programmatic) return;
+            programmatic = true;
+            bankShare.value = '0';
+            safeShare.value = '0';
+            lastEdited = null;
+            programmatic = false;
+            validate();
+        }
+
+        function validate(){
+            const a = parseDec(amount.value);
+            const b = parseDec(bankShare.value);
+            const s = parseDec(safeShare.value);
+
+            let okSum = false, sum = 0;
+            if (a != null && b != null && s != null){
+                sum = r2(b + s);
+                okSum = (a > 0) && (r2(a) === sum);
+            }
+
+            sumHint.textContent = `المجموع الحالي: ${sum.toFixed ? sum.toFixed(2) : '0.00'} / الإجمالي: ${a!=null ? r2(a).toFixed(2) : '0.00'}`;
+            sumHint.className   = okSum ? 'text-success' : 'text-danger';
+
+            const bp = (a && b!=null) ? Math.round((r2(b)/r2(a))*100) : 0;
+            const sp = (a && s!=null) ? (100 - bp) : 0;
+            ratioHint.textContent = (a && (b!=null || s!=null)) ? `النِسب: بنك ${bp}% — خزنة ${sp}%` : '';
+
+            bankSel.required = !!(b && b > 0);
+            safeSel.required = !!(s && s > 0);
+
+            let ok = okSum;
+            if (ok && b && b > 0 && !bankSel.value) ok = false;
+            if (ok && s && s > 0 && !safeSel.value) ok = false;
+            btnSubmit.disabled = !ok;
+        }
+
+        // Events
+        catSel.addEventListener('change', syncCategoryUI);
+        statusInv.addEventListener('change', syncStatusHiddenAndBadge);
+        statusOff.addEventListener('change', syncStatusHiddenAndBadge);
+
+        amount.addEventListener('input',  updateFromAmount);
+        bankShare.addEventListener('input', updateFromBank);
+        safeShare.addEventListener('input', updateFromSafe);
+
+        [amount, bankShare, safeShare].forEach(el => {
+            el.addEventListener('blur', ()=>formatOnBlur(el));
+            el.addEventListener('wheel', e => { e.preventDefault(); el.blur(); }, { passive:false });
+        });
+
+        [bankSel, safeSel].forEach(el => el.addEventListener('change', validate));
+
+        if (btnAddProduct) btnAddProduct.addEventListener('click', addProductRow);
+        productsWrapper.addEventListener('click', handleRemoveClick);
+
+        form.addEventListener('submit', function(){
+            btnSubmit.disabled = true;
+            btnSpinner.classList.remove('d-none');
+            [amount, bankShare, safeShare].forEach(formatOnBlur);
+        });
+
+        // init
+        syncCategoryUI();
         syncStatusHiddenAndBadge();
-    }
-
-    function syncStatusHiddenAndBadge(){
-        const sel = currentStatusSelect();
-        let idx = sel.selectedIndex;
-        // حماية إضافية: لو اتسرّبت حالة تحويل (type=3) لأي سبب، نخفيها/نتجاوزها
-        for (let i=0; i<sel.options.length; i++){
-            const o = sel.options[i];
-            if (o.dataset && o.dataset.type === '3') { o.hidden = true; o.disabled = true; if (i === idx) idx = 0; }
-        }
-        if (sel.options.length > 0) sel.selectedIndex = idx;
-
-        const opt = sel.options[sel.selectedIndex];
-        statusHid.value = opt ? (opt.value || '') : '';
-
-        const t = opt ? (opt.dataset.type || '') : '';
-        let text='—', cls='bg-secondary';
-        if (t==='1'){ text='داخل (إيداع)'; cls='bg-success'; }
-        else if (t==='2'){ text='خارج (سحب)'; cls='bg-danger'; }
-        else { text='—'; cls='bg-secondary'; }
-        dirBadge.textContent = text; dirBadge.className = 'badge rounded-pill ' + cls;
-    }
-
-    catSel.addEventListener('change', syncCategoryUI);
-    statusInv.addEventListener('change', syncStatusHiddenAndBadge);
-    statusOff.addEventListener('change', syncStatusHiddenAndBadge);
-
-    // ===== أرقام =====
-    function parseDec(v){
-        if (v == null) return null;
-        const s = String(v).trim().replace(',', '.');
-        if (s === '' || s === '.' || s === '-.' ) return null; // السماح بالكتابة الجزئية
-        const n = Number(s);
-        return Number.isFinite(n) ? n : null;
-    }
-    function r2(n){ return Math.round(n * 100) / 100; }
-    function fmt2(n){ return (Number.isFinite(n) ? n : 0).toFixed(2); }
-    function formatOnBlur(el){
-        const n = parseDec(el.value);
-        if (n == null) return; // سيبه لو كتابة جزئية
-        el.value = fmt2(Math.max(0, n));
-    }
-
-    // ===== منطق التقسيم =====
-    function updateFromBank(){
-        if (programmatic) return;
-        lastEdited = 'bank';
-        const a = parseDec(amount.value);
-        const b = parseDec(bankShare.value);
-        programmatic = true;
-        if (a == null || b == null){ safeShare.value = ''; programmatic = false; return validate(); }
-        const s = a - b;
-        safeShare.value = s >= 0 ? String(r2(s)) : ''; // لو أكبر من الإجمالي يفرّغ المقابل
-        programmatic = false;
-        validate();
-    }
-
-    function updateFromSafe(){
-        if (programmatic) return;
-        lastEdited = 'safe';
-        const a = parseDec(amount.value);
-        const s = parseDec(safeShare.value);
-        programmatic = true;
-        if (a == null || s == null){ bankShare.value = ''; programmatic = false; return validate(); }
-        const b = a - s;
-        bankShare.value = b >= 0 ? String(r2(b)) : '';
-        programmatic = false;
-        validate();
-    }
-
-    function updateFromAmount(){
-        if (programmatic) return;
-        // كل تغيير في الإجمالي يُصفر الجزأين
-        programmatic = true;
-        bankShare.value = '0';
-        safeShare.value = '0';
-        lastEdited = null;
-        programmatic = false;
-        validate();
-    }
-
-    // ===== فاليوديشن =====
-    function validate(){
-        const a = parseDec(amount.value);
-        const b = parseDec(bankShare.value);
-        const s = parseDec(safeShare.value);
-
-        let okSum = false, sum = 0;
-        if (a != null && b != null && s != null){
-            sum = r2(b + s);
-            okSum = (a > 0) && (r2(a) === sum);
-        }
-
-        sumHint.textContent = `المجموع الحالي: ${sum.toFixed ? sum.toFixed(2) : '0.00'} / الإجمالي: ${a!=null ? r2(a).toFixed(2) : '0.00'}`;
-        sumHint.className   = okSum ? 'text-success' : 'text-danger';
-
-        const bp = (a && b!=null) ? Math.round((r2(b)/r2(a))*100) : 0;
-        const sp = (a && s!=null) ? (100 - bp) : 0;
-        ratioHint.textContent = (a && (b!=null || s!=null)) ? `النِسب: بنك ${bp}% — خزنة ${sp}%` : '';
-
-        // required الديناميكي للاختيارات
-        bankSel.required = !!(b && b > 0);
-        safeSel.required = !!(s && s > 0);
-
-        // تفعيل زر الحفظ بعد تحقق المجموع واختيار الحسابات المطلوبة
-        let ok = okSum;
-        if (ok && b && b > 0 && !bankSel.value) ok = false;
-        if (ok && s && s > 0 && !safeSel.value) ok = false;
-        btnSubmit.disabled = !ok;
-    }
-
-    // ===== Events =====
-    amount.addEventListener('input',  updateFromAmount);
-    bankShare.addEventListener('input', updateFromBank);
-    safeShare.addEventListener('input', updateFromSafe);
-
-    [amount, bankShare, safeShare].forEach(el => {
-        el.addEventListener('blur', ()=>formatOnBlur(el));                 // نسّق عند الخروج
-        el.addEventListener('wheel', e => { e.preventDefault(); el.blur(); }, { passive:false }); // منع تغيّر القيمة بالسكرول
+        updateFromAmount();
     });
-
-    [bankSel, safeSel].forEach(el => el.addEventListener('change', validate));
-
-    form.addEventListener('submit', function(){
-        btnSubmit.disabled = true;
-        btnSpinner.classList.remove('d-none');
-        [amount, bankShare, safeShare].forEach(formatOnBlur); // تنسيق نهائي
-    });
-
-    // init
-    syncCategoryUI();
-    syncStatusHiddenAndBadge();
-    updateFromAmount();
-});
 </script>
 @endpush
 @endsection

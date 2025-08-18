@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LedgerEntry;
-use App\Models\Investor;
 use App\Models\BankAccount;
+use App\Models\Investor;
+use App\Models\LedgerEntry;
+use App\Models\Product;
+use App\Models\ProductTransaction;
 use App\Models\Safe;
 use App\Models\TransactionStatus;
 use Illuminate\Http\Request;
@@ -15,7 +17,7 @@ class LedgerController extends Controller
 {
     /**
      * IDs فئات الربط في category_transaction_status
-     * 1 = المستثمرين ، 4 = المكتب (حسب إعداداتك)
+     * 1 = المستثمرين ،4 = المكتب (حسب إعداداتك)
      */
     private int $CAT_INVESTORS = 1;
     private int $CAT_OFFICE    = 4;
@@ -29,9 +31,7 @@ class LedgerController extends Controller
     private const DIR_IN  = 'in';
     private const DIR_OUT = 'out';
 
-    // =======================
-    // Index
-    // =======================
+    
     public function index(Request $request)
     {
         $base = LedgerEntry::query()
@@ -94,9 +94,7 @@ class LedgerController extends Controller
         ]);
     }
 
-    // =======================
-    // Create (قيد عادي)
-    // =======================
+    
     public function create()
     {
         $investors = Investor::orderBy('name')->get();
@@ -108,12 +106,14 @@ class LedgerController extends Controller
             'office'    => $this->statusesForCategory($this->CAT_OFFICE),
         ];
 
-        return view('ledger.create', compact('investors', 'banks', 'safes', 'statusesByCategory'));
+        // المنتجات + IDs حالات البضائع (حسب الاسم)
+        $products        = Product::orderBy('name')->get();
+        $goodsStatusIds  = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])
+                            ->pluck('id')->values()->all();
+
+        return view('ledger.create', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
     }
 
-    // =======================
-    // Store (قيد عادي: بنك *أو* خزنة)
-    // =======================
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -136,12 +136,12 @@ class LedgerController extends Controller
             'notes'            => 'ملاحظات',
         ]);
 
-        // مستثمر مطلوب إذا الفئة مستثمرين
+        // مستثمر مطلوب لو الفئة مستثمرين
         if ($data['party_category'] === 'investors' && empty($data['investor_id'])) {
             return back()->withErrors(['investor_id' => 'اختيار المستثمر مطلوب لفئة المستثمرين'])->withInput();
         }
 
-        // لازم واحد فقط: بنك *أو* خزنة
+        // لازم بنك أو خزنة واحدة
         $hasBank = !empty($data['bank_account_id']);
         $hasSafe = !empty($data['safe_id']);
         if (!$hasBank && !$hasSafe) {
@@ -154,16 +154,15 @@ class LedgerController extends Controller
             ])->withInput();
         }
 
-        // تأكيد أن الحالة مرتبطة بالفئة
+        // تأكيد ربط الحالة بالفئة
         $categoryId = $data['party_category'] === 'investors' ? $this->CAT_INVESTORS : $this->CAT_OFFICE;
         if (!$this->statusAllowedForCategory($categoryId, (int)$data['status_id'])) {
             return back()->withErrors(['status_id' => 'هذه الحالة غير مرتبطة بالفئة المختارة'])->withInput();
         }
 
-        $status  = TransactionStatus::findOrFail($data['status_id']);
-        $typeId  = (int) $status->transaction_type_id;
+        $status = TransactionStatus::findOrFail($data['status_id']);
+        $typeId = (int) $status->transaction_type_id;
 
-        // حالة التحويل الداخلي لا تُسجَّل من هذا النموذج
         if ($typeId === self::TYPE_TRANSFER) {
             return back()->withErrors(['status_id' => 'استخدم نموذج "تحويل داخلي" لهذه الحالة.'])->withInput();
         }
@@ -171,8 +170,35 @@ class LedgerController extends Controller
         $direction = $this->directionFromType($typeId);
         $amount    = round((float) $data['amount'], 2);
 
-        DB::transaction(function () use ($data, $typeId, $direction, $amount) {
-            // ملاحظة ذكية
+        // هل الحالة تخص البضائع؟
+        $goodsStatusIds = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])->pluck('id')->toArray();
+        $isGoods = in_array((int)$data['status_id'], $goodsStatusIds, true);
+
+        // فاليديشن إضافي للمنتجات لو حالة بضائع
+        if ($isGoods) {
+            $request->validate([
+                'products'                 => ['required','array','min:1'],
+                'products.*.product_id'    => ['required','integer','exists:products,id'],
+                'products.*.quantity'      => ['required','integer','min:1'],
+            ], [], [
+                'products'                 => 'المنتجات',
+                'products.*.product_id'    => 'المنتج',
+                'products.*.quantity'      => 'الكمية',
+            ]);
+        }
+
+        // جهّز صفوف المنتجات (لو فيه)
+        $productRows = collect($request->input('products', []))
+            ->map(function($r){
+                return [
+                    'product_id' => (int)($r['product_id'] ?? 0),
+                    'quantity'   => (int)($r['quantity'] ?? 0),
+                ];
+            })
+            ->filter(fn($r)=> $r['product_id']>0 && $r['quantity']>0)
+            ->values();
+
+        DB::transaction(function () use ($data, $typeId, $direction, $amount, $isGoods, $productRows, $request) {
             $note = $this->buildSmartNote(
                 partyCategory: $data['party_category'],
                 investorId: $data['investor_id'] ?? null,
@@ -185,7 +211,7 @@ class LedgerController extends Controller
                 baseNote: $data['notes'] ?? null
             );
 
-            LedgerEntry::create([
+            $entry = LedgerEntry::create([
                 'entry_date'            => $data['transaction_date'],
                 'investor_id'           => $data['party_category'] === 'investors' ? $data['investor_id'] : null,
                 'is_office'             => $data['party_category'] === 'office',
@@ -198,16 +224,25 @@ class LedgerController extends Controller
                 'notes'                 => $note,
             ]);
 
-            // TODO: تحديث أرصدة bank_accounts / safes (إن كان لديك أعمدة رصيد).
+            // حفظ منتجات القيد إن كانت حالة بضائع
+            if ($isGoods && $productRows->isNotEmpty()) {
+                foreach ($productRows as $row) {
+                    ProductTransaction::create([
+                        'ledger_entry_id' => $entry->id,
+                        'product_id'      => $row['product_id'],
+                        'quantity'        => $row['quantity'],
+                    ]);
+                }
+            }
+
+            // TODO: تحديث أرصدة الخزن/البنوك لو عندك
         });
 
         return redirect()->route('ledger.index')->with('success', 'تم إضافة القيد بنجاح');
     }
 
-    // =======================
-    // تحويل داخلي (مكتب فقط)
-    // =======================
-    public function transferCreate()
+
+       public function transferCreate()
     {
         $banks = BankAccount::orderBy('name')->get();
         $safes = Safe::orderBy('name')->get();
@@ -328,22 +363,24 @@ class LedgerController extends Controller
         return redirect()->route('ledger.index')->with('success', 'تم تنفيذ التحويل الداخلي بنجاح');
     }
 
-    // =======================
-    // قيد مُجزّأ (جزء بنك + جزء خزنة)
-    // =======================
+    
     public function splitCreate()
-    {
-        $investors = Investor::orderBy('name')->get();
-        $banks     = BankAccount::orderBy('name')->get();
-        $safes     = Safe::orderBy('name')->get();
+{
+    $investors = Investor::orderBy('name')->get();
+    $banks     = BankAccount::orderBy('name')->get();
+    $safes     = Safe::orderBy('name')->get();
 
-        $statusesByCategory = [
-            'investors' => $this->statusesForCategory($this->CAT_INVESTORS),
-            'office'    => $this->statusesForCategory($this->CAT_OFFICE),
-        ];
+    $statusesByCategory = [
+        'investors' => $this->statusesForCategory($this->CAT_INVESTORS),
+        'office'    => $this->statusesForCategory($this->CAT_OFFICE),
+    ];
 
-        return view('ledger.split', compact('investors', 'banks', 'safes', 'statusesByCategory'));
-    }
+    $products        = Product::orderBy('name')->get();
+    $goodsStatusIds  = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])
+                        ->pluck('id')->values()->all();
+
+    return view('ledger.split', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
+}
 
     public function splitStore(Request $request)
     {
@@ -375,7 +412,7 @@ class LedgerController extends Controller
         $safe  = round((float)($data['safe_share'] ?? 0), 2);
         $total = round((float)$data['amount'], 2);
 
-        // تحقق إضافي
+        // تحقق إضافي (بدون تغيير اللوجيك)
         $errors = [];
 
         if ($data['party_category'] === 'investors' && empty($data['investor_id'])) {
@@ -404,6 +441,35 @@ class LedgerController extends Controller
             $errors['status_id'] = 'هذه الحالة غير مرتبطة بالفئة المختارة';
         }
 
+        // ===== نفس سيناريو store بالظبط: حالات البضائع بالاسم =====
+        $goodsStatusIds = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])
+            ->pluck('id')->toArray();
+        $isGoods = in_array((int)$data['status_id'], $goodsStatusIds, true);
+
+        // فاليديشن إضافي للمنتجات لو حالة بضائع (نفس رسائل store)
+        if ($isGoods) {
+            $request->validate([
+                'products'                 => ['required','array','min:1'],
+                'products.*.product_id'    => ['required','integer','exists:products,id'],
+                'products.*.quantity'      => ['required','integer','min:1'],
+            ], [], [
+                'products'                 => 'المنتجات',
+                'products.*.product_id'    => 'المنتج',
+                'products.*.quantity'      => 'الكمية',
+            ]);
+        }
+
+        // جهّز صفوف المنتجات (زي store)
+        $productRows = collect($request->input('products', []))
+            ->map(function($r){
+                return [
+                    'product_id' => (int)($r['product_id'] ?? 0),
+                    'quantity'   => (int)($r['quantity'] ?? 0),
+                ];
+            })
+            ->filter(fn($r)=> $r['product_id']>0 && $r['quantity']>0)
+            ->values();
+
         if (!empty($errors)) {
             return back()->withErrors($errors)->withInput();
         }
@@ -412,12 +478,9 @@ class LedgerController extends Controller
         $typeId    = (int) $status->transaction_type_id;
         $direction = $this->directionFromType($typeId);
 
-        DB::transaction(function () use ($data, $bank, $safe, $typeId, $direction) {
-            $statusName = optional(TransactionStatus::find($data['status_id']))->name ?? 'عملية';
-            $partyLabel = $data['party_category'] === 'office'
-                ? 'المكتب'
-                : ('المستثمر: ' . (optional(Investor::find($data['investor_id']))->name ?? ('#' . $data['investor_id'])));
-            $dirLabel   = $direction === self::DIR_IN ? 'داخل' : 'خارج';
+        DB::transaction(function () use ($data, $bank, $safe, $typeId, $direction, $isGoods, $productRows) {
+            $bankEntry = null;
+            $safeEntry = null;
 
             // جزء البنك
             if ($bank > 0) {
@@ -432,7 +495,7 @@ class LedgerController extends Controller
                     baseNote: $data['notes'] ?? null
                 );
 
-                LedgerEntry::create([
+                $bankEntry = LedgerEntry::create([
                     'entry_date'            => $data['transaction_date'],
                     'investor_id'           => $data['party_category'] === 'investors' ? $data['investor_id'] : null,
                     'is_office'             => $data['party_category'] === 'office',
@@ -459,7 +522,7 @@ class LedgerController extends Controller
                     baseNote: $data['notes'] ?? null
                 );
 
-                LedgerEntry::create([
+                $safeEntry = LedgerEntry::create([
                     'entry_date'            => $data['transaction_date'],
                     'investor_id'           => $data['party_category'] === 'investors' ? $data['investor_id'] : null,
                     'is_office'             => $data['party_category'] === 'office',
@@ -472,10 +535,28 @@ class LedgerController extends Controller
                     'notes'                 => $noteSafe,
                 ]);
             }
+
+            // ربط البضائع بقيد واحد (زي ما عملنا في النسخة السابقة): البنك أولاً وإلا الخزنة
+            if ($isGoods && $productRows->isNotEmpty()) {
+                $anchor = $bankEntry ?? $safeEntry;
+                if ($anchor) {
+                    foreach ($productRows as $row) {
+                        ProductTransaction::create([
+                            'ledger_entry_id' => $anchor->id,
+                            'product_id'      => $row['product_id'],
+                            'quantity'        => $row['quantity'],
+                        ]);
+                    }
+                }
+            }
+
+            // TODO: تحديث أرصدة الحسابات/الخزن لو عندك.
         });
 
         return redirect()->route('ledger.index')->with('success', 'تم حفظ القيد المُجزّأ بنجاح');
     }
+
+
 
     // =======================
     // Helpers
@@ -507,16 +588,8 @@ class LedgerController extends Controller
         return $typeId === self::TYPE_IN ? self::DIR_IN : self::DIR_OUT;
     }
 
-    /** توليد ملاحظة ذكية موحّدة */
-    private function buildSmartNote(
-        string $partyCategory,
-        ?int $investorId,
-        int $statusId,
-        string $direction,
-        string $accountLabel,
-        float $amount,
-        ?string $baseNote = null
-    ): string {
+    private function buildSmartNote(string $partyCategory,?int $investorId,int $statusId,string $direction,string $accountLabel,float $amount,?string $baseNote = null): string 
+    {
         $statusName = optional(TransactionStatus::find($statusId))->name ?? 'عملية';
         $partyLabel = $partyCategory === 'office'
             ? 'المكتب'

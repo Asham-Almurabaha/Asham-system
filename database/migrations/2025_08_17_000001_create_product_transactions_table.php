@@ -9,10 +9,10 @@ return new class extends Migration {
     {
         Schema::create('product_transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade'); // المنتج المرتبط
+            $table->foreignId('product_id')->constrained('products')->nullable()->onDelete('cascade'); // المنتج المرتبط
+            $table->foreignId('ledger_entry_id')->constrained('ledger_entries')->nullable()->onDelete('cascade'); // ربط بالقيد
             $table->integer('quantity'); // الكمية
-            $table->decimal('purchase_price', 10, 2); // سعر الشراء للوحدة
-            $table->date('entry_date')->default(now()); // تاريخ الإدخال
+            
             $table->timestamps();
         });
     }

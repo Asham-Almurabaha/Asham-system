@@ -5,7 +5,6 @@ use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuarantorController;
-use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\InvestorTransactionController;
 use App\Http\Controllers\LanguageController;
@@ -94,13 +93,11 @@ Route::prefix('ledger')->name('ledger.')->group(function () {
 
 
 Route::prefix('installments')->name('installments.')->group(function () {
-    Route::get('/{installment}', [InstallmentController::class, 'show'])->name('show');
-
+   
     Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
     
     Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
     
-    Route::delete('/{installment}/payment/{paymentId}', [InstallmentController::class, 'deletePayment'])->name('payment.delete');
 });
 
 Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');

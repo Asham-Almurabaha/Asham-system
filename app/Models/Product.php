@@ -17,6 +17,6 @@ class Product extends Model
     // كل منتج ممكن يكون له إدخالات أسعار متعددة
     public function entries()
     {
-        return $this->hasMany(ProductEntry::class);
+        return $this->hasMany(ProductTransaction::class);
     }
 }

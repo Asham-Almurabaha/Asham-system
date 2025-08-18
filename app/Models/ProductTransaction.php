@@ -11,9 +11,8 @@ class ProductTransaction extends Model
 
     protected $fillable = [
         'product_id',
+        'ledger_entry_id',
         'quantity',
-        'purchase_price',
-        'entry_date',
     ];
 
     protected $casts = [
@@ -24,5 +23,10 @@ class ProductTransaction extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function ledgerEntry()
+    {
+        return $this->belongsTo(LedgerEntry::class);
     }
 }

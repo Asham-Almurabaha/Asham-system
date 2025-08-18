@@ -25,6 +25,11 @@
 @php
     $oldCat = old('party_category', 'investors');
     $oldAccountPicker = old('bank_account_id') ? 'bank:'.old('bank_account_id') : (old('safe_id') ? 'safe:'.old('safe_id') : '');
+
+    // متغيرات البضائع (لو الكنترولر لسه مبعتهومش)
+    $goodsStatusIds = $goodsStatusIds ?? [];
+    $products = $products ?? collect();
+    $oldProducts = old('products', []);
 @endphp
 
 <div class="card shadow-sm">
@@ -59,14 +64,16 @@
                 <div class="col-md-4">
                     <label class="form-label">الحالة</label>
 
-                    <select id="status_investors" class="form-select mb-2" {{ $oldCat==='investors' ? '' : 'hidden' }}>
+                    <select id="status_investors" class="form-select mb-2" {{ $oldCat==='investors' ? '' : 'hidden' }}
+                            data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (مستثمر)</option>
                         @foreach(($statusesByCategory['investors'] ?? []) as $st)
                             <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
                         @endforeach
                     </select>
 
-                    <select id="status_office" class="form-select mb-2" {{ $oldCat==='office' ? '' : 'hidden' }}>
+                    <select id="status_office" class="form-select mb-2" {{ $oldCat==='office' ? '' : 'hidden' }}
+                            data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (المكتب)</option>
                         @foreach(($statusesByCategory['office'] ?? []) as $st)
                             <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
@@ -80,6 +87,7 @@
                     @error('status_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
             </div>
+
             {{-- مُلتقط الحساب (يجمع البنك والخزنة) + حقول مخفية --}}
             <div class="col-md-4 mt-0">
                 <label class="form-label" for="account_picker">الحساب</label>
@@ -117,6 +125,62 @@
                 @error('transaction_date') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
+            {{-- ====== قسم البضائع (يظهر تلقائيًا لحالات شراء/بيع بضائع) ====== --}}
+            <div class="col-12" id="goods_section" style="display:none;">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddProduct">إضافة صنف</button>
+                    </div>
+                    <div class="card-body" id="products_wrapper">
+                        @if(!empty($oldProducts))
+                            @foreach($oldProducts as $i => $row)
+                                <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
+                                    <div class="col-md-8">
+                                        <label class="form-label small mb-1">الصنف</label>
+                                        <select name="products[{{ $i }}][product_id]" class="form-select">
+                                            <option value="">— اختر —</option>
+                                            @foreach($products as $p)
+                                                <option value="{{ $p->id }}" @selected(($row['product_id'] ?? null)==$p->id)>{{ $p->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small mb-1">الكمية</label>
+                                        <div class="input-group">
+                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
+                                            <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="row g-2 product-row align-items-end">
+                                <div class="col-md-8">
+                                    <label class="form-label small mb-1">الصنف</label>
+                                    <select name="products[0][product_id]" class="form-select">
+                                        <option value="">— اختر —</option>
+                                        @foreach($products as $p)
+                                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small mb-1">الكمية</label>
+                                    <div class="input-group">
+                                        <input type="number" min="1" name="products[0][quantity]" class="form-control" placeholder="0">
+                                        <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="card-footer small text-muted">
+                        * لا يتم إجبارك على إدخال البضائع إلا إذا كانت الحالة شراء/بيع بضائع.
+                    </div>
+                </div>
+            </div>
+
             {{-- ملاحظات --}}
             <div class="col-12">
                 <label class="form-label" for="notes">ملاحظات</label>
@@ -139,6 +203,29 @@
     </div>
 </div>
 
+{{-- قالب صف بضاعة جديد (Template) --}}
+<template id="product_row_tpl">
+    <div class="row g-2 product-row align-items-end mt-2">
+        <div class="col-md-8">
+            <label class="form-label small mb-1">الصنف</label>
+            <select class="form-select js-product-select">
+                <option value="">— اختر —</option>
+                @foreach($products as $p)
+                    <option value="{{ $p->id }}">{{ $p->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small mb-1">الكمية</label>
+            <div class="input-group">
+                <input type="number" min="1" class="form-control js-qty-input" placeholder="0">
+                <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+            </div>
+        </div>
+    </div>
+</template>
+@endsection
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -158,6 +245,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnSpinner = document.getElementById('btnSpinner');
     const form = document.getElementById('createForm');
 
+    // ====== البضائع
+    const goodsSection = document.getElementById('goods_section');
+    const productsWrapper = document.getElementById('products_wrapper');
+    const btnAddProduct = document.getElementById('btnAddProduct');
+    const rowTpl = document.getElementById('product_row_tpl');
+
+    function goodsIdsFrom(el){
+        try { return JSON.parse(el.dataset.goodsIds || '[]').map(Number); }
+        catch(e){ return []; }
+    }
     function currentStatusSelect(){
         return catSel.value === 'investors' ? statusInv : statusOff;
     }
@@ -167,6 +264,7 @@ document.addEventListener('DOMContentLoaded', function () {
         statusInv.hidden = !(catSel.value === 'investors');
         statusOff.hidden = !(catSel.value === 'office');
         syncStatusHiddenAndBadge();
+        toggleGoodsSection(); // تحديث عرض/إخفاء البضائع
     }
 
     function syncStatusHiddenAndBadge(){
@@ -189,10 +287,65 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (type === 'safe'){ safeHidden.value = id; bankHidden.value = ''; }
     }
 
+    // ====== عرض/إخفاء قسم البضائع حسب الحالة المختارة
+    function selectedStatusId(){
+        const sel = currentStatusSelect();
+        const opt = sel.options[sel.selectedIndex];
+        return opt ? Number(opt.value || 0) : 0;
+    }
+    function isGoodsStatus(){
+        const sel = currentStatusSelect();
+        const ids = goodsIdsFrom(sel);
+        const cur = selectedStatusId();
+        return ids.includes(cur);
+    }
+    function toggleGoodsSection(){
+        goodsSection.style.display = isGoodsStatus() ? '' : 'none';
+    }
+
+    // ====== إدارة صفوف البضائع
+    function nextProductIndex(){
+        const rows = productsWrapper.querySelectorAll('.product-row');
+        return rows.length ? Math.max(...Array.from(rows).map(r => {
+            const sel = r.querySelector('select[name^="products["]');
+            if (!sel) return -1;
+            const m = sel.name.match(/^products\[(\d+)\]/);
+            return m ? Number(m[1]) : -1;
+        })) + 1 : 0;
+    }
+
+    function wireRowNames(row, index){
+        const sel = row.querySelector('.js-product-select');
+        const qty = row.querySelector('.js-qty-input');
+        if (sel) sel.setAttribute('name', `products[${index}][product_id]`);
+        if (qty) qty.setAttribute('name', `products[${index}][quantity]`);
+    }
+
+    function addProductRow(){
+        const frag = rowTpl.content.cloneNode(true);
+        const row = frag.querySelector('.product-row');
+        wireRowNames(row, nextProductIndex());
+        productsWrapper.appendChild(frag);
+    }
+
+    function handleRemoveClick(e){
+        if (!e.target.classList.contains('js-remove-product')) return;
+        const row = e.target.closest('.product-row');
+        if (!row) return;
+        // سيب صف واحد على الأقل
+        if (productsWrapper.querySelectorAll('.product-row').length > 1){
+            row.remove();
+        }
+    }
+
+    // Events
     catSel.addEventListener('change', syncCategoryUI);
-    statusInv.addEventListener('change', syncStatusHiddenAndBadge);
-    statusOff.addEventListener('change', syncStatusHiddenAndBadge);
+    statusInv.addEventListener('change', function(){ syncStatusHiddenAndBadge(); toggleGoodsSection(); });
+    statusOff.addEventListener('change', function(){ syncStatusHiddenAndBadge(); toggleGoodsSection(); });
     accountPicker.addEventListener('change', syncAccountHidden);
+
+    if (btnAddProduct) btnAddProduct.addEventListener('click', addProductRow);
+    productsWrapper.addEventListener('click', handleRemoveClick);
 
     form.addEventListener('submit', function(){
         btnSave.disabled = true;
@@ -206,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function () {
     syncCategoryUI();
     syncStatusHiddenAndBadge();
     syncAccountHidden();
+    toggleGoodsSection();
 });
 </script>
 @endpush
-@endsection
