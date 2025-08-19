@@ -35,12 +35,8 @@ class Investor extends Model
     public function contracts()
     {
         return $this->belongsToMany(Contract::class, 'contract_investor')
-                    ->withPivot([
-                        'capital_percentage',    // نسبة رأس المال من العقد
-                        'profit_percentage',     // نسبة الربح من العقد
-                        'capital_amount',        // قيمة رأس المال فعليا
-                        'profit_amount'          // قيمة الربح فعليا
-                    ])
+                        ->withPivot(['share_percentage', 'share_value'])
+                  
                     ->withTimestamps();
     }
 

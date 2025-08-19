@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ContractStatus;
 use App\Models\Investor;
+use App\Models\LedgerEntry;
 use App\Models\Nationality;
 use App\Models\Title;
+use App\Services\InvestorDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -34,10 +37,10 @@ class InvestorController extends Controller
 
         // IDs للحالات لو فيه جدول statuses
         $endedStatusIds = [];
-        if (class_exists(\App\Models\InvestmentStatus::class)) {
-            $endedStatusIds = \App\Models\InvestmentStatus::whereIn('name',$endedStatusNames)->pluck('id')->all();
-        } elseif (class_exists(\App\Models\ContractStatus::class)) {
-            $endedStatusIds = \App\Models\ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all();
+        if (class_exists(InvestmentStatus::class)) {
+            $endedStatusIds = InvestmentStatus::whereIn('name',$endedStatusNames)->pluck('id')->all();
+        } elseif (class_exists(ContractStatus::class)) {
+            $endedStatusIds = ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all();
         }
 
         // حساب النشطين:
@@ -137,9 +140,13 @@ class InvestorController extends Controller
         return redirect()->route('investors.index')->with('success', 'تم إضافة المستثمر بنجاح');
     }
 
-    public function show(Investor $investor)
+    public function show(Investor $investor, InvestorDataService $service)
     {
-        return view('investors.show', compact('investor'));
+        // ابني الداتا من السيرفس
+        $data = $service->build($investor, currencySymbol: 'ر.س');
+
+        // مرر الداتا + المستثمر للواجهة
+        return view('investors.show', ['investor' => $investor] + $data);
     }
 
     public function edit(Investor $investor)

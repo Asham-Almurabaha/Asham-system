@@ -100,56 +100,64 @@
     </div>
 </div>
 
-
 @php
-    // ====== مجاميع تفصيلية حسب الفئة (المستثمرون/المكتب) ======
-    $coll = $entries instanceof \Illuminate\Pagination\LengthAwarePaginator ? $entries->getCollection() : collect($entries);
+    // ====== مصدر البيانات ======
+    $coll = $entries instanceof \Illuminate\Pagination\LengthAwarePaginator
+        ? $entries->getCollection()
+        : collect($entries);
 
-    $sumFn = function($cat = null, $dir = null, $acc = null) use ($coll) {
-        $t = 0.0;
-        foreach ($coll as $e) {
-            $isOffice = (bool)($e->is_office ?? false);
-            if ($cat === 'investors' && $isOffice) continue;
-            if ($cat === 'office'    && !$isOffice) continue;
-            if ($dir && ($e->direction ?? null) !== $dir) continue;
+    // ====== تجميع الحسابات البنكيّة والخزن (على مستوى الحسابات فقط) ======
+    $bankAgg = [];  $safeAgg = [];
+    $bankTotalIn = $bankTotalOut = 0.0;
+    $safeTotalIn = $safeTotalOut = 0.0;
 
-            if ($acc === 'bank' && empty($e->bankAccount)) continue;
-            if ($acc === 'safe' && empty($e->safe)) continue;
+    foreach ($coll as $e) {
+        $amt = (float)($e->amount ?? 0);
+        $dir = $e->direction ?? null;
 
-            $t += (float)($e->amount ?? 0);
+        if (!empty($e->bankAccount)) {
+            $bid = (string)$e->bank_account_id;
+            $bankAgg[$bid] ??= [
+                'name' => $e->bankAccount->name ?? ('#'.$bid),
+                'in'   => 0.0,
+                'out'  => 0.0,
+            ];
+            if ($dir === 'in')  { $bankAgg[$bid]['in']  += $amt; $bankTotalIn  += $amt; }
+            if ($dir === 'out') { $bankAgg[$bid]['out'] += $amt; $bankTotalOut += $amt; }
         }
-        return $t;
-    };
 
-    // المستثمرون
-    $invIn       = $totalsInvestors['in']       ?? $sumFn('investors','in',  null);
-    $invOut      = $totalsInvestors['out']      ?? $sumFn('investors','out', null);
-    $invBankIn   = $totalsInvestors['bank_in']  ?? $sumFn('investors','in',  'bank');
-    $invBankOut  = $totalsInvestors['bank_out'] ?? $sumFn('investors','out', 'bank');
-    $invSafeIn   = $totalsInvestors['safe_in']  ?? $sumFn('investors','in',  'safe');
-    $invSafeOut  = $totalsInvestors['safe_out'] ?? $sumFn('investors','out', 'safe');
-    $invNet      = $invIn - $invOut;
+        if (!empty($e->safe)) {
+            $sid = (string)$e->safe_id;
+            $safeAgg[$sid] ??= [
+                'name' => $e->safe->name ?? ('#'.$sid),
+                'in'   => 0.0,
+                'out'  => 0.0,
+            ];
+            if ($dir === 'in')  { $safeAgg[$sid]['in']  += $amt; $safeTotalIn  += $amt; }
+            if ($dir === 'out') { $safeAgg[$sid]['out'] += $amt; $safeTotalOut += $amt; }
+        }
+    }
 
-    // المكتب
-    $offIn       = $totalsOffice['in']       ?? $sumFn('office','in',  null);
-    $offOut      = $totalsOffice['out']      ?? $sumFn('office','out', null);
-    $offBankIn   = $totalsOffice['bank_in']  ?? $sumFn('office','in',  'bank');
-    $offBankOut  = $totalsOffice['bank_out'] ?? $sumFn('office','out', 'bank');
-    $offSafeIn   = $totalsOffice['safe_in']  ?? $sumFn('office','in',  'safe');
-    $offSafeOut  = $totalsOffice['safe_out'] ?? $sumFn('office','out', 'safe');
-    $offNet      = $offIn - $offOut;
+    // حساب الصافي والنِسَب للبار المصغّر
+    foreach ($bankAgg as $k => $b) {
+        $flow = max(($b['in'] ?? 0) + ($b['out'] ?? 0), 0.00001);
+        $b['net']     = ($b['in'] ?? 0) - ($b['out'] ?? 0);
+        $b['in_pct']  = round(($b['in']  ?? 0) / $flow * 100, 1);
+        $b['out_pct'] = round(($b['out'] ?? 0) / $flow * 100, 1);
+        $bankAgg[$k]  = $b;
+    }
+    foreach ($safeAgg as $k => $s) {
+        $flow = max(($s['in'] ?? 0) + ($s['out'] ?? 0), 0.00001);
+        $s['net']     = ($s['in'] ?? 0) - ($s['out'] ?? 0);
+        $s['in_pct']  = round(($s['in']  ?? 0) / $flow * 100, 1);
+        $s['out_pct'] = round(($s['out'] ?? 0) / $flow * 100, 1);
+        $safeAgg[$k]  = $s;
+    }
 
-    $pct = function($part, $whole){ return $whole>0 ? round(($part/$whole)*100,1) : 0; };
-    $invTotalFlow = max($invIn + $invOut, 0.00001);
-    $offTotalFlow = max($offIn + $offOut, 0.00001);
-    $invInPct   = $pct($invIn,  $invTotalFlow);
-    $invOutPct  = $pct($invOut, $invTotalFlow);
-    $offInPct   = $pct($offIn,  $offTotalFlow);
-    $offOutPct  = $pct($offOut, $offTotalFlow);
-    $invNetClass = $invNet >= 0 ? 'text-success' : 'text-danger';
-    $offNetClass = $offNet >= 0 ? 'text-success' : 'text-danger';
+    $bankAgg = collect($bankAgg)->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
+    $safeAgg = collect($safeAgg)->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
 
-    // ====== كروت إضافية: فرق البيع / فرق المكاتبة / ربح المكتب ======
+    // ====== كروت إضافية: المكاتبة / فرق البيع / ربح المكتب (داخل فقط من دفتر القيود للمكتب) ======
     $containsAny = function($txt, $words){
         $txt = mb_strtolower($txt ?? '');
         foreach ($words as $w) {
@@ -159,291 +167,210 @@
         return false;
     };
 
-    $saleKeywords      = ['بيع','مبيع','مبيعات','sale','sales'];
+    $saleKeywords      = ['بيع','مبيع','مبيعات','sale','sales','فرق بيع','فرق البيع'];
     $mukatabaKeywords  = ['مكاتبة','مُكاتبة','كتابة','mukataba','mukātaba'];
     $officeProfitInKW  = ['ربح','أرباح','عوائد','عمولة','عمولات','profit','revenue','return'];
-    $officeProfitOutKW = ['مصاريف','مصروف','خصم','عمولة مدفوعة','خصومات','expenses','fee','commission'];
 
-    $saleIn = $saleOut = $mktIn = $mktOut = 0.0;
-    $offProfitIn = $offProfitOut = 0.0;
+    $saleOnlyIn = $mktOnlyIn = $officeProfitOnlyIn = 0.0;
 
     foreach ($coll as $e) {
+        if (!($e->is_office ?? false)) continue;          // المكتب فقط
+        if (($e->direction ?? null) !== 'in') continue;   // داخل فقط
+
         $statusName = trim($e->status->name ?? '');
-        $dir        = $e->direction ?? null;
         $amt        = (float)($e->amount ?? 0);
 
-        if ($containsAny($statusName, $saleKeywords)) {
-            if ($dir === 'in')  { $saleIn += $amt; }
-            if ($dir === 'out') { $saleOut += $amt; }
-        }
-        if ($containsAny($statusName, $mukatabaKeywords)) {
-            if ($dir === 'in')  { $mktIn += $amt; }
-            if ($dir === 'out') { $mktOut += $amt; }
-        }
-
-        if ($e->is_office ?? false) {
-            if ($containsAny($statusName, $officeProfitInKW)  && $dir === 'in')  $offProfitIn  += $amt;
-            if ($containsAny($statusName, $officeProfitOutKW) && $dir === 'out') $offProfitOut += $amt;
-        }
+        if ($containsAny($statusName, $saleKeywords))     $saleOnlyIn         += $amt;
+        if ($containsAny($statusName, $mukatabaKeywords)) $mktOnlyIn          += $amt;
+        if ($containsAny($statusName, $officeProfitInKW)) $officeProfitOnlyIn += $amt;
     }
-
-    $saleNet = $saleIn - $saleOut;
-    $mktNet  = $mktIn  - $mktOut;
-
-    // إن لم يوجد تصنيف واضح لربح المكتب من الحالات، نستعمل صافي المكتب كبديل منطقي
-    $officeProfit = ($offProfitIn + $offProfitOut) > 0 ? ($offProfitIn - $offProfitOut) : $offNet;
-
-    $saleFlow = max($saleIn + $saleOut, 0.00001);
-    $mktFlow  = max($mktIn  + $mktOut,  0.00001);
-    $saleInPct  = $pct($saleIn,  $saleFlow);
-    $saleOutPct = $pct($saleOut, $saleFlow);
-    $mktInPct   = $pct($mktIn,   $mktFlow);
-    $mktOutPct  = $pct($mktOut,  $mktFlow);
-
-    $saleNetClass = $saleNet >= 0 ? 'text-success' : 'text-danger';
-    $mktNetClass  = $mktNet  >= 0 ? 'text-success' : 'text-danger';
-    $offProfClass = $officeProfit >= 0 ? 'text-success' : 'text-danger';
 @endphp
 
-{{-- كروت تفصيلية: المستثمرون والمكتب --}}
+{{-- كروت: الحسابات البنكية + الخزن --}}
 <div class="row g-3 mb-3" dir="rtl">
-    {{-- المستثمرون --}}
+    {{-- الحسابات البنكية --}}
     <div class="col-12 col-xl-6">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="kpi-icon"><i class="bi bi-person-badge fs-4 text-primary"></i></div>
-                <div>
-                    <div class="fw-bold">المستثمرون</div>
-                    <div class="subnote">تفصيل الحركات ضمن نتائج البحث الحالية</div>
+        <div class="kpi-card p-0 h-100">
+            <div class="card-head bank-grad p-3 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="kpi-icon"><i class="bi bi-bank fs-4 text-success"></i></div>
+                    <div>
+                        <div class="fw-bold">الحسابات البنكية</div>
+                        <div class="subnote">ضمن النتائج الحالية</div>
+                    </div>
                 </div>
+                <span class="chip soft">عدد الحسابات: <strong>{{ $bankAgg->count() }}</strong></span>
             </div>
 
-            <div class="row g-2">
-                <div class="col-4">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote">داخل</div>
-                        <div class="kpi-value fw-bold text-success">{{ number_format($invIn,2) }}</div>
-                        <div class="progress bar-8 mt-1"><div class="progress-bar" style="width: {{ $invInPct }}%"></div></div>
-                        <div class="mini text-muted mt-1">{{ $invInPct }}% من تدفق المستثمر</div>
+            <div class="p-3 pt-2">
+                <div class="stat-box mb-2">
+                    <div class="d-flex justify-content-between mini"><span>إجمالي داخل</span><strong class="text-success">{{ number_format($bankTotalIn,2) }}</strong></div>
+                    <div class="d-flex justify-content-between mini"><span>إجمالي خارج</span><strong class="text-danger">{{ number_format($bankTotalOut,2) }}</strong></div>
+                    @php $bankNet = $bankTotalIn - $bankTotalOut; @endphp
+                    <div class="d-flex justify-content-between mini">
+                        <span>الصافي</span>
+                        <strong class="{{ $bankNet>=0?'text-success':'text-danger' }}">{{ number_format($bankNet,2) }}</strong>
                     </div>
                 </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote">خارج</div>
-                        <div class="kpi-value fw-bold text-danger">{{ number_format($invOut,2) }}</div>
-                        <div class="progress bar-8 mt-1"><div class="progress-bar bg-danger" style="width: {{ $invOutPct }}%"></div></div>
-                        <div class="mini text-muted mt-1">{{ $invOutPct }}% من تدفق المستثمر</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote">الصافي</div>
-                        <div class="kpi-value fw-bold {{ $invNetClass }}">{{ number_format($invNet,2) }}</div>
-                        <div class="mini text-muted mt-1">داخل − خارج</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="row g-2 mt-2">
-                <div class="col-6">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote"><i class="bi bi-bank"></i> بنك</div>
-                        <div class="d-flex justify-content-between mini mt-1">
-                            <span>داخل</span><strong class="text-success">{{ number_format($invBankIn,2) }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mini">
-                            <span>خارج</span><strong class="text-danger">{{ number_format($invBankOut,2) }}</strong>
-                        </div>
+                @if($bankAgg->isNotEmpty())
+                    <div class="table-responsive nice-scroll">
+                        <table class="table table-sm align-middle mb-0 table-hover">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>الحساب</th>
+                                    <th style="width:34%"></th>
+                                    <th class="text-end" style="width:12%">داخل</th>
+                                    <th class="text-end" style="width:12%">خارج</th>
+                                    <th class="text-end" style="width:12%">صافي</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($bankAgg as $b)
+                                    <tr>
+                                        <td class="text-truncate" style="max-width:220px">
+                                            <i class="bi bi-building-fill-check text-success me-1"></i>{{ $b['name'] }}
+                                        </td>
+                                        <td>
+                                            <div class="stacked-bar" title="داخل {{ $b['in_pct'] }}% / خارج {{ $b['out_pct'] }}%">
+                                                <span class="in"  style="width: {{ $b['in_pct'] }}%"></span>
+                                                <span class="out" style="width: {{ $b['out_pct'] }}%"></span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end text-success">{{ number_format($b['in'],2) }}</td>
+                                        <td class="text-end text-danger">{{ number_format($b['out'],2) }}</td>
+                                        <td class="text-end fw-semibold {{ ($b['net']??0)>=0?'text-success':'text-danger' }}">{{ number_format($b['net']??0,2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="2" class="text-end">الإجمالي</th>
+                                    <th class="text-end text-success">{{ number_format($bankTotalIn,2) }}</th>
+                                    <th class="text-end text-danger">{{ number_format($bankTotalOut,2) }}</th>
+                                    <th class="text-end fw-semibold {{ $bankNet>=0?'text-success':'text-danger' }}">{{ number_format($bankNet,2) }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
-                </div>
-                <div class="col-6">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote"><i class="bi bi-safe2"></i> خزنة</div>
-                        <div class="d-flex justify-content-between mini mt-1">
-                            <span>داخل</span><strong class="text-success">{{ number_format($invSafeIn,2) }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mini">
-                            <span>خارج</span><strong class="text-danger">{{ number_format($invSafeOut,2) }}</strong>
-                        </div>
-                    </div>
-                </div>
+                @else
+                    <div class="text-muted mini">لا توجد حركات بنكية ضمن النتائج.</div>
+                @endif
             </div>
-
         </div>
     </div>
 
-    {{-- المكتب --}}
+    {{-- الخزن --}}
     <div class="col-12 col-xl-6">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="kpi-icon"><i class="bi bi-building fs-4 text-primary"></i></div>
-                <div>
-                    <div class="fw-bold">المكتب</div>
-                    <div class="subnote">تفصيل الحركات ضمن نتائج البحث الحالية</div>
+        <div class="kpi-card p-0 h-100">
+            <div class="card-head safe-grad p-3 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="kpi-icon"><i class="bi bi-safe2 fs-4 text-warning"></i></div>
+                    <div>
+                        <div class="fw-bold">الخزن</div>
+                        <div class="subnote">ضمن النتائج الحالية</div>
+                    </div>
                 </div>
+                <span class="chip soft">عدد الخزن: <strong>{{ $safeAgg->count() }}</strong></span>
             </div>
 
-            <div class="row g-2">
-                <div class="col-4">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote">داخل</div>
-                        <div class="kpi-value fw-bold text-success">{{ number_format($offIn,2) }}</div>
-                        <div class="progress bar-8 mt-1"><div class="progress-bar" style="width: {{ $offInPct }}%"></div></div>
-                        <div class="mini text-muted mt-1">{{ $offInPct }}% من تدفق المكتب</div>
+            <div class="p-3 pt-2">
+                <div class="stat-box mb-2">
+                    <div class="d-flex justify-content-between mini"><span>إجمالي داخل</span><strong class="text-success">{{ number_format($safeTotalIn,2) }}</strong></div>
+                    <div class="d-flex justify-content-between mini"><span>إجمالي خارج</span><strong class="text-danger">{{ number_format($safeTotalOut,2) }}</strong></div>
+                    @php $safeNet = $safeTotalIn - $safeTotalOut; @endphp
+                    <div class="d-flex justify-content-between mini">
+                        <span>الصافي</span>
+                        <strong class="{{ $safeNet>=0?'text-success':'text-danger' }}">{{ number_format($safeNet,2) }}</strong>
                     </div>
                 </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote">خارج</div>
-                        <div class="kpi-value fw-bold text-danger">{{ number_format($offOut,2) }}</div>
-                        <div class="progress bar-8 mt-1"><div class="progress-bar bg-danger" style="width: {{ $offOutPct }}%"></div></div>
-                        <div class="mini text-muted mt-1">{{ $offOutPct }}% من تدفق المكتب</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote">الصافي</div>
-                        <div class="kpi-value fw-bold {{ $offNetClass }}">{{ number_format($offNet,2) }}</div>
-                        <div class="mini text-muted mt-1">داخل − خارج</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="row g-2 mt-2">
-                <div class="col-6">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote"><i class="bi bi-bank"></i> بنك</div>
-                        <div class="d-flex justify-content-between mini mt-1">
-                            <span>داخل</span><strong class="text-success">{{ number_format($offBankIn,2) }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mini">
-                            <span>خارج</span><strong class="text-danger">{{ number_format($offBankOut,2) }}</strong>
-                        </div>
+                @if($safeAgg->isNotEmpty())
+                    <div class="table-responsive nice-scroll">
+                        <table class="table table-sm align-middle mb-0 table-hover">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>الخزنة</th>
+                                    <th style="width:34%"></th>
+                                    <th class="text-end" style="width:12%">داخل</th>
+                                    <th class="text-end" style="width:12%">خارج</th>
+                                    <th class="text-end" style="width:12%">صافي</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($safeAgg as $s)
+                                    <tr>
+                                        <td class="text-truncate" style="max-width:220px">
+                                            <i class="bi bi-archive-fill text-warning me-1"></i>{{ $s['name'] }}
+                                        </td>
+                                        <td>
+                                            <div class="stacked-bar" title="داخل {{ $s['in_pct'] }}% / خارج {{ $s['out_pct'] }}%">
+                                                <span class="in"  style="width: {{ $s['in_pct'] }}%"></span>
+                                                <span class="out" style="width: {{ $s['out_pct'] }}%"></span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end text-success">{{ number_format($s['in'],2) }}</td>
+                                        <td class="text-end text-danger">{{ number_format($s['out'],2) }}</td>
+                                        <td class="text-end fw-semibold {{ ($s['net']??0)>=0?'text-success':'text-danger' }}">{{ number_format($s['net']??0,2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="2" class="text-end">الإجمالي</th>
+                                    <th class="text-end text-success">{{ number_format($safeTotalIn,2) }}</th>
+                                    <th class="text-end text-danger">{{ number_format($safeTotalOut,2) }}</th>
+                                    <th class="text-end fw-semibold {{ $safeNet>=0?'text-success':'text-danger' }}">{{ number_format($safeNet,2) }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
-                </div>
-                <div class="col-6">
-                    <div class="border rounded p-2 h-100">
-                        <div class="subnote"><i class="bi bi-safe2"></i> خزنة</div>
-                        <div class="d-flex justify-content-between mini mt-1">
-                            <span>داخل</span><strong class="text-success">{{ number_format($offSafeIn,2) }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between mini">
-                            <span>خارج</span><strong class="text-danger">{{ number_format($offSafeOut,2) }}</strong>
-                        </div>
-                    </div>
-                </div>
+                @else
+                    <div class="text-muted mini">لا توجد حركات خزنة ضمن النتائج.</div>
+                @endif
             </div>
-
         </div>
     </div>
 </div>
 
-{{-- ===== كروت إضافية: فرق البيع / فرق المكاتبة / ربح المكتب ===== --}}
+{{-- كروت إضافية: المكاتبة / فرق البيع / ربح المكتب (داخل فقط) --}}
 <div class="row g-3 mb-3" dir="rtl">
     <div class="col-12 col-md-4">
-        <div class="kpi-card p-3">
+        <div class="kpi-card pretty p-3">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="kpi-icon"><i class="bi bi-journal-text fs-4 text-primary"></i></div>
+                <div>
+                    <div class="fw-bold">المكاتبة</div>
+                    <div class="subnote">مجمّعة من دفتر القيود</div>
+                </div>
+            </div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($mktOnlyIn,2) }}</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
+        <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-bag-check fs-4 text-success"></i></div>
                 <div>
                     <div class="fw-bold">فرق البيع</div>
-                    <div class="subnote">(داخل البيع − خارج البيع)</div>
+                    <div class="subnote">مجمّعة من دفتر القيود</div>
                 </div>
             </div>
-            <div class="row g-2">
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">داخل</div>
-                        <div class="fw-bold text-success">{{ number_format($saleIn,2) }}</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">خارج</div>
-                        <div class="fw-bold text-danger">{{ number_format($saleOut,2) }}</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">الصافي</div>
-                        <div class="fw-bold {{ $saleNetClass }}">{{ number_format($saleNet,2) }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="progress bar-8 mt-3">
-                <div class="progress-bar" style="width: {{ $saleInPct }}%"></div>
-            </div>
-            <div class="mini text-muted mt-1">نسبة الداخل من إجمالي تدفق البيع: {{ $saleInPct }}%</div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($saleOnlyIn,2) }}</div>
         </div>
     </div>
 
     <div class="col-12 col-md-4">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <div class="kpi-icon"><i class="bi bi-journal-text fs-4 text-primary"></i></div>
-                <div>
-                    <div class="fw-bold">فرق المكاتبة</div>
-                    <div class="subnote">(داخل المكاتبة − خارج المكاتبة)</div>
-                </div>
-            </div>
-            <div class="row g-2">
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">داخل</div>
-                        <div class="fw-bold text-success">{{ number_format($mktIn,2) }}</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">خارج</div>
-                        <div class="fw-bold text-danger">{{ number_format($mktOut,2) }}</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">الصافي</div>
-                        <div class="fw-bold {{ $mktNetClass }}">{{ number_format($mktNet,2) }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="progress bar-8 mt-3">
-                <div class="progress-bar" style="width: {{ $mktInPct }}%"></div>
-            </div>
-            <div class="mini text-muted mt-1">نسبة الداخل من إجمالي تدفق المكاتبة: {{ $mktInPct }}%</div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-4">
-        <div class="kpi-card p-3">
+        <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-briefcase fs-4 text-warning"></i></div>
                 <div>
                     <div class="fw-bold">ربح المكتب</div>
-                    <div class="subnote">
-                        (عوائد/أرباح/عمولات المكتب − مصاريف/عمولات مدفوعة)
-                        <span class="mini text-muted d-block">* إن لم تتوفر هذه التصنيفات، يُعرض صافي المكتب.</span>
-                    </div>
+                    <div class="subnote">مجمّعة من دفتر القيود</div>
                 </div>
             </div>
-            <div class="row g-2">
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">عوائد</div>
-                        <div class="fw-bold text-success">{{ number_format($offProfitIn,2) }}</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">مصاريف</div>
-                        <div class="fw-bold text-danger">{{ number_format($offProfitOut,2) }}</div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="border rounded p-2 text-center">
-                        <div class="mini text-muted">الربح</div>
-                        <div class="fw-bold {{ $offProfClass }}">{{ number_format($officeProfit,2) }}</div>
-                    </div>
-                </div>
-            </div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($officeProfitOnlyIn,2) }}</div>
         </div>
     </div>
 </div>
@@ -477,11 +404,7 @@
                         <td>
                             @php $statusText = $e->status->name ?? '-'; @endphp
                             @if(!empty($e->notes))
-                                <span
-                                    data-bs-toggle="tooltip"
-                                    data-bs-container="body"
-                                    data-bs-placement="top"
-                                    title="{{ $e->notes }}">
+                                <span data-bs-toggle="tooltip" data-bs-container="body" data-bs-placement="top" title="{{ $e->notes }}">
                                     {{ $statusText }}
                                 </span>
                             @else
@@ -531,16 +454,43 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <style>
 .table-responsive { max-height: 65vh; }
+.nice-scroll { max-height: 42vh; }
 
-/* كروت */
-:root{ --card-r:1rem; --soft:0 6px 18px rgba(0,0,0,.06); --soft2:0 10px 24px rgba(0,0,0,.08); }
-.kpi-card{ border:1px solid #eef2f7; border-radius:var(--card-r); box-shadow:var(--soft); height:100%; transition:.2s; }
+/* كروت + لمسات */
+:root{
+  --card-r:1rem; --soft:0 6px 18px rgba(0,0,0,.06); --soft2:0 10px 24px rgba(0,0,0,.08);
+  --grad-bank: linear-gradient(135deg,#e8f7ff 0%,#ffffff 70%);
+  --grad-safe: linear-gradient(135deg,#fff7e6 0%,#ffffff 70%);
+}
+.kpi-card{ border:1px solid #eef2f7; border-radius:var(--card-r); box-shadow:var(--soft); transition:.2s; }
 .kpi-card:hover{ box-shadow:var(--soft2); transform: translateY(-2px); }
+.kpi-card.pretty{ background: #fff; }
+.card-head{ border-bottom:1px solid #eef2f7; border-top-left-radius:var(--card-r); border-top-right-radius:var(--card-r); }
+.bank-grad{ background: var(--grad-bank); }
+.safe-grad{ background: var(--grad-safe); }
 .kpi-icon{ width:52px;height:52px;border-radius:.9rem;display:grid;place-items:center;background:#f4f6fb; }
-.kpi-value{ font-size:1.6rem; line-height:1; }
+.kpi-value{ font-size:1.65rem; line-height:1; }
 .subnote{ font-size:.85rem; color:#6b7280; }
+.chip{ background:#f1f4f9; color:#374151; border-radius:999px; padding:.25rem .6rem; font-weight:600; }
+.chip.soft{ background:#eef6ff; color:#1d4ed8; }
+.stat-box{ border:1px dashed #e5e7eb; border-radius:.75rem; padding:.5rem .75rem; background:#fafafa; }
+
+/* البار المصغّر (داخل/خارج) */
+.stacked-bar{ position:relative; width:100%; height:8px; background:#f3f4f6; border-radius:999px; overflow:hidden; box-shadow: inset 0 0 0 1px #eef2f7; }
+.stacked-bar > span{ display:block; height:100%; float:right; } /* RTL */
+.stacked-bar .in{ background:#16a34a55; }
+.stacked-bar .out{ background:#ef444455; }
+
+/* جدول */
+.table > :not(caption) > * > *{ vertical-align: middle; }
+.table-hover tbody tr:hover{ background:#f9fbff; }
+.text-truncate{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sticky-top{ top:0; z-index: 1; }
+
+/* عموميات */
 .bar-8{ height:8px; }
 .mini{ font-size:.9rem; }
+.invisible{ visibility: hidden !important; }
 </style>
 @endpush
 
@@ -558,10 +508,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Debounce
     let timer = null;
-    function autosubmit() {
-        clearTimeout(timer);
-        timer = setTimeout(() => form.requestSubmit(), 300);
-    }
+    function autosubmit() { clearTimeout(timer); timer = setTimeout(() => form.requestSubmit(), 300); }
 
     // إظهار/إخفاء المستثمر بدون تغيير الشبكة
     function syncInvestorVisibility() {
@@ -581,13 +528,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const isTransfer = (op.dataset.type === '3');
             const show = (cat === '' ? true : (op.dataset.cat === cat));
             if (isTransfer || !show) {
-                op.disabled = true;
-                op.hidden   = true;
-                if (op.selected) keepSelected = true;
-            } else {
-                op.disabled = false;
-                op.hidden   = false;
-            }
+                op.disabled = true; op.hidden = true; if (op.selected) keepSelected = true;
+            } else { op.disabled = false; op.hidden = false; }
         });
 
         if (keepSelected) statusSel.value = '';
@@ -607,7 +549,6 @@ document.addEventListener('DOMContentLoaded', function () {
             autosubmit();
         });
     });
-
     [fromDate, toDate].forEach(el => {
         el && el.addEventListener('change', autosubmit);
         el && el.addEventListener('keyup', (e)=> { if (e.key === 'Enter') autosubmit(); });
