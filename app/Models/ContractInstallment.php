@@ -44,10 +44,7 @@ class ContractInstallment extends Model
         return $this->belongsTo(InstallmentStatus::class);
     }
 
-    public function payments()
-    {
-        return $this->hasMany(InstallmentPayment::class, 'contract_installment_id');
-    }
+    
 
     public function officeTransactions()
     {

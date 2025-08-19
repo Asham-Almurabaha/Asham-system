@@ -1,4 +1,3 @@
-
 {{-- البطاقة: البيانات الأساسية --}}
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-primary text-white">
@@ -37,8 +36,8 @@
             </div>
 
             <div class="col-md-4">
-                <div class="fw-semibold text-muted mb-1">نوع العقد</div>
-                <div>{{ $contract->contractType->name ?? '—' }}</div>
+                <div class="fw-semibold text-muted mb-1">نوع البضاعة</div>
+                <div>{{ $contract->productType->name ?? '—' }}</div>
             </div>
 
             <div class="col-md-4">
@@ -83,14 +82,13 @@
 
             <div class="col-md-4">
                 <div class="fw-semibold text-muted mb-1">تاريخ بداية العقد</div>
-                <div>{{ \Carbon\Carbon::parse($contract->start_date)->format('Y-m-d') }}</div>
+                <div>{{ optional($contract->start_date)->format('Y-m-d') ?? '—' }}</div>
             </div>
 
             <div class="col-md-4">
                 <div class="fw-semibold text-muted mb-1">تاريخ أول قسط</div>
-                <div>{{ $contract->first_installment_date ? \Carbon\Carbon::parse($contract->first_installment_date)->format('Y-m-d') : '—' }}</div>
+                <div>{{ $contract->first_installment_date ? optional($contract->first_installment_date)->format('Y-m-d') : '—' }}</div>
             </div>
         </div>
     </div>
 </div>
-

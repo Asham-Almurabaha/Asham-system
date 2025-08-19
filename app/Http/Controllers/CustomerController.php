@@ -6,17 +6,88 @@ use App\Models\Customer;
 use App\Models\Nationality;
 use App\Models\Title;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class CustomerController extends Controller
 {
     // عرض كل العملاء
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::with(['nationality', 'title'])->latest()->paginate(10);
-        return view('customers.index', compact('customers'));
-    }
+        // ====== الاستعلام الأساسي ======
+        $query = Customer::query()
+            ->with(['nationality','title'])
+            ->when($request->filled('q'),            fn($q) => $q->where('name','like','%'.$request->q.'%'))
+            ->when($request->filled('national_id'),  fn($q) => $q->where('national_id','like','%'.$request->national_id.'%'))
+            ->when($request->filled('phone'),        fn($q) => $q->where('phone','like','%'.$request->phone.'%'))
+            ->when($request->filled('email'),        fn($q) => $q->where('email','like','%'.$request->email.'%'))
+            ->when($request->filled('nationality'),  fn($q) => $q->where('nationality_id', $request->nationality))
+            ->when($request->filled('title'),        fn($q) => $q->where('title_id', $request->title))
+            ->latest();
 
+        $customers = $query->paginate(10)->withQueryString();
+
+        // ====== كروت عامة ======
+        $customersTotalAll = Customer::count();
+
+        // الحالات غير النشطة
+        $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
+
+        $endedStatusIds = [];
+        if (class_exists(\App\Models\ContractStatus::class)) {
+            $endedStatusIds = \App\Models\ContractStatus::query()
+                ->whereIn('name', $endedStatusNames)
+                ->pluck('id')
+                ->all();
+        }
+
+        $statusIdCol = null;
+        foreach (['status_id', 'contract_status_id', 'state_id'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) { $statusIdCol = $col; break; }
+        }
+        $statusNameCol = null;
+        foreach (['status', 'state'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) { $statusNameCol = $col; break; }
+        }
+
+        $activeCustomersTotalAll = Customer::query()
+            ->whereHas('contracts', function ($c) use ($statusIdCol, $statusNameCol, $endedStatusIds, $endedStatusNames) {
+                if ($statusIdCol && !empty($endedStatusIds)) {
+                    $c->whereNotIn($statusIdCol, $endedStatusIds);
+                } elseif ($statusNameCol) {
+                    $c->whereNotIn($statusNameCol, $endedStatusNames);
+                } elseif (Schema::hasColumn('contracts', 'is_closed')) {
+                    $c->where('is_closed', 0);
+                } elseif (Schema::hasColumn('contracts', 'closed_at')) {
+                    $c->whereNull('closed_at');
+                } else {
+                    $c->whereRaw('1 = 1');
+                }
+            })
+            ->count();
+
+        // أرقام إضافية للإبقاء
+        $newCustomersThisMonthAll = Customer::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
+        $newCustomersThisWeekAll  = Customer::whereBetween('created_at', [now()->startOfWeek(),  now()])->count();
+
+        // قوائم للفلاتر
+        $nationalities = class_exists(Nationality::class)
+            ? Nationality::select('id','name')->orderBy('name')->get()
+            : collect();
+        $titles = class_exists(Title::class)
+            ? Title::select('id','name')->orderBy('name')->get()
+            : collect();
+
+        return view('customers.index', compact(
+            'customers',
+            'customersTotalAll',
+            'activeCustomersTotalAll',
+            'newCustomersThisMonthAll',
+            'newCustomersThisWeekAll',
+            'nationalities',
+            'titles'
+        ));
+    }
     // صفحة إنشاء عميل جديد
     public function create()
     {

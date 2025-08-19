@@ -35,6 +35,7 @@ class CreateTransactionStatusesTable extends Migration
             ['name' => 'إضافة سيولة', 'transaction_type_id' => 1, 'is_protected' => true],
             ['name'=> 'إيداع حسابات', 'transaction_type_id' => 1, 'is_protected' => true],
             ['name'=> 'سحب حسابات', 'transaction_type_id' => 2, 'is_protected' => true],
+            ['name'=> 'تحويل بين حسابات', 'transaction_type_id' => 3, 'is_protected' => true],
         ]);
 
         // تأكد من إضافة القيم الافتراضية المناسبة حسب احتياجاتك    

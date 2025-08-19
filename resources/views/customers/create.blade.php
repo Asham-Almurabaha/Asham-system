@@ -1,85 +1,255 @@
 @extends('layouts.master')
 
-@section('title', 'إضافة عميل جديد')
+@section('title', 'إضافة مستثمر جديد')
 
 @section('content')
+<div class="container py-3" dir="rtl">
 
-<div class="pagetitle">
-    <h1>إضافة عميل جديد</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">العملاء</li>
-            <li class="breadcrumb-item active">إضافة</li>
-        </ol>
-    </nav>
-</div><!-- End Page Title -->
+    <div class="pagetitle">
+        <h1 class="h3 mb-1">إضافة مستثمر جديد</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">المستثمرون</li>
+                <li class="breadcrumb-item active">إضافة</li>
+            </ol>
+        </nav>
+    </div>
 
-<div class="col-lg-8">
-    <div class="card">
+    {{-- تنبيهات التحقق العامة --}}
+    @if ($errors->any())
+        <div class="alert alert-danger shadow-sm">
+            يوجد بعض الأخطاء، فضلاً راجع الحقول المظلّلة بالأسفل.
+        </div>
+    @endif
+
+    <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('investors.store') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
 
-                <div class="mb-3">
-                    <label for="name" class="form-label">الاسم <span class="text-danger">*</span></label>
-                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
+                <div class="row g-3">
+                    {{-- الاسم --}}
+                    <div class="col-12">
+                        <label for="name" class="form-label">الاسم <span class="text-danger">*</span></label>
+                        <input
+                            type="text"
+                            name="name"
+                            id="name"
+                            class="form-control @error('name') is-invalid @enderror"
+                            value="{{ old('name') }}"
+                            required
+                            autofocus
+                            maxlength="190"
+                            autocomplete="name"
+                            placeholder="اكتب الاسم الثلاثي">
+                        @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- رقم الهوية --}}
+                    <div class="col-md-6">
+                        <label for="national_id" class="form-label">رقم الهوية الوطنية</label>
+                        <input
+                            type="text"
+                            name="national_id"
+                            id="national_id"
+                            class="form-control @error('national_id') is-invalid @enderror"
+                            value="{{ old('national_id') }}"
+                            inputmode="numeric"
+                            dir="ltr"
+                            maxlength="20"
+                            placeholder="مثال: 1234567890">
+                        <div class="form-text">يمكن إدخال أرقام فقط.</div>
+                        @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- الهاتف --}}
+                    <div class="col-md-6">
+                        <label for="phone" class="form-label">الهاتف</label>
+                        <input
+                            type="text"
+                            name="phone"
+                            id="phone"
+                            class="form-control @error('phone') is-invalid @enderror"
+                            value="{{ old('phone') }}"
+                            inputmode="tel"
+                            dir="ltr"
+                            maxlength="25"
+                            autocomplete="tel"
+                            placeholder="+9665XXXXXXXX">
+                        <div class="form-text">يُفضّل إدخال المفتاح الدولي.</div>
+                        @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- البريد --}}
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                        <input
+                            type="email"
+                            name="email"
+                            id="email"
+                            class="form-control @error('email') is-invalid @enderror"
+                            value="{{ old('email') }}"
+                            maxlength="190"
+                            autocomplete="email"
+                            placeholder="name@email.com">
+                        @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- الجنسية --}}
+                    <div class="col-md-6">
+                        <label for="nationality_id" class="form-label">الجنسية</label>
+                        <select
+                            name="nationality_id"
+                            id="nationality_id"
+                            class="form-select @error('nationality_id') is-invalid @enderror">
+                            <option value="">-- اختر --</option>
+                            @foreach (($nationalities ?? []) as $Nationality)
+                                @if(is_object($Nationality))
+                                    <option value="{{ $Nationality->id }}" @selected(old('nationality_id') == $Nationality->id)>{{ $Nationality->name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('nationality_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- الوظيفة --}}
+                    <div class="col-md-6">
+                        <label for="title_id" class="form-label">الوظيفة</label>
+                        <select
+                            name="title_id"
+                            id="title_id"
+                            class="form-select @error('title_id') is-invalid @enderror">
+                            <option value="">-- اختر --</option>
+                            @foreach (($titles ?? []) as $title)
+                                @if(is_object($title))
+                                    <option value="{{ $title->id }}" @selected(old('title_id') == $title->id)>{{ $title->name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- العنوان --}}
+                    <div class="col-12">
+                        <label for="address" class="form-label">العنوان</label>
+                        <textarea
+                            name="address"
+                            id="address"
+                            rows="3"
+                            class="form-control @error('address') is-invalid @enderror"
+                            placeholder="اكتب العنوان بالتفصيل">{{ old('address') }}</textarea>
+                        @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- صورة الهوية + معاينة --}}
+                    <div class="col-md-6">
+                        <label for="id_card_image" class="form-label">صورة الهوية</label>
+                        <input
+                            type="file"
+                            name="id_card_image"
+                            id="id_card_image"
+                            class="form-control @error('id_card_image') is-invalid @enderror"
+                            accept="image/*">
+                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                        <div class="mt-2 d-none" id="id-preview-wrap">
+                            <small class="text-muted d-block mb-1">معاينة:</small>
+                            <img id="id-preview" src="#" alt="معاينة صورة الهوية" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                        </div>
+                    </div>
+
+                    {{-- صورة العقد + معاينة --}}
+                    <div class="col-md-6">
+                        <label for="contract_image" class="form-label">صورة العقد</label>
+                        <input
+                            type="file"
+                            name="contract_image"
+                            id="contract_image"
+                            class="form-control @error('contract_image') is-invalid @enderror"
+                            accept="image/*">
+                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
+
+                        <div class="mt-2 d-none" id="contract-preview-wrap">
+                            <small class="text-muted d-block mb-1">معاينة:</small>
+                            <img id="contract-preview" src="#" alt="معاينة صورة العقد" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                        </div>
+                    </div>
+
+                    {{-- نسبة حصة المكتب --}}
+                    <div class="col-md-6">
+                        <label for="office_share_percentage" class="form-label">نسبة حصة المكتب (%)</label>
+                        <input
+                            type="number"
+                            name="office_share_percentage"
+                            id="office_share_percentage"
+                            class="form-control @error('office_share_percentage') is-invalid @enderror"
+                            value="{{ old('office_share_percentage', '0') }}"
+                            min="0" max="100" step="0.01" inputmode="decimal" dir="ltr"
+                            placeholder="مثال: 12.50">
+                        <div class="form-text">القيمة بين 0 و 100.</div>
+                        @error('office_share_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <label for="national_id" class="form-label">رقم الهوية الوطنية</label>
-                    <input type="text" name="national_id" id="national_id" class="form-control" value="{{ old('national_id') }}">
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check2-circle me-1"></i> حفظ
+                    </button>
+                    <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
+                        إلغاء
+                    </a>
                 </div>
-
-                <div class="mb-3">
-                    <label for="phone" class="form-label">الهاتف</label>
-                    <input type="text" name="phone" id="phone" class="form-control" value="{{ old('phone') }}">
-                </div>
-
-                <div class="mb-3">
-                    <label for="email" class="form-label">البريد الإلكتروني</label>
-                    <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}">
-                </div>
-
-                <div class="mb-3">
-                    <label for="nationality_id" class="form-label">الجنسية</label>
-                    <select name="nationality_id" id="nationality_id" class="form-select">
-                        <option value="">-- اختر --</option>
-                        @foreach ($nationalities as $nat)
-                            <option value="{{ $nat->id }}" @selected(old('nationality_id') == $nat->id)>{{ $nat->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="title_id" class="form-label">الوظيفة</label>
-                    <select name="title_id" id="title_id" class="form-select">
-                        <option value="">-- اختر --</option>
-                        @foreach ($titles as $title)
-                            <option value="{{ $title->id }}" @selected(old('title_id') == $title->id)>{{ $title->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="address" class="form-label">العنوان</label>
-                    <textarea name="address" id="address" class="form-control" rows="3">{{ old('address') }}</textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label for="id_card_image" class="form-label">صورة الهوية</label>
-                    <input type="file" name="id_card_image" id="id_card_image" class="form-control" accept="image/*">
-                </div>
-
-                <div class="mb-3">
-                    <label for="notes" class="form-label">ملاحظات</label>
-                    <textarea name="notes" id="notes" class="form-control" rows="3">{{ old('notes') }}</textarea>
-                </div>
-
-                <button type="submit" class="btn btn-success">حفظ</button>
-                <a href="{{ route('customers.index') }}" class="btn btn-secondary">إلغاء</a>
             </form>
         </div>
     </div>
-</div>
 
+</div>
 @endsection
+
+@push('styles')
+<style>
+    .card { border-radius: 1rem; }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // معاينة صورة (هوية/عقد)
+    function bindPreview(inputId, wrapId, imgId){
+        const input = document.getElementById(inputId);
+        const wrap  = document.getElementById(wrapId);
+        const img   = document.getElementById(imgId);
+        input?.addEventListener('change', function(){
+            const file = this.files && this.files[0];
+            if (!file || !/^image\//.test(file.type)) { wrap?.classList.add('d-none'); return; }
+            const reader = new FileReader();
+            reader.onload = e => { img.src = e.target.result; wrap.classList.remove('d-none'); };
+            reader.readAsDataURL(file);
+        });
+    }
+    bindPreview('id_card_image','id-preview-wrap','id-preview');
+    bindPreview('contract_image','contract-preview-wrap','contract-preview');
+
+    // ضبط النسبة بين 0 و 100
+    const pct = document.getElementById('office_share_percentage');
+    pct?.addEventListener('change', () => {
+        let v = parseFloat(pct.value || '0');
+        if (isNaN(v)) v = 0;
+        v = Math.min(100, Math.max(0, v));
+        pct.value = v.toFixed(2);
+    });
+
+    // إخفاء التنبيهات
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(el => {
+            el.style.transition = 'opacity .4s ease';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 400);
+        });
+    }, 5000);
+});
+</script>
+@endpush

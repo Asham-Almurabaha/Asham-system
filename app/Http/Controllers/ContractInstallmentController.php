@@ -58,12 +58,26 @@ class ContractInstallmentController extends Controller
     public function payInstallment(Request $request)
     {
         $validated = $request->validate([
-            'contract_id'    => 'required|exists:contracts,id',
-            'payment_amount' => 'required|numeric|min:0.01',
-            'payment_date'   => 'required|date',
+            'contract_id'      => 'required|exists:contracts,id',
+            'payment_amount'   => 'required|numeric|min:0.01',
+            'payment_date'     => 'required|date',
+            // ⬇️ مصادر التحصيل (اختياري)
+            'bank_account_id'  => 'nullable|integer|exists:bank_accounts,id',
+            'safe_id'          => 'nullable|integer|exists:safes,id',
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $bankId = $request->input('bank_account_id');
+        $safeId = $request->input('safe_id');
+
+        // منع الجمع بين بنك وخزنة
+        if (!empty($bankId) && !empty($safeId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن اختيار بنك وخزنة معًا لنفس السداد.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($validated, $bankId, $safeId) {
             $remainingPayment = (float) $validated['payment_amount'];
             $paymentDate      = $validated['payment_date'];
 
@@ -117,7 +131,9 @@ class ContractInstallmentController extends Controller
                         $currentInstallment->id,
                         $paymentForThisInstallment,
                         'سداد قسط',
-                        $paymentDate
+                        $paymentDate,
+                        $bankId,   // ⬅️ يمرر الحساب
+                        $safeId
                     );
                 }
 
@@ -141,10 +157,24 @@ class ContractInstallmentController extends Controller
     {
         $data = $request->validate([
             'discount_amount' => ['required', 'numeric', 'min:0'],
+            // ⬇️ مصادر التحصيل (اختياري)
+            'bank_account_id' => 'nullable|integer|exists:bank_accounts,id',
+            'safe_id'         => 'nullable|integer|exists:safes,id',
         ]);
 
+        $bankId = $request->input('bank_account_id');
+        $safeId = $request->input('safe_id');
+
+        // منع الجمع بين بنك وخزنة
+        if (!empty($bankId) && !empty($safeId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن اختيار بنك وخزنة معًا للسداد المبكر.',
+            ], 422);
+        }
+
         try {
-            DB::transaction(function () use ($contract, $data) {
+            DB::transaction(function () use ($contract, $data, $bankId, $safeId) {
                 // أقساط العقد (قفل للتناسق)
                 $installments = ContractInstallment::where('contract_id', $contract->id)
                     ->orderBy('installment_number')
@@ -205,14 +235,16 @@ class ContractInstallmentController extends Controller
                         }
                         $inst->save();
 
-                        // سجّل توزيع الدفعة حسب السيناريو (تحصيل المتبقّي من ربح المكتب لكل مستثمر إن وجد)
+                        // سجّل توزيع الدفعة حسب السيناريو + تمرير الحساب
                         if ($pay > 0) {
                             $this->logInvestorInstallmentTransactions(
                                 $contract->id,
                                 $inst->id,
                                 $pay,
                                 'سداد قسط',
-                                $paymentDate
+                                $paymentDate,
+                                $bankId,   // ⬅️ حساب البنك إن وُجد
+                                $safeId    // ⬅️ أو الخزنة
                             );
                         }
 
@@ -319,87 +351,271 @@ class ContractInstallmentController extends Controller
         }
     }
 
-    private function logInvestorInstallmentTransactions($contractId, $installmentId, $amount, $statusName, $transactionDate)
-{
-    $amount = round((float) $amount, 2);
-    if ($amount <= 0) return;
+    private function logInvestorInstallmentTransactions(
+        $contractId,
+        $installmentId,
+        $amount,
+        $statusName,        // مثال: "سداد قسط"
+        $transactionDate,
+        ?int $bankAccountId = null,   // ✅ حساب بنكي (اختياري)
+        ?int $safeId        = null    // ✅ خزنة (اختياري)
+    ){
+        // === (نفس المنطق كما أرسلته) — مضاف فقط تمرير الحساب داخل قيود LedgerEntry ===
+        // --- BEGIN COPY OF YOUR FUNCTION (unchanged logic) ---
+        $amount = round((float) $amount, 2);
+        if ($amount <= 0) return;
 
-    $contract = Contract::with('investors')->find($contractId);
-    if (!$contract || $contract->investors->isEmpty()) return;
-
-    $statusId = TransactionStatus::where('name', $statusName)->value('id');
-    if (!$statusId) throw new \Exception("🚫 لم يتم العثور على حالة باسم: {$statusName}");
-
-    $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
-    if (!$officeStatusId) throw new \Exception("🚫 لم يتم العثور على حالة 'ربح المكتب'");
-
-    $installment       = ContractInstallment::find($installmentId);
-    $installmentNumber = $installment ? $installment->installment_number : null;
-    $now               = $transactionDate ?: now();
-    $entryDate         = $now instanceof Carbon
-        ? $now->toDateString()
-        : Carbon::parse($now)->toDateString();
-
-    // دالة محلّية صغيرة لتحديد transaction_type_id من اسم الحالة مع مرادفات
-    $resolveTypeId = function (string $main, array $alts = []) {
-        $id = TransactionType::where('name', $main)->value('id');
-        if ($id) return (int) $id;
-        foreach ($alts as $alt) {
-            $id = TransactionType::where('name', $alt)->value('id');
-            if ($id) return (int) $id;
+        if (!empty($bankAccountId) && !empty($safeId)) {
+            throw new \InvalidArgumentException('لا يمكن اختيار بنك وخزنة معًا في نفس العملية.');
         }
-        return TransactionType::query()->orderBy('id')->value('id'); // Fallback
-    };
 
-    $payTypeId    = $resolveTypeId('سداد قسط',   ['تحصيل قسط','تحصيل','وارد','ايداع','إيداع']);
-    $officeTypeId = $resolveTypeId('ربح المكتب', ['أرباح','تحصيل','وارد']);
-
-    // 1) حساب ربح المكتب لكل مستثمر + نسب المشاركة
-    $investorMeta = []; // [id => ['office_profit'=>, 'share_pct'=>, 'name'=>]]
-    $totalOfficeProfit = 0.0;
-
-    foreach ($contract->investors as $inv) {
-        $sharePct = (float) ($inv->pivot->share_percentage ?? 0);
-        if ($sharePct <= 0) continue;
-
-        $investorTotalProfit   = max(0, (float) $contract->investor_profit * ($sharePct / 100));
-        // لو النسبة مخزنة على الـpivot استخدم $inv->pivot->office_share_percentage بدل السطر التالي
-        $officeSharePercentage = (float) ($inv->office_share_percentage ?? 0);
-
-        $officeProfit = $officeSharePercentage > 0
-            ? round($investorTotalProfit * ($officeSharePercentage / 100), 2)
-            : 0.0;
-
-        $investorMeta[$inv->id] = [
-            'office_profit' => $officeProfit,
-            'share_pct'     => $sharePct,
-            'name'          => $inv->name,
+        $accountCols = [
+            'bank_account_id' => $bankAccountId ?: null,
+            'safe_id'         => $safeId ?: null,
         ];
-        $totalOfficeProfit = round($totalOfficeProfit + $officeProfit, 2);
-    }
-    if (empty($investorMeta)) return;
 
-    // 2) المبالغ المحصلة سابقاً لربح المكتب لكل مستثمر
-    $collectedOfficeByInvestor = OfficeTransaction::where('contract_id', $contract->id)
-        ->where('status_id', $officeStatusId)
-        ->selectRaw('investor_id, COALESCE(SUM(amount),0) as total')
-        ->groupBy('investor_id')
-        ->pluck('total', 'investor_id')
-        ->toArray();
+        $accountNote = '';
+        if ($bankAccountId) {
+            $bankName   = optional(\App\Models\BankAccount::find($bankAccountId))->name;
+            $accountNote = $bankName ? " | بنك: {$bankName}" : " | بنك";
+        } elseif ($safeId) {
+            $safeName   = optional(\App\Models\Safe::find($safeId))->name;
+            $accountNote = $safeName ? " | خزنة: {$safeName}" : " | خزنة";
+        }
 
-    $collectedOfficeProfit = round(array_sum($collectedOfficeByInvestor), 2);
-    $remainingOfficeProfit = max(0, round($totalOfficeProfit - $collectedOfficeProfit, 2));
+        $contract = Contract::with('investors')->find($contractId);
+        if (!$contract || $contract->investors->isEmpty()) return;
 
-    // ================= الحالة 1: في تحصيل سابق ومازال فيه باقي =================
-    $usePerInvestorDeduct = ($collectedOfficeProfit > 0) && ($remainingOfficeProfit > 0);
+        $statusId = TransactionStatus::where('name', $statusName)->value('id');
+        if (!$statusId) throw new \Exception("🚫 لم يتم العثور على حالة باسم: {$statusName}");
 
-    if ($usePerInvestorDeduct) {
-        // وزّع مبلغ السداد على المستثمرين حسب نسب المشاركة
+        $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
+        if (!$officeStatusId) throw new \Exception("🚫 لم يتم العثور على حالة 'ربح المكتب'");
+
+        $installment       = ContractInstallment::find($installmentId);
+        $installmentNumber = $installment ? $installment->installment_number : null;
+        $now               = $transactionDate ?: now();
+        $entryDate         = $now instanceof \Carbon\Carbon
+            ? $now->toDateString()
+            : \Carbon\Carbon::parse($now)->toDateString();
+
+        $resolveTypeId = function (string $main, array $alts = []) {
+            $id = TransactionType::where('name', $main)->value('id');
+            if ($id) return (int) $id;
+            foreach ($alts as $alt) {
+                $id = TransactionType::where('name', $alt)->value('id');
+                if ($id) return (int) $id;
+            }
+            return (int) TransactionType::query()->orderBy('id')->value('id');
+        };
+
+        $payTypeId    = $resolveTypeId('سداد قسط',   ['تحصيل قسط','تحصيل','وارد','ايداع','إيداع']);
+        $officeTypeId = $resolveTypeId('ربح المكتب', ['أرباح','تحصيل','وارد']);
+
+        $investorMeta = [];
+        $totalOfficeProfit = 0.0;
+
+        foreach ($contract->investors as $inv) {
+            $sharePct = (float) ($inv->pivot->share_percentage ?? 0);
+            if ($sharePct <= 0) continue;
+
+            $investorTotalProfit   = max(0, (float) $contract->investor_profit * ($sharePct / 100));
+            $officeSharePercentage = (float) ($inv->office_share_percentage ?? 0);
+
+            $officeProfit = $officeSharePercentage > 0
+                ? round($investorTotalProfit * ($officeSharePercentage / 100), 2)
+                : 0.0;
+
+            $investorMeta[$inv->id] = [
+                'office_profit' => $officeProfit,
+                'share_pct'     => $sharePct,
+                'name'          => $inv->name,
+            ];
+            $totalOfficeProfit = round($totalOfficeProfit + $officeProfit, 2);
+        }
+        if (empty($investorMeta)) return;
+
+        $collectedOfficeByInvestor = OfficeTransaction::where('contract_id', $contract->id)
+            ->where('status_id', $officeStatusId)
+            ->selectRaw('investor_id, COALESCE(SUM(amount),0) as total')
+            ->groupBy('investor_id')
+            ->pluck('total', 'investor_id')
+            ->toArray();
+
+        $collectedOfficeProfit = round(array_sum($collectedOfficeByInvestor), 2);
+        $remainingOfficeProfit = max(0, round($totalOfficeProfit - $collectedOfficeProfit, 2));
+
+        $usePerInvestorDeduct = ($collectedOfficeProfit > 0) && ($remainingOfficeProfit > 0);
+
+        if ($usePerInvestorDeduct) {
+            $weights = [];
+            $sumW = 0.0;
+            foreach ($investorMeta as $id => $m) {
+                $w = (float) $m['share_pct'];
+                if ($w > 0) { $weights[$id] = $w; $sumW += $w; }
+            }
+            if ($sumW <= 0) return;
+
+            $allocatedSum = 0.0;
+            $ids  = array_keys($weights);
+            $last = end($ids);
+
+            foreach ($weights as $invId => $w) {
+                $alloc = ($invId === $last)
+                    ? round($amount - $allocatedSum, 2)
+                    : round($amount * $w / $sumW, 2);
+
+                if ($allocatedSum + $alloc > $amount) {
+                    $alloc = round($amount - $allocatedSum, 2);
+                }
+                $allocatedSum = round($allocatedSum + $alloc, 2);
+                if ($alloc <= 0) continue;
+
+                $alreadyCollected = (float) ($collectedOfficeByInvestor[$invId] ?? 0);
+                $invOfficeTarget  = (float) ($investorMeta[$invId]['office_profit'] ?? 0);
+                $officeRemForInv  = max(0, round($invOfficeTarget - $alreadyCollected, 2));
+
+                $officeTake   = min($alloc, $officeRemForInv);
+                $investorTake = round($alloc - $officeTake, 2);
+
+                if ($officeTake > 0) {
+                    $officeTrx = OfficeTransaction::create([
+                        'investor_id'      => $invId,
+                        'contract_id'      => $contract->id,
+                        'installment_id'   => $installmentId,
+                        'status_id'        => $officeStatusId,
+                        'amount'           => $officeTake,
+                        'transaction_date' => $now,
+                        'notes'            => "تحصيل ربح المكتب من {$investorMeta[$invId]['name']}"
+                            . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
+                            . " - العقد رقم {$contract->contract_number}",
+                    ]);
+
+                    if ($officeTypeId) {
+                        LedgerEntry::create(array_merge([
+                            'entry_date'            => $entryDate,
+                            'investor_id'           => null,
+                            'is_office'             => true,
+                            'transaction_status_id' => $officeStatusId,
+                            'transaction_type_id'   => $officeTypeId,
+                            'contract_id'           => $contract->id,
+                            'installment_id'        => $installmentId,
+                            'amount'                => $officeTake,
+                            'ref'                   => 'OT-'.$officeTrx->id,
+                            'notes'                 => "قيد ربح المكتب — عقد #{$contract->contract_number}"
+                                . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
+                                . $accountNote,
+                        ], $accountCols));
+                    }
+                }
+
+                if ($investorTake > 0) {
+                    $trx = InvestorTransaction::create([
+                        'investor_id'      => $invId,
+                        'contract_id'      => $contract->id,
+                        'installment_id'   => $installmentId,
+                        'status_id'        => $statusId,
+                        'amount'           => $investorTake,
+                        'transaction_date' => $now,
+                        'notes'            => ($installmentNumber
+                            ? "سداد قسط رقم {$installmentNumber} بعد خصم المتبقّي من ربح المكتب"
+                            : "سداد بعد خصم المتبقّي من ربح المكتب")
+                            . " - العقد رقم {$contract->contract_number}",
+                    ]);
+
+                    if ($payTypeId) {
+                        $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
+                        LedgerEntry::create(array_merge([
+                            'entry_date'            => $entryDate,
+                            'investor_id'           => $invId,
+                            'is_office'             => false,
+                            'transaction_status_id' => $statusId,
+                            'transaction_type_id'   => $payTypeId,
+                            'contract_id'           => $contract->id,
+                            'installment_id'        => $installmentId,
+                            'amount'                => $investorTake,
+                            'ref'                   => 'IT-'.$trx->id,
+                            'notes'                 => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
+                                . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
+                                . $accountNote,
+                        ], $accountCols));
+                    }
+                }
+            }
+            return;
+        }
+
+        if ($remainingOfficeProfit > 0) {
+            $payOffice = min($amount, $remainingOfficeProfit);
+            if ($payOffice > 0) {
+                $weights = [];
+                $sumW    = 0.0;
+
+                foreach ($investorMeta as $invId => $m) {
+                    $already = (float) ($collectedOfficeByInvestor[$invId] ?? 0);
+                    $rem     = max(0, round(($m['office_profit'] ?? 0) - $already, 2));
+                    if ($rem > 0) { $weights[$invId] = $rem; $sumW += $rem; }
+                }
+
+                if ($sumW > 0) {
+                    $allocatedSum = 0.0;
+                    $ids  = array_keys($weights);
+                    $last = end($ids);
+
+                    foreach ($weights as $invId => $w) {
+                        $alloc = ($invId === $last)
+                            ? round($payOffice - $allocatedSum, 2)
+                            : round($payOffice * $w / $sumW, 2);
+
+                        if ($allocatedSum + $alloc > $payOffice) {
+                            $alloc = round($payOffice - $allocatedSum, 2);
+                        }
+
+                        if ($alloc > 0) {
+                            $officeTrx = OfficeTransaction::create([
+                                'investor_id'      => $invId,
+                                'contract_id'      => $contract->id,
+                                'installment_id'   => $installmentId,
+                                'status_id'        => $officeStatusId,
+                                'amount'           => $alloc,
+                                'transaction_date' => $now,
+                                'notes'            => "تحصيل ربح المكتب من {$investorMeta[$invId]['name']}"
+                                    . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
+                                    . " - العقد رقم {$contract->contract_number}",
+                            ]);
+
+                            if ($officeTypeId) {
+                                LedgerEntry::create(array_merge([
+                                    'entry_date'            => $entryDate,
+                                    'investor_id'           => null,
+                                    'is_office'             => true,
+                                    'transaction_status_id' => $officeStatusId,
+                                    'transaction_type_id'   => $officeTypeId,
+                                    'contract_id'           => $contract->id,
+                                    'installment_id'        => $installmentId,
+                                    'amount'                => $alloc,
+                                    'ref'                   => 'OT-'.$officeTrx->id,
+                                    'notes'                 => "قيد ربح المكتب — عقد #{$contract->contract_number}"
+                                        . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
+                                        . $accountNote,
+                                ], $accountCols));
+                            }
+
+                            $allocatedSum = round($allocatedSum + $alloc, 2);
+                        }
+                    }
+                }
+
+                $amount = round($amount - $payOffice, 2);
+                if ($amount <= 0) return;
+            }
+        }
+
         $weights = [];
         $sumW = 0.0;
-        foreach ($investorMeta as $id => $m) {
+        foreach ($investorMeta as $invId => $m) {
             $w = (float) $m['share_pct'];
-            if ($w > 0) { $weights[$id] = $w; $sumW += $w; }
+            if ($w > 0) { $weights[$invId] = $w; $sumW += $w; }
         }
         if ($sumW <= 0) return;
 
@@ -415,227 +631,49 @@ class ContractInstallmentController extends Controller
             if ($allocatedSum + $alloc > $amount) {
                 $alloc = round($amount - $allocatedSum, 2);
             }
-            $allocatedSum = round($allocatedSum + $alloc, 2);
-            if ($alloc <= 0) continue;
 
-            // المتبقي من ربح المكتب لهذا المستثمر
-            $alreadyCollected = (float) ($collectedOfficeByInvestor[$invId] ?? 0);
-            $invOfficeTarget  = (float) ($investorMeta[$invId]['office_profit'] ?? 0);
-            $officeRemForInv  = max(0, round($invOfficeTarget - $alreadyCollected, 2));
-
-            // نخصم المتبقي من حصة هذا المستثمر من الدفعة
-            $officeTake   = min($alloc, $officeRemForInv);
-            $investorTake = round($alloc - $officeTake, 2);
-
-            if ($officeTake > 0) {
-                $officeTrx = OfficeTransaction::create([
-                    'investor_id'      => $invId,
-                    'contract_id'      => $contract->id,
-                    'installment_id'   => $installmentId,
-                    'status_id'        => $officeStatusId,
-                    'amount'           => $officeTake,
-                    'transaction_date' => $now,
-                    'notes'            => "تحصيل ربح المكتب من {$investorMeta[$invId]['name']}"
-                        . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
-                        . " - العقد رقم {$contract->contract_number}",
-                ]);
-
-                // ← قيد دفتر القيود (مكتب)
-                if ($officeTypeId) {
-                    LedgerEntry::create([
-                        'entry_date'            => $entryDate,
-                        'investor_id'           => null, // قيد مكتب فقط
-                        'is_office'             => true,
-                        'transaction_status_id' => $officeStatusId,
-                        'transaction_type_id'   => $officeTypeId,
-                        'bank_account_id'       => null,
-                        'safe_id'               => null,
-                        'contract_id'           => $contract->id,
-                        'installment_id'        => $installmentId,
-                        'amount'                => $officeTake,
-                        'ref'                   => 'OT-'.$officeTrx->id,
-                        'notes'                 => "قيد ربح المكتب — عقد #{$contract->contract_number}"
-                            . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
-                    ]);
-                }
-            }
-
-            if ($investorTake > 0) {
+            if ($alloc > 0) {
                 $trx = InvestorTransaction::create([
                     'investor_id'      => $invId,
                     'contract_id'      => $contract->id,
                     'installment_id'   => $installmentId,
                     'status_id'        => $statusId,
-                    'amount'           => $investorTake,
+                    'amount'           => $alloc,
                     'transaction_date' => $now,
                     'notes'            => ($installmentNumber
-                        ? "سداد قسط رقم {$installmentNumber} بعد خصم المتبقّي من ربح المكتب"
-                        : "سداد بعد خصم المتبقّي من ربح المكتب")
+                            ? "سداد قسط رقم {$installmentNumber} بعد سداد كامل ربح المكتب"
+                            : "سداد بعد سداد كامل ربح المكتب")
                         . " - العقد رقم {$contract->contract_number}",
                 ]);
 
-                // ← قيد دفتر القيود (مستثمر)
                 if ($payTypeId) {
                     $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
-                    LedgerEntry::create([
+                    LedgerEntry::create(array_merge([
                         'entry_date'            => $entryDate,
                         'investor_id'           => $invId,
                         'is_office'             => false,
-                        'transaction_status_id' => $statusId,     // سداد قسط
+                        'transaction_status_id' => $statusId,
                         'transaction_type_id'   => $payTypeId,
-                        'bank_account_id'       => null,
-                        'safe_id'               => null,
                         'contract_id'           => $contract->id,
                         'installment_id'        => $installmentId,
-                        'amount'                => $investorTake,
+                        'amount'                => $alloc,
                         'ref'                   => 'IT-'.$trx->id,
                         'notes'                 => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
-                            . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
-                    ]);
+                            . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
+                            . $accountNote,
+                    ], $accountCols));
                 }
+
+                $allocatedSum = round($allocatedSum + $alloc, 2);
             }
         }
-        return;
+        // --- END COPY ---
     }
-
-    // ================= الحالة 2: المنطق القديم (مفيش تحصيل سابق أو ربح المكتب خلص) =================
-    // (أ) نسدد ربح المكتب أولاً حتى يكتمل — موزع حسب المتبقّي لكل مستثمر
-    if ($remainingOfficeProfit > 0) {
-        $payOffice = min($amount, $remainingOfficeProfit);
-
-        if ($payOffice > 0) {
-            // وزن كل مستثمر = المتبقّي له من ربح المكتب
-            $weights = [];
-            $sumW    = 0.0;
-
-            foreach ($investorMeta as $invId => $m) {
-                $already = (float) ($collectedOfficeByInvestor[$invId] ?? 0);
-                $rem     = max(0, round(($m['office_profit'] ?? 0) - $already, 2));
-                if ($rem > 0) { $weights[$invId] = $rem; $sumW += $rem; }
-            }
-
-            if ($sumW > 0) {
-                $allocatedSum = 0.0;
-                $ids  = array_keys($weights);
-                $last = end($ids);
-
-                foreach ($weights as $invId => $w) {
-                    $alloc = ($invId === $last)
-                        ? round($payOffice - $allocatedSum, 2)
-                        : round($payOffice * $w / $sumW, 2);
-
-                    if ($allocatedSum + $alloc > $payOffice) {
-                        $alloc = round($payOffice - $allocatedSum, 2);
-                    }
-
-                    if ($alloc > 0) {
-                        $officeTrx = OfficeTransaction::create([
-                            'investor_id'      => $invId,
-                            'contract_id'      => $contract->id,
-                            'installment_id'   => $installmentId,
-                            'status_id'        => $officeStatusId,
-                            'amount'           => $alloc,
-                            'transaction_date' => $now,
-                            'notes'            => "تحصيل ربح المكتب من {$investorMeta[$invId]['name']}"
-                                . ($installmentNumber ? " - قسط رقم {$installmentNumber}" : '')
-                                . " - العقد رقم {$contract->contract_number}",
-                        ]);
-
-                        // ← قيد دفتر القيود (مكتب)
-                        if ($officeTypeId) {
-                            LedgerEntry::create([
-                                'entry_date'            => $entryDate,
-                                'investor_id'           => null, // مكتب
-                                'is_office'             => true,
-                                'transaction_status_id' => $officeStatusId,
-                                'transaction_type_id'   => $officeTypeId,
-                                'bank_account_id'       => null,
-                                'safe_id'               => null,
-                                'contract_id'           => $contract->id,
-                                'installment_id'        => $installmentId,
-                                'amount'                => $alloc,
-                                'ref'                   => 'OT-'.$officeTrx->id,
-                                'notes'                 => "قيد ربح المكتب — عقد #{$contract->contract_number}"
-                                    . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
-                            ]);
-                        }
-
-                        $allocatedSum = round($allocatedSum + $alloc, 2);
-                    }
-                }
-            }
-
-            $amount = round($amount - $payOffice, 2);
-            if ($amount <= 0) return;
-        }
-    }
-
-    // (ب) نوزع الباقي على المستثمرين حسب نسب المشاركة (مكافئ للنقطة الأولى لأن ربح المكتب خلص)
-    $weights = [];
-    $sumW = 0.0;
-    foreach ($investorMeta as $invId => $m) {
-        $w = (float) $m['share_pct'];
-        if ($w > 0) { $weights[$invId] = $w; $sumW += $w; }
-    }
-    if ($sumW <= 0) return;
-
-    $allocatedSum = 0.0;
-    $ids  = array_keys($weights);
-    $last = end($ids);
-
-    foreach ($weights as $invId => $w) {
-        $alloc = ($invId === $last)
-            ? round($amount - $allocatedSum, 2)
-            : round($amount * $w / $sumW, 2);
-
-        if ($allocatedSum + $alloc > $amount) {
-            $alloc = round($amount - $allocatedSum, 2);
-        }
-
-        if ($alloc > 0) {
-            $trx = InvestorTransaction::create([
-                'investor_id'      => $invId,
-                'contract_id'      => $contract->id,
-                'installment_id'   => $installmentId,
-                'status_id'        => $statusId,
-                'amount'           => $alloc,
-                'transaction_date' => $now,
-                'notes'            => ($installmentNumber
-                        ? "سداد قسط رقم {$installmentNumber} بعد سداد كامل ربح المكتب"
-                        : "سداد بعد سداد كامل ربح المكتب")
-                    . " - العقد رقم {$contract->contract_number}",
-            ]);
-
-            // ← قيد دفتر القيود (مستثمر)
-            if ($payTypeId) {
-                $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
-                LedgerEntry::create([
-                    'entry_date'            => $entryDate,
-                    'investor_id'           => $invId,
-                    'is_office'             => false,
-                    'transaction_status_id' => $statusId,     // سداد قسط
-                    'transaction_type_id'   => $payTypeId,
-                    'bank_account_id'       => null,
-                    'safe_id'               => null,
-                    'contract_id'           => $contract->id,
-                    'installment_id'        => $installmentId,
-                    'amount'                => $alloc,
-                    'ref'                   => 'IT-'.$trx->id,
-                    'notes'                 => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
-                        . ($installmentNumber ? " — قسط #{$installmentNumber}" : ''),
-                ]);
-            }
-
-            $allocatedSum = round($allocatedSum + $alloc, 2);
-        }
-    }
-}
-
 
     /**
- * يرجّع transaction_type_id المناسب لاسم حالة معيّن.
- * يحاول: نفس الاسم → مرادفات بسيطة → أول نوع موجود.
- */
+     * يرجّع transaction_type_id المناسب لاسم حالة معيّن.
+     * يحاول: نفس الاسم → مرادفات بسيطة → أول نوع موجود.
+     */
     private function typeIdForStatusName(string $statusName): ?int
     {
         // 1) نفس الاسم
@@ -708,45 +746,3 @@ class ContractInstallmentController extends Controller
         ]);
     }
 }
-    
-    /**
-     * تعديل بيانات القسط
-     */
-    // public function update(Request $request, $installmentId)
-    // {
-    //     $installment = ContractInstallment::findOrFail($installmentId);
-
-    //     $validated = $request->validate([
-    //         'due_date'    => 'required|date',
-    //         'due_amount'  => 'required|numeric|min:0.01',
-    //     ]);
-
-    //     $installment->update($validated);
-
-    //     return redirect()->back()->with('success', '✏️ تم تعديل بيانات القسط بنجاح.');
-    // }
-
-
-    /**
-     * حذف مبلغ سداد من القسط
-     */
-
-    // public function removePayment($installmentId, $amount)
-    // {
-    //     $installment = ContractInstallment::findOrFail($installmentId);
-
-    //     DB::transaction(function () use ($installment, $amount) {
-    //         $newTotalPaid = max(0, (float)$installment->payment_amount - (float)$amount);
-
-    //         $installment->update([
-    //             'payment_amount' => $newTotalPaid,
-    //             'payment_date'   => $newTotalPaid > 0 ? $installment->payment_date : null,
-    //         ]);
-
-    //         // updateStatus نفسها فيها شرط 100% وبتخرج لو مش مكتمّلة
-    //         $this->updateStatus($installment);
-    //     });
-
-    //     return redirect()->back()->with('success', '🗑 تم تعديل مبلغ السداد بنجاح.');
-    // }
-

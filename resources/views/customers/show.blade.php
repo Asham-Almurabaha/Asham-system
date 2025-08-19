@@ -3,94 +3,286 @@
 @section('title', 'عرض بيانات العميل')
 
 @section('content')
+<div class="container py-3" dir="rtl">
 
-<div class="pagetitle">
-    <h1>عرض بيانات العميل</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">العملاء</li>
-            <li class="breadcrumb-item active">عرض</li>
-        </ol>
-    </nav>
-</div>
+    {{-- Bootstrap Icons (لو مش مضافة في الـ layout) --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-<section class="section profile">
-    <div class="card">
-        <div class="card-body pt-3">
+    @php
+        // ====== إحصائيات سريعة ======
+        $contractsCount = method_exists($customer, 'contracts')
+            ? (int) $customer->contracts()->count()
+            : 0;
 
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">الاسم</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->name }}</div>
+        // تحديد "العقد النشط": ليس (منتهي/سداد مبكر) مع دعم أكثر من شكل للأعمدة
+        $endedNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
+
+        $activeContractsCount = 0;
+        if (method_exists($customer, 'contracts')) {
+            $activeContractsCount = $customer->contracts()->where(function ($q) use ($endedNames) {
+                // status النصّي
+                if (\Illuminate\Support\Facades\Schema::hasColumn('contracts','status')) {
+                    $q->whereNotIn('status', $endedNames);
+
+                // status_id أو contract_status_id
+                } elseif (\Illuminate\Support\Facades\Schema::hasColumn('contracts','status_id')
+                       || \Illuminate\Support\Facades\Schema::hasColumn('contracts','contract_status_id')) {
+
+                    $statusCol = \Illuminate\Support\Facades\Schema::hasColumn('contracts','status_id')
+                        ? 'status_id' : 'contract_status_id';
+
+                    if (class_exists(\App\Models\ContractStatus::class)) {
+                        $endedIds = \App\Models\ContractStatus::whereIn('name', $endedNames)->pluck('id');
+                        if ($endedIds->isNotEmpty()) {
+                            $q->whereNotIn($statusCol, $endedIds);
+                        } else {
+                            $q->whereRaw('1=1'); // ما عندنا IDs واضحة، اعتبر أي عقد نشط
+                        }
+                    } else {
+                        $q->whereRaw('1=1'); // ما في موديل للحالات
+                    }
+
+                // is_closed / closed_at كبدائل منطقية
+                } elseif (\Illuminate\Support\Facades\Schema::hasColumn('contracts','is_closed')) {
+                    $q->where('is_closed', 0);
+                } elseif (\Illuminate\Support\Facades\Schema::hasColumn('contracts','closed_at')) {
+                    $q->whereNull('closed_at');
+                } else {
+                    $q->whereRaw('1=1'); // fallback آمن
+                }
+            })->count();
+        }
+
+        $activePct = $contractsCount > 0
+            ? round(($activeContractsCount / $contractsCount) * 100, 1)
+            : 0;
+    @endphp
+
+    <style>
+        :root{
+            --card-r: 1rem;
+            --soft: 0 8px 20px rgba(0,0,0,.06);
+            --soft-2: 0 10px 26px rgba(0,0,0,.08);
+        }
+        .profile-hero{
+            border:1px solid #eef2f7; border-radius: var(--card-r);
+            background: linear-gradient(135deg,#f7fbff 0%,#ffffff 70%);
+            padding: 1.25rem 1rem; box-shadow: var(--soft);
+        }
+        .avatar{
+            width:64px; height:64px; border-radius:50%;
+            display:grid; place-items:center;
+            background:#e8f0fe; color:#1e40af; font-weight:800; font-size:1.25rem;
+        }
+        .kpi-card{
+            border:1px solid #eef2f7; border-radius: var(--card-r);
+            box-shadow: var(--soft); transition:.2s; height:100%;
+        }
+        .kpi-card:hover{ box-shadow: var(--soft-2); transform: translateY(-2px); }
+        .kpi-icon{
+            width:48px;height:48px;border-radius:.85rem;display:grid;place-items:center;background:#f4f6fb;
+        }
+        .chip{ background:#f1f4f9; color:#3c4a5d; border-radius:999px; padding:.35rem .6rem; font-weight:600; }
+        .label-col{ color:#6b7280; font-weight:600; }
+        .value-col{ font-weight:600; }
+        .text-pos{ color:#16a34a !important; }
+        .text-muted-2{ color:#6b7280 !important; }
+        .img-thumb{ max-width: 160px; max-height: 120px; object-fit: cover; border-radius:.5rem; border:1px solid #eef2f7; }
+    </style>
+
+    {{-- ====== HERO ====== --}}
+    <div class="profile-hero mb-3">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar">
+                    {{ mb_strtoupper(mb_substr($customer->name ?? '؟', 0, 1)) }}
+                </div>
+                <div>
+                    <h3 class="mb-0">{{ $customer->name }}</h3>
+                    <div class="small text-muted-2 mt-1">
+                        <span class="chip me-1"><i class="bi bi-badge-ad"></i> {{ optional($customer->title)->name ?? '—' }}</span>
+                        <span class="chip me-1"><i class="bi bi-flag"></i> {{ optional($customer->nationality)->name ?? '—' }}</span>
+                        <span class="chip"><i class="bi bi-hash"></i> ID: {{ $customer->id }}</span>
+                    </div>
+                </div>
             </div>
-
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">رقم الهوية الوطنية</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->national_id ?? '-' }}</div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('customers.edit', $customer) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil-square me-1"></i> تعديل
+                </a>
+                <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-right-circle me-1"></i> العودة للقائمة
+                </a>
             </div>
+        </div>
+    </div>
 
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">الهاتف</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->phone ?? '-' }}</div>
+    {{-- ====== KPIs ====== --}}
+    <div class="row g-3 mb-2">
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-files fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">إجمالي العقود</div>
+                </div>
+                <div class="fs-2 fw-bold">{{ number_format($contractsCount) }}</div>
+                <div class="small text-muted">جميع العقود المرتبطة بالعميل</div>
             </div>
-
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">البريد الإلكتروني</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->email ?? '-' }}</div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-person-check fs-5 text-success"></i></div>
+                    <div class="fw-bold text-muted">العقود النشطة</div>
+                </div>
+                <div class="fs-2 fw-bold text-pos">{{ number_format($activeContractsCount) }}</div>
+                <div class="small text-muted">النسبة: {{ $contractsCount>0 ? number_format($activePct,1) : 0 }}%</div>
+                <div class="progress mt-2" style="height:8px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ $activePct }}%"></div>
+                </div>
             </div>
-
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">الجنسية</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->nationality ? $customer->nationality->name : '-' }}</div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-clock-history fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">تاريخ الإنشاء / آخر تحديث</div>
+                </div>
+                <div class="fw-bold">{{ optional($customer->created_at)->format('Y-m-d') ?? '—' }}</div>
+                <div class="small text-muted">آخر تحديث: {{ optional($customer->updated_at)->format('Y-m-d H:i') ?? '—' }}</div>
             </div>
+        </div>
+    </div>
 
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">العنوان</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->address ?? '-' }}</div>
+    {{-- ====== تفاصيل العميل ====== --}}
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white fw-bold">بيانات أساسية</div>
+        <div class="card-body">
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-5 label-col">الاسم</div>
+                        <div class="col-7 value-col">{{ $customer->name }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-5 label-col">رقم الهوية</div>
+                        <div class="col-7 value-col" dir="ltr">
+                            @if($customer->national_id)
+                                <span>{{ $customer->national_id }}</span>
+                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $customer->national_id }}')" title="نسخ">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-5 label-col">الجنسية</div>
+                        <div class="col-7 value-col">{{ optional($customer->nationality)->name ?? '—' }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-5 label-col">الوظيفة</div>
+                        <div class="col-7 value-col">{{ optional($customer->title)->name ?? '—' }}</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-5 label-col">الهاتف</div>
+                        <div class="col-7 value-col" dir="ltr">
+                            @if($customer->phone)
+                                <a href="tel:{{ $customer->phone }}">{{ $customer->phone }}</a>
+                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $customer->phone }}')" title="نسخ">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-5 label-col">البريد الإلكتروني</div>
+                        <div class="col-7 value-col">
+                            @if($customer->email)
+                                <a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-5 label-col">العنوان</div>
+                        <div class="col-7 value-col">{{ $customer->address ?? '—' }}</div>
+                    </div>
+                </div>
+
             </div>
+        </div>
+    </div>
 
-
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">الوظيفة</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->title ? $customer->title->name : '-' }}</div>
-            </div>
-
-
-            
-
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">صورة الهوية</div>
-                <div class="col-lg-9 col-md-8">
+    {{-- ====== صورة الهوية & الملاحظات ====== --}}
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">صورة الهوية</div>
+                <div class="card-body">
                     @if($customer->id_card_image)
-                        <a href="{{ asset('storage/' . $customer->id_card_image) }}" target="_blank">
-                            <img src="{{ asset('storage/' . $customer->id_card_image) }}" alt="صورة الهوية" style="max-width: 150px; object-fit: cover;">
+                        <a href="{{ asset('storage/'.$customer->id_card_image) }}" target="_blank" title="عرض بالحجم الكامل">
+                            <img class="img-thumb" src="{{ asset('storage/'.$customer->id_card_image) }}" alt="صورة الهوية">
                         </a>
+                        <div class="small text-muted mt-2">انقر لفتح الصورة في نافذة جديدة</div>
                     @else
-                        <span class="text-muted">-</span>
+                        <div class="text-muted">لا توجد صورة هوية مرفوعة.</div>
                     @endif
                 </div>
             </div>
-
-            <div class="row mb-3">
-                <div class="col-lg-3 col-md-4 label">ملاحظات</div>
-                <div class="col-lg-9 col-md-8">{{ $customer->notes ?? '-' }}</div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold">ملاحظات</div>
+                <div class="card-body">
+                    <div class="text-wrap" style="white-space: pre-line;">
+                        {{ $customer->notes ?? '—' }}
+                    </div>
+                </div>
             </div>
-
-            <a href="{{ route('customers.index') }}" class="btn btn-secondary mt-3">العودة للقائمة</a>
-
         </div>
     </div>
-</section>
 
-@section('js')
+</div>
+@endsection
+
+@push('scripts')
 <script>
-    setTimeout(() => {
-        document.querySelectorAll('.alert').forEach(alert => {
-            alert.style.transition = 'opacity 0.5s ease';
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 500);
-        });
-    }, 5000);
-</script>
-@endsection
+function copyText(txt){
+    navigator.clipboard?.writeText(txt).then(() => {
+        // Toast خفيف
+        const el = document.createElement('div');
+        el.textContent = 'تم النسخ';
+        el.style.position = 'fixed';
+        el.style.bottom = '16px';
+        el.style.left = '50%';
+        el.style.transform = 'translateX(-50%)';
+        el.style.background = 'rgba(0,0,0,.8)';
+        el.style.color = '#fff';
+        el.style.padding = '6px 12px';
+        el.style.borderRadius = '999px';
+        el.style.fontSize = '12px';
+        el.style.zIndex = 9999;
+        document.body.appendChild(el);
+        setTimeout(()=>{ el.remove(); }, 900);
+    });
+}
 
-@endsection
+// إخفاء أي alert تلقائياً
+setTimeout(() => {
+    document.querySelectorAll('.alert').forEach(alert => {
+        alert.style.transition = 'opacity .5s ease';
+        alert.style.opacity = '0';
+        setTimeout(() => alert.remove(), 500);
+    });
+}, 5000);
+</script>
+@endpush

@@ -10,7 +10,7 @@ class ProductTransaction extends Model
     use HasFactory;
 
     protected $fillable = [
-        'product_id',
+        'product_type_id',
         'ledger_entry_id',
         'quantity',
     ];
@@ -20,9 +20,9 @@ class ProductTransaction extends Model
     ];
 
 
-    public function product()
+    public function productType()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductType::class);
     }
 
     public function ledgerEntry()

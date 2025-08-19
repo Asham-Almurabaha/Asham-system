@@ -14,7 +14,7 @@ class Contract extends Model
         'customer_id',
         'guarantor_id',
         'contract_status_id',
-        'contract_type_id',
+        'product_type_id',
         'products_count',
         'purchase_price',
         'sale_price',
@@ -65,9 +65,9 @@ class Contract extends Model
         return $this->belongsTo(ContractStatus::class);
     }
 
-    public function contractType()
+    public function productType()
     {
-        return $this->belongsTo(ContractType::class);
+        return $this->belongsTo(ProductType::class);
     }
 
     public function installmentType()

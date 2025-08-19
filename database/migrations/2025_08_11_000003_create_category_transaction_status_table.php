@@ -36,6 +36,7 @@ class CreateCategoryTransactionStatusTable extends Migration
             ['transaction_status_id' => 6, 'category_id' => 4, 'is_protected' => true],
             ['transaction_status_id' => 10, 'category_id' => 4, 'is_protected' => true],
             ['transaction_status_id' => 11, 'category_id' => 4, 'is_protected' => true],
+            ['transaction_status_id' => 12, 'category_id' => 4, 'is_protected' => true],
             
         ]); 
     }

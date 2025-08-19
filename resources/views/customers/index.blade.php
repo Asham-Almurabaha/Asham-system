@@ -13,17 +13,102 @@
     </nav>
 </div>
 
-{{-- شريط الأدوات --}}
+@php
+    // ===== ملخصات عامة على مستوى كل النظام =====
+    $allTotal    = (int)($customersTotalAll ?? 0);
+    $allActive   = (int)($activeCustomersTotalAll ?? 0);
+    $allInactive = max($allTotal - $allActive, 0);
+
+    $activePct   = $allTotal > 0 ? round(($allActive   / $allTotal) * 100, 1) : 0;
+    $inactivePct = $allTotal > 0 ? round(($allInactive / $allTotal) * 100, 1) : 0;
+
+    // متوفرة من الكنترولر (المطلوب إبقاءها)
+    $newThisMonthAll = (int)($newCustomersThisMonthAll ?? 0);
+    $newThisWeekAll  = (int)($newCustomersThisWeekAll  ?? 0);
+@endphp
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+    :root { --card-r: 1rem; --soft: 0 6px 18px rgba(0,0,0,.06); --soft2: 0 10px 24px rgba(0,0,0,.08); }
+    .kpi-card{ border:1px solid #eef2f7; border-radius:var(--card-r); box-shadow:var(--soft); transition:.2s; height:100%;}
+    .kpi-card:hover{ box-shadow:var(--soft2); transform: translateY(-2px); }
+    .kpi-icon{ width:52px;height:52px;border-radius:.9rem;display:grid;place-items:center;background:#f4f6fb; }
+    .kpi-value{ font-size:1.85rem; line-height:1; }
+    .subnote{ font-size:.8rem; color:#6b7280; }
+    .bar-8{ height:8px; }
+</style>
+
+{{-- ====== كروت عامة ====== --}}
+<div class="row g-4 mb-3" dir="rtl">
+    <div class="col-12 col-md-3">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-people fs-4 text-primary"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">إجمالي العملاء — كل النظام</div>
+                    <div class="kpi-value fw-bold">{{ number_format($allTotal) }}</div>
+                    <div class="subnote">غير متأثر بالفلاتر</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-person-check fs-4 text-success"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">العملاء النشطون</div>
+                    <div class="kpi-value fw-bold">{{ number_format($allActive) }}</div>
+                    <div class="subnote">نسبة النشطين: {{ number_format($activePct,1) }}%</div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="progress bar-8">
+                    <div class="progress-bar" style="width: {{ $activePct }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-person-x fs-4 text-danger"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">غير نشطين</div>
+                    <div class="kpi-value fw-bold">{{ number_format($allInactive) }}</div>
+                    <div class="subnote">النسبة: {{ number_format($inactivePct,1) }}%</div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="progress bar-8">
+                    <div class="progress-bar bg-danger" style="width: {{ $inactivePct }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-calendar2-plus fs-4 text-primary"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">عملاء جدد هذا الشهر</div>
+                    <div class="kpi-value fw-bold">{{ number_format($newThisMonthAll) }}</div>
+                    <div class="subnote">هذا الأسبوع: {{ number_format($newThisWeekAll) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ====== شريط الأدوات ====== --}}
 <div class="card shadow-sm mb-3">
-    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-20">
-        <a href="{{ route('customers.create') }}" class="btn btn-success">
-            + إضافة عميل جديد
-        </a>
-
-        <span class="ms-auto small text-muted">
-            النتائج: <strong>{{ $customers->total() }}</strong>
-        </span>
-
+    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
+        <a href="{{ route('customers.create') }}" class="btn btn-outline-success">+ إضافة عميل جديد</a>
+        <span class="ms-auto small text-muted">النتائج: <strong>{{ $customers->total() }}</strong></span>
         <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
             تصفية متقدمة
         </button>
@@ -32,27 +117,22 @@
     <div class="collapse @if(request()->hasAny(['q','national_id','phone','email','nationality','title'])) show @endif border-top" id="filterBar">
         <div class="card-body">
             <form action="{{ route('customers.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-
                 <div class="col-12 col-md-3">
                     <label class="form-label mb-1">الاسم</label>
                     <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="اسم العميل">
                 </div>
-
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">رقم الهوية</label>
                     <input type="text" name="national_id" value="{{ request('national_id') }}" class="form-control form-control-sm" placeholder="مثال: 1234567890">
                 </div>
-
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">الهاتف</label>
                     <input type="text" name="phone" value="{{ request('phone') }}" class="form-control form-control-sm" placeholder="+9665XXXXXXXX">
                 </div>
-
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">البريد الإلكتروني</label>
                     <input type="email" name="email" value="{{ request('email') }}" class="form-control form-control-sm" placeholder="name@email.com">
                 </div>
-
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">الجنسية</label>
                     <select name="nationality" class="form-select form-select-sm">
@@ -64,7 +144,6 @@
                         @endisset
                     </select>
                 </div>
-
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">الوظيفة</label>
                     <select name="title" class="form-select form-select-sm">
@@ -76,7 +155,6 @@
                         @endisset
                     </select>
                 </div>
-
                 <div class="col-12 col-md-2 d-flex gap-2">
                     <button class="btn btn-primary btn-sm w-100">بحث</button>
                     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
@@ -86,7 +164,7 @@
     </div>
 </div>
 
-{{-- الجدول --}}
+{{-- ====== الجدول ====== --}}
 <div class="card shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -131,12 +209,8 @@
                                 @endif
                             </td>
                             <td class="text-nowrap">
-                                <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary btn-sm">
-                                    عرض
-                                </a>
-                                <a href="{{ route('customers.edit', $customer) }}" class="btn btn-outline-primary btn-sm">
-                                    تعديل
-                                </a>
+                                <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
+                                <a href="{{ route('customers.edit', $customer) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
                                 <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline"
                                       onsubmit="return confirm('هل أنت متأكد من حذف هذا العميل؟');">
                                     @csrf
@@ -177,7 +251,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // تفعيل Bootstrap Tooltip
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
 });

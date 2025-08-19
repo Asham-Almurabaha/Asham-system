@@ -6,14 +6,127 @@ use App\Models\Guarantor;
 use App\Models\Nationality;
 use App\Models\Title;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class GuarantorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $guarantors = Guarantor::latest()->paginate(15);
-        return view('guarantors.index', compact('guarantors'));
+        // ====== الاستعلام الأساسي (مع الفلاتر) ======
+        $query = Guarantor::query()
+            ->with(['nationality','title'])
+            ->when($request->filled('q'),           fn($q) => $q->where('name','like','%'.$request->q.'%'))
+            // فلتر الهوية مشروط بوجود العمود لتفادي أخطاء الأعمدة المفقودة
+            ->when($request->filled('national_id') && Schema::hasColumn('guarantors','national_id'),
+                fn($q) => $q->where('national_id','like','%'.$request->national_id.'%'))
+            ->when($request->filled('phone'),       fn($q) => $q->where('phone','like','%'.$request->phone.'%'))
+            ->when($request->filled('email'),       fn($q) => $q->where('email','like','%'.$request->email.'%'))
+            ->when($request->filled('nationality'), fn($q) => $q->where('nationality_id', $request->nationality))
+            ->when($request->filled('title'),       fn($q) => $q->where('title_id', $request->title))
+            ->latest();
+
+        $guarantors = $query->paginate(10)->withQueryString();
+
+        // ====== كروت عامة ======
+        $guarantorsTotalAll = Guarantor::count();
+
+        // تعريف الحالات غير النشطة
+        $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
+
+        // IDs للحالات إن وُجد جدول حالة العقود
+        $endedStatusIds = [];
+        if (class_exists(\App\Models\ContractStatus::class)) {
+            $endedStatusIds = \App\Models\ContractStatus::query()
+                ->whereIn('name', $endedStatusNames)
+                ->pluck('id')
+                ->all();
+        }
+
+        // تحديد أعمدة الحالة المتوفرة في جدول العقود
+        $statusIdCol = null;
+        foreach (['status_id', 'contract_status_id', 'state_id'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) { $statusIdCol = $col; break; }
+        }
+        $statusNameCol = null;
+        foreach (['status', 'state'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) { $statusNameCol = $col; break; }
+        }
+
+        // كلوجر يطبق شرط "عقد نشط"
+        $applyActiveContractWhere = function ($c) use ($statusIdCol, $statusNameCol, $endedStatusIds, $endedStatusNames) {
+            if ($statusIdCol && !empty($endedStatusIds)) {
+                $c->whereNotIn("contracts.$statusIdCol", $endedStatusIds);
+            } elseif ($statusNameCol) {
+                $c->whereNotIn("contracts.$statusNameCol", $endedStatusNames);
+            } elseif (Schema::hasColumn('contracts', 'is_closed')) {
+                $c->where('contracts.is_closed', 0);
+            } elseif (Schema::hasColumn('contracts', 'closed_at')) {
+                $c->whereNull('contracts.closed_at');
+            } else {
+                // لو ماعندناش معلومة حالة الإغلاق، اعتبر وجود أي عقد = نشط
+                $c->whereRaw('1 = 1');
+            }
+        };
+
+        // حساب الكفلاء النشطين بحسب شكل الربط
+        if (method_exists(Guarantor::class, 'contracts')) {
+            // لو معرف علاقة contracts على الموديل
+            $activeGuarantorsTotalAll = Guarantor::whereHas('contracts', function ($c) use ($applyActiveContractWhere) {
+                $applyActiveContractWhere($c);
+            })->count();
+
+        } elseif (Schema::hasColumn('contracts', 'guarantor_id')) {
+            // ربط مباشر عبر عمود guarantor_id
+            $activeGuarantorsTotalAll = Guarantor::whereExists(function ($q) use ($applyActiveContractWhere) {
+                $q->select(DB::raw(1))
+                  ->from('contracts')
+                  ->whereColumn('contracts.guarantor_id', 'guarantors.id');
+                $applyActiveContractWhere($q);
+            })->count();
+
+        } elseif (Schema::hasTable('contract_guarantors') || Schema::hasTable('contract_guarantor')) {
+            // ربط Pivot
+            $pivot = Schema::hasTable('contract_guarantors') ? 'contract_guarantors' : 'contract_guarantor';
+            $activeGuarantorsTotalAll = Guarantor::whereExists(function ($q) use ($pivot, $applyActiveContractWhere) {
+                $q->select(DB::raw(1))
+                  ->from("$pivot as cg")
+                  ->whereColumn('cg.guarantor_id', 'guarantors.id')
+                  ->whereExists(function ($qq) use ($applyActiveContractWhere) {
+                      $qq->select(DB::raw(1))
+                         ->from('contracts')
+                         ->whereColumn('contracts.id', 'cg.contract_id');
+                      $applyActiveContractWhere($qq);
+                  });
+            })->count();
+
+        } else {
+            // شكل الربط غير معروف
+            $activeGuarantorsTotalAll = 0;
+        }
+
+        // أرقام إضافية للإبقاء (الجدد)
+        $newGuarantorsThisMonthAll = Guarantor::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
+        $newGuarantorsThisWeekAll  = Guarantor::whereBetween('created_at', [now()->startOfWeek(),  now()])->count();
+
+        // قوائم للفلاتر
+        $nationalities = class_exists(Nationality::class)
+            ? Nationality::select('id','name')->orderBy('name')->get()
+            : collect();
+        $titles = class_exists(Title::class)
+            ? Title::select('id','name')->orderBy('name')->get()
+            : collect();
+
+        return view('guarantors.index', compact(
+            'guarantors',
+            'guarantorsTotalAll',
+            'activeGuarantorsTotalAll',
+            'newGuarantorsThisMonthAll',
+            'newGuarantorsThisWeekAll',
+            'nationalities',
+            'titles'
+        ));
     }
 
     public function create()

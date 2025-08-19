@@ -10,12 +10,12 @@ class CreateGuarantorsTable extends Migration
         Schema::create('guarantors', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->unsignedBigInteger('title_id')->nullable();
+            $table->string('national_id')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
             $table->text('address')->nullable();
             $table->foreignId('nationality_id')->nullable()->constrained('nationalities')->onDelete('set null');
-            $table->foreign('title_id')->references('id')->on('titles')->onDelete('set null');
+            $table->foreignId('title_id')->nullable()->constrained('titles')->onDelete('set null');
             $table->string('id_card_image')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
@@ -23,6 +23,7 @@ class CreateGuarantorsTable extends Migration
         // ✅ إضافة ضامن افتراضي
         DB::table('guarantors')->insert([
             'name' => 'ضامن افتراضي',
+            'national_id'=> '2000000000',
             'phone' => '0500000000',
             'email' => 'default@example.com',
             'address' => 'الرياض - السعودية',

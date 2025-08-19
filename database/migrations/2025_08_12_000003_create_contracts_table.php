@@ -17,7 +17,7 @@ class CreateContractsTable extends Migration
 
             $table->foreignId('contract_status_id')->nullable()->constrained('contract_statuses')->onDelete('restrict'); // حالة العقد
             
-            $table->foreignId('contract_type_id')->constrained('contract_types')->onDelete('restrict'); // نوع العقد
+            $table->foreignId('product_type_id')->constrained('product_types')->onDelete('restrict'); // نوع البضائع
             $table->integer('products_count')->default(0); // عدد البضائع
             $table->decimal('purchase_price', 15, 2); // سعر شراء البضائع
             $table->decimal('sale_price', 15, 2); // سعر البيع للمستثمر

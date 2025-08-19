@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\DTOs\InvestorShare;
 use App\Http\Requests\StoreContractInvestorsRequest;
+use App\Models\BankAccount;
 use App\Models\Contract;
 use App\Models\ContractInstallment;
 use App\Models\ContractStatus;
-use App\Models\ContractType;
 use App\Models\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentStatus;
@@ -15,6 +15,8 @@ use App\Models\InstallmentType;
 use App\Models\Investor;
 use App\Models\InvestorTransaction;
 use App\Models\LedgerEntry;
+use App\Models\ProductType;
+use App\Models\Safe;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
 use Carbon\Carbon;
@@ -39,23 +41,25 @@ class ContractController extends Controller
 
     public function index(Request $request)
     {
-        $contracts = Contract::with(['customer','guarantor','contractStatus','contractType','investors'])
+        $contracts = Contract::with(['customer','guarantor','contractStatus','productType','investors'])
             ->when($request->customer, function ($q) use ($request) {
                 $q->whereHas('customer', function ($qq) use ($request) {
                     $qq->where('name', 'like', '%' . $request->customer . '%');
                 });
             })
-            ->when($request->type,   fn($q) => $q->where('contract_type_id', $request->type))
+            // ✅ التصفية أصبحت على product_type_id
+            ->when($request->type,   fn($q) => $q->where('product_type_id', $request->type))
             ->when($request->status, fn($q) => $q->where('contract_status_id', $request->status))
             ->when($request->from,   fn($q) => $q->whereDate('start_date', '>=', $request->from))
             ->when($request->to,     fn($q) => $q->whereDate('start_date', '<=', $request->to))
             ->latest()
             ->paginate(10);
 
-        $contractTypes    = ContractType::all();
+        // ✅ الأنواع من product_types
+        $productTypes    = ProductType::all();
         $contractStatuses = ContractStatus::all();
 
-        return view('contracts.index', compact('contracts','contractTypes','contractStatuses'));
+        return view('contracts.index', compact('contracts','productTypes','contractStatuses'));
     }
 
     public function create()
@@ -64,216 +68,215 @@ class ContractController extends Controller
             'contract'         => new Contract(),
             'customers'        => Customer::all(),
             'guarantors'       => Guarantor::all(),
-            'contractTypes'    => ContractType::all(),
+            'productTypes'     => ProductType::all(), // ✅
             'installmentTypes' => InstallmentType::all(),
             'investors'        => Investor::all(),
         ]);
     }
 
     public function store(Request $request)
-{
-    $data = $this->validateContract($request, false);
-    $this->backfillCalculatedFields($data, $request);
+    {
+        $data = $this->validateContract($request, false);
+        $this->backfillCalculatedFields($data, $request);
 
-    $data['contract_number'] = date('Ymd') . rand(10, 99);
+        // ✅ نتاكد أن المفتاح المستخدم هو product_type_id فقط
+        if (!empty($data['contract_type_id']) && empty($data['product_type_id'])) {
+            $data['product_type_id'] = (int) $data['contract_type_id'];
+        }
+        unset($data['contract_type_id']);
 
-    $investors = $this->normalizeInvestors($request->input('investors', []));
+        $data['contract_number'] = date('Ymd') . rand(10, 99);
 
-    $data['contract_image']           = $this->putImage($request, 'contract_image',           self::DIR_CONTRACT_MAIN);
-    $data['contract_customer_image']  = $this->putImage($request, 'contract_customer_image',  self::DIR_CONTRACT_CUSTOMERS);
-    $data['contract_guarantor_image'] = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS);
+        $investors = $this->normalizeInvestors($request->input('investors', []));
 
-    try {
-        DB::transaction(function () use ($data, $investors, $request) {
-            unset($data['contract_status_id']);
+        $data['contract_image']           = $this->putImage($request, 'contract_image',           self::DIR_CONTRACT_MAIN);
+        $data['contract_customer_image']  = $this->putImage($request, 'contract_customer_image',  self::DIR_CONTRACT_CUSTOMERS);
+        $data['contract_guarantor_image'] = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS);
 
-            $contract = Contract::create($data);
+        try {
+            DB::transaction(function () use ($data, $investors, $request) {
+                unset($data['contract_status_id']);
 
-            $statuses = InstallmentStatus::pluck('id', 'name');
+                $contract = Contract::create($data);
 
-            // === إعدادات الأقساط ===
-            $totalValue       = (float) ($data['total_value'] ?? 0);
-            $installmentValue = (float) ($request->installment_value ?? 0);
+                $statuses = InstallmentStatus::pluck('id', 'name');
 
-            $baseDate = $request->first_installment_date
-                ? Carbon::parse($request->first_installment_date)
-                : Carbon::parse($data['start_date'] ?? now());
+                // === إعدادات الأقساط ===
+                $totalValue       = (float) ($data['total_value'] ?? 0);
+                $installmentValue = (float) ($request->installment_value ?? 0);
 
-            $installmentTypeName = optional(
-                InstallmentType::find($data['installment_type_id'] ?? null)
-            )->name;
+                $baseDate = $request->first_installment_date
+                    ? Carbon::parse($request->first_installment_date)
+                    : Carbon::parse($data['start_date'] ?? now());
 
-            $computeDueDate = function (Carbon $base, int $i) use ($installmentTypeName) {
-                $type = mb_strtolower(trim((string) $installmentTypeName));
-                $step = max(0, $i - 1);
-                if (str_contains($type, 'يوم') || str_contains($type, 'daily'))  return $base->copy()->addDays($step);
-                if (str_contains($type, 'أسبوع') || str_contains($type, 'week')) return $base->copy()->addWeeks($step);
-                if (str_contains($type, 'سنة') || str_contains($type, 'year'))   return $base->copy()->addYears($step);
-                /* شهر */                                                        return $base->copy()->addMonthsNoOverflow($step);
-            };
+                $installmentTypeName = optional(
+                    InstallmentType::find($data['installment_type_id'] ?? null)
+                )->name;
 
-            if ($installmentValue > 0.0) {
-                $installmentsCount = (int) floor($totalValue / $installmentValue);
-                $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
+                $computeDueDate = function (Carbon $base, int $i) use ($installmentTypeName) {
+                    $type = mb_strtolower(trim((string) $installmentTypeName));
+                    $step = max(0, $i - 1);
+                    if (str_contains($type, 'يوم') || str_contains($type, 'daily'))  return $base->copy()->addDays($step);
+                    if (str_contains($type, 'أسبوع') || str_contains($type, 'week')) return $base->copy()->addWeeks($step);
+                    if (str_contains($type, 'سنة') || str_contains($type, 'year'))   return $base->copy()->addYears($step);
+                    /* شهر */                                                        return $base->copy()->addMonthsNoOverflow($step);
+                };
 
-                for ($i = 1; $i <= $installmentsCount; $i++) {
-                    ContractInstallment::create([
-                        'contract_id'           => $contract->id,
-                        'installment_number'    => $i,
-                        'due_date'              => $computeDueDate($baseDate, $i),
-                        'due_amount'            => $installmentValue,
-                        'payment_amount'        => 0,
-                        'installment_status_id' => $statuses['لم يحل'] ?? null,
-                    ]);
-                }
+                if ($installmentValue > 0.0) {
+                    $installmentsCount = (int) floor($totalValue / $installmentValue);
+                    $remaining         = round($totalValue - ($installmentsCount * $installmentValue), 2);
 
-                if ($remaining > 0) {
-                    ContractInstallment::create([
-                        'contract_id'           => $contract->id,
-                        'installment_number'    => $installmentsCount + 1,
-                        'due_date'              => $computeDueDate($baseDate, $installmentsCount + 1),
-                        'due_amount'            => $remaining,
-                        'payment_amount'        => 0,
-                        'installment_status_id' => $statuses['لم يحل'] ?? null,
-                    ]);
-                }
-            } elseif ($totalValue > 0.0) {
-                ContractInstallment::create([
-                    'contract_id'           => $contract->id,
-                    'installment_number'    => 1,
-                    'due_date'              => $baseDate,
-                    'due_amount'            => $totalValue,
-                    'payment_amount'        => 0,
-                    'installment_status_id' => $statuses['لم يحل'] ?? null,
-                ]);
-            }
-
-            // ربط المستثمرين + لوج ترانزاكشن
-            $this->syncInvestorsAndRecalcStatus($contract, $investors);
-            if (!empty($investors)) {
-                $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
-            }
-
-            // === قيد فرق البيع (مكتب) + تسجيل في product_transactions ===
-            $salePrice     = (float) ($data['sale_price'] ?? 0);
-            $purchasePrice = (float) ($data['purchase_price'] ?? 0);
-            $diff          = round($salePrice - $purchasePrice, 2);
-
-            if ($diff > 0) {
-                $statusRow = TransactionStatus::whereIn('name', ['فرق البيع', 'ربح فرق البيع'])
-                    ->first(['id', 'transaction_type_id']);
-
-                if ($statusRow) {
-                    $typeId =
-                        ($statusRow->transaction_type_id ?? null)
-                        ?: TransactionType::whereIn('name', ['ربح فرق البيع','فرق البيع','أرباح','تحصيل'])->value('id')
-                        ?: TransactionType::query()->orderBy('id')->value('id');
-
-                    if ($typeId) {
-                        $saleDiffEntry = LedgerEntry::create([
-                            'entry_date'            => now()->toDateString(),
-                            'investor_id'           => null,
-                            'is_office'             => true,
-                            'transaction_status_id' => $statusRow->id,
-                            'transaction_type_id'   => $typeId,
-                            'bank_account_id'       => null,
-                            'safe_id'               => null,
+                    for ($i = 1; $i <= $installmentsCount; $i++) {
+                        ContractInstallment::create([
                             'contract_id'           => $contract->id,
-                            'installment_id'        => null,
-                            'amount'                => $diff,
-                            'ref'                   => 'CT-'.$contract->id,
-                            'notes'                 => "قيد فرق البيع للعقد #{$contract->contract_number}",
+                            'installment_number'    => $i,
+                            'due_date'              => $computeDueDate($baseDate, $i),
+                            'due_amount'            => $installmentValue,
+                            'payment_amount'        => 0,
+                            'installment_status_id' => $statuses['لم يحل'] ?? null,
                         ]);
+                    }
 
-                        // === عدد البضائع من products_count + النوع = contract_type_id (من جدول product_types) ===
-                        try {
-                            if (Schema::hasTable('product_transactions') &&
-                                Schema::hasColumn('product_transactions', 'ledger_entry_id')) {
+                    if ($remaining > 0) {
+                        ContractInstallment::create([
+                            'contract_id'           => $contract->id,
+                            'installment_number'    => $installmentsCount + 1,
+                            'due_date'              => $computeDueDate($baseDate, $installmentsCount + 1),
+                            'due_amount'            => $remaining,
+                            'payment_amount'        => 0,
+                            'installment_status_id' => $statuses['لم يحل'] ?? null,
+                        ]);
+                    }
+                } elseif ($totalValue > 0.0) {
+                    ContractInstallment::create([
+                        'contract_id'           => $contract->id,
+                        'installment_number'    => 1,
+                        'due_date'              => $baseDate,
+                        'due_amount'            => $totalValue,
+                        'payment_amount'        => 0,
+                        'installment_status_id' => $statuses['لم يحل'] ?? null,
+                    ]);
+                }
 
-                                $qty = (int) (
-                                    $data['products_count']
-                                    ?? $request->input('products_count')
-                                    ?? 0
-                                );
+                // ربط المستثمرين + لوج ترانزاكشن
+                $this->syncInvestorsAndRecalcStatus($contract, $investors);
+                if (!empty($investors)) {
+                    $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
+                }
 
-                                $productTypeId = (int) (
-                                    $data['contract_type_id']
-                                    ?? $request->input('contract_type_id')
-                                    ?? 0
-                                );
+                // === قيد فرق البيع (مكتب) + تسجيل في product_transactions ===
+                $salePrice     = (float) ($data['sale_price'] ?? 0);
+                $purchasePrice = (float) ($data['purchase_price'] ?? 0);
+                $diff          = round($salePrice - $purchasePrice, 2);
 
-                                // تأكُّد سريع إن الـ type موجود في product_types (اختياري)
-                                if ($productTypeId > 0 && Schema::hasTable('product_types')) {
-                                    $exists = DB::table('product_types')->where('id', $productTypeId)->exists();
-                                    if (!$exists) { $productTypeId = 0; }
-                                }
+                if ($diff > 0) {
+                    $statusRow = TransactionStatus::whereIn('name', ['فرق البيع', 'ربح فرق البيع'])
+                        ->first(['id', 'transaction_type_id']);
 
-                                $payload = [
-                                    'product_id'=> $productTypeId,
-                                    'ledger_entry_id' => $saleDiffEntry->id,
-                                    'created_at'      => now(),
-                                    'updated_at'      => now(),
-                                ];
+                    if ($statusRow) {
+                        $typeId =
+                            ($statusRow->transaction_type_id ?? null)
+                            ?: TransactionType::whereIn('name', ['ربح فرق البيع','فرق البيع','أرباح','تحصيل'])->value('id')
+                            ?: TransactionType::query()->orderBy('id')->value('id');
 
-                                if (Schema::hasColumn('product_transactions', 'quantity')) {
-                                    $payload['quantity'] = max(0, $qty);
-                                }
+                        if ($typeId) {
+                            $saleDiffEntry = LedgerEntry::create([
+                                'entry_date'            => now()->toDateString(),
+                                'investor_id'           => null,
+                                'is_office'             => true,
+                                'transaction_status_id' => $statusRow->id,
+                                'transaction_type_id'   => $typeId,
+                                'bank_account_id'       => null,
+                                'safe_id'               => null,
+                                'contract_id'           => $contract->id,
+                                'installment_id'        => null,
+                                'amount'                => $diff,
+                                'ref'                   => 'CT-'.$contract->id,
+                                'notes'                 => "قيد فرق البيع للعقد #{$contract->contract_number}",
+                            ]);
 
-                                // نحاول نكتب النوع في عمود نوع البضائع المناسب
-                                if (Schema::hasColumn('product_transactions', 'product_type_id')) {
-                                    $payload['product_type_id'] = $productTypeId > 0 ? $productTypeId : null;
-                                } elseif (Schema::hasColumn('product_transactions', 'goods_type_id')) {
-                                    $payload['goods_type_id'] = $productTypeId > 0 ? $productTypeId : null;
-                                } else {
-                                    // لو مفيش أعمدة ID للنوع — نحفظه نصّيًا في عمود مناسب لو موجود
-                                    foreach (['type','goods_type','product_type','note','description'] as $col) {
-                                        if (Schema::hasColumn('product_transactions', $col)) {
-                                            $payload[$col] = $productTypeId > 0 ? ('type#'.$productTypeId) : 'غير محدد';
-                                            break;
+                            // === products_count + نوع البضاعة من product_types عبر product_type_id ===
+                            try {
+                                if (Schema::hasTable('product_transactions') &&
+                                    Schema::hasColumn('product_transactions', 'ledger_entry_id')) {
+
+                                    $qty = (int) (
+                                        $data['products_count']
+                                        ?? $request->input('products_count')
+                                        ?? 0
+                                    );
+
+                                    $productTypeId = (int) (
+                                        $data['product_type_id']
+                                        ?? $request->input('product_type_id')
+                                        ?? 0
+                                    );
+
+                                    if ($productTypeId > 0 && Schema::hasTable('product_types')) {
+                                        $exists = DB::table('product_types')->where('id', $productTypeId)->exists();
+                                        if (!$exists) { $productTypeId = 0; }
+                                    }
+
+                                    $payload = [
+                                        'ledger_entry_id' => $saleDiffEntry->id,
+                                        'created_at'      => now(),
+                                        'updated_at'      => now(),
+                                    ];
+
+                                    if (Schema::hasColumn('product_transactions', 'quantity')) {
+                                        $payload['quantity'] = max(0, $qty);
+                                    }
+
+                                    // ✅ نخزّن نوع البضاعة كـ product_type_id (أو goods_type_id)
+                                    if (Schema::hasColumn('product_transactions', 'product_type_id')) {
+                                        $payload['product_type_id'] = $productTypeId > 0 ? $productTypeId : null;
+                                    } elseif (Schema::hasColumn('product_transactions', 'goods_type_id')) {
+                                        $payload['goods_type_id'] = $productTypeId > 0 ? $productTypeId : null;
+                                    } else {
+                                        foreach (['type','goods_type','product_type','note','description'] as $col) {
+                                            if (Schema::hasColumn('product_transactions', $col)) {
+                                                $payload[$col] = $productTypeId > 0 ? ('type#'.$productTypeId) : 'غير محدد';
+                                                break;
+                                            }
                                         }
                                     }
-                                }
 
-                                // حالة "إضافة عقد"
-                                if (Schema::hasColumn('product_transactions', 'transaction_status_id')) {
-                                    $addContractStatusId = TransactionStatus::where('name', 'إضافة عقد')->value('id');
-                                    if ($addContractStatusId) $payload['transaction_status_id'] = $addContractStatusId;
-                                } else {
-                                    foreach (['status','action','note','description'] as $col) {
-                                        if (Schema::hasColumn('product_transactions', $col)) {
-                                            $payload[$col] = 'إضافة عقد';
-                                            break;
+                                    // حالة "إضافة عقد"
+                                    if (Schema::hasColumn('product_transactions', 'transaction_status_id')) {
+                                        $addContractStatusId = TransactionStatus::where('name', 'إضافة عقد')->value('id');
+                                        if ($addContractStatusId) $payload['transaction_status_id'] = $addContractStatusId;
+                                    } else {
+                                        foreach (['status','action','note','description'] as $col) {
+                                            if (Schema::hasColumn('product_transactions', $col)) {
+                                                $payload[$col] = 'إضافة عقد';
+                                                break;
+                                            }
                                         }
                                     }
-                                }
 
-                                if (Schema::hasColumn('product_transactions', 'contract_id')) {
-                                    $payload['contract_id'] = $contract->id;
-                                }
+                                    if (Schema::hasColumn('product_transactions', 'contract_id')) {
+                                        $payload['contract_id'] = $contract->id;
+                                    }
 
-                                DB::table('product_transactions')->insert($payload);
+                                    DB::table('product_transactions')->insert($payload);
+                                }
+                            } catch (\Throwable $ignore) {
+                                // اختلافات السكيمة لا تكسر العملية
                             }
-                        } catch (\Throwable $ignore) {
-                            // اختلافات السكيمة لا تكسر العملية
                         }
                     }
                 }
-            }
-        });
+            });
 
-    } catch (\Throwable $e) {
-        report($e);
-        return back()
-            ->withInput()
-            ->withErrors(['general' => 'خطأ أثناء إنشاء العقد: ' . $e->getMessage()]);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()
+                ->withInput()
+                ->withErrors(['general' => 'خطأ أثناء إنشاء العقد: ' . $e->getMessage()]);
+        }
+
+        return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
     }
-
-    return redirect()->route('contracts.index')->with('success', 'تم إنشاء العقد بنجاح.');
-}
-
-
-
-
 
     public function storeInvestors(StoreContractInvestorsRequest $request): JsonResponse
     {
@@ -286,7 +289,6 @@ class ContractController extends Controller
         /** @var array<int, array{id:int,share_percentage:float,share_value?:float|null}> $incomingRaw */
         $incomingRaw = $request->validated('investors');
 
-        // حوّل الـ array لـ DTOs واضحة
         /** @var array<int, InvestorShare> $incoming */
         $incoming = array_map(
             fn (array $row) => InvestorShare::fromArray($row),
@@ -296,13 +298,11 @@ class ContractController extends Controller
         $contract = Contract::with('investors')->findOrFail($contractId);
         $contractValue = (float) $contract->contract_value;
 
-        // IDs الموجودين حالياً على العقد
         /** @var array<int,int> $existingIds */
         $existingIds = $contract->investors->pluck('id')->map(fn($id)=>(int)$id)->all();
         /** @var array<int,int> $incomingIds */
         $incomingIds = array_map(fn(InvestorShare $s) => $s->id, $incoming);
 
-        // منع تمرير أي مستثمر موجود مسبقاً
         $intersection = array_values(array_intersect($incomingIds, $existingIds));
         if (!empty($intersection)) {
             return response()->json([
@@ -311,12 +311,10 @@ class ContractController extends Controller
             ], 422);
         }
 
-        // حساب المجاميع
         $currentPct = (float) $contract->investors()->sum('contract_investor.share_percentage');
         $newPct     = array_reduce($incoming, fn($c, InvestorShare $s) => $c + $s->sharePercentage, 0.0);
         $afterAdd   = $currentPct + $newPct;
 
-        // لا تتجاوز 100
         if ($afterAdd > 100 + self::EPS) {
             return response()->json([
                 'success' => false,
@@ -324,7 +322,6 @@ class ContractController extends Controller
             ], 422);
         }
 
-        // لازم يبقى = 100% بعد الإضافة (متوافق مع منطق الفرونت)
         if (abs($afterAdd - 100) > self::EPS) {
             $remaining = max(0, 100 - $afterAdd);
             return response()->json([
@@ -333,17 +330,8 @@ class ContractController extends Controller
             ], 422);
         }
 
-        /**
-         * @var array<int, array{
-         *   share_percentage: float,
-         *   share_value: float,
-         *   created_at: \Illuminate\Support\Carbon,
-         *   updated_at: \Illuminate\Support\Carbon
-         * }> $pivotData
-         */
         $pivotData = [];
         foreach ($incoming as $s) {
-            // نحسب القيمة من السيرفر لضمان الاتساق
             $value = round(($contractValue * $s->sharePercentage) / 100, 2);
             if ($value <= 0) {
                 return response()->json([
@@ -361,10 +349,8 @@ class ContractController extends Controller
         }
 
         DB::transaction(function () use ($contract, $pivotData) {
-            // إضافة بدون نزع الموجودين
             $contract->investors()->sync($pivotData, false);
 
-            // تسجيل معاملات "إضافة عقد" للمستثمرين المضافين
             $this->logInvestorTransaction(
                 $contract->fresh('investors'),
                 collect($pivotData)
@@ -374,7 +360,6 @@ class ContractController extends Controller
                 'إضافة عقد'
             );
 
-            // تحديث حالة العقد حسب المجموع (سيصير "جديد" لو 100%)
             $pivotTable = 'contract_investor';
             $dbSum      = (float) $contract->investors()->sum("$pivotTable.share_percentage");
             $rows       = $contract->investors()->pluck('investors.id')->map(fn($id)=>['id'=>(int)$id])->all();
@@ -386,7 +371,6 @@ class ContractController extends Controller
             }
         });
 
-        // أعِد تحميل العقد وجدول المستثمرين
         $contract->load('investors');
         $html = view('contracts.partials.investors_table', compact('contract'))->render();
 
@@ -395,8 +379,8 @@ class ContractController extends Controller
             'html'    => $html
         ]);
     }
-    
-    private function logInvestorTransaction(Contract $contract, array $investors, string $statusName = 'إضافة عقد'): void 
+
+    private function logInvestorTransaction(Contract $contract, array $investors, string $statusName = 'إضافة عقد'): void
     {
         $status = TransactionStatus::where('name', $statusName)
             ->first(['id', 'transaction_type_id']);
@@ -442,14 +426,13 @@ class ContractController extends Controller
                     'contract_id'            => $contract->id,
                     'installment_id'         => null,
                     'amount'                 => $amount,
-                    'direction'              => $direction,    // ← 'in' أو 'out' من اسم النوع
+                    'direction'              => $direction,
                     'ref'                    => 'IT-'.$trx->id,
                     'notes'                  => "قيد {$statusName} للعقد #{$contract->contract_number} (مستثمر #{$investorId})",
                 ]);
             }
         });
     }
-
 
     private function getTransactionTypeIdForStatusName(string $statusName, ?int $statusTypeId = null): ?int
     {
@@ -483,26 +466,22 @@ class ContractController extends Controller
         $name = $this->arNormalize($typeName);
         if ($name === '') return null;
 
-        // تطابقات دقيقة أولاً
         $exact = [
             'ايداع' => 'in', 'إيداع' => 'in', 'توريد' => 'in', 'تحصيل' => 'in',
             'سحب'   => 'out', 'صرف'  => 'out', 'توزيع' => 'out', 'استرداد' => 'out',
-            // دعم إنجليزي لو عندك أسماء بالإنجليزي
             'deposit' => 'in', 'withdraw' => 'out',
         ];
         if (isset($exact[$typeName])) {
             return $exact[$typeName];
         }
 
-        // بحث جزئي داخل الاسم بعد التطبيع
-        if (mb_strpos($name, 'ايداع')   !== false || mb_strpos($name, 'توريد')   !== false || mb_strpos($name, 'تحصيل') !== false) return 'in';
-        if (mb_strpos($name, 'سحب')     !== false || mb_strpos($name, 'صرف')     !== false || mb_strpos($name, 'توزيع') !== false || mb_strpos($name, 'استرداد') !== false) return 'out';
-        if (mb_strpos($name, 'deposit') !== false) return 'in';
-        if (mb_strpos($name, 'withdraw')!== false) return 'out';
+        if (mb_strpos($name, 'ايداع')!==false || mb_strpos($name, 'توريد')!==false || mb_strpos($name, 'تحصيل')!==false) return 'in';
+        if (mb_strpos($name, 'سحب')  !==false || mb_strpos($name, 'صرف')  !==false || mb_strpos($name, 'توزيع')  !==false || mb_strpos($name, 'استرداد')!==false) return 'out';
+        if (mb_strpos($name, 'deposit')!==false) return 'in';
+        if (mb_strpos($name, 'withdraw')!==false) return 'out';
 
         return null;
     }
-
 
     private function arNormalize(?string $text): string
     {
@@ -518,7 +497,6 @@ class ContractController extends Controller
         return strtr($text, $map);
     }
 
-
     public function show(Contract $contract)
     {
         $this->updateInstallmentsStatuses($contract);
@@ -527,22 +505,31 @@ class ContractController extends Controller
             'customer',
             'guarantor',
             'contractStatus',
-            'contractType',
+            'productType',     // ✅ العلاقة أصبحت productType
             'installmentType',
             'investors',
             'installments.installmentStatus'
         ]);
 
         $investors = Investor::all();
-        return view('contracts.show', compact('contract', 'investors'));
+
+        $banks = BankAccount::all();
+        $safes = Safe::all();
+
+
+        
+        return view('contracts.show', compact('contract', 'investors','banks','safes'));
     }
- 
+
     private function validateContract(Request $request, bool $isUpdate = false): array
     {
         $rules = [
             'customer_id'            => ['required','exists:customers,id'],
             'guarantor_id'           => ['nullable','exists:guarantors,id'],
-            'contract_type_id'       => ['required','exists:contract_types,id'],
+
+            // ✅ التحقق من product_types عبر الحقل product_type_id
+            'product_type_id'        => ['required','exists:product_types,id'],
+
             'products_count'         => ['required','integer','min:0'],
             'purchase_price'         => ['required','numeric','min:0'],
             'sale_price'             => ['required','numeric','min:0'],
@@ -551,7 +538,6 @@ class ContractController extends Controller
             'total_value'            => ['nullable','numeric','min:0'],
             'discount_amount'        => ['nullable','numeric','min:0'],
             'installment_type_id'    => ['required','exists:installment_types,id'],
-            // ✅ لازم يكون > 0 علشان القسمة
             'installment_value'      => ['required','numeric','min:0.01'],
             'installments_count'     => ['required','integer','min:1'],
             'start_date'             => ['required','date'],
@@ -840,76 +826,4 @@ class ContractController extends Controller
 
         $contract->save();
     }
-
 }
-
-    // public function edit(Contract $contract)
-    // {
-    //     $contract->load('investors');
-
-    //     return view('contracts.edit', [
-    //         'contract'         => $contract,
-    //         'customers'        => Customer::all(),
-    //         'guarantors'       => Guarantor::all(),
-    //         'contractTypes'    => ContractType::all(),
-    //         'installmentTypes' => InstallmentType::all(),
-    //         'investors'        => Investor::all(),
-    //     ]);
-    // }
-
-
-
-    // public function update(Request $request, Contract $contract)
-    // {
-    //     $data = $this->validateContract($request, true);
-    //     $this->backfillCalculatedFields($data, $request);
-
-    //     unset($data['contract_status_id']);
-
-    //     // صور
-    //     if ($img = $this->putImage($request, 'contract_image', self::DIR_CONTRACT_MAIN, $contract->contract_image)) {
-    //         $data['contract_image'] = $img;
-    //     }
-    //     if ($img = $this->putImage($request, 'contract_customer_image', self::DIR_CONTRACT_CUSTOMERS, $contract->contract_customer_image)) {
-    //         $data['contract_customer_image'] = $img;
-    //     }
-    //     if ($img = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS, $contract->contract_guarantor_image)) {
-    //         $data['contract_guarantor_image'] = $img;
-    //     }
-
-    //     try {
-    //         DB::transaction(function () use ($contract, $data, $request) {
-    //             $contract->update($data);
-
-    //             // ✅ ما نعدلش المستثمرين إلا لو بعتهم فعلًا
-    //             if ($request->has('investors')) {
-    //                 $investors = $this->normalizeInvestors($request->input('investors', []));
-    //                 $this->syncInvestorsAndRecalcStatus($contract->fresh(), $investors);
-    //             }
-    //         });
-    //     } catch (\Throwable $e) {
-    //         report($e);
-    //         return back()->withInput()->withErrors(['general' => 'تعذّر تحديث العقد. حاول مرة أخرى.']);
-    //     }
-
-    //     return redirect()->route('contracts.index')->with('success', 'تم تحديث العقد بنجاح.');
-    // }
-
-
-
-    // public function destroy(Contract $contract)
-    // {
-    //     if (!empty($contract->contract_image)) {
-    //         Storage::disk('public')->delete($contract->contract_image);
-    //     }
-    //     if (!empty($contract->contract_customer_image)) {
-    //         Storage::disk('public')->delete($contract->contract_customer_image);
-    //     }
-    //     if (!empty($contract->contract_guarantor_image)) {
-    //         Storage::disk('public')->delete($contract->contract_guarantor_image);
-    //     }
-
-    //     $contract->delete();
-    //     return redirect()->route('contracts.index')->with('success', 'تم حذف العقد بنجاح.');
-    // }
-

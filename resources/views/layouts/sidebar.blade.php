@@ -9,7 +9,7 @@
   // هل مجموعة الإعدادات مفتوحة؟
   $settingsOpen = $isPath('*/setting*')
       || $isRoute('settings.*') || $isRoute('nationalities.*') || $isRoute('titles.*')
-      || $isRoute('contract_statuses.*') || $isRoute('contract_types.*')
+      || $isRoute('contract_statuses.*') 
       || $isRoute('installment_statuses.*') || $isRoute('installment_types.*')
       || $isRoute('products.*') || $isRoute('product_entries.*')
       || $isRoute('bank_cash_accounts.*') || $isRoute('transaction_types.*') || $isRoute('transaction_statuses.*')
@@ -58,6 +58,14 @@
     </a>
   </li> --}}
 
+  {{-- العقود --}}
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('contracts.*')) }} {{ $active($isRoute('contracts.*')) }}"
+       href="{{ route('contracts.index') }}">
+      <i class="bi bi-file-earmark-text"></i><span>العقود</span>
+    </a>
+  </li>
+
   {{-- دفتر القيود --}}
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('ledger.*')) }} {{ $active($isRoute('ledger.*')) }}"
@@ -66,13 +74,7 @@
     </a>
   </li>
 
-  {{-- العقود --}}
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('contracts.*')) }} {{ $active($isRoute('contracts.*')) }}"
-       href="{{ route('contracts.index') }}">
-      <i class="bi bi-file-earmark-text"></i><span>العقود</span>
-    </a>
-  </li>
+  
 
   {{-- الإعدادات (قابلة للطي) --}}
   <li class="nav-item">
@@ -89,7 +91,7 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
         </a>
       </li>
-      <li>
+      {{-- <li>
         <a class="{{ $active($isRoute('nationalities.*')) }}" href="{{ route('nationalities.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Nationalities')</span>
         </a>
@@ -106,11 +108,7 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Contract Statuses')</span>
         </a>
       </li>
-      <li>
-        <a class="{{ $active($isRoute('contract_types.*')) }}" href="{{ route('contract_types.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Contract Types')</span>
-        </a>
-      </li>
+      
 
       <li class="nav-heading">إعدادات الأقساط</li>
       <li>
@@ -123,19 +121,6 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Installment Types')</span>
         </a>
       </li>
-
-      <li class="nav-heading">إعدادات البضائع</li>
-      <li>
-        <a class="{{ $active($isRoute('products.*')) }}" href="{{ route('products.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Products')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('product_entries.*')) }}" href="{{ route('product_entries.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Product Entries')</span>
-        </a>
-      </li>
-
       <li>
         <a class="{{ $active($isRoute('transaction_types.*')) }}" href="{{ route('transaction_types.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Transaction Types')</span>
@@ -150,7 +135,7 @@
         <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Categories')</span>
         </a>
-      </li>
+      </li> --}}
     </ul>
   </li>
 </ul>

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AjaxInvestorController;
+use App\Http\Controllers\AjaxProductTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Controllers\CustomerController;
@@ -12,12 +14,11 @@ use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Setting\CategoryController;
 use App\Http\Controllers\Setting\ContractStatusController;
-use App\Http\Controllers\Setting\ContractTypeController;
 use App\Http\Controllers\Setting\InstallmentStatusController;
 use App\Http\Controllers\Setting\InstallmentTypeController;
 use App\Http\Controllers\Setting\NationalityController;
-use App\Http\Controllers\Setting\ProductController;
 use App\Http\Controllers\Setting\ProductTransactionController;
+use App\Http\Controllers\Setting\ProductTypeController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\TitleController;
 use App\Http\Controllers\Setting\TransactionStatusController;
@@ -25,6 +26,9 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
+
+
 
 
 
@@ -59,11 +63,8 @@ Route::prefix('settings')->group(function () {
     Route::resource('nationalities', NationalityController::class);
     Route::resource('titles', TitleController::class);
     Route::resource('contract_statuses', ContractStatusController::class);
-    Route::resource('contract_types', ContractTypeController::class);
     Route::resource('installment_statuses', InstallmentStatusController::class);
     Route::resource('installment_types', InstallmentTypeController::class);
-    Route::resource('products', ProductController::class);
-    Route::resource('product_entries', ProductTransactionController::class);
     Route::resource('transaction_types', TransactionTypeController::class);
     Route::resource('transaction_statuses', TransactionStatusController::class);
     Route::resource('categories', CategoryController::class);
@@ -99,6 +100,17 @@ Route::prefix('installments')->name('installments.')->group(function () {
     Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
     
 });
+
+Route::get('/investors/{investor}/cash', [AjaxInvestorController::class, 'liquidity'])
+    ->name('investors.cash');
+
+
+Route::get('/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
+    ->name('investors.liquidity'); // ← مهم الاسم
+
+
+Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])
+     ->name('product-types.available');
 
 Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');
     

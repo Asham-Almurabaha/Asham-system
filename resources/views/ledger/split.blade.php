@@ -172,18 +172,22 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddProduct">إضافة صنف</button>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddProduct">إضافة نوع</button>
                     </div>
                     <div class="card-body" id="products_wrapper">
                         @if(!empty($oldProducts))
                             @foreach($oldProducts as $i => $row)
+                                @php
+                                    // دعم كلا المفتاحين: product_type_id الأحدث و product_id القديم
+                                    $oldTypeId = $row['product_type_id'] ?? $row['product_id'] ?? null;
+                                @endphp
                                 <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
                                     <div class="col-md-8">
-                                        <label class="form-label small mb-1">الصنف</label>
-                                        <select name="products[{{ $i }}][product_id]" class="form-select">
+                                        <label class="form-label small mb-1">نوع البضاعة</label>
+                                        <select name="products[{{ $i }}][product_type_id]" class="form-select">
                                             <option value="">— اختر —</option>
                                             @foreach($products as $p)
-                                                <option value="{{ $p->id }}" @selected(($row['product_id'] ?? null)==$p->id)>{{ $p->name }}</option>
+                                                <option value="{{ $p->id }}" @selected($oldTypeId==$p->id)>{{ $p->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -199,8 +203,8 @@
                         @else
                             <div class="row g-2 product-row align-items-end">
                                 <div class="col-md-8">
-                                    <label class="form-label small mb-1">الصنف</label>
-                                    <select name="products[0][product_id]" class="form-select">
+                                    <label class="form-label small mb-1">نوع البضاعة</label>
+                                    <select name="products[0][product_type_id]" class="form-select">
                                         <option value="">— اختر —</option>
                                         @foreach($products as $p)
                                             <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -244,7 +248,7 @@
 <template id="product_row_tpl">
     <div class="row g-2 product-row align-items-end mt-2">
         <div class="col-md-8">
-            <label class="form-label small mb-1">الصنف</label>
+            <label class="form-label small mb-1">نوع البضاعة</label>
             <select class="form-select js-product-select">
                 <option value="">— اختر —</option>
                 @foreach($products as $p)
@@ -361,7 +365,7 @@
         function wireRowNames(row, index){
             const sel = row.querySelector('.js-product-select');
             const qty = row.querySelector('.js-qty-input');
-            if (sel) sel.setAttribute('name', `products[${index}][product_id]`);
+            if (sel) sel.setAttribute('name', `products[${index}][product_type_id]`);
             if (qty) qty.setAttribute('name', `products[${index}][quantity]`);
         }
 
