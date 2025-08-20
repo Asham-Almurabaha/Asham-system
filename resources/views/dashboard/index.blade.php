@@ -55,28 +55,126 @@
         .help-item i { width: 1.2rem; display: inline-block; }
         .table thead th { position: sticky; top: 0; background: #f8f9fb; z-index: 1; }
         .chart-card canvas { max-height: 280px; }
+
+        /* ===== شريط النطاق الزمني الاحترافي ===== */
+        .dr-toolbar{border:1px solid #eef2f7;border-radius:1.1rem;box-shadow:var(--soft-shadow);background:#fff}
+        .dr-toolbar .btn-range{border-radius:999px}
+        .dr-toolbar .btn-range.active{background:#0d6efd;color:#fff;border-color:#0d6efd}
+        .dr-toolbar .btn-range .dot{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;margin-inline-start:.4rem;background:currentColor;opacity:.6}
+        .dr-toolbar .chip{background:#f1f4f9;border-radius:999px;padding:.35rem .7rem;font-weight:600;color:#475569}
+        .dr-toolbar .label{font-size:.9rem;color:#6b7280}
+        .dr-toolbar .sep{width:1px;background:#eef2f7;height:32px}
     </style>
 
-    {{-- ====== فلاتر التاريخ (اختياري) ====== --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <form method="GET" action="{{ url()->current() }}" class="card-body row gy-2 gx-2 align-items-end">
-            <div class="col-6 col-md-2">
-                <label class="form-label mb-1">من</label>
-                <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm">
+    {{-- ====== شريط اختيار النطاق الزمني (بديل عن كار্ড التاريخ) ====== --}}
+    @php
+        // هنحافظ على كل البرامترات ما عدا from/to/page
+        $qsBase = request()->except(['from','to','page']);
+
+        $buildUrl = function (?string $from = null, ?string $to = null) use ($qsBase) {
+            $q = $qsBase;
+            if ($from) $q['from'] = $from;
+            if ($to)   $q['to']   = $to;
+            return url()->current() . (empty($q) ? '' : ('?' . http_build_query($q)));
+        };
+
+        $todayFrom = \Carbon\Carbon::today()->toDateString();
+        $todayTo   = \Carbon\Carbon::today()->toDateString();
+
+        $now       = \Carbon\Carbon::now();
+        $monthFrom = $now->copy()->startOfMonth()->toDateString();
+        $monthTo   = $now->copy()->endOfMonth()->toDateString();
+
+        $yearFrom  = $now->copy()->startOfYear()->toDateString();
+        $yearTo    = $now->copy()->endOfYear()->toDateString();
+
+        $rFrom = request('from');
+        $rTo   = request('to');
+
+        $isToday = ($rFrom === $todayFrom && $rTo === $todayTo);
+        $isMonth = ($rFrom === $monthFrom && $rTo === $monthTo);
+        $isYear  = ($rFrom === $yearFrom  && $rTo === $yearTo);
+        $isAll   = (!request()->filled('from') && !request()->filled('to'));
+    @endphp
+
+    <div class="dr-toolbar p-3 mb-3">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a href="{{ $buildUrl($todayFrom,$todayTo) }}"
+                   class="btn btn-outline-secondary btn-sm btn-range {{ $isToday ? 'active' : '' }}">
+                    <i class="bi bi-calendar-day me-1"></i> اليوم {!! $isToday ? '<span class="dot"></span>' : '' !!}
+                </a>
+
+                <a href="{{ $buildUrl($monthFrom,$monthTo) }}"
+                   class="btn btn-outline-secondary btn-sm btn-range {{ $isMonth ? 'active' : '' }}">
+                    <i class="bi bi-calendar3 me-1"></i> هذا الشهر {!! $isMonth ? '<span class="dot"></span>' : '' !!}
+                </a>
+
+                <a href="{{ $buildUrl($yearFrom,$yearTo) }}"
+                   class="btn btn-outline-secondary btn-sm btn-range {{ $isYear ? 'active' : '' }}">
+                    <i class="bi bi-calendar2-week me-1"></i> هذه السنة {!! $isYear ? '<span class="dot"></span>' : '' !!}
+                </a>
+
+                <a href="{{ $buildUrl(null,null) }}"
+                   class="btn btn-outline-secondary btn-sm btn-range {{ $isAll ? 'active' : '' }}">
+                    <i class="bi bi-infinity me-1"></i> الكل {!! $isAll ? '<span class="dot"></span>' : '' !!}
+                </a>
             </div>
-            <div class="col-6 col-md-2">
-                <label class="form-label mb-1">إلى</label>
-                <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm">
+
+            <div class="sep mx-2 d-none d-md-block"></div>
+
+            {{-- مدى مُخصّص --}}
+            <form method="GET" action="{{ url()->current() }}" class="d-flex flex-wrap align-items-end gap-2">
+                {{-- الحفاظ على باقي معلمات الرابط --}}
+                @foreach($qsBase as $k => $v)
+                    @if(is_array($v))
+                        @foreach($v as $vv)
+                            <input type="hidden" name="{{ $k }}[]" value="{{ e($vv) }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $k }}" value="{{ e($v) }}">
+                    @endif
+                @endforeach
+
+                <div class="label">مُخصّص:</div>
+                <div>
+                    <label class="form-label mb-1 small">من</label>
+                    <input type="date" class="form-control form-control-sm js-date" name="from" value="{{ e($rFrom) }}">
+                </div>
+                <div>
+                    <label class="form-label mb-1 small">إلى</label>
+                    <input type="date" class="form-control form-control-sm js-date" name="to" value="{{ e($rTo) }}">
+                </div>
+                <button class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i> تطبيق</button>
+                <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i> مسح</a>
+            </form>
+
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <span class="chip">
+                    <i class="bi bi-clock me-1"></i>
+                    النطاق الحالي:
+                    <strong>{{ $rFrom ? e($rFrom) : '—' }} — {{ $rTo ? e($rTo) : '—' }}</strong>
+                </span>
+                <span class="text-muted small d-none d-md-inline">آخر تحديث: {{ now()->format('Y-m-d H:i') }}</span>
             </div>
-            <div class="col-12 col-md-3">
-                <button class="btn btn-primary btn-sm">تحديث</button>
-                <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm">مسح</a>
-            </div>
-            <div class="col-12 col-md-5 text-end small text-muted">
-                آخر تحديث: {{ now()->format('Y-m-d H:i') }}
-            </div>
-        </form>
+        </div>
     </div>
+
+    {{-- ====== تطبيع المتغيّرات لتفادي أخطاء null ====== --}}
+    @php
+        $invTotals       = (object) ($invTotals      ?? ['net' => 0]);
+        $officeTotals    = (object) ($officeTotals   ?? ['net' => 0]);
+
+        $invByInvestor   = collect($invByInvestor    ?? []);
+        $statuses        = collect($statuses         ?? []);
+
+        $timeSeries      = (array)  ($timeSeries     ?? ['labels'=>[], 'in'=>[], 'out'=>[], 'net'=>[]]);
+        $monthlySeries   = (array)  ($monthlySeries  ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
+        $distribution    = (array)  ($distribution   ?? ['labels'=>['بنوك','خزن'], 'data'=>[0,0]]);
+
+        $bankAccountsSummary = collect($bankAccountsSummary ?? []);
+        $safesSummary        = collect($safesSummary       ?? []);
+    @endphp
 
     {{-- ====== HERO ====== --}}
     <div class="dashboard-hero mb-3">
@@ -112,14 +210,12 @@
     @php
         $invNet  = (float)($invTotals->net ?? 0);
         $offNet  = (float)($officeTotals->net ?? 0);
-        $invCls  = $invNet >= 0 ? 'text-pos' : 'text-neg';
-        $offCls  = $offNet >= 0 ? 'text-pos' : 'text-neg';
 
         // تقديرات آمنة لو مش متوفرة من الكنترولر:
         $kpi = (object) [
-            'entries_count' => (int)($entriesCount ?? ($contractsTotal ?? 0)),
-            'avg_amount'    => (float)($avgAmount ?? 0),
-            'active_investors' => (int)($activeInvestors ?? ($invByInvestor->count() ?? 0)),
+            'entries_count'    => (int)($entriesCount ?? ($contractsTotal ?? 0)),
+            'avg_amount'       => (float)($avgAmount ?? 0),
+            'active_investors' => (int)($activeInvestors ?? $invByInvestor->count()),
         ];
     @endphp
 
@@ -166,7 +262,7 @@
         </div>
     </div>
 
-    {{-- ====== الحالات + توزيع (كما هو) ====== --}}
+    {{-- ====== الحالات + توزيع ====== --}}
     <div class="row g-3 mt-1">
         <div class="col-lg-6">
             <div class="section-card card h-100 border-0">
@@ -219,18 +315,12 @@
 
     {{-- ====== تحليلات إضافية ====== --}}
     @php
-        // بيانات اختيارية آمنة للرسم
-        $ts = (object)($timeSeries ?? ['labels'=>[], 'in'=>[], 'out'=>[], 'net'=>[]]);
-        $ms = (object)($monthlySeries ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
-        $dist = (object)($distribution ?? ['labels'=>['بنوك','خزن'], 'data'=>[(float)($banksTotal ?? 0), (float)($safesTotal ?? 0)]]);
         // أفضل الأرصدة من ملخص البنوك والخزن (أعلى 7)
-        $banksColl = collect($bankAccountsSummary ?? []);
-        $safesColl = collect($safesSummary ?? []);
-        $topBalances = $banksColl->map(function($b){
+        $topBalances = $bankAccountsSummary->map(function($b){
             $opening=(float)($b->opening_balance ?? 0); $in=(float)($b->inflow ?? 0); $out=(float)($b->outflow ?? 0);
             return ['label'=>$b->name ?? ('#'.$b->id), 'bal'=>$opening + ($in-$out)];
         })->merge(
-            $safesColl->map(function($s){
+            $safesSummary->map(function($s){
                 $opening=(float)($s->opening_balance ?? 0); $in=(float)($s->inflow ?? 0); $out=(float)($s->outflow ?? 0);
                 return ['label'=>$s->name ?? ('#'.$s->id), 'bal'=>$opening + ($in-$out)];
             })
@@ -293,7 +383,7 @@
         </div>
     </div>
 
-    {{-- ====== أعلى المستثمرين (كما هو) ====== --}}
+    {{-- ====== أعلى المستثمرين ====== --}}
     <div class="row g-3 mt-1">
         <div class="col-12">
             <div class="section-card card border-0">
@@ -501,10 +591,10 @@ document.addEventListener('DOMContentLoaded', function(){
     (function(){
         const el = document.getElementById('cashLineChart');
         if (!el) return;
-        const labels = @json(($timeSeries['labels'] ?? ($timeSeries->labels ?? [])));
-        const inflow = @json(($timeSeries['in']     ?? ($timeSeries->in     ?? [])));
-        const outflow= @json(($timeSeries['out']    ?? ($timeSeries->out    ?? [])));
-        const net    = @json(($timeSeries['net']    ?? ($timeSeries->net    ?? [])));
+        const labels = @json(($timeSeries['labels'] ?? ($timeSeries['labels'] ?? [])));
+        const inflow = @json(($timeSeries['in']     ?? ($timeSeries['in']     ?? [])));
+        const outflow= @json(($timeSeries['out']    ?? ($timeSeries['out']    ?? [])));
+        const net    = @json(($timeSeries['net']    ?? ($timeSeries['net']    ?? [])));
         if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات يومية.</div>'; return; }
         new Chart(el, {
             type: 'line',
@@ -529,9 +619,9 @@ document.addEventListener('DOMContentLoaded', function(){
     (function(){
         const el = document.getElementById('monthlyBarChart');
         if (!el) return;
-        const labels = @json(($monthlySeries['labels'] ?? ($monthlySeries->labels ?? [])));
-        const inflow = @json(($monthlySeries['in']     ?? ($monthlySeries->in     ?? [])));
-        const outflow= @json(($monthlySeries['out']    ?? ($monthlySeries->out    ?? [])));
+        const labels = @json(($monthlySeries['labels'] ?? ($monthlySeries['labels'] ?? [])));
+        const inflow = @json(($monthlySeries['in']     ?? ($monthlySeries['in']     ?? [])));
+        const outflow= @json(($monthlySeries['out']    ?? ($monthlySeries['out']    ?? [])));
         if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات شهرية.</div>'; return; }
         new Chart(el, {
             type: 'bar',
@@ -554,8 +644,8 @@ document.addEventListener('DOMContentLoaded', function(){
     (function(){
         const el = document.getElementById('acctDistChart');
         if (!el) return;
-        const labels = @json(($distribution['labels'] ?? ($distribution->labels ?? ['بنوك','خزن'])));
-        const data   = @json(($distribution['data']   ?? ($distribution->data   ?? [0,0])));
+        const labels = @json(($distribution['labels'] ?? ($distribution['labels'] ?? ['بنوك','خزن'])));
+        const data   = @json(($distribution['data']   ?? ($distribution['data']   ?? [0,0])));
         if (!data.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات توزيع.</div>'; return; }
         new Chart(el, {
             type: 'doughnut',

@@ -213,7 +213,7 @@
     </div>
 
     {{-- ====== تفصيل المجاميع المالية (نشط) ====== --}}
-    <div class="row g-3 mb-3">
+    {{-- <div class="row g-3 mb-3">
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-1">
@@ -262,7 +262,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 
         {{-- ====== تفاصيل المستثمر (مع الصور داخل التفاصيل) ====== --}}
     <div class="card border-0 shadow-sm mb-3">

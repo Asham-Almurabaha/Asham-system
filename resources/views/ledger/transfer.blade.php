@@ -51,12 +51,18 @@
                 <input type="hidden" name="from_type" id="from_type">
                 <input type="hidden" name="from_bank_account_id" id="from_bank_account_id" value="{{ old('from_bank_account_id') }}">
                 <input type="hidden" name="from_safe_id"         id="from_safe_id"         value="{{ old('from_safe_id') }}">
+                {{-- 👇 عرض المتاح في المصدر --}}
+                <div class="form-text mt-1">
+                    <span class="text-muted">المتاح بالمصدر: </span>
+                    <strong id="fromAvailValue">—</strong>
+                    <span id="fromAvailLoading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                </div>
                 @error('from_bank_account_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 @error('from_safe_id')         <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
             {{-- زر تبديل --}}
-            <div class="col-md-2 d-flex align-items-end justify-content-center">
+            <div class="col-md-2 d-flex align-items-center justify-content-center">
                 <button type="button" class="btn btn-outline-secondary" id="btnSwap" title="تبديل المصدر والوجهة">⇄</button>
             </div>
 
@@ -86,7 +92,12 @@
             {{-- المبلغ + التاريخ --}}
             <div class="col-md-6">
                 <label class="form-label" for="amount">المبلغ</label>
-                <input type="number" step="0.01" min="0.01" name="amount" id="amount" class="form-control" value="{{ old('amount') }}" required>
+                <input
+                    type="number" step="0.01" min="0"
+                    name="amount" id="amount"
+                    class="form-control"
+                    value="{{ old('amount', 0) }}" required>
+                <div class="invalid-feedback">المبلغ يتجاوز المتاح في الحساب المصدر.</div>
                 @error('amount') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
@@ -108,6 +119,11 @@
                     تنفيذ التحويل
                 </button>
                 <a href="{{ route('ledger.index') }}" class="btn btn-secondary">إلغاء</a>
+
+                <div class="ms-auto d-flex gap-2">
+                    <a href="{{ route('ledger.create') }}" class="btn btn-outline-success">إضافة قيد</a>
+                    <a href="{{ route('ledger.split.create') }}" class="btn btn-outline-secondary">قيد مُجزّأ</a>
+                </div>
             </div>
         </form>
     </div>
@@ -129,6 +145,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnTransfer= document.getElementById('btnTransfer');
     const btnSpinner = document.getElementById('btnSpinner');
     const btnSwap    = document.getElementById('btnSwap');
+
+    // المبلغ + المتاح (جديد)
+    const amount           = document.getElementById('amount');
+    const fromAvailValue   = document.getElementById('fromAvailValue');
+    const fromAvailLoading = document.getElementById('fromAvailLoading');
+    let fromAvail = null; // رقم خام
 
     function parsePick(val){
         if(!val) return {type:'', id:''};
@@ -154,7 +176,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // تعطيل الخيار المختار في القائمة الأخرى (متبادل)
     function syncMutualDisable(){
-        // فعّل كل الخيارات أولاً (مع ترك placeholder disabled)
         [...fromPicker.options].forEach(o => { if (o.value) o.disabled = false; });
         [...toPicker.options].forEach(o => { if (o.value) o.disabled = false; });
 
@@ -164,15 +185,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (fv){
             const tOpt = [...toPicker.options].find(o => o.value === fv);
             if (tOpt) tOpt.disabled = true;
-            // لو الوجهة كانت مساوية للمصدر، صفّر الوجهة
             if (tv === fv){ toPicker.value = ''; sinkPickToHidden('to'); }
         }
         if (tv){
             const fOpt = [...fromPicker.options].find(o => o.value === tv);
             if (fOpt) fOpt.disabled = true;
-            // لو المصدر كان مساوي للوجهة، صفّر المصدر
             if (fv === tv){ fromPicker.value = ''; sinkPickToHidden('from'); }
         }
+
+        // المبلغ يتفعّل فقط بعد اختيار المصدر والوجهة
+        enforceAmountLock();
     }
 
     function sameAccount(){
@@ -186,18 +208,101 @@ document.addEventListener('DOMContentLoaded', function () {
         sinkPickToHidden('from'); 
         sinkPickToHidden('to');
         syncMutualDisable();
+        refreshFromAvailability(); // المصدر اتغيّر
     }
 
-    fromPicker.addEventListener('change', ()=>{ sinkPickToHidden('from'); syncMutualDisable(); });
-    toPicker.addEventListener('change',   ()=>{ sinkPickToHidden('to');   syncMutualDisable(); });
+    // ====== جديد: قفل/فتح حقل المبلغ لحين اختيار الحسابات
+    function enforceAmountLock(){
+        const ready = !!fromPicker.value && !!toPicker.value;
+        amount.readOnly = !ready;
+        amount.classList.toggle('bg-light', !ready);
+        if (!ready){
+            amount.value = '0';
+            amount.setCustomValidity('');
+            amount.classList.remove('is-invalid');
+        }
+    }
+
+    // ====== جديد: جلب المتاح من المصدر + منع تجاوز المتاح
+    async function refreshFromAvailability(){
+        fromAvail = null;
+        fromAvailValue.textContent = '—';
+        amount.removeAttribute('max');
+        amount.setCustomValidity('');
+        amount.classList.remove('is-invalid');
+
+        const {type, id} = parsePick(fromPicker.value);
+        if (!type || !id){ validateAmount(); return; }
+
+        try {
+            fromAvailLoading.classList.remove('d-none');
+            const url = `{{ route('ajax.accounts.availability') }}?account_type=${encodeURIComponent(type)}&account_id=${encodeURIComponent(id)}`;
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error('fetch failed');
+            const data = await res.json();
+            if (data && data.success){
+                fromAvail = Number(data.available);
+                const s = (data.available_formatted ?? fromAvail.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+                fromAvailValue.textContent = s;
+                // التحويل دايمًا سحب من المصدر => طبّق الحد الأقصى
+                if (Number.isFinite(fromAvail)) amount.setAttribute('max', String(fromAvail));
+            } else {
+                fromAvail = null;
+            }
+        } catch(e){
+            console.error(e);
+            fromAvail = null;
+        } finally {
+            fromAvailLoading.classList.add('d-none');
+            validateAmount();
+        }
+    }
+
+    function validateAmount(){
+        const ready = !!fromPicker.value && !!toPicker.value;
+        if (!ready){
+            amount.setCustomValidity('');
+            amount.classList.remove('is-invalid');
+            return;
+        }
+        const val = parseFloat(amount.value || '0');
+        // تجاوز المتاح؟
+        if (fromAvail !== null && Number.isFinite(val) && val > fromAvail + 1e-9){
+            amount.setCustomValidity('المبلغ يتجاوز المتاح في الحساب المصدر');
+        } else {
+            amount.setCustomValidity('');
+        }
+        amount.classList.toggle('is-invalid', !!amount.validationMessage);
+    }
+
+    fromPicker.addEventListener('change', ()=>{
+        sinkPickToHidden('from'); 
+        syncMutualDisable();
+        refreshFromAvailability();
+    });
+    toPicker.addEventListener('change',   ()=>{
+        sinkPickToHidden('to');   
+        syncMutualDisable();
+        // مجرد فتح/قفل المبلغ؛ المتاح يتحدد من المصدر فقط
+        validateAmount();
+    });
     btnSwap.addEventListener('click', swap);
 
+    amount.addEventListener('input', validateAmount);
+
     form.addEventListener('submit', function (e) {
-        // حارس إضافي (ما المفروض يحصل مع التعطيل، بس للاحتياط)
         if (sameAccount()) {
             e.preventDefault();
             alert('لا يمكن التحويل لنفس الحساب.');
             return false;
+        }
+        // تأكيد عدم تجاوز المتاح
+        validateAmount();
+        if (!form.checkValidity()){
+            e.preventDefault();
+            e.stopPropagation();
+            amount.reportValidity();
+            return;
         }
         btnTransfer.disabled = true;
         btnSpinner.classList.remove('d-none');
@@ -206,12 +311,16 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // init
-    // احترم old() الممرّر من السيرفر
     if ('{{ $oldFrom }}') fromPicker.value = '{{ $oldFrom }}';
     if ('{{ $oldTo }}')   toPicker.value   = '{{ $oldTo }}';
     sinkPickToHidden('from'); 
     sinkPickToHidden('to');
     syncMutualDisable();
+    refreshFromAvailability();
+
+    // اجعل القيمة الافتراضية 0 دائمًا لو مش موجودة
+    if (!amount.value || isNaN(parseFloat(amount.value))) amount.value = '0';
+    enforceAmountLock();
 });
 </script>
 @endpush

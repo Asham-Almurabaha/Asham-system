@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\ContractStatus;
 use App\Models\Investor;
-use App\Models\LedgerEntry;
 use App\Models\Nationality;
 use App\Models\Title;
+use App\Services\InstallmentsMonthlyService;
 use App\Services\InvestorDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class InvestorController extends Controller
 {
-    public function index(Request $request)
+     public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
     {
         // ====== الاستعلام الأساسي مع الفلاتر ======
         $query = Investor::query()
@@ -29,11 +29,14 @@ class InvestorController extends Controller
 
         $investors = $query->paginate(10)->withQueryString();
 
-        // ====== كروت عامة ======
+        // ====== كروت عامة (إجمالي كل المستثمرين) ======
         $investorsTotalAll = Investor::count();
 
-        // تعريف حالات منتهية/مغلقة لاستبعادها عند حساب "نشط"
-        $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement','Closed','Inactive'];
+        // تعريف حالات منتهية/مغلقة لاستبعادها عند حساب "نشِط"
+        $endedStatusNames = [
+            'منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر',
+            'Completed','Early Settlement','Closed','Inactive'
+        ];
 
         // IDs للحالات لو فيه جدول statuses
         $endedStatusIds = [];
@@ -43,15 +46,15 @@ class InvestorController extends Controller
             $endedStatusIds = ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all();
         }
 
-        // حساب النشطين:
-        // 1) من جدول investments إن وُجد
+        // ====== حساب عدد المستثمرين النشطين على مستوى النظام ======
         if (Schema::hasTable('investments') && Schema::hasColumn('investments','investor_id')) {
-            // أعمدة محتملة للحالة
+            // محاولة تعرّف اسم عمود الحالة
             $statusIdCol = null; foreach (['status_id','investment_status_id','state_id'] as $c){ if(Schema::hasColumn('investments',$c)){ $statusIdCol=$c; break; } }
             $statusNmCol = null; foreach (['status','state'] as $c){ if(Schema::hasColumn('investments',$c)){ $statusNmCol=$c; break; } }
 
             $activeInvestorsTotalAll = Investor::whereExists(function($sub) use($statusIdCol,$statusNmCol,$endedStatusIds,$endedStatusNames){
                 $sub->from('investments')
+                    ->selectRaw('1')
                     ->whereColumn('investors.id','investments.investor_id');
 
                 if ($statusIdCol && !empty($endedStatusIds)) {
@@ -62,29 +65,33 @@ class InvestorController extends Controller
                     $sub->where('is_closed', 0);
                 } elseif (Schema::hasColumn('investments','closed_at')) {
                     $sub->whereNull('closed_at');
-                } else {
-                    $sub->whereRaw('1=1'); // أي استثمار يعتبر نشط
                 }
             })->count();
-
-        // 2) بدائل منطقية عند عدم وجود investments:
         } else {
-            // اعتبره نشط لو عنده صورة عقد أو نسبة مكتب > 0 (كبديل معقول)
+            // بديل منطقي لو ما فيش جدول investments
             $activeInvestorsTotalAll = Investor::query()
                 ->where(function($q){
+                    $added = false;
                     if (Schema::hasColumn('investors','contract_image')) {
                         $q->whereNotNull('contract_image')->where('contract_image','!=','');
+                        $added = true;
                     }
                     if (Schema::hasColumn('investors','office_share_percentage')) {
-                        $q->orWhere('office_share_percentage','>',0);
+                        $added ? $q->orWhere('office_share_percentage','>',0)
+                               : $q->where('office_share_percentage','>',0);
                     }
                 })
                 ->count();
         }
 
-        // أرقام إضافية
         $newInvestorsThisMonthAll = Investor::whereBetween('created_at',[now()->startOfMonth(), now()])->count();
         $newInvestorsThisWeekAll  = Investor::whereBetween('created_at',[now()->startOfWeek(),  now()])->count();
+
+        // ====== إجمالي أقساط هذا الشهر (لكل المستثمرين) ======
+        // يستثني "مؤجل" و"معتذر" افتراضياً. تقدر تغيّر الفترة عبر ?m=2&y=2025
+        $m = $request->integer('m');   // 1..12
+        $y = $request->integer('y');   // YYYY
+        $installmentsMonthly = $installmentsSvc->build($m ?: null, $y ?: null, ['مؤجل','معتذر']);
 
         // للفلاتر
         $nationalities = class_exists(Nationality::class)
@@ -101,7 +108,8 @@ class InvestorController extends Controller
             'newInvestorsThisMonthAll',
             'newInvestorsThisWeekAll',
             'nationalities',
-            'titles'
+            'titles',
+            'installmentsMonthly'
         ));
     }
 

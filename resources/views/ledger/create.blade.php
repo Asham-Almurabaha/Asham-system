@@ -34,7 +34,7 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form action="{{ route('ledger.store') }}" method="POST" class="row g-3 mt-1" id="createForm">
+        <form action="{{ route('ledger.store') }}" method="POST" class="row g-3 mt-1" id="createForm" novalidate>
             @csrf
 
             <div class="row">
@@ -68,6 +68,7 @@
                             data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (مستثمر)</option>
                         @foreach(($statusesByCategory['investors'] ?? []) as $st)
+                            @continue($st->transaction_type_id == 3) {{-- إخفاء التحويل --}}
                             <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
                         @endforeach
                     </select>
@@ -76,6 +77,7 @@
                             data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (المكتب)</option>
                         @foreach(($statusesByCategory['office'] ?? []) as $st)
+                            @continue($st->transaction_type_id == 3) {{-- إخفاء التحويل --}}
                             <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
                         @endforeach
                     </select>
@@ -88,10 +90,10 @@
                 </div>
             </div>
 
-            {{-- مُلتقط الحساب (يجمع البنك والخزنة) + حقول مخفية --}}
+            {{-- مُلتقط الحساب + عرض المتاح --}}
             <div class="col-md-4 mt-0">
                 <label class="form-label" for="account_picker">الحساب</label>
-                <select id="account_picker" class="form-select" required>
+                <select id="account_picker" class="form-select" required disabled>
                     <option value="" disabled {{ $oldAccountPicker ? '' : 'selected' }}>اختر حسابًا</option>
                     <optgroup label="الحسابات البنكية">
                         @foreach ($banks as $bank)
@@ -108,6 +110,12 @@
                 <input type="hidden" name="bank_account_id" id="bank_account_id" value="{{ old('bank_account_id') }}">
                 <input type="hidden" name="safe_id"         id="safe_id"         value="{{ old('safe_id') }}">
 
+                <div id="accountAvailability" class="form-text mt-1">
+                    <span class="text-muted">المتاح في الحساب: </span>
+                    <strong id="availValue">—</strong>
+                    <span id="availLoading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                </div>
+
                 @error('bank_account_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 @error('safe_id')         <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
@@ -115,7 +123,8 @@
             {{-- المبلغ + التاريخ --}}
             <div class="col-md-4 mt-0">
                 <label class="form-label" for="amount">المبلغ</label>
-                <input type="number" step="0.01" min="0.01" name="amount" id="amount" class="form-control" value="{{ old('amount') }}" required>
+                <input type="number" step="0.01" min="0" name="amount" id="amount" class="form-control" value="{{ old('amount', '0') }}" required>
+                <div class="invalid-feedback">المبلغ يتجاوز المتاح في الحساب.</div>
                 @error('amount') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
@@ -125,7 +134,7 @@
                 @error('transaction_date') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
-            {{-- ====== قسم البضائع (يظهر تلقائيًا لحالات شراء/بيع بضائع) ====== --}}
+            {{-- ====== قسم البضائع ====== --}}
             <div class="col-12" id="goods_section" style="display:none;">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -135,10 +144,7 @@
                     <div class="card-body" id="products_wrapper">
                         @if(!empty($oldProducts))
                             @foreach($oldProducts as $i => $row)
-                                @php
-                                    // دعم كلا المفتاحين: product_type_id الأحدث و product_id القديم
-                                    $oldTypeId = $row['product_type_id'] ?? $row['product_id'] ?? null;
-                                @endphp
+                                @php $oldTypeId = $row['product_type_id'] ?? $row['product_id'] ?? null; @endphp
                                 <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
                                     <div class="col-md-8">
                                         <label class="form-label small mb-1">نوع البضاعة</label>
@@ -245,6 +251,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const bankHidden = document.getElementById('bank_account_id');
     const safeHidden = document.getElementById('safe_id');
 
+    const amountInput = document.getElementById('amount');
+    const availSpan = document.getElementById('availValue');
+    const availLoading = document.getElementById('availLoading');
+
     const btnSave = document.getElementById('btnSave');
     const btnSpinner = document.getElementById('btnSpinner');
     const form = document.getElementById('createForm');
@@ -268,7 +278,10 @@ document.addEventListener('DOMContentLoaded', function () {
         statusInv.hidden = !(catSel.value === 'investors');
         statusOff.hidden = !(catSel.value === 'office');
         syncStatusHiddenAndBadge();
-        toggleGoodsSection(); // تحديث عرض/إخفاء البضائع
+        toggleGoodsSection();
+        applyMaxByDirection();
+        validateAmount();
+        enforceStatusBeforeAccount();
     }
 
     function syncStatusHiddenAndBadge(){
@@ -281,6 +294,23 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (t==='2'){ text='خارج (سحب)'; cls='bg-danger'; }
         else if (t==='3'){ text='تحويل'; cls='bg-warning text-dark'; }
         dirBadge.textContent = text; dirBadge.className = 'badge rounded-pill ' + cls;
+        enforceStatusBeforeAccount();
+    }
+
+    function clearAccountSelection(){
+        accountPicker.value = '';
+        bankHidden.value = '';
+        safeHidden.value = '';
+        availSpan.textContent = '—';
+        amountInput.removeAttribute('max');
+    }
+
+    function enforceStatusBeforeAccount(){
+        const hasStatus = !!statusHidden.value;
+        accountPicker.disabled = !hasStatus;
+        if (!hasStatus){
+            clearAccountSelection();
+        }
     }
 
     function syncAccountHidden(){
@@ -291,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (type === 'safe'){ safeHidden.value = id; bankHidden.value = ''; }
     }
 
-    // ====== عرض/إخفاء قسم البضائع حسب الحالة المختارة
+    // ====== عرض/إخفاء قسم البضائع
     function selectedStatusId(){
         const sel = currentStatusSelect();
         const opt = sel.options[sel.selectedIndex];
@@ -317,53 +347,164 @@ document.addEventListener('DOMContentLoaded', function () {
             return m ? Number(m[1]) : -1;
         })) + 1 : 0;
     }
-
     function wireRowNames(row, index){
         const sel = row.querySelector('.js-product-select');
         const qty = row.querySelector('.js-qty-input');
         if (sel) sel.setAttribute('name', `products[${index}][product_type_id]`);
         if (qty) qty.setAttribute('name', `products[${index}][quantity]`);
     }
-
     function addProductRow(){
         const frag = rowTpl.content.cloneNode(true);
         const row = frag.querySelector('.product-row');
         wireRowNames(row, nextProductIndex());
         productsWrapper.appendChild(frag);
     }
-
     function handleRemoveClick(e){
         if (!e.target.classList.contains('js-remove-product')) return;
         const row = e.target.closest('.product-row');
         if (!row) return;
-        // سيب صف واحد على الأقل
         if (productsWrapper.querySelectorAll('.product-row').length > 1){
             row.remove();
         }
     }
 
+    // ====== المتاح في الحساب + منع السحب بأكثر من المتاح
+    let accountAvail = null; // رقم خام (float)
+
+    function currentDirectionType(){
+        const sel = currentStatusSelect();
+        const opt = sel.options[sel.selectedIndex];
+        return opt ? (opt.dataset.type || '') : '';
+    }
+
+    function applyMaxByDirection(){
+        const t = currentDirectionType();
+        if (t === '2' && accountAvail !== null){ // سحب فقط
+            amountInput.setAttribute('max', String(accountAvail));
+        } else {
+            amountInput.removeAttribute('max');
+        }
+    }
+
+    function validateAmount(){
+        const t = currentDirectionType();
+        const val = parseFloat(amountInput.value || '0');
+        if (t === '2' && accountAvail !== null && val > accountAvail + 1e-9){
+            amountInput.setCustomValidity('المبلغ يتجاوز المتاح في الحساب');
+        } else {
+            amountInput.setCustomValidity('');
+        }
+        amountInput.classList.toggle('is-invalid', !!amountInput.validationMessage);
+    }
+
+    async function refreshAvailability(){
+        const val = accountPicker.value || '';
+        accountAvail = null;
+        availSpan.textContent = '—';
+        amountInput.removeAttribute('max');
+
+        if (!val){ validateAmount(); return; }
+
+        const [type, id] = val.split(':');
+        if (!type || !id){ validateAmount(); return; }
+
+        availLoading.classList.remove('d-none');
+        try {
+            const url = `{{ route('ajax.accounts.availability') }}?account_type=${encodeURIComponent(type)}&account_id=${encodeURIComponent(id)}`;
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+
+            if (!res.ok) {
+                console.error('Availability fetch failed:', res.status, res.statusText);
+                accountAvail = null;
+                availSpan.textContent = '—';
+                return;
+            }
+
+            const data = await res.json();
+            if (data && data.success){
+                accountAvail = Number(data.available);
+                const s = (data.available_formatted ?? accountAvail.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+                availSpan.textContent = s;
+                applyMaxByDirection();
+            } else {
+                accountAvail = null;
+                availSpan.textContent = '—';
+            }
+        } catch (e){
+            console.error('Availability fetch error:', e);
+            accountAvail = null;
+            availSpan.textContent = '—';
+        } finally {
+            availLoading.classList.add('d-none');
+            validateAmount();
+        }
+    }
+
     // Events
     catSel.addEventListener('change', syncCategoryUI);
-    statusInv.addEventListener('change', function(){ syncStatusHiddenAndBadge(); toggleGoodsSection(); });
-    statusOff.addEventListener('change', function(){ syncStatusHiddenAndBadge(); toggleGoodsSection(); });
-    accountPicker.addEventListener('change', syncAccountHidden);
+
+    statusInv.addEventListener('change', function(){
+        syncStatusHiddenAndBadge();
+        toggleGoodsSection();
+        applyMaxByDirection();
+        validateAmount();
+        clearAccountSelection(); // يلزم اختيار الحساب بعد تغيير الحالة
+    });
+
+    statusOff.addEventListener('change', function(){
+        syncStatusHiddenAndBadge();
+        toggleGoodsSection();
+        applyMaxByDirection();
+        validateAmount();
+        clearAccountSelection(); // يلزم اختيار الحساب بعد تغيير الحالة
+    });
+
+    accountPicker.addEventListener('change', function(){
+        syncAccountHidden();
+        refreshAvailability();
+    });
 
     if (btnAddProduct) btnAddProduct.addEventListener('click', addProductRow);
     productsWrapper.addEventListener('click', handleRemoveClick);
 
-    form.addEventListener('submit', function(){
-        btnSave.disabled = true;
-        btnSpinner.classList.remove('d-none');
+    amountInput.addEventListener('input', validateAmount);
+
+    form.addEventListener('submit', function(e){
+        // الحالة أولاً
+        if (!statusHidden.value){
+            e.preventDefault();
+            e.stopPropagation();
+            alert('يرجى اختيار الحالة أولاً.');
+            return;
+        }
+
         // تأكيد المزامنة قبل الإرسال
         syncStatusHiddenAndBadge();
         syncAccountHidden();
+        applyMaxByDirection();
+        validateAmount();
+
+        if (!form.checkValidity()){
+            e.preventDefault();
+            e.stopPropagation();
+            amountInput.reportValidity();
+            return;
+        }
+
+        btnSave.disabled = true;
+        btnSpinner.classList.remove('d-none');
     });
 
     // init
     syncCategoryUI();
     syncStatusHiddenAndBadge();
     syncAccountHidden();
-    toggleGoodsSection();
+    // المبلغ افتراضي 0
+    if (!amountInput.value || isNaN(parseFloat(amountInput.value))) {
+        amountInput.value = '0';
+    }
+    enforceStatusBeforeAccount();
+    refreshAvailability(); // في حال فيه حساب مختار من old()
 });
 </script>
 @endpush

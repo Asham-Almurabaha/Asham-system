@@ -161,6 +161,7 @@ class LedgerController extends Controller
     }
 
 
+
     public function create()
     {
         $investors = Investor::orderBy('name')->get();
@@ -168,8 +169,12 @@ class LedgerController extends Controller
         $safes     = Safe::orderBy('name')->get();
 
         $statusesByCategory = [
-            'investors' => $this->statusesForCategory($this->CAT_INVESTORS),
-            'office'    => $this->statusesForCategory($this->CAT_OFFICE),
+            'investors' => $this->statusesForCategory($this->CAT_INVESTORS)
+                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->values(),
+            'office'    => $this->statusesForCategory($this->CAT_OFFICE)
+                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->values(),
         ];
 
         // ✅ أنواع البضائع (بدلاً من products)
@@ -445,8 +450,12 @@ class LedgerController extends Controller
         $safes     = Safe::orderBy('name')->get();
 
         $statusesByCategory = [
-            'investors' => $this->statusesForCategory($this->CAT_INVESTORS),
-            'office'    => $this->statusesForCategory($this->CAT_OFFICE),
+            'investors' => $this->statusesForCategory($this->CAT_INVESTORS)
+                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->values(),
+            'office'    => $this->statusesForCategory($this->CAT_OFFICE)
+                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->values(),
         ];
 
         // ✅ أنواع البضائع

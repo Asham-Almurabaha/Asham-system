@@ -207,11 +207,11 @@
                             </td>
                             <td class="text-nowrap">
                                 <a href="{{ route('guarantors.show', $guarantor) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
-                                <a href="{{ route('guarantors.edit', $guarantor) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
+                                {{-- <a href="{{ route('guarantors.edit', $guarantor) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
                                 <form action="{{ route('guarantors.destroy', $guarantor) }}" method="POST" class="d-inline" onsubmit="return confirm('حذف هذا الكفيل؟');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm">حذف</button>
-                                </form>
+                                </form> --}}
                             </td>
                         </tr>
                     @empty

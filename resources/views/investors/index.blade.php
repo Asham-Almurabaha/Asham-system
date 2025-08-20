@@ -14,6 +14,7 @@
 </div>
 
 @php
+    // ===== أرقام عامة =====
     $allTotal    = (int)($investorsTotalAll ?? 0);
     $allActive   = (int)($activeInvestorsTotalAll ?? 0);
     $allInactive = max($allTotal - $allActive, 0);
@@ -23,6 +24,22 @@
 
     $newThisMonthAll = (int)($newInvestorsThisMonthAll ?? 0);
     $newThisWeekAll  = (int)($newInvestorsThisWeekAll  ?? 0);
+
+    // ===== ملخص أقساط الشهر (من InstallmentsMonthlyService) =====
+    $monthly   = (array)($installmentsMonthly ?? []);
+    $totals    = (array)($monthly['totals'] ?? []);
+    $dueSum    = (float)($totals['due'] ?? 0);
+    $paidSum   = (float)($totals['paid'] ?? 0);
+    $remainSum = (float)($totals['remaining'] ?? max($dueSum - $paidSum, 0));
+    $dueCount  = (int)  ($totals['count'] ?? 0);
+    $paidPct2  = $dueSum > 0 ? round(($paidSum / $dueSum) * 100, 1) : 0;
+
+    $monthLabel       = (string)($monthly['month_label'] ?? now()->format('Y-m'));
+    $excludedStatuses = (array)($monthly['excluded_status_names'] ?? ['مؤجل','معتذر']);
+    $excludedStatusesTx = count($excludedStatuses) ? implode('، ', $excludedStatuses) : '—';
+
+    $mVal = (int)($monthly['month'] ?? now()->month);
+    $yVal = (int)($monthly['year']  ?? now()->year);
 @endphp
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -96,6 +113,83 @@
                     <div class="subnote">مستثمرون جدد هذا الشهر</div>
                     <div class="kpi-value fw-bold">{{ number_format($newThisMonthAll) }}</div>
                     <div class="subnote">هذا الأسبوع: {{ number_format($newThisWeekAll) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ====== ملخص أقساط هذا الشهر (كل المستثمرين) ====== --}}
+<div class="row g-4 mb-4" dir="rtl">
+    <div class="col-12 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <h6 class="mb-0">ملخص أقساط هذا الشهر <span class="text-muted">({{ $monthLabel }})</span></h6>
+            <span class="subnote"><i class="bi bi-filter"></i> يستثني الحالات: {{ $excludedStatusesTx }}</span>
+        </div>
+
+        {{-- اختيار سريع للشهر/السنة --}}
+        <form action="{{ route('investors.index') }}" method="GET" class="d-flex align-items-center gap-2">
+            {{-- الحفاظ على باراميترات البحث الحالية --}}
+            @foreach(request()->except(['m','y','page']) as $k => $v)
+                @if(is_array($v))
+                    @foreach($v as $vv)
+                        <input type="hidden" name="{{ $k }}[]" value="{{ $vv }}">
+                    @endforeach
+                @else
+                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                @endif
+            @endforeach
+
+            <input type="number" name="m" min="1" max="12" class="form-control form-control-sm" style="width:86px" value="{{ request('m', $mVal) }}" placeholder="شهر">
+            <input type="number" name="y" min="2000" max="2100" class="form-control form-control-sm" style="width:92px" value="{{ request('y', $yVal) }}" placeholder="سنة">
+            <button class="btn btn-outline-primary btn-sm">تحديث</button>
+        </form>
+    </div>
+
+    {{-- بطاقات الأقساط العامة --}}
+    <div class="col-12 col-md-3">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-journal-check fs-4 text-primary"></i></div>
+                <div>
+                    <div class="subnote">عدد الأقساط المستحقة</div>
+                    <div class="kpi-value fw-bold">{{ number_format($dueCount) }}</div>
+                    <div class="subnote">هذا الشهر</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                <div>
+                    <div class="subnote">إجمالي المستحق</div>
+                    <div class="kpi-value fw-bold">{{ number_format($dueSum, 2) }}</div>
+                    <div class="subnote">ريـال</div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <div class="progress bar-8">
+                    <div class="progress-bar" style="width: {{ $paidPct2 }}%" title="نسبة المدفوع"></div>
+                </div>
+                <div class="d-flex justify-content-between subnote mt-1">
+                    <span>مدفوع: {{ number_format($paidSum,2) }}</span>
+                    <span>({{ number_format($paidPct2,1) }}%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-3">
+        <div class="kpi-card p-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
+                <div>
+                    <div class="subnote">المتبقي للدفع</div>
+                    <div class="kpi-value fw-bold">{{ number_format($remainSum, 2) }}</div>
+                    <div class="subnote">ريـال</div>
                 </div>
             </div>
         </div>
@@ -223,13 +317,13 @@
                             <td>{{ is_numeric($investor->office_share_percentage) ? number_format($investor->office_share_percentage, 2) : '—' }}</td>
                             <td class="text-nowrap">
                                 <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
-                                <a href="{{ route('investors.edit', $investor) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
+                                {{-- <a href="{{ route('investors.edit', $investor) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
                                 <form action="{{ route('investors.destroy', $investor) }}" method="POST" class="d-inline"
                                       onsubmit="return confirm('هل أنت متأكد من حذف هذا المستثمر؟');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm">حذف</button>
-                                </form>
+                                </form> --}}
                             </td>
                         </tr>
                     @empty

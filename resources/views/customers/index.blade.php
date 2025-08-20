@@ -210,13 +210,13 @@
                             </td>
                             <td class="text-nowrap">
                                 <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
-                                <a href="{{ route('customers.edit', $customer) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
+                                {{-- <a href="{{ route('customers.edit', $customer) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
                                 <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline"
                                       onsubmit="return confirm('هل أنت متأكد من حذف هذا العميل؟');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm">حذف</button>
-                                </form>
+                                </form> --}}
                             </td>
                         </tr>
                     @empty
