@@ -147,6 +147,18 @@ class InvestorDataService
             ")
             ->value('bal');
 
+        // رأس المال المودع (ابتدائي) من دفتر القيود: إيداعات بحالة "رأس مال"
+        $initialCapital = (float) LedgerEntry::query()
+            ->where('investor_id', $investor->id)
+            ->where('direction', 'in')
+            ->where('transaction_status_id', function($q) {
+                $q->select('id')
+                  ->from('transaction_statuses')
+                  ->where('name', 'رأس المال')
+                  ->limit(1);
+            })
+            ->sum('amount');
+
         return [
             // إجماليات العدّ
             'contractsTotal'   => $contractsTotal,
@@ -174,6 +186,9 @@ class InvestorDataService
             // السيولة والعملة
             'liquidity'            => $liquidity,
             'currencySymbol'       => $currencySymbol,
+
+            // رأس المال المودع (ابتدائي)
+            'initialCapital'       => $initialCapital,
         ];
     }
 

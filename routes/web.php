@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuarantorController;
 use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\InvestorReportController;
 use App\Http\Controllers\InvestorStatementController;
 use App\Http\Controllers\InvestorTransactionController;
 use App\Http\Controllers\LanguageController;
@@ -20,8 +21,6 @@ use App\Http\Controllers\Setting\ContractStatusController;
 use App\Http\Controllers\Setting\InstallmentStatusController;
 use App\Http\Controllers\Setting\InstallmentTypeController;
 use App\Http\Controllers\Setting\NationalityController;
-use App\Http\Controllers\Setting\ProductTransactionController;
-use App\Http\Controllers\Setting\ProductTypeController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\TitleController;
 use App\Http\Controllers\Setting\TransactionStatusController;
@@ -29,6 +28,10 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
+
+
+
 
 
 
@@ -117,8 +120,18 @@ Route::prefix('installments')->name('installments.')->group(function () {
     Route::get('/contracts/{contract}/closure', [ContractPrintController::class, 'closure'])
     ->name('contracts.closure');
 
-    Route::get('/investors/{investor}/statement', [InvestorStatementController::class, 'show'])
-    ->name('investors.statement.show');
+    Route::get('/investors/{investor}/statement', [InvestorReportController::class, 'statement'])
+    ->name('investors.statement.statement');
+
+    Route::get('investors/{investor}/withdrawals', [InvestorReportController::class, 'withdrawals'])
+    ->name('investors.withdrawals.withdrawals');
+
+    Route::get('investors/{investor}/deposits', [InvestorReportController::class, 'deposits'])
+    ->name('investors.deposits.deposits');
+
+    Route::get('investors/{investor}/transactions', [InvestorReportController::class, 'transactions'])
+    ->name('investors.transactions.transactions');
+
 
 
 

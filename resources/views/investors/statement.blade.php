@@ -44,6 +44,11 @@
   // السيولة الحالية (دفتر المستثمر)
   $liquidity              = (float)($data['liquidity'] ?? 0);
 
+  // رأس المال الابتدائي من دفتر القيود
+  $initialCapital         = (float)($data['initialCapital'] ?? 0);
+
+  $total         = $liquidity + $totalRemainingOnCust ;
+
   $rows                   = $data['contractBreakdown'] ?? [];
 @endphp
 
@@ -56,68 +61,81 @@
         <div class="small-muted">المستثمر: <strong>{{ $investor->name }}</strong></div>
       </div>
       <div class="text-end">
-        <div class="small-muted">التاريخ: {{ now()->format('Y-m-d') }}</div>
-        <button class="btn btn-primary btn-sm no-print" onclick="window.print()">🖨 طباعة</button>
+        <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
       </div>
     </div>
 
+    {{-- KPIs الأساسية --}}
     <div class="row g-3 kpi mb-4">
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">عدد العقود</div>
+          <div class="small-muted">عدد العقود ({{ $contractsTotal }})</div>
           <div class="fs-6">سارية: <strong>{{ $contractsActive }}</strong> — منتهية: <strong>{{ $contractsEnded }}</strong></div>
-          <div class="small-muted">الإجمالي: {{ $contractsTotal }}</div>
         </div></div>
       </div>
+
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">رأس المال (الكل)</div>
-          <div class="fs-6 fw-bold">{{ number_format($totalCapitalShareAll,2) }} <span class="small-muted">{{ $cs }}</span></div>
+          <div class="small-muted">رأس المال الابتدائي</div>
+          <div class="fs-6 fw-bold">{{ number_format($initialCapital,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
+
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">الربح الصافي (الكل)</div>
-          <div class="fs-6 fw-bold">{{ number_format($totalProfitNetAll,2) }} <span class="small-muted">{{ $cs }}</span></div>
-        </div></div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="card"><div class="card-body p-3">
-          <div class="small-muted">السيولة الحالية (دفتر المستثمر)</div>
+          <div class="small-muted">السيولة الحالية</div>
           <div class="fs-6 fw-bold">{{ number_format($liquidity,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
-    </div>
 
-    {{-- KPIs --}}
-    <div class="row g-3 kpi mb-3">
-      <div class="col-6 col-md-3">
-        <div class="card"><div class="card-body p-3">
-          <div class="small-muted">رأس المال (نشط)</div>
-          <div class="fs-5 fw-bold">{{ number_format($totalCapitalShare,2) }} <span class="small-muted">{{ $cs }}</span></div>
-        </div></div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="card"><div class="card-body p-3">
-          <div class="small-muted">الربح الصافي (نشط)</div>
-          <div class="fs-5 fw-bold">{{ number_format($totalProfitNet,2) }} <span class="small-muted">{{ $cs }}</span></div>
-        </div></div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="card"><div class="card-body p-3">
-          <div class="small-muted">المحصل للمستثمر</div>
-          <div class="fs-5 fw-bold">{{ number_format($totalPaidPortion,2) }} <span class="small-muted">{{ $cs }}</span></div>
-        </div></div>
-      </div>
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
           <div class="small-muted">المتبقي على العملاء</div>
-          <div class="fs-5 fw-bold">{{ number_format(max(0,$totalRemainingOnCust),2) }} <span class="small-muted">{{ $cs }}</span></div>
+          <div class="fs-6 fw-bold">{{ number_format(max(0,$totalRemainingOnCust),2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
+
+      <div class="col-6 col-md-6">
+        <div class="card"><div class="card-body p-3">
+          <div class="small-muted">الرصيد المتوقع بعد انتهاء الاقساط</div>
+          <div class="fs-5 fw-bold">{{ number_format(max(0,$total),2) }} <span class="small-muted">{{ $cs }}</span></div>
+        </div></div>
+      </div>
+
+      
+      
     </div>
 
-    
+    {{-- KPIs للعقود النشطة --}}
+    <div class="row g-3 kpi mb-3">
+      <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body p-3">
+          <div class="small-muted">رأس المال (المشارك بجميع العقود)</div>
+          <div class="fs-6 fw-bold">{{ number_format($totalCapitalShareAll,2) }} <span class="small-muted">{{ $cs }}</span></div>
+        </div></div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body p-3">
+          <div class="small-muted">الربح الصافي (من جميع العقود)</div>
+          <div class="fs-6 fw-bold">{{ number_format($totalProfitNetAll,2) }} <span class="small-muted">{{ $cs }}</span></div>
+        </div></div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body p-3">
+          <div class="small-muted">رأس المال (العقود السارية)</div>
+          <div class="fs-6 fw-bold">{{ number_format($totalCapitalShare,2) }} <span class="small-muted">{{ $cs }}</span></div>
+        </div></div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card"><div class="card-body p-3">
+          <div class="small-muted">الربح الصافي (العقود السارية)</div>
+          <div class="fs-6 fw-bold">{{ number_format($totalProfitNet,2) }} <span class="small-muted">{{ $cs }}</span></div>
+        </div></div>
+      </div>
+          
+    </div>
 
     {{-- Table --}}
     <div class="table-responsive">
@@ -161,7 +179,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="9" class="py-5 text-muted">لا توجد عقود مرتبطة بهذا المستثمر.</td>
+              <td colspan="9" class="py-5 text-muted">لا توجد عقود سارية مرتبطة بهذا المستثمر.</td>
             </tr>
           @endforelse
         </tbody>
@@ -169,11 +187,10 @@
     </div>
 
     <div class="small-muted mt-3">
-      * الأرقام مبنية على خدمة InvestorDataService، ويمكن تعديل معادلات الربح/المتبقي بحسب السياسة المحاسبية لديكم.
     </div>
 
     <div class="no-print text-end mt-3">
-      <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">↩ رجوع</a>
+      <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary">↩ رجوع</a>
       <button class="btn btn-primary" onclick="window.print()">🖨 طباعة</button>
     </div>
   </div>

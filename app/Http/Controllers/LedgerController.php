@@ -284,17 +284,17 @@ class LedgerController extends Controller
             ->values();
 
         DB::transaction(function () use ($data, $typeId, $direction, $amount, $isGoods, $productRows, $request) {
-            $note = $this->buildSmartNote(
-                partyCategory: $data['party_category'],
-                investorId: $data['investor_id'] ?? null,
-                statusId: $data['status_id'],
-                direction: $direction,
-                accountLabel: $data['bank_account_id']
-                    ? ('بنك: ' . optional(BankAccount::find($data['bank_account_id']))->name)
-                    : ('خزنة: ' . optional(Safe::find($data['safe_id']))->name),
-                amount: $amount,
-                baseNote: $data['notes'] ?? null
-            );
+            // $note = $this->buildSmartNote(
+            //     partyCategory: $data['party_category'],
+            //     investorId: $data['investor_id'] ?? null,
+            //     statusId: $data['status_id'],
+            //     direction: $direction,
+            //     accountLabel: $data['bank_account_id']
+            //         ? ('بنك: ' . optional(BankAccount::find($data['bank_account_id']))->name)
+            //         : ('خزنة: ' . optional(Safe::find($data['safe_id']))->name),
+            //     amount: $amount,
+            //     baseNote: $data['notes'] ?? null
+            // );
 
             $entry = LedgerEntry::create([
                 'entry_date'            => $data['transaction_date'],
@@ -306,7 +306,8 @@ class LedgerController extends Controller
                 'safe_id'               => $data['safe_id'] ?? null,
                 'amount'                => $amount,
                 'direction'             => $direction,
-                'notes'                 => $note,
+                'notes'                 => $data['notes'],
+                // 'notes'                 => $note,
             ]);
 
             // حفظ منتجات القيد إن كانت حالة بضائع
@@ -581,16 +582,16 @@ class LedgerController extends Controller
 
             // جزء البنك
             if ($bank > 0) {
-                $bankName = optional(BankAccount::find($data['bank_account_id']))->name;
-                $noteBank = $this->buildSmartNote(
-                    partyCategory: $data['party_category'],
-                    investorId: $data['investor_id'] ?? null,
-                    statusId: $data['status_id'],
-                    direction: $direction,
-                    accountLabel: "بنك: {$bankName}",
-                    amount: $bank,
-                    baseNote: $data['notes'] ?? null
-                );
+                // $bankName = optional(BankAccount::find($data['bank_account_id']))->name;
+                // $noteBank = $this->buildSmartNote(
+                //     partyCategory: $data['party_category'],
+                //     investorId: $data['investor_id'] ?? null,
+                //     statusId: $data['status_id'],
+                //     direction: $direction,
+                //     accountLabel: "بنك: {$bankName}",
+                //     amount: $bank,
+                //     baseNote: $data['notes'] ?? null
+                // );
 
                 $bankEntry = LedgerEntry::create([
                     'entry_date'            => $data['transaction_date'],
@@ -602,22 +603,23 @@ class LedgerController extends Controller
                     'safe_id'               => null,
                     'amount'                => $bank,
                     'direction'             => $direction,
-                    'notes'                 => $noteBank,
+                    'notes'                 => $data['notes'],
+                    // 'notes'                 => $noteBank,
                 ]);
             }
 
             // جزء الخزنة
             if ($safe > 0) {
-                $safeName = optional(Safe::find($data['safe_id']))->name;
-                $noteSafe = $this->buildSmartNote(
-                    partyCategory: $data['party_category'],
-                    investorId: $data['investor_id'] ?? null,
-                    statusId: $data['status_id'],
-                    direction: $direction,
-                    accountLabel: "خزنة: {$safeName}",
-                    amount: $safe,
-                    baseNote: $data['notes'] ?? null
-                );
+                // $safeName = optional(Safe::find($data['safe_id']))->name;
+                // $noteSafe = $this->buildSmartNote(
+                //     partyCategory: $data['party_category'],
+                //     investorId: $data['investor_id'] ?? null,
+                //     statusId: $data['status_id'],
+                //     direction: $direction,
+                //     accountLabel: "خزنة: {$safeName}",
+                //     amount: $safe,
+                //     baseNote: $data['notes'] ?? null
+                // );
 
                 $safeEntry = LedgerEntry::create([
                     'entry_date'            => $data['transaction_date'],
@@ -629,7 +631,8 @@ class LedgerController extends Controller
                     'safe_id'               => $data['safe_id'],
                     'amount'                => $safe,
                     'direction'             => $direction,
-                    'notes'                 => $noteSafe,
+                    'notes'                 => $data['notes'],
+                    // 'notes'                 => $noteSafe,
                 ]);
             }
 

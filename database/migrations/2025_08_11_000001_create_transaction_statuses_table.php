@@ -37,7 +37,7 @@ class CreateTransactionStatusesTable extends Migration
             ['name'=> 'سحب حسابات', 'transaction_type_id' => 2, 'is_protected' => true],
             ['name'=> 'تحويل بين حسابات', 'transaction_type_id' => 3, 'is_protected' => true],
             ['name' => 'رصيد افتتاحي', 'transaction_type_id' => 1, 'is_protected' => true],
-            ['name' => 'راس المال', 'transaction_type_id' => 1, 'is_protected' => true],
+            ['name' => 'رأس المال', 'transaction_type_id' => 1, 'is_protected' => true],
         ]);
 
         // تأكد من إضافة القيم الافتراضية المناسبة حسب احتياجاتك    

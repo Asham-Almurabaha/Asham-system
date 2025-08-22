@@ -105,15 +105,43 @@
                 </div>
             </div>
             <div class="mini-actions d-flex flex-wrap gap-2">
-                <a href="{{ route('investors.edit', $investor) }}" class="btn btn-primary">
+                {{-- <a href="{{ route('investors.edit', $investor) }}" class="btn btn-primary">
                     <i class="bi bi-pencil-square me-1"></i> تعديل
-                </a>
+                </a> --}}
+                
+                 {{-- ✅ Dropdown للتقارير --}}
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        📊 التقارير
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end text-end">
+                        <li>
+                            <a class="dropdown-item" href="{{ route('investors.statement.statement', $investor) }}">
+                                📄 تقرير جرد المستثمر
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
+                                💸 جرد المسحوبات
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('investors.deposits.deposits', $investor) }}">
+                                💰 جرد الإيداعات
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('investors.transactions.transactions', $investor) }}">
+                                🔄 جرد مسحوبات / إيداعات
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
                 <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-right-circle me-1"></i> العودة للقائمة
                 </a>
-                <a href="{{ route('investors.statement.show', $investor) }}" class="btn btn-outline-primary">📄 جرد الحساب</a>
 
-                {{-- ✅ زر الطباعة تمت إزالته --}}
             </div>
         </div>
     </div>
