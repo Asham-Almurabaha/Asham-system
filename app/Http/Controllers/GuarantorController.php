@@ -133,6 +133,7 @@ class GuarantorController extends Controller
             'guarantorNameOptions'
         ));
     }
+
     public function create()
     {
         $nationalities = Nationality::all();

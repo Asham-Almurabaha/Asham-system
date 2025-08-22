@@ -137,8 +137,6 @@ Route::prefix('installments')->name('installments.')->group(function () {
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
 
-
-
     // المتاح في الحسابات (بنكي/خزنة) — لو مش موجودة عندك فعلًا
     Route::get('/ajax/accounts/availability', [AjaxAccountController::class, 'availability'])
         ->name('ajax.accounts.availability');
