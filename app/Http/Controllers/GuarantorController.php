@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Validation\Rule;
 
 class GuarantorController extends Controller
 {
@@ -144,14 +145,14 @@ class GuarantorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'national_id' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|unique:guarantors,name,',
+            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,',
+            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,',
             'email' => 'nullable|email|max:255',
+            'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',
-            'title_id' => 'nullable|exists:titles,id',
-            'id_card_image' => 'nullable|image|max:2048', // 2MB max
+            'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);
 
@@ -179,14 +180,14 @@ class GuarantorController extends Controller
     public function update(Request $request, Guarantor $guarantor)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'national_id' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|unique:guarantors,name,' . $guarantor->id,
+            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,' . $guarantor->id,
+            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,' . $guarantor->id,
             'email' => 'nullable|email|max:255',
+            'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',
-            'title_id' => 'nullable|exists:titles,id',
-            'id_card_image' => 'nullable|image|max:2048',
+            'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);
 

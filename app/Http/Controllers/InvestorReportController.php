@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Contract;
 use App\Models\Investor;
 use App\Models\LedgerEntry;
-use App\Models\TransactionStatus;
 use App\Services\InvestorDataService;
 use Illuminate\Http\Request;
 
@@ -171,6 +170,47 @@ class InvestorReportController extends Controller
             'transactionsTotal',
             'currencySymbol'
         ));
+    }
+
+    public function allliquidity(Request $request, InvestorDataService $svc)
+    {
+        $q       = trim((string)$request->get('q', ''));
+        $perPage = (int)($request->integer('per_page') ?? 25);
+
+        $paginator = Investor::query()
+            ->when($q, fn($qq) => $qq->where('name', 'like', "%{$q}%"))
+            ->select(['id','name'])
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $rows = $paginator->getCollection()->map(function (Investor $inv) use ($svc) {
+            $d = $svc->build($inv);
+            return (object)[
+                'id'               => $inv->id,
+                'name'             => $inv->name,
+                'liquidity'        => (float)($d['liquidity'] ?? 0),
+                'initial_capital'  => (float)($d['initialCapital'] ?? 0),
+                'contracts_active' => (int)($d['contractsActive'] ?? 0),
+                'contracts_total'  => (int)($d['contractsTotal'] ?? 0),
+            ];
+        });
+
+        $totalLiquidity = $rows->sum('liquidity');
+        $totalInitial   = $rows->sum('initial_capital');
+
+        $paginator->setCollection($rows);
+
+        return view('investors.allliquidity', [
+            'rows'          => $paginator,            // الفيو تتوقع rows
+            'grandTotal'    => $totalLiquidity,       // إجمالي السيولة
+            'totalInitial'  => $totalInitial,         // لو حاب تستخدمه لاحقًا
+            'filters'       => [
+                'q'        => $q,
+                'per_page' => $perPage,
+            ],
+            'currencySymbol'=> 'ر.س',
+                ]);
     }
 
     

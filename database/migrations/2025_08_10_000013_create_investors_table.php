@@ -9,9 +9,9 @@ class CreateInvestorsTable extends Migration
     {
         Schema::create('investors', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('national_id')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('name')->unique('name');
+            $table->string('national_id')->unique('national_id');
+            $table->string('phone')->unique('phone');
             $table->string('email')->nullable();
             $table->text('address')->nullable();
             $table->foreignId('nationality_id')->nullable()->constrained('nationalities')->onDelete('set null');
@@ -34,8 +34,8 @@ class CreateInvestorsTable extends Migration
             'contract_image' => null,
             'office_share_percentage' => 25,],
             ['name' => 'مستثمر افتراضي 2',
-            'national_id' => '0000000000',
-            'phone' => '0500000000',
+            'national_id' => '0000000001',
+            'phone' => '0500000001',
             'email' => 'default@example.com',
             'address' => 'الرياض - السعودية',
             'nationality_id' => null,

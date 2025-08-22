@@ -10,9 +10,9 @@ class CreateCustomersTable extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('national_id')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('name')->unique('name');
+            $table->string('national_id')->unique('national_id');
+            $table->string('phone')->unique('phone');
             $table->string('email')->nullable();
             $table->text('address')->nullable();
             $table->foreignId('nationality_id')->nullable()->constrained('nationalities')->onDelete('set null');

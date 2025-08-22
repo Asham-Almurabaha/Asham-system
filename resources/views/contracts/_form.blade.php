@@ -49,7 +49,7 @@
       <span id="available_count_badge" class="badge bg-light text-dark">المتاح: —</span>
     </div>
     <input type="number" name="products_count" id="products_count"
-           class="form-control @error('products_count') is-invalid @enderror"
+           class="form-control mt-2 @error('products_count') is-invalid @enderror"
            value="{{ old('products_count', ($contract->products_count ?? null)) }}"
            min="0" required inputmode="numeric" autocomplete="off" aria-describedby="available_count_hint">
     <small id="available_count_hint" class="text-muted">اختر نوع البضاعة لعرض العدد المتاح.</small>

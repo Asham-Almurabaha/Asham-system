@@ -167,7 +167,7 @@
                     </div>
                     <div class="row mt-2">
                         <div class="col-5 label-col">رقم الهوية</div>
-                        <div class="col-7 value-col" dir="ltr">
+                        <div class="col-7 value-col">
                             @if($guarantor->national_id)
                                 <span>{{ $guarantor->national_id }}</span>
                                 <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->national_id }}')" title="نسخ">
@@ -191,7 +191,7 @@
                 <div class="col-md-6">
                     <div class="row">
                         <div class="col-5 label-col">الهاتف</div>
-                        <div class="col-7 value-col" dir="ltr">
+                        <div class="col-7 value-col">
                             @if($guarantor->phone)
                                 <a href="tel:{{ $guarantor->phone }}">{{ $guarantor->phone }}</a>
                                 <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->phone }}')" title="نسخ">

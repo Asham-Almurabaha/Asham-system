@@ -11,6 +11,8 @@ use App\Services\InvestorDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Validation\Rule;
+
 
 class InvestorController extends Controller
 {
@@ -132,9 +134,9 @@ class InvestorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'national_id' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|unique:investors,name,',
+            'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,',
+            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:investors,phone,',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',
@@ -202,9 +204,9 @@ class InvestorController extends Controller
     public function update(Request $request, Investor $investor)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'national_id' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:255',
+            'name' => 'required|string|max:255|unique:investors,name,' . $investor->id,
+            'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,'. $investor->id,
+            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:investors,phone,' . $investor->id,
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',

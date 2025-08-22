@@ -107,6 +107,19 @@
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
         <a href="{{ route('investors.create') }}" class="btn btn-outline-success">+ إضافة مستثمر جديد</a>
+        {{-- ✅ Dropdown للتقارير --}}
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        📊 التقارير
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end text-end">
+                        <li>
+                            <a class="dropdown-item" href="{{ route('reports.investors.Allliquidity') }}">
+                                📄 تقرير سيولات المستثمرين
+                            </a>
+                        </li>
+                    </ul>
+                </div>
         <span class="ms-auto small text-muted">النتائج: <strong>{{ $investors->total() }}</strong></span>
         <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
             تصفية متقدمة

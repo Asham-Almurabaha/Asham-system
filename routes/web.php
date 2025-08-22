@@ -107,20 +107,14 @@ Route::prefix('installments')->name('installments.')->group(function () {
     
 });
 
-    Route::get('/investors/{investor}/cash', [AjaxInvestorController::class, 'liquidity'])->name('investors.cash');
+    Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])
+        ->name('product-types.available');
 
-    Route::get('/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])->name('investors.liquidity');
+    Route::get('/investors/{investor}/cash', [AjaxInvestorController::class, 'liquidity'])
+        ->name('investors.cash');
 
-    Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])->name('product-types.available');
-
-    Route::get('/ajax/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
-        ->name('ajax.investors.liquidity');
-
-    Route::get('/contracts/{contract}/print', [ContractPrintController::class, 'show'])
-        ->name('contracts.print');
-
-    Route::get('/contracts/{contract}/closure', [ContractPrintController::class, 'closure'])
-        ->name('contracts.closure');
+    Route::get('/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
+        ->name('investors.liquidity');
 
     Route::get('/investors/{investor}/statement', [InvestorReportController::class, 'statement'])
         ->name('investors.statement.statement');
@@ -133,6 +127,20 @@ Route::prefix('installments')->name('installments.')->group(function () {
 
     Route::get('investors/{investor}/transactions', [InvestorReportController::class, 'transactions'])
         ->name('investors.transactions.transactions');
+
+    Route::get('reports/investors/Allliquidity', [InvestorReportController::class, 'allliquidity'])
+        ->name('reports.investors.Allliquidity');
+
+    Route::get('/ajax/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
+        ->name('ajax.investors.liquidity');
+
+    Route::get('/contracts/{contract}/print', [ContractPrintController::class, 'show'])
+        ->name('contracts.print');
+
+    Route::get('/contracts/{contract}/closure', [ContractPrintController::class, 'closure'])
+        ->name('contracts.closure');
+
+    
 
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 

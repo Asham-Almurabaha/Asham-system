@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 
 class CustomerController extends Controller
@@ -120,15 +121,15 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'national_id'   => 'nullable|string|max:50',
-            'title_id'      => 'nullable|exists:titles,id',
-            'phone'         => 'nullable|string|max:20',
-            'email'         => 'nullable|email|max:255',
-            'address'       => 'nullable|string',
-            'nationality_id'=> 'nullable|exists:nationalities,id',
+            'name' => ['required','string','max:255', Rule::unique('customers','name')],
+            'national_id' => ['nullable','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')],
+            'phone' => ['nullable','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')],
+            'email' => 'nullable|email|max:255',
+            'title_id' => 'nullable|exists:titles,id',
+            'address' => 'nullable|string',
+            'nationality_id' => 'nullable|exists:nationalities,id',
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'notes'         => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         // رفع صورة الهوية
@@ -228,15 +229,15 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'national_id'   => 'nullable|string|max:50',
-            'title_id'      => 'nullable|exists:titles,id',
-            'phone'         => 'nullable|string|max:20',
-            'email'         => 'nullable|email|max:255',
-            'address'       => 'nullable|string',
-            'nationality_id'=> 'nullable|exists:nationalities,id',
+            'name' => ['required','string','max:255', Rule::unique('customers','name')->ignore($customer->id)],
+            'national_id' => ['nullable','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')->ignore($customer->id)],
+            'phone' => ['nullable','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')->ignore($customer->id)],
+            'email' => 'nullable|email|max:255',
+            'title_id' => 'nullable|exists:titles,id',
+            'address' => 'nullable|string',
+            'nationality_id' => 'nullable|exists:nationalities,id',
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'notes'         => 'nullable|string',
+            'notes' => 'nullable|string',
         ]);
 
         // رفع صورة الهوية الجديدة وحذف القديمة
