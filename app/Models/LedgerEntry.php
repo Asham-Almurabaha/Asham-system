@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LedgerEntry extends Model
 {
     use SoftDeletes;
+    use Auditable;
 
     protected $fillable = [
         'entry_date',

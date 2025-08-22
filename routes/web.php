@@ -3,6 +3,7 @@
 use App\Http\Controllers\AjaxAccountController;
 use App\Http\Controllers\AjaxInvestorController;
 use App\Http\Controllers\AjaxProductTypeController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Controllers\ContractPrintController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -118,19 +120,21 @@ Route::prefix('installments')->name('installments.')->group(function () {
         ->name('contracts.print');
 
     Route::get('/contracts/{contract}/closure', [ContractPrintController::class, 'closure'])
-    ->name('contracts.closure');
+        ->name('contracts.closure');
 
     Route::get('/investors/{investor}/statement', [InvestorReportController::class, 'statement'])
-    ->name('investors.statement.statement');
+        ->name('investors.statement.statement');
 
     Route::get('investors/{investor}/withdrawals', [InvestorReportController::class, 'withdrawals'])
-    ->name('investors.withdrawals.withdrawals');
+        ->name('investors.withdrawals.withdrawals');
 
     Route::get('investors/{investor}/deposits', [InvestorReportController::class, 'deposits'])
-    ->name('investors.deposits.deposits');
+        ->name('investors.deposits.deposits');
 
     Route::get('investors/{investor}/transactions', [InvestorReportController::class, 'transactions'])
-    ->name('investors.transactions.transactions');
+        ->name('investors.transactions.transactions');
+
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
 
 

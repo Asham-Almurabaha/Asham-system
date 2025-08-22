@@ -120,19 +120,21 @@
                                 📄 تقرير جرد المستثمر
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
-                                💸 جرد المسحوبات
-                            </a>
-                        </li>
+                        
                         <li>
                             <a class="dropdown-item" href="{{ route('investors.deposits.deposits', $investor) }}">
                                 💰 جرد الإيداعات
                             </a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
+                                💸 جرد المسحوبات
+                            </a>
+                        </li>
+                        
+                        <li>
                             <a class="dropdown-item" href="{{ route('investors.transactions.transactions', $investor) }}">
-                                🔄 جرد مسحوبات / إيداعات
+                                🔄 جرد إيداعات / مسحوبات
                             </a>
                         </li>
                     </ul>

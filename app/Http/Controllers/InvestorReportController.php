@@ -41,6 +41,7 @@ class InvestorReportController extends Controller
             'statusMap' => $statusMap,
         ]);
     }
+    
     public function deposits(Investor $investor)
     {
         $currencySymbol = 'ر.س';
@@ -118,59 +119,59 @@ class InvestorReportController extends Controller
     }
 
     public function transactions(Investor $investor)
-{
-    $currencySymbol = 'ر.س';
+    {
+        $currencySymbol = 'ر.س';
 
-    // الحالات اللي عايزينها (مع اختلافات الإملاء الشائعة)
-    $statusNames = [
-        'سحب سيولة', 'سحب سيوله',
-        'رأس المال',
-        'إضافة سيولة', 'اضافة سيولة',
-    ];
+        // الحالات اللي عايزينها (مع اختلافات الإملاء الشائعة)
+        $statusNames = [
+            'سحب سيولة', 'سحب سيوله',
+            'رأس المال',
+            'إضافة سيولة', 'اضافة سيولة',
+        ];
 
-    // هات IDs للحالات مرة واحدة
-    $transactions = LedgerEntry::with(['status:id,name','type:id,name'])
-            ->where('investor_id', $investor->id)
-            ->whereIn('transaction_status_id', function($q)use ($statusNames) {
+        // هات IDs للحالات مرة واحدة
+        $transactions = LedgerEntry::with(['status:id,name','type:id,name'])
+                ->where('investor_id', $investor->id)
+                ->whereIn('transaction_status_id', function($q)use ($statusNames) {
+                    $q->select('id')
+                        ->from('transaction_statuses')
+                        ->whereIn('name', $statusNames);
+                })
+                ->orderByDesc('entry_date')
+                ->paginate(15);
+
+        $transactionsCount = $transactions->total();
+        $withdrawalsTotal = LedgerEntry::where('investor_id', $investor->id)
+                ->where('direction', 'out')
+                ->where('transaction_status_id', function($q) {
+                    $q->select('id')
+                    ->from('transaction_statuses')
+                    ->where('name', 'سحب سيولة')
+                    ->limit(1);
+                })
+                ->sum('amount');
+
+        $depositsTotal = LedgerEntry::where('investor_id', $investor->id)
+                ->where('direction', 'in')
+                ->whereIn('transaction_status_id', function($q)use ($statusNames) {
                 $q->select('id')
                     ->from('transaction_statuses')
                     ->whereIn('name', $statusNames);
-            })
-            ->orderByDesc('entry_date')
-            ->paginate(15);
+                })
+                ->sum('amount');
 
-    $transactionsCount = $transactions->total();
-    $withdrawalsTotal = LedgerEntry::where('investor_id', $investor->id)
-            ->where('direction', 'out')
-             ->where('transaction_status_id', function($q) {
-                $q->select('id')
-                  ->from('transaction_statuses')
-                  ->where('name', 'سحب سيولة')
-                  ->limit(1);
-            })
-            ->sum('amount');
+        $transactionsTotal = $depositsTotal - $withdrawalsTotal ;
 
-    $depositsTotal = LedgerEntry::where('investor_id', $investor->id)
-            ->where('direction', 'in')
-            ->whereIn('transaction_status_id', function($q)use ($statusNames) {
-            $q->select('id')
-                ->from('transaction_statuses')
-                ->whereIn('name', $statusNames);
-            })
-            ->sum('amount');
-
-    $transactionsTotal = $depositsTotal - $withdrawalsTotal ;
-
-    return view('investors.transactions', compact(
-        'investor',
-        'transactions',
-        'depositsTotal',
-        'withdrawalsTotal',
-        'transactionsCount',
-        'transactionsTotal',
-        'currencySymbol'
-    ));
-}
+        return view('investors.transactions', compact(
+            'investor',
+            'transactions',
+            'depositsTotal',
+            'withdrawalsTotal',
+            'transactionsCount',
+            'transactionsTotal',
+            'currencySymbol'
+        ));
+    }
 
     
 }
