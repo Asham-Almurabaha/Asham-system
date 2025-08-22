@@ -16,15 +16,20 @@
 @php
     use Illuminate\Support\Facades\Schema;
 
-    // أسماء الحالات (مرنة بالعربي/إنجليزي)
-    $namesEnded   = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Finished','Closed','Early Settlement','Settled'];
-    $namesActive  = ['نشط','Active','Open','In Progress'];
-    $namesPending = ['معلق','Pending','On Hold','Awaiting'];
-    $namesNoInv   = ['بدون مستثمر','No Investor'];
+    // عملة افتراضية للعرض فقط
+    $currencySymbol = $currencySymbol ?? 'ر.س';
+
+    // ✅ التقسيم الصارم للحالات
+    $namesEnded   = ['منتهي','سداد مبكر']; // المنتهي = منتهي أو سداد مبكر
+    $namesPending = ['معلق'];               // المعلّق = معلق فقط
+    // "بدون مستثمر" متريك مستقل من العلاقة
+    // النشط = كل ما عداهما
+
+    $endedNamesTx   = implode('، ', $namesEnded);
+    $pendingNamesTx = implode('، ', $namesPending);
 
     // إجماليات على مستوى النظام (غير متأثرة بالفلاتر)
-    $contractsTotalAll          = $contractsTotalAll          ?? (\App\Models\Contract::query()->count());
-    $contractsNoInvestorAll     = $contractsNoInvestorAll     ?? (\App\Models\Contract::query()->doesntHave('investors')->count());
+    $contractsTotalAll = $contractsTotalAll ?? (\App\Models\Contract::query()->count());
 
     // كشف أعمدة الحالة المحتملة
     $statusIdCol = null;
@@ -36,74 +41,63 @@
         if (Schema::hasColumn('contracts', $col)) { $statusTextCol = $col; break; }
     }
 
-    // محاولة جلب IDs للحالات لو في جدول ContractStatus
-    $endedIds = $pendingIds = $activeIds = [];
+    // محاولة جلب IDs للحالات من جدول ContractStatus (إن وجد)
+    $endedIds = $pendingIds = [];
     if (class_exists(\App\Models\ContractStatus::class)) {
         $endedIds   = \App\Models\ContractStatus::whereIn('name', $namesEnded)->pluck('id')->all();
         $pendingIds = \App\Models\ContractStatus::whereIn('name', $namesPending)->pluck('id')->all();
-        $activeIds  = \App\Models\ContractStatus::whereIn('name', $namesActive)->pluck('id')->all();
     }
 
-    // حسابات مرنة للحالات
-    $contractsEndedAll = $contractsEndedAll ?? (function() use ($statusIdCol,$statusTextCol,$namesEnded){
+    // ===== منتهي =====
+    $contractsEndedAll = $contractsEndedAll ?? (function() use ($statusIdCol,$statusTextCol,$namesEnded,$endedIds){
         $q = \App\Models\Contract::query();
         if ($statusIdCol) {
-            // لو ما قدرنا نحدد IDs للحالات المنتهية، جرّب بدائل منطقية
-            return !empty($GLOBALS['endedIds'] ?? []) ? $q->whereIn($statusIdCol, $GLOBALS['endedIds'])->count()
-                 : (Schema::hasColumn('contracts','is_closed') ? $q->where('is_closed',1)->count()
-                 : (Schema::hasColumn('contracts','closed_at')  ? $q->whereNotNull('closed_at')->count()
-                 : 0));
+            return !empty($endedIds) ? $q->whereIn($statusIdCol, $endedIds)->count() : 0;
         } elseif ($statusTextCol) {
             return $q->whereIn($statusTextCol, $namesEnded)->count();
-        } elseif (Schema::hasColumn('contracts','is_closed')) {
-            return $q->where('is_closed',1)->count();
-        } elseif (Schema::hasColumn('contracts','closed_at')) {
-            return $q->whereNotNull('closed_at')->count();
         }
         return 0;
     })();
 
-    $contractsPendingAll = $contractsPendingAll ?? (function() use ($statusIdCol,$statusTextCol,$namesPending){
+    // ===== معلّق =====
+    $contractsPendingAll = $contractsPendingAll ?? (function() use ($statusIdCol,$statusTextCol,$namesPending,$pendingIds){
         $q = \App\Models\Contract::query();
-        if ($statusIdCol && !empty($GLOBALS['pendingIds'] ?? [])) {
-            return $q->whereIn($statusIdCol, $GLOBALS['pendingIds'])->count();
+        if ($statusIdCol && !empty($pendingIds)) {
+            return $q->whereIn($statusIdCol, $pendingIds)->count();
         } elseif ($statusTextCol) {
             return $q->whereIn($statusTextCol, $namesPending)->count();
         }
-        return 0; // لو مافيش حقل حالة نصي/معرّف، نخليها 0
+        return 0;
     })();
 
-    $contractsActiveAll = $activeContractsTotalAll ?? (function() use ($statusIdCol,$statusTextCol,$namesEnded,$namesActive){
+    // ===== بدون مستثمر =====
+    $contractsNoInvestorAll = $contractsNoInvestorAll ?? (\App\Models\Contract::query()->doesntHave('investors')->count());
+
+    // ===== نشط = كل ما عدا (منتهي + معلّق) =====
+    $contractsActiveAll = $activeContractsTotalAll ?? (function() use ($statusIdCol,$statusTextCol,$namesEnded,$namesPending,$endedIds,$pendingIds){
         $q = \App\Models\Contract::query();
         if ($statusIdCol) {
-            if (!empty($GLOBALS['activeIds'] ?? [])) {
-                return $q->whereIn($statusIdCol, $GLOBALS['activeIds'])->count();
-            } elseif (!empty($GLOBALS['endedIds'] ?? [])) {
-                return $q->whereNotIn($statusIdCol, $GLOBALS['endedIds'])->count();
+            $excludeIds = array_merge($endedIds, $pendingIds);
+            if (!empty($excludeIds)) {
+                return $q->whereNotIn($statusIdCol, $excludeIds)->count();
             }
         } elseif ($statusTextCol) {
-            // عندنا نص: استبعد المنتهية
-            return $q->whereNotIn($statusTextCol, $namesEnded)->count();
-        } elseif (Schema::hasColumn('contracts','is_closed')) {
-            return $q->where('is_closed',0)->count();
-        } elseif (Schema::hasColumn('contracts','closed_at')) {
-            return $q->whereNull('closed_at')->count();
+            $excludeNames = array_merge($namesEnded, $namesPending);
+            return $q->whereNotIn($statusTextCol, $excludeNames)->count();
         }
-        return $q->count(); // آخر حل
+        // fallback لو لم نجد عمود حالة مناسب
+        return $q->count();
     })();
-
-    $contractsNoInvestorAll = $contractsNoInvestorAll ?? (\App\Models\Contract::query()->doesntHave('investors')->count());
 
     // نسب
     $pct = fn($num) => ($contractsTotalAll>0) ? round(($num/$contractsTotalAll)*100,1) : 0;
 
-    $activePct    = $pct($contractsActiveAll);
-    $pendingPct   = $pct($contractsPendingAll);
-    $noInvPct     = $pct($contractsNoInvestorAll);
-    $endedPct     = $pct($contractsEndedAll);
+    $activePct  = $pct($contractsActiveAll);
+    $pendingPct = $pct($contractsPendingAll);
+    $noInvPct   = $pct($contractsNoInvestorAll);
+    $endedPct   = $pct($contractsEndedAll);
 @endphp
 
-{{-- كروت الإحصائيات --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 <style>
     :root { --card-r: 1rem; --soft: 0 6px 18px rgba(0,0,0,.06); --soft2: 0 10px 24px rgba(0,0,0,.08); }
@@ -113,8 +107,115 @@
     .kpi-value{ font-size:1.85rem; line-height:1; }
     .subnote{ font-size:.8rem; color:#6b7280; }
     .bar-8{ height:8px; }
+    .hint { margin-inline-start: .35rem; cursor: help; color:#6b7280; }
 </style>
 
+{{-- ====== ملخص أقساط هذا الشهر (ستايل مماثل لصفحة المستثمر) ====== --}}
+@php
+    $monthly   = (array)($installmentsMonthly ?? []);
+    $totals    = (array)($monthly['totals'] ?? []);
+    $dueSum    = (float)($totals['due'] ?? 0);
+    $paidSum   = (float)($totals['paid'] ?? 0);
+    $remainSum = (float)($totals['remaining'] ?? max($dueSum - $paidSum, 0));
+    $dueCount  = (int)  ($totals['count'] ?? 0);
+    $paidPct2  = $dueSum > 0 ? round(($paidSum / $dueSum) * 100, 1) : 0;
+
+    $monthLabel       = (string)($monthly['month_label'] ?? now()->format('Y-m'));
+    $excludedStatuses = (array)($monthly['excluded_status_names'] ?? ['مؤجل','معتذر']);
+    $excludedStatusesTx = count($excludedStatuses) ? implode('، ', $excludedStatuses) : '—';
+
+    $mVal = (int)($monthly['month'] ?? now()->month);
+    $yVal = (int)($monthly['year']  ?? now()->year);
+@endphp
+
+<div class="card shadow-sm mb-4" dir="rtl">
+    <div class="card-header bg-white d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+            <h6 class="mb-0">ملخص أقساط هذا الشهر <span class="text-muted">({{ $monthLabel }})</span></h6>
+            <span class="subnote"><i class="bi bi-filter"></i> يستثني الحالات: {{ $excludedStatusesTx }}</span>
+        </div>
+        {{-- اختيار سريع للشهر/السنة مع الحفاظ على فلاتر العقود الحالية --}}
+        <form action="{{ route('contracts.index') }}" method="GET" class="d-flex align-items-center gap-2">
+            @foreach(request()->except(['m','y','page']) as $k => $v)
+                @if(is_array($v))
+                    @foreach($v as $vv)
+                        <input type="hidden" name="{{ $k }}[]" value="{{ $vv }}">
+                    @endforeach
+                @else
+                    <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                @endif
+            @endforeach
+
+            <input type="number" name="m" min="1" max="12" class="form-control form-control-sm" style="width:86px" value="{{ request('m', $mVal) }}" placeholder="شهر">
+            <input type="number" name="y" min="2000" max="2100" class="form-control form-control-sm" style="width:92px" value="{{ request('y', $yVal) }}" placeholder="سنة">
+            <button class="btn btn-outline-primary btn-sm">تحديث</button>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {{-- عدد الأقساط --}}
+            <div class="col-12 col-md-3">
+                <div class="kpi-card p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-journal-check fs-4 text-primary"></i></div>
+                        <div>
+                            <div class="subnote">عدد الأقساط المستحقة</div>
+                            <div class="kpi-value fw-bold">{{ number_format($dueCount) }}</div>
+                            <div class="subnote">هذا الشهر</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{-- إجمالي المستحق + المدفوع + نسبة --}}
+            <div class="col-12 col-md-5">
+                <div class="kpi-card p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                            <div>
+                                <div class="subnote">إجمالي المستحق</div>
+                                <div class="kpi-value fw-bold">
+                                    {{ number_format($dueSum, 2) }}
+                                    <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="subnote">مدفوع</div>
+                            <div class="fw-bold">{{ number_format($paidSum,2) }}</div>
+                        </div>
+                    </div>
+                    <div class="progress bar-8" title="نسبة المدفوع">
+                        <div class="progress-bar" style="width: {{ $paidPct2 }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between subnote mt-1">
+                        <span>النسبة: {{ number_format($paidPct2,1) }}%</span>
+                        <span>المتبقي: {{ number_format($remainSum,2) }}</span>
+                    </div>
+                </div>
+            </div>
+            {{-- المتبقي --}}
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
+                        <div>
+                            <div class="subnote">المتبقي للدفع</div>
+                            <div class="kpi-value fw-bold">
+                                {{ number_format($remainSum, 2) }}
+                                <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                            </div>
+                            <div class="subnote">ضمن الفترة المحددة</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{-- (اختياري) إضافة جدول مختصر للأقساط لاحقاً --}}
+        </div>
+    </div>
+</div>
+
+{{-- ====== KPI Cards ====== --}}
 <div class="row g-3 mb-3" dir="rtl">
     <div class="col-12 col-md-2">
         <div class="kpi-card p-3">
@@ -133,7 +234,12 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-check2-circle fs-4 text-success"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">عقود نشطة</div>
+                    <div class="subnote">
+                        عقود نشطة
+                        <span class="hint" data-bs-toggle="tooltip" title="نشط = كل الحالات ما عدا ({{ $endedNamesTx }}) و({{ $pendingNamesTx }})">
+                            <i class="bi bi-info-circle"></i>
+                        </span>
+                    </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsActiveAll) }}</div>
                     <div class="subnote">النسبة: {{ number_format($activePct,1) }}%</div>
                 </div>
@@ -150,7 +256,12 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-hourglass-split fs-4 text-warning"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">عقود معلّقة</div>
+                    <div class="subnote">
+                        عقود معلّقة
+                        <span class="hint" data-bs-toggle="tooltip" title="يشمل فقط: {{ $pendingNamesTx }}">
+                            <i class="bi bi-info-circle"></i>
+                        </span>
+                    </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsPendingAll) }}</div>
                     <div class="subnote">النسبة: {{ number_format($pendingPct,1) }}%</div>
                 </div>
@@ -167,7 +278,12 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-people fs-4 text-danger"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">بدون مستثمر</div>
+                    <div class="subnote">
+                        بدون مستثمر
+                        <span class="hint" data-bs-toggle="tooltip" title="العقود التي لا ترتبط بأي مستثمر (من العلاقة)">
+                            <i class="bi bi-info-circle"></i>
+                        </span>
+                    </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsNoInvestorAll) }}</div>
                     <div class="subnote">النسبة: {{ number_format($noInvPct,1) }}%</div>
                 </div>
@@ -184,7 +300,12 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-flag-fill fs-4 text-secondary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">عقود منتهية</div>
+                    <div class="subnote">
+                        عقود منتهية
+                        <span class="hint" data-bs-toggle="tooltip" title="يشمل: {{ $endedNamesTx }}">
+                            <i class="bi bi-info-circle"></i>
+                        </span>
+                    </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsEndedAll) }}</div>
                     <div class="subnote">النسبة: {{ number_format($endedPct,1) }}%</div>
                 </div>
@@ -198,7 +319,7 @@
     </div>
 </div>
 
-{{-- شريط الأدوات --}}
+{{-- ====== شريط الأدوات ====== --}}
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
         <a href="{{ route('contracts.create') }}" class="btn btn-outline-success">
@@ -214,23 +335,29 @@
         </button>
     </div>
 
-    <div class="collapse @if(request()->hasAny(['customer','type','status','from','to'])) show @endif border-top" id="filterBar">
+    {{-- ✅ أزلنا type وأضفنا investor_id --}}
+    <div class="collapse @if(request()->hasAny(['customer','investor_id','status','from','to'])) show @endif border-top" id="filterBar">
         <div class="card-body">
             <form action="{{ route('contracts.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
                 <div class="col-12 col-md-3">
                     <label class="form-label mb-1">العميل</label>
                     <input type="text" name="customer" value="{{ request('customer') }}" class="form-control form-control-sm" placeholder="اسم العميل">
                 </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">نوع البضاعة</label>
-                    <select name="type" class="form-select form-select-sm">
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">المستثمر</label>
+                    <select name="investor_id" class="form-select form-select-sm">
                         <option value="">الكل</option>
-                        @foreach($productTypes as $type)
-                            <option value="{{ $type->id }}" @selected(request('type') == $type->id)>{{ $type->name }}</option>
+                        <option value="_none" @selected(request('investor_id') === '_none')>بدون مستثمر</option>
+                        @foreach($investors as $inv)
+                            <option value="{{ $inv->id }}" @selected((string)request('investor_id') === (string)$inv->id)>
+                                {{ $inv->name }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
-                <div class="col-6 col-md-2">
+
+                <div class="col-6 col-md-1">
                     <label class="form-label mb-1">حالة العقد</label>
                     <select name="status" class="form-select form-select-sm">
                         <option value="">الكل</option>
@@ -239,14 +366,16 @@
                         @endforeach
                     </select>
                 </div>
+
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">من تاريخ</label>
-                    <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm">
+                    <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">إلى تاريخ</label>
-                    <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm">
+                    <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
                 </div>
+
                 <div class="col-12 col-md-1 d-flex gap-2">
                     <button class="btn btn-primary btn-sm w-100">بحث</button>
                     <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
@@ -256,7 +385,7 @@
     </div>
 </div>
 
-{{-- الجدول --}}
+{{-- ====== الجدول ====== --}}
 <div class="card shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -314,15 +443,6 @@
                             <td>{{ optional($contract->start_date)->format('Y-m-d') }}</td>
                             <td class="text-nowrap">
                                 <a href="{{ route('contracts.show', $contract) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
-                                {{-- 
-                                <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
-                                <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('هل أنت متأكد من حذف هذا العقد؟');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">حذف</button>
-                                </form> 
-                                --}}
                             </td>
                         </tr>
                     @empty

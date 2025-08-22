@@ -12,10 +12,16 @@
     </ol>
   </nav>
 
+  @php
+    // تجهيز روابط الصور (تعمل سواء عندك accessors أو لأ)
+    $logoUrl    = $setting?->logo_url    ?? ($setting?->logo    ? asset('storage/'.$setting->logo)    : null);
+    $faviconUrl = $setting?->favicon_url ?? ($setting?->favicon ? asset('storage/'.$setting->favicon) : null);
+  @endphp
+
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
       <h4 class="mb-0">{{ __('الإعدادات العامة') }}</h4>
-      <small class="text-muted">{{ __('التحكم في الاسم والشعار و أيقونة الموقع') }}</small>
+      <small class="text-muted">{{ __('التحكم في الاسم واسم المالك والشعار وأيقونة الموقع') }}</small>
     </div>
 
     <div class="d-flex gap-2">
@@ -46,7 +52,7 @@
       <div class="card-body text-center py-5">
         <div class="mb-3"><i class="bi bi-gear-wide-connected fs-1"></i></div>
         <h5 class="mb-2">{{ __('لا يوجد إعداد محفوظ بعد') }}</h5>
-        <p class="text-muted mb-4">{{ __('أنشئ الإعداد لإظهار الاسم والشعار وأيقونة الموقع عبر النظام.') }}</p>
+        <p class="text-muted mb-4">{{ __('أنشئ الإعداد لإظهار الاسم واسم المالك والشعار وأيقونة الموقع عبر النظام.') }}</p>
         <a href="{{ route('settings.create') }}" class="btn btn-success">{{ __('إنشاء الآن') }}</a>
       </div>
     </div>
@@ -65,7 +71,11 @@
               <table class="table table-sm align-middle mb-0">
                 <tbody>
                   <tr>
-                    <th style="width:220px">{{ __('الاسم (EN)') }}</th>
+                    <th style="width:220px">{{ __('اسم المالك') }}</th>
+                    <td class="fw-medium">{{ $setting->owner_name }}</td>
+                  </tr>
+                  <tr>
+                    <th>{{ __('الاسم (EN)') }}</th>
                     <td class="fw-medium">{{ $setting->name }}</td>
                   </tr>
                   <tr>
@@ -103,9 +113,9 @@
               {{-- Logo --}}
               <div class="text-center">
                 <div class="text-muted small mb-2">{{ __('الشعار') }}</div>
-                @if(!empty($setting->logo_url))
+                @if(!empty($logoUrl))
                   <div class="ratio ratio-1x1 border rounded bg-light d-flex align-items-center justify-content-center" style="width:96px;">
-                    <img src="{{ $setting->logo_url }}" alt="Logo" class="img-fluid p-1">
+                    <img src="{{ $logoUrl }}" alt="Logo" class="img-fluid p-1">
                   </div>
                 @else
                   <div class="text-muted fst-italic">{{ __('غير مرفوع') }}</div>
@@ -115,9 +125,9 @@
               {{-- Favicon --}}
               <div class="text-center">
                 <div class="text-muted small mb-2">{{ __('Favicon') }}</div>
-                @if(!empty($setting->favicon_url))
+                @if(!empty($faviconUrl))
                   <div class="ratio ratio-1x1 border rounded bg-light d-flex align-items-center justify-content-center" style="width:64px;">
-                    <img src="{{ $setting->favicon_url }}" alt="Favicon" class="img-fluid p-1">
+                    <img src="{{ $faviconUrl }}" alt="Favicon" class="img-fluid p-1">
                   </div>
                 @else
                   <div class="text-muted fst-italic">{{ __('غير مرفوع') }}</div>
@@ -143,14 +153,18 @@
       <div class="card-body mt-2">
         <h6 class="mb-3">{{ __('معاينة العلامة') }}</h6>
         <div class="border rounded p-3 d-flex align-items-center gap-3">
-          @if(!empty($setting->logo_url))
-            <img src="{{ $setting->logo_url }}" alt="Logo" style="height:40px" class="rounded border bg-white p-1">
+          @if(!empty($logoUrl))
+            <img src="{{ $logoUrl }}" alt="Logo" style="height:40px" class="rounded border bg-white p-1">
           @else
             <div class="rounded border bg-light d-flex align-items-center justify-content-center" style="height:40px;width:40px;">
               <i class="bi bi-image text-muted"></i>
             </div>
           @endif
-          <div class="fs-5 fw-semibold">{{ app()->getLocale()==='ar' ? ($setting->name_ar ?? $setting->name) : ($setting->name ?? $setting->name_ar) }}</div>
+          <div class="fs-5 fw-semibold">
+            {{ app()->getLocale()==='ar'
+                ? ($setting->name_ar ?? $setting->name)
+                : ($setting->name ?? $setting->name_ar) }}
+          </div>
         </div>
       </div>
     </div>

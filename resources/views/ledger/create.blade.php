@@ -24,12 +24,17 @@
 
 @php
     $oldCat = old('party_category', 'investors');
-    $oldAccountPicker = old('bank_account_id') ? 'bank:'.old('bank_account_id') : (old('safe_id') ? 'safe:'.old('safe_id') : '');
+    $oldAccountPicker = old('bank_account_id') ? 'bank:'.old('bank_account_id')
+                        : (old('safe_id') ? 'safe:'.old('safe_id') : '');
 
-    // متغيرات البضائع (لو الكنترولر لسه مبعتهومش)
+    // متغيرات البضائع (fallback لو الكنترولر لسه مبعتهومش)
     $goodsStatusIds = $goodsStatusIds ?? [];
-    $products = $products ?? collect();
-    $oldProducts = old('products', []);
+    $products       = $products ?? collect();
+    $oldProducts    = old('products', []);
+
+    // مصفوفة IDs لأنواع البطاقات (اختياري لو ما عندك عمود is_card)
+    // مرّر $cardTypeIds من الكنترولر إن وُجد
+    $cardTypeIds    = $cardTypeIds ?? [];
 @endphp
 
 <div class="card shadow-sm">
@@ -56,7 +61,15 @@
                             <option value="{{ $investor->id }}" @selected(old('investor_id') == $investor->id)>{{ $investor->name }}</option>
                         @endforeach
                     </select>
-                    <div id="investorHelp" class="form-text">إلزامي عند اختيار فئة المستثمرين.</div>
+                    <div id="investorHelp" class="form-text"></div>
+
+                    {{-- سيولة المستثمر --}}
+                    <div class="form-text mt-1">
+                        <span class="text-muted">سيولة المستثمر المتاحة: </span>
+                        <strong id="invAvailValue">—</strong>
+                        <span id="invAvailLoading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                    </div>
+
                     @error('investor_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
@@ -68,8 +81,10 @@
                             data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (مستثمر)</option>
                         @foreach(($statusesByCategory['investors'] ?? []) as $st)
-                            @continue($st->transaction_type_id == 3) {{-- إخفاء التحويل --}}
-                            <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
+                            @continue(($st->transaction_type_id ?? null) == 3) {{-- إخفاء التحويل --}}
+                            <option value="{{ $st->id }}"
+                                    data-type="{{ $st->transaction_type_id }}"
+                                    @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
                         @endforeach
                     </select>
 
@@ -77,8 +92,10 @@
                             data-goods-ids='@json($goodsStatusIds)'>
                         <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (المكتب)</option>
                         @foreach(($statusesByCategory['office'] ?? []) as $st)
-                            @continue($st->transaction_type_id == 3) {{-- إخفاء التحويل --}}
-                            <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
+                            @continue(($st->transaction_type_id ?? null) == 3) {{-- إخفاء التحويل --}}
+                            <option value="{{ $st->id }}"
+                                    data-type="{{ $st->transaction_type_id }}"
+                                    @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
                         @endforeach
                     </select>
 
@@ -124,7 +141,7 @@
             <div class="col-md-4 mt-0">
                 <label class="form-label" for="amount">المبلغ</label>
                 <input type="number" step="0.01" min="0" name="amount" id="amount" class="form-control" value="{{ old('amount', '0') }}" required>
-                <div class="invalid-feedback">المبلغ يتجاوز المتاح في الحساب.</div>
+                <div class="invalid-feedback">المبلغ يتجاوز الحد المسموح.</div>
                 @error('amount') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
@@ -148,17 +165,22 @@
                                 <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
                                     <div class="col-md-8">
                                         <label class="form-label small mb-1">نوع البضاعة</label>
-                                        <select name="products[{{ $i }}][product_type_id]" class="form-select">
+                                        <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
                                             <option value="">— اختر —</option>
                                             @foreach($products as $p)
-                                                <option value="{{ $p->id }}" @selected($oldTypeId==$p->id)>{{ $p->name }}</option>
+                                                <option value="{{ $p->id }}"
+                                                        data-card="{{ in_array($p->id, $cardTypeIds) || ($p->is_card ?? false) ? 1 : 0 }}"
+                                                        @selected($oldTypeId==$p->id)>{{ $p->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label small mb-1">الكمية</label>
+                                        <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                            <span>الكمية</span>
+                                            <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                        </label>
                                         <div class="input-group">
-                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
+                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
                                             <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
                                         </div>
                                     </div>
@@ -168,17 +190,23 @@
                             <div class="row g-2 product-row align-items-end">
                                 <div class="col-md-8">
                                     <label class="form-label small mb-1">نوع البضاعة</label>
-                                    <select name="products[0][product_type_id]" class="form-select">
+                                    <select name="products[0][product_type_id]" class="form-select js-product-select">
                                         <option value="">— اختر —</option>
                                         @foreach($products as $p)
-                                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                            <option value="{{ $p->id }}"
+                                                    data-card="{{ in_array($p->id, $cardTypeIds) || ($p->is_card ?? false) ? 1 : 0 }}">
+                                                {{ $p->name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small mb-1">الكمية</label>
+                                    <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                        <span>الكمية</span>
+                                        <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                    </label>
                                     <div class="input-group">
-                                        <input type="number" min="1" name="products[0][quantity]" class="form-control" placeholder="0">
+                                        <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
                                         <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
                                     </div>
                                 </div>
@@ -213,7 +241,7 @@
     </div>
 </div>
 
-{{-- قالب صف بضاعة جديد (Template) --}}
+{{-- قالب صف بضاعة جديد --}}
 <template id="product_row_tpl">
     <div class="row g-2 product-row align-items-end mt-2">
         <div class="col-md-8">
@@ -221,12 +249,18 @@
             <select class="form-select js-product-select">
                 <option value="">— اختر —</option>
                 @foreach($products as $p)
-                    <option value="{{ $p->id }}">{{ $p->name }}</option>
+                    <option value="{{ $p->id }}"
+                            data-card="{{ in_array($p->id, $cardTypeIds) || ($p->is_card ?? false) ? 1 : 0 }}">
+                        {{ $p->name }}
+                    </option>
                 @endforeach
             </select>
         </div>
         <div class="col-md-4">
-            <label class="form-label small mb-1">الكمية</label>
+            <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                <span>الكمية</span>
+                <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+            </label>
             <div class="input-group">
                 <input type="number" min="1" class="form-control js-qty-input" placeholder="0">
                 <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
@@ -239,38 +273,47 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const catSel = document.getElementById('party_category');
-    const investorWrap = document.getElementById('investorWrap');
+    const catSel        = document.getElementById('party_category');
+    const investorWrap  = document.getElementById('investorWrap');
+    const investorSel   = document.getElementById('investor_id');
+    const invAvailValue = document.getElementById('invAvailValue');
+    const invAvailLoading = document.getElementById('invAvailLoading');
 
-    const statusInv = document.getElementById('status_investors');
-    const statusOff = document.getElementById('status_office');
-    const statusHidden = document.getElementById('status_id_hidden');
-    const dirBadge = document.getElementById('dirBadge');
+    const statusInv   = document.getElementById('status_investors');
+    const statusOff   = document.getElementById('status_office');
+    const statusHidden= document.getElementById('status_id_hidden');
+    const dirBadge    = document.getElementById('dirBadge');
 
     const accountPicker = document.getElementById('account_picker');
-    const bankHidden = document.getElementById('bank_account_id');
-    const safeHidden = document.getElementById('safe_id');
+    const bankHidden    = document.getElementById('bank_account_id');
+    const safeHidden    = document.getElementById('safe_id');
 
     const amountInput = document.getElementById('amount');
-    const availSpan = document.getElementById('availValue');
-    const availLoading = document.getElementById('availLoading');
+    const availSpan   = document.getElementById('availValue');
+    const availLoading= document.getElementById('availLoading');
 
-    const btnSave = document.getElementById('btnSave');
-    const btnSpinner = document.getElementById('btnSpinner');
-    const form = document.getElementById('createForm');
+    const btnSave     = document.getElementById('btnSave');
+    const btnSpinner  = document.getElementById('btnSpinner');
+    const form        = document.getElementById('createForm');
 
     // ====== البضائع
-    const goodsSection = document.getElementById('goods_section');
+    const goodsSection    = document.getElementById('goods_section');
     const productsWrapper = document.getElementById('products_wrapper');
-    const btnAddProduct = document.getElementById('btnAddProduct');
-    const rowTpl = document.getElementById('product_row_tpl');
+    const btnAddProduct   = document.getElementById('btnAddProduct');
+    const rowTpl          = document.getElementById('product_row_tpl');
 
-    function goodsIdsFrom(el){
-        try { return JSON.parse(el.dataset.goodsIds || '[]').map(Number); }
-        catch(e){ return []; }
-    }
-    function currentStatusSelect(){
-        return catSel.value === 'investors' ? statusInv : statusOff;
+    // Helpers
+    function goodsIdsFrom(el){ try { return JSON.parse(el.dataset.goodsIds || '[]').map(Number); } catch(e){ return []; } }
+    function currentStatusSelect(){ return catSel.value === 'investors' ? statusInv : statusOff; }
+
+    // حالة المتاح
+    let accountAvail  = null; // متاح الحساب (بنك/خزنة)
+    let investorAvail = null; // سيولة المستثمر
+
+    function currentDirectionType(){
+        const sel = currentStatusSelect();
+        const opt = sel ? sel.options[sel.selectedIndex] : null;
+        return opt ? (opt.dataset.type || '') : '';
     }
 
     function syncCategoryUI(){
@@ -279,9 +322,20 @@ document.addEventListener('DOMContentLoaded', function () {
         statusOff.hidden = !(catSel.value === 'office');
         syncStatusHiddenAndBadge();
         toggleGoodsSection();
+        enforceStatusBeforeAccount();
+
+        // تحديث/تصفير سيولة المستثمر حسب الفئة
+        if (catSel.value === 'investors') {
+            refreshInvestorLiquidity();
+        } else {
+            investorAvail = null;
+            invAvailValue.textContent = '—';
+        }
+
         applyMaxByDirection();
         validateAmount();
-        enforceStatusBeforeAccount();
+        reapplyRowsAvailabilityPolicy();
+        validateGoodsQuantities();
     }
 
     function syncStatusHiddenAndBadge(){
@@ -292,9 +346,10 @@ document.addEventListener('DOMContentLoaded', function () {
         let text='—', cls='bg-secondary';
         if (t==='1'){ text='داخل (إيداع)'; cls='bg-success'; }
         else if (t==='2'){ text='خارج (سحب)'; cls='bg-danger'; }
-        else if (t==='3'){ text='تحويل'; cls='bg-warning text-dark'; }
         dirBadge.textContent = text; dirBadge.className = 'badge rounded-pill ' + cls;
         enforceStatusBeforeAccount();
+        applyMaxByDirection();
+        validateAmount();
     }
 
     function clearAccountSelection(){
@@ -303,14 +358,13 @@ document.addEventListener('DOMContentLoaded', function () {
         safeHidden.value = '';
         availSpan.textContent = '—';
         amountInput.removeAttribute('max');
+        accountAvail = null;
     }
 
     function enforceStatusBeforeAccount(){
         const hasStatus = !!statusHidden.value;
         accountPicker.disabled = !hasStatus;
-        if (!hasStatus){
-            clearAccountSelection();
-        }
+        if (!hasStatus){ clearAccountSelection(); }
     }
 
     function syncAccountHidden(){
@@ -321,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (type === 'safe'){ safeHidden.value = id; bankHidden.value = ''; }
     }
 
-    // ====== عرض/إخفاء قسم البضائع
+    // عرض/إخفاء قسم البضائع
     function selectedStatusId(){
         const sel = currentStatusSelect();
         const opt = sel.options[sel.selectedIndex];
@@ -333,11 +387,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const cur = selectedStatusId();
         return ids.includes(cur);
     }
+
     function toggleGoodsSection(){
         goodsSection.style.display = isGoodsStatus() ? '' : 'none';
     }
 
-    // ====== إدارة صفوف البضائع
+    // إدارة صفوف البضائع
     function nextProductIndex(){
         const rows = productsWrapper.querySelectorAll('.product-row');
         return rows.length ? Math.max(...Array.from(rows).map(r => {
@@ -358,6 +413,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = frag.querySelector('.product-row');
         wireRowNames(row, nextProductIndex());
         productsWrapper.appendChild(frag);
+        const appended = productsWrapper.querySelector('.product-row:last-child');
+        if (appended) bindProductRow(appended);
+        validateGoodsQuantities();
     }
     function handleRemoveClick(e){
         if (!e.target.classList.contains('js-remove-product')) return;
@@ -365,103 +423,314 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!row) return;
         if (productsWrapper.querySelectorAll('.product-row').length > 1){
             row.remove();
+            validateGoodsQuantities();
         }
     }
 
-    // ====== المتاح في الحساب + منع السحب بأكثر من المتاح
-    let accountAvail = null; // رقم خام (float)
-
-    function currentDirectionType(){
-        const sel = currentStatusSelect();
+    // --- توابع للمساعدة سابقًا (قد لا تُستخدم الآن) ---
+    function isCardSaleMode(){
+        return isGoodsStatus() && currentDirectionType() === '1';
+    }
+    function rowIsCard(row){
+        const sel = row.querySelector('.js-product-select');
+        if (!sel) return false;
         const opt = sel.options[sel.selectedIndex];
-        return opt ? (opt.dataset.type || '') : '';
+        return !!(opt && Number(opt.dataset.card) === 1);
+    }
+    function reapplyRowsAvailabilityPolicy(){
+        productsWrapper.querySelectorAll('.product-row').forEach(row => {
+            const sel = row.querySelector('.js-product-select');
+            if (sel && sel.value) {
+                reloadRowAvailability(row);
+            } else {
+                setRowAvailabilityUI(row, { success:true, available:0 });
+            }
+        });
     }
 
+    // حد السحب = min(متاح الحساب، سيولة المستثمر إن وُجد مستثمر مختار)
     function applyMaxByDirection(){
         const t = currentDirectionType();
-        if (t === '2' && accountAvail !== null){ // سحب فقط
-            amountInput.setAttribute('max', String(accountAvail));
+
+        if (t === '2') { // سحب
+            let cap = null;
+
+            if (accountAvail !== null) cap = accountAvail;
+
+            const isInvestorFlow = (catSel.value === 'investors') && investorSel && investorSel.value;
+            if (isInvestorFlow && investorAvail !== null) {
+                cap = (cap === null) ? investorAvail : Math.min(cap, investorAvail);
+            }
+
+            if (cap !== null) amountInput.setAttribute('max', String(cap));
+            else amountInput.removeAttribute('max');
         } else {
             amountInput.removeAttribute('max');
+            amountInput.setCustomValidity('');
+            amountInput.classList.remove('is-invalid');
         }
     }
 
     function validateAmount(){
         const t = currentDirectionType();
         const val = parseFloat(amountInput.value || '0');
-        if (t === '2' && accountAvail !== null && val > accountAvail + 1e-9){
-            amountInput.setCustomValidity('المبلغ يتجاوز المتاح في الحساب');
+
+        let cap = null;
+        if (t === '2') {
+            if (accountAvail !== null) cap = accountAvail;
+
+            const isInvestorFlow = (catSel.value === 'investors') && investorSel && investorSel.value;
+            if (isInvestorFlow && investorAvail !== null) {
+                cap = (cap === null) ? investorAvail : Math.min(cap, investorAvail);
+            }
+        }
+
+        if (t === '2' && cap !== null && val > cap + 1e-9){
+            amountInput.setCustomValidity('المبلغ يتجاوز الحد المسموح (سيولة المستثمر/متاح الحساب).');
         } else {
             amountInput.setCustomValidity('');
         }
         amountInput.classList.toggle('is-invalid', !!amountInput.validationMessage);
     }
 
+    // جلب متاح الحساب (بنك/خزنة)
     async function refreshAvailability(){
         const val = accountPicker.value || '';
         accountAvail = null;
         availSpan.textContent = '—';
         amountInput.removeAttribute('max');
 
-        if (!val){ validateAmount(); return; }
+        if (!val){ applyMaxByDirection(); validateAmount(); return; }
 
         const [type, id] = val.split(':');
-        if (!type || !id){ validateAmount(); return; }
+        if (!type || !id){ applyMaxByDirection(); validateAmount(); return; }
 
         availLoading.classList.remove('d-none');
         try {
-            const url = `{{ route('ajax.accounts.availability') }}?account_type=${encodeURIComponent(type)}&account_id=${encodeURIComponent(id)}`;
+            const url = `{{ route('ajax.accounts.availability') }}` + `?account_type=${encodeURIComponent(type)}&account_id=${encodeURIComponent(id)}`;
             const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
 
             if (!res.ok) {
-                console.error('Availability fetch failed:', res.status, res.statusText);
                 accountAvail = null;
                 availSpan.textContent = '—';
-                return;
-            }
-
-            const data = await res.json();
-            if (data && data.success){
-                accountAvail = Number(data.available);
-                const s = (data.available_formatted ?? accountAvail.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
-                availSpan.textContent = s;
-                applyMaxByDirection();
             } else {
-                accountAvail = null;
-                availSpan.textContent = '—';
+                const data = await res.json();
+                if (data && data.success){
+                    accountAvail = Number(data.available);
+                    const s = (data.available_formatted ?? accountAvail.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+                    availSpan.textContent = s;
+                } else {
+                    accountAvail = null;
+                    availSpan.textContent = '—';
+                }
             }
         } catch (e){
-            console.error('Availability fetch error:', e);
             accountAvail = null;
             availSpan.textContent = '—';
         } finally {
             availLoading.classList.add('d-none');
+            applyMaxByDirection();
             validateAmount();
         }
     }
 
+    // سيولة المستثمر
+    const INVESTOR_LIQ_URL_TPL = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
+
+    async function refreshInvestorLiquidity(){
+        // نطبّق فقط لو الفئة "المستثمرون" ومختار مستثمر
+        if (catSel.value !== 'investors') { investorAvail = null; invAvailValue.textContent = '—'; return; }
+
+        const id = investorSel.value || '';
+        investorAvail = null;
+        invAvailValue.textContent = '—';
+        if (!id) { applyMaxByDirection(); validateAmount(); return; }
+
+        invAvailLoading.classList.remove('d-none');
+        try{
+            const url = INVESTOR_LIQ_URL_TPL.replace('__ID__', encodeURIComponent(id));
+            const res = await fetch(url, { headers: { 'Accept':'application/json' }, credentials: 'same-origin' });
+            if (!res.ok) {
+                investorAvail = null;
+                invAvailValue.textContent = '—';
+            } else {
+                const data = await res.json();
+                const raw = Number(data.cash ?? data.balance ?? 0);
+                if (Number.isFinite(raw)) {
+                    investorAvail = raw;
+                    const fmt = (data.formatted ?? raw.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+                    invAvailValue.textContent = fmt;
+                } else {
+                    investorAvail = null;
+                    invAvailValue.textContent = '—';
+                }
+            }
+        } catch(e){
+            investorAvail = null;
+            invAvailValue.textContent = '—';
+        } finally {
+            invAvailLoading.classList.add('d-none');
+            applyMaxByDirection();
+            validateAmount();
+        }
+    }
+
+    // المتاح لكل نوع بضاعة (جلب من السيرفر + ضبط max فقط لو بيع بضائع)
+    const AVAIL_URL_TPL = @json(route('product-types.available', ['productType' => '__ID__']));
+    const availableCache = Object.create(null);
+
+    async function fetchAvailableFor(typeId){
+        if (!typeId) return { success:true, available:0 };
+        if (availableCache[typeId] !== undefined) return availableCache[typeId];
+        try{
+            const url = AVAIL_URL_TPL.replace('__ID__', encodeURIComponent(typeId));
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP '+res.status);
+            const data = await res.json();
+            availableCache[typeId] = data;
+            return data;
+        }catch(e){
+            availableCache[typeId] = { success:false, message:e.message };
+            return availableCache[typeId];
+        }
+    }
+
+    function setRowAvailabilityUI(row, payload){
+        const badge = row.querySelector('.js-available-badge');
+        const qty   = row.querySelector('.js-qty-input');
+
+        if (!badge || !qty) return;
+
+        if (!payload || payload.success !== true){
+            const msg = (payload && payload.message) ? payload.message : 'تعذّر جلب المتاح';
+            badge.textContent = 'خطأ: ' + msg;
+            badge.className = 'badge bg-danger text-white js-available-badge';
+            qty.removeAttribute('max');     // لا نفرض max عند فشل الجلب
+            return;
+        }
+
+        const avail = Number(payload.available ?? payload.stock?.available ?? 0);
+        const safeAvail = Number.isFinite(avail) ? Math.max(0, Math.floor(avail)) : 0;
+
+        badge.textContent = 'المتاح: ' + safeAvail.toLocaleString('ar-EG');
+        badge.className = 'badge bg-light text-dark js-available-badge';
+
+        // ✅ شرط: max فقط في حالة "بيع البضائع" (أي نوع)
+        if (isGoodsStatus() && currentDirectionType() === '1') {
+            qty.setAttribute('max', String(safeAvail)); // قد تكون 0
+        } else {
+            qty.removeAttribute('max');
+        }
+
+        // لقط القيمة ضمن الحدود لو max موجود
+        const maxAttr = qty.getAttribute('max');
+        const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
+        let v = parseInt(qty.value || '0', 10) || 0;
+        if (v < 0) v = 0;
+        if (isFinite(max) && v > max) v = max;
+        qty.value = v ? String(v) : '';
+    }
+
+    async function reloadRowAvailability(row){
+        const sel = row.querySelector('.js-product-select');
+        const qty = row.querySelector('.js-qty-input');
+        const badge = row.querySelector('.js-available-badge');
+        if (!sel || !qty || !badge) return;
+
+        // حالة التحميل
+        badge.textContent = 'جاري التحميل...';
+        badge.className = 'badge bg-secondary text-white js-available-badge';
+
+        const typeId = sel.value || '';
+        const payload = await fetchAvailableFor(typeId);
+        setRowAvailabilityUI(row, payload);
+        validateGoodsQuantities();
+    }
+
+    function bindProductRow(row){
+        const sel = row.querySelector('.js-product-select');
+        const qty = row.querySelector('.js-qty-input');
+
+        if (sel){
+            sel.addEventListener('change', () => reloadRowAvailability(row));
+            // تهيئة أولية إن كان النوع مختارًا من old()
+            if (sel.value) reloadRowAvailability(row);
+            else setRowAvailabilityUI(row, { success:true, available:0 });
+        }
+        if (qty){
+            const clampQty = () => {
+                const maxAttr = qty.getAttribute('max');
+                const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
+                let v = parseInt(qty.value || '0', 10) || 0;
+                if (v < 0) v = 0;
+                if (isFinite(max) && v > max) v = max;
+                qty.value = v ? String(v) : '';
+            };
+            qty.addEventListener('input', () => { clampQty(); validateGoodsQuantities(); });
+            qty.addEventListener('blur',  () => { clampQty(); validateGoodsQuantities(); });
+        }
+    }
+
+    // ✅ تحقق عام: لا تبيع أكثر من المتاح في حالة بيع البضائع
+    function validateGoodsQuantities(){
+        const isSale = isGoodsStatus() && currentDirectionType() === '1';
+        let ok = true;
+
+        productsWrapper.querySelectorAll('.product-row').forEach(row => {
+            const sel = row.querySelector('.js-product-select');
+            const qty = row.querySelector('.js-qty-input');
+            if (!sel || !qty || !sel.value) return;
+
+            // نظّف أي حالة قديمة
+            qty.classList.remove('is-invalid');
+            qty.setCustomValidity('');
+
+            if (!isSale) return; // التحقق ينطبق فقط في البيع
+
+            const maxAttr = qty.getAttribute('max');
+            const max = maxAttr !== null ? parseInt(maxAttr,10) : null;
+            const val = parseInt(qty.value || '0', 10) || 0;
+            const effectiveMax = (max === null || isNaN(max)) ? 0 : max;
+
+            if (val > effectiveMax){
+                ok = false;
+                qty.classList.add('is-invalid');
+                qty.setCustomValidity('الكمية أكبر من المتاح في المخزون.');
+            }
+        });
+
+        return ok;
+    }
+
+    // اربط كل الصفوف الحالية
+    productsWrapper.querySelectorAll('.product-row').forEach(bindProductRow);
+
     // Events
-    catSel.addEventListener('change', syncCategoryUI);
+    catSel.addEventListener('change', () => { syncCategoryUI(); reapplyRowsAvailabilityPolicy(); validateGoodsQuantities(); });
 
     statusInv.addEventListener('change', function(){
         syncStatusHiddenAndBadge();
         toggleGoodsSection();
-        applyMaxByDirection();
-        validateAmount();
         clearAccountSelection(); // يلزم اختيار الحساب بعد تغيير الحالة
+        reapplyRowsAvailabilityPolicy();
+        validateGoodsQuantities();
     });
 
     statusOff.addEventListener('change', function(){
         syncStatusHiddenAndBadge();
         toggleGoodsSection();
-        applyMaxByDirection();
-        validateAmount();
         clearAccountSelection(); // يلزم اختيار الحساب بعد تغيير الحالة
+        reapplyRowsAvailabilityPolicy();
+        validateGoodsQuantities();
     });
 
     accountPicker.addEventListener('change', function(){
         syncAccountHidden();
         refreshAvailability();
+    });
+
+    investorSel.addEventListener('change', function(){
+        refreshInvestorLiquidity();
     });
 
     if (btnAddProduct) btnAddProduct.addEventListener('click', addProductRow);
@@ -484,6 +753,15 @@ document.addEventListener('DOMContentLoaded', function () {
         applyMaxByDirection();
         validateAmount();
 
+        // ✅ منع بيع كمية أكبر من المتاح قبل الإرسال
+        const goodsOk = validateGoodsQuantities();
+        if (!goodsOk){
+            e.preventDefault();
+            e.stopPropagation();
+            alert('لا يمكنك بيع كمية أكبر من المتاح في المخزون.');
+            return;
+        }
+
         if (!form.checkValidity()){
             e.preventDefault();
             e.stopPropagation();
@@ -499,12 +777,16 @@ document.addEventListener('DOMContentLoaded', function () {
     syncCategoryUI();
     syncStatusHiddenAndBadge();
     syncAccountHidden();
-    // المبلغ افتراضي 0
+
     if (!amountInput.value || isNaN(parseFloat(amountInput.value))) {
         amountInput.value = '0';
     }
-    enforceStatusBeforeAccount();
-    refreshAvailability(); // في حال فيه حساب مختار من old()
+
+    // جلب سيولة المستثمر ومتـاح الحساب لو في old()
+    refreshInvestorLiquidity();
+    refreshAvailability();
+    reapplyRowsAvailabilityPolicy();
+    validateGoodsQuantities();
 });
 </script>
 @endpush

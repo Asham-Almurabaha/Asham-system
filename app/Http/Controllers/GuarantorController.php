@@ -14,25 +14,39 @@ class GuarantorController extends Controller
 {
     public function index(Request $request)
     {
-        // ====== الاستعلام الأساسي (مع الفلاتر) ======
-        $query = Guarantor::query()
-            ->with(['nationality','title'])
-            ->when($request->filled('q'),           fn($q) => $q->where('name','like','%'.$request->q.'%'))
-            // فلتر الهوية مشروط بوجود العمود لتفادي أخطاء الأعمدة المفقودة
-            ->when($request->filled('national_id') && Schema::hasColumn('guarantors','national_id'),
-                fn($q) => $q->where('national_id','like','%'.$request->national_id.'%'))
-            ->when($request->filled('phone'),       fn($q) => $q->where('phone','like','%'.$request->phone.'%'))
-            ->when($request->filled('email'),       fn($q) => $q->where('email','like','%'.$request->email.'%'))
-            ->when($request->filled('nationality'), fn($q) => $q->where('nationality_id', $request->nationality))
-            ->when($request->filled('title'),       fn($q) => $q->where('title_id', $request->title))
-            ->latest();
+        // ====== الاستعلام الأساسي ======
+        $query = Guarantor::query();
 
-        $guarantors = $query->paginate(10)->withQueryString();
+        // فلتر دقيق بالـ ID القادم من الـ dropdown
+        $guarantorId = $request->input('guarantor_id');
+        if ($guarantorId !== null && $guarantorId !== '' && $guarantorId !== '_none') {
+            // التحقق سريعًا لتفادي إدخالات غير متوقعة
+            if (is_numeric($guarantorId)) {
+                $query->where('guarantors.id', (int) $guarantorId);
+            } else {
+                // قيمة غير صالحة => لا نتائج
+                $query->whereRaw('1=0');
+            }
+        } else {
+            // فلاتر النص التقليدية عند عدم اختيار ID
+            $query
+                ->when($request->filled('q'),
+                    fn($q) => $q->where('name', 'like', '%' . trim($request->q) . '%'))
+                ->when($request->filled('national_id') && Schema::hasColumn('guarantors','national_id'),
+                    fn($q) => $q->where('national_id', 'like', '%' . trim($request->national_id) . '%'))
+                ->when($request->filled('phone'),
+                    fn($q) => $q->where('phone', 'like', '%' . trim($request->phone) . '%'));
+        }
+
+        $guarantors = $query->latest()->paginate(10)->withQueryString();
+
+        // أسماء الكفلاء للـ dropdown
+        $guarantorNameOptions = Guarantor::orderBy('name')->get(['id','name']);
 
         // ====== كروت عامة ======
         $guarantorsTotalAll = Guarantor::count();
 
-        // تعريف الحالات غير النشطة
+        // تعريف الحالات المنتهية
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
 
         // IDs للحالات إن وُجد جدول حالة العقود
@@ -66,13 +80,13 @@ class GuarantorController extends Controller
                 $c->whereNull('contracts.closed_at');
             } else {
                 // لو ماعندناش معلومة حالة الإغلاق، اعتبر وجود أي عقد = نشط
-                $c->whereRaw('1 = 1');
+                $c->whereRaw('1=1');
             }
         };
 
         // حساب الكفلاء النشطين بحسب شكل الربط
         if (method_exists(Guarantor::class, 'contracts')) {
-            // لو معرف علاقة contracts على الموديل
+            // علاقة contracts معرّفة على الموديل
             $activeGuarantorsTotalAll = Guarantor::whereHas('contracts', function ($c) use ($applyActiveContractWhere) {
                 $applyActiveContractWhere($c);
             })->count();
@@ -81,8 +95,8 @@ class GuarantorController extends Controller
             // ربط مباشر عبر عمود guarantor_id
             $activeGuarantorsTotalAll = Guarantor::whereExists(function ($q) use ($applyActiveContractWhere) {
                 $q->select(DB::raw(1))
-                  ->from('contracts')
-                  ->whereColumn('contracts.guarantor_id', 'guarantors.id');
+                ->from('contracts')
+                ->whereColumn('contracts.guarantor_id', 'guarantors.id');
                 $applyActiveContractWhere($q);
             })->count();
 
@@ -91,14 +105,14 @@ class GuarantorController extends Controller
             $pivot = Schema::hasTable('contract_guarantors') ? 'contract_guarantors' : 'contract_guarantor';
             $activeGuarantorsTotalAll = Guarantor::whereExists(function ($q) use ($pivot, $applyActiveContractWhere) {
                 $q->select(DB::raw(1))
-                  ->from("$pivot as cg")
-                  ->whereColumn('cg.guarantor_id', 'guarantors.id')
-                  ->whereExists(function ($qq) use ($applyActiveContractWhere) {
-                      $qq->select(DB::raw(1))
-                         ->from('contracts')
-                         ->whereColumn('contracts.id', 'cg.contract_id');
-                      $applyActiveContractWhere($qq);
-                  });
+                ->from("$pivot as cg")
+                ->whereColumn('cg.guarantor_id', 'guarantors.id')
+                ->whereExists(function ($qq) use ($applyActiveContractWhere) {
+                    $qq->select(DB::raw(1))
+                        ->from('contracts')
+                        ->whereColumn('contracts.id', 'cg.contract_id');
+                    $applyActiveContractWhere($qq);
+                });
             })->count();
 
         } else {
@@ -106,17 +120,9 @@ class GuarantorController extends Controller
             $activeGuarantorsTotalAll = 0;
         }
 
-        // أرقام إضافية للإبقاء (الجدد)
+        // أرقام إضافية (الجدد)
         $newGuarantorsThisMonthAll = Guarantor::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
         $newGuarantorsThisWeekAll  = Guarantor::whereBetween('created_at', [now()->startOfWeek(),  now()])->count();
-
-        // قوائم للفلاتر
-        $nationalities = class_exists(Nationality::class)
-            ? Nationality::select('id','name')->orderBy('name')->get()
-            : collect();
-        $titles = class_exists(Title::class)
-            ? Title::select('id','name')->orderBy('name')->get()
-            : collect();
 
         return view('guarantors.index', compact(
             'guarantors',
@@ -124,11 +130,9 @@ class GuarantorController extends Controller
             'activeGuarantorsTotalAll',
             'newGuarantorsThisMonthAll',
             'newGuarantorsThisWeekAll',
-            'nationalities',
-            'titles'
+            'guarantorNameOptions'
         ));
     }
-
     public function create()
     {
         $nationalities = Nationality::all();

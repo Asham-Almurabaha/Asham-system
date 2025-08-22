@@ -1,15 +1,15 @@
 @extends('layouts.master')
 
-@section('title', 'إضافة مستثمر جديد')
+@section('title', 'إضافة عميل جديد')
 
 @section('content')
 <div class="container py-3" dir="rtl">
 
     <div class="pagetitle">
-        <h1 class="h3 mb-1">إضافة مستثمر جديد</h1>
+        <h1 class="h3 mb-1">إضافة عميل جديد</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">المستثمرون</li>
+                <li class="breadcrumb-item">العملاء</li>
                 <li class="breadcrumb-item active">إضافة</li>
             </ol>
         </nav>
@@ -24,7 +24,7 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            <form action="{{ route('investors.store') }}" method="POST" enctype="multipart/form-data" novalidate>
+            <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
 
                 <div class="row g-3">
@@ -149,47 +149,27 @@
                             name="id_card_image"
                             id="id_card_image"
                             class="form-control @error('id_card_image') is-invalid @enderror"
-                            accept="image/*">
-                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                            accept="image/*"
+                            aria-describedby="idCardHelp">
+                        <div id="idCardHelp" class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
                             <small class="text-muted d-block mb-1">معاينة:</small>
-                            <img id="id-preview" src="#" alt="معاينة صورة الهوية" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                            <img id="id-preview" src="#" alt="معاينة الصورة" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
 
-                    {{-- صورة العقد + معاينة --}}
+                    {{-- ملاحظات --}}
                     <div class="col-md-6">
-                        <label for="contract_image" class="form-label">صورة العقد</label>
-                        <input
-                            type="file"
-                            name="contract_image"
-                            id="contract_image"
-                            class="form-control @error('contract_image') is-invalid @enderror"
-                            accept="image/*">
-                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
-                        @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
-
-                        <div class="mt-2 d-none" id="contract-preview-wrap">
-                            <small class="text-muted d-block mb-1">معاينة:</small>
-                            <img id="contract-preview" src="#" alt="معاينة صورة العقد" class="rounded border" style="max-height: 140px; object-fit: cover;">
-                        </div>
-                    </div>
-
-                    {{-- نسبة حصة المكتب --}}
-                    <div class="col-md-6">
-                        <label for="office_share_percentage" class="form-label">نسبة حصة المكتب (%)</label>
-                        <input
-                            type="number"
-                            name="office_share_percentage"
-                            id="office_share_percentage"
-                            class="form-control @error('office_share_percentage') is-invalid @enderror"
-                            value="{{ old('office_share_percentage', '0') }}"
-                            min="0" max="100" step="0.01" inputmode="decimal" dir="ltr"
-                            placeholder="مثال: 12.50">
-                        <div class="form-text">القيمة بين 0 و 100.</div>
-                        @error('office_share_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <label for="notes" class="form-label">ملاحظات</label>
+                        <textarea
+                            name="notes"
+                            id="notes"
+                            rows="3"
+                            class="form-control @error('notes') is-invalid @enderror"
+                            placeholder="أي معلومات إضافية عن العميل">{{ old('notes') }}</textarea>
+                        @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
@@ -197,7 +177,7 @@
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-check2-circle me-1"></i> حفظ
                     </button>
-                    <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
+                    <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
                         إلغاء
                     </a>
                 </div>
@@ -217,32 +197,26 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // معاينة صورة (هوية/عقد)
-    function bindPreview(inputId, wrapId, imgId){
-        const input = document.getElementById(inputId);
-        const wrap  = document.getElementById(wrapId);
-        const img   = document.getElementById(imgId);
-        input?.addEventListener('change', function(){
-            const file = this.files && this.files[0];
-            if (!file || !/^image\//.test(file.type)) { wrap?.classList.add('d-none'); return; }
-            const reader = new FileReader();
-            reader.onload = e => { img.src = e.target.result; wrap.classList.remove('d-none'); };
-            reader.readAsDataURL(file);
-        });
-    }
-    bindPreview('id_card_image','id-preview-wrap','id-preview');
-    bindPreview('contract_image','contract-preview-wrap','contract-preview');
+    // معاينة صورة الهوية قبل الرفع
+    const input = document.getElementById('id_card_image');
+    const wrap  = document.getElementById('id-preview-wrap');
+    const img   = document.getElementById('id-preview');
 
-    // ضبط النسبة بين 0 و 100
-    const pct = document.getElementById('office_share_percentage');
-    pct?.addEventListener('change', () => {
-        let v = parseFloat(pct.value || '0');
-        if (isNaN(v)) v = 0;
-        v = Math.min(100, Math.max(0, v));
-        pct.value = v.toFixed(2);
+    input?.addEventListener('change', function(){
+        const file = this.files && this.files[0];
+        if (!file) { wrap?.classList.add('d-none'); return; }
+        const ok = /^image\//.test(file.type);
+        if (!ok) { wrap?.classList.add('d-none'); return; }
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            wrap.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
     });
 
-    // إخفاء التنبيهات
+    // إخفاء أي تنبيه بعد 5 ثوانٍ
     setTimeout(() => {
         document.querySelectorAll('.alert').forEach(el => {
             el.style.transition = 'opacity .4s ease';

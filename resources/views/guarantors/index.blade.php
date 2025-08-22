@@ -112,49 +112,31 @@
         </button>
     </div>
 
-    <div class="collapse @if(request()->hasAny(['q','national_id','phone','email','nationality','title'])) show @endif border-top" id="filterBar">
+    <div class="collapse @if(request()->hasAny(['guarantor_id','national_id','phone'])) show @endif border-top" id="filterBar">
         <div class="card-body">
-            <form action="{{ route('guarantors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+            <form id="filterForm" action="{{ route('guarantors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
                 <div class="col-12 col-md-3">
-                    <label class="form-label mb-1">الاسم</label>
-                    <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="اسم الكفيل">
+                    <label class="form-label mb-1">الكفيل</label>
+                    <select name="guarantor_id" class="form-select form-select-sm auto-submit">
+                        <option value="">الكل</option>
+                        @foreach($guarantorNameOptions as $g)
+                            <option value="{{ $g->id }}" @selected((string)request('guarantor_id') === (string)$g->id)>
+                                {{ $g->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">رقم الهوية</label>
-                    <input type="text" name="national_id" value="{{ request('national_id') }}" class="form-control form-control-sm" placeholder="مثال: 1234567890">
+                    <input type="text" name="national_id" value="{{ request('national_id') }}" 
+                           class="form-control form-control-sm auto-submit-input" placeholder="مثال: 1234567890">
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">الهاتف</label>
-                    <input type="text" name="phone" value="{{ request('phone') }}" class="form-control form-control-sm" placeholder="+9665XXXXXXXX">
+                    <input type="text" name="phone" value="{{ request('phone') }}" 
+                           class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
                 </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">البريد الإلكتروني</label>
-                    <input type="email" name="email" value="{{ request('email') }}" class="form-control form-control-sm" placeholder="name@email.com">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">الجنسية</label>
-                    <select name="nationality" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        @isset($nationalities)
-                            @foreach($nationalities as $nat)
-                                <option value="{{ $nat->id }}" @selected(request('nationality') == $nat->id)>{{ $nat->name }}</option>
-                            @endforeach
-                        @endisset
-                    </select>
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">الوظيفة</label>
-                    <select name="title" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        @isset($titles)
-                            @foreach($titles as $t)
-                                <option value="{{ $t->id }}" @selected(request('title') == $t->id)>{{ $t->name }}</option>
-                            @endforeach
-                        @endisset
-                    </select>
-                </div>
-                <div class="col-12 col-md-2 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm w-100">بحث</button>
+                <div class="col-12 col-md-1">
                     <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
                 </div>
             </form>
@@ -207,11 +189,6 @@
                             </td>
                             <td class="text-nowrap">
                                 <a href="{{ route('guarantors.show', $guarantor) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
-                                {{-- <a href="{{ route('guarantors.edit', $guarantor) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
-                                <form action="{{ route('guarantors.destroy', $guarantor) }}" method="POST" class="d-inline" onsubmit="return confirm('حذف هذا الكفيل؟');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">حذف</button>
-                                </form> --}}
                             </td>
                         </tr>
                     @empty
@@ -246,8 +223,27 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // tooltips
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
+
+    // auto submit select
+    document.querySelectorAll('.auto-submit').forEach(el => {
+        el.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+
+    // auto submit inputs with debounce
+    let typingTimer;
+    document.querySelectorAll('.auto-submit-input').forEach(el => {
+        el.addEventListener('input', function() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 700);
+        });
+    });
 });
 </script>
 @endpush

@@ -101,89 +101,105 @@
 </div>
 
 @php
-    // ====== مصدر البيانات ======
-    $coll = $entries instanceof \Illuminate\Pagination\LengthAwarePaginator
-        ? $entries->getCollection()
-        : collect($entries);
+    /**
+     * تهيئة بيانات الحسابات من الخدمة مع fallback للتجميع اليدوي القديم
+     */
+    // ==== BANKS ====
+    $banksFromSvc = collect($banks ?? []);
+    $bankAgg = $banksFromSvc->map(function($b){
+        $name = is_array($b) ? ($b['name'] ?? '') : ($b->name ?? '');
+        $in   = (float)(is_array($b) ? ($b['in']   ?? $b['total_in']  ?? 0) : ($b->in   ?? 0));
+        $out  = (float)(is_array($b) ? ($b['out']  ?? $b['total_out'] ?? 0) : ($b->out  ?? 0));
+        $flow = max($in + $out, 0.00001);
+        return [
+            'name'    => $name,
+            'in'      => $in,
+            'out'     => $out,
+            'net'     => $in - $out,
+            'in_pct'  => round($in  / $flow * 100, 1),
+            'out_pct' => round($out / $flow * 100, 1),
+        ];
+    });
 
-    // ====== تجميع الحسابات البنكيّة والخزن (على مستوى الحسابات فقط) ======
-    $bankAgg = [];  $safeAgg = [];
-    $bankTotalIn = $bankTotalOut = 0.0;
-    $safeTotalIn = $safeTotalOut = 0.0;
-
-    foreach ($coll as $e) {
-        $amt = (float)($e->amount ?? 0);
-        $dir = $e->direction ?? null;
-
-        if (!empty($e->bankAccount)) {
-            $bid = (string)$e->bank_account_id;
-            $bankAgg[$bid] ??= [
-                'name' => $e->bankAccount->name ?? ('#'.$bid),
-                'in'   => 0.0,
-                'out'  => 0.0,
-            ];
-            if ($dir === 'in')  { $bankAgg[$bid]['in']  += $amt; $bankTotalIn  += $amt; }
-            if ($dir === 'out') { $bankAgg[$bid]['out'] += $amt; $bankTotalOut += $amt; }
+    if ($bankAgg->isEmpty()) {
+        // Fallback من القيود
+        $bankAgg = collect();
+        $bankBucket = [];
+        foreach (($entries instanceof \Illuminate\Pagination\LengthAwarePaginator ? $entries->getCollection() : $entries) as $e) {
+            if (!$e->bankAccount) continue;
+            $key = (string)$e->bank_account_id;
+            $bankBucket[$key] ??= ['name'=>$e->bankAccount->name ?? ('#'.$key), 'in'=>0.0, 'out'=>0.0];
+            if ($e->direction === 'in')  $bankBucket[$key]['in']  += (float)$e->amount;
+            if ($e->direction === 'out') $bankBucket[$key]['out'] += (float)$e->amount;
         }
-
-        if (!empty($e->safe)) {
-            $sid = (string)$e->safe_id;
-            $safeAgg[$sid] ??= [
-                'name' => $e->safe->name ?? ('#'.$sid),
-                'in'   => 0.0,
-                'out'  => 0.0,
-            ];
-            if ($dir === 'in')  { $safeAgg[$sid]['in']  += $amt; $safeTotalIn  += $amt; }
-            if ($dir === 'out') { $safeAgg[$sid]['out'] += $amt; $safeTotalOut += $amt; }
+        foreach ($bankBucket as $b) {
+            $flow = max(($b['in']+$b['out']), 0.00001);
+            $bankAgg->push([
+                'name'=>$b['name'],
+                'in'=>$b['in'],
+                'out'=>$b['out'],
+                'net'=>$b['in']-$b['out'],
+                'in_pct'=>round($b['in']/$flow*100,1),
+                'out_pct'=>round($b['out']/$flow*100,1),
+            ]);
         }
+        $bankAgg = $bankAgg->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
     }
 
-    // حساب الصافي والنِسَب للبار المصغّر
-    foreach ($bankAgg as $k => $b) {
-        $flow = max(($b['in'] ?? 0) + ($b['out'] ?? 0), 0.00001);
-        $b['net']     = ($b['in'] ?? 0) - ($b['out'] ?? 0);
-        $b['in_pct']  = round(($b['in']  ?? 0) / $flow * 100, 1);
-        $b['out_pct'] = round(($b['out'] ?? 0) / $flow * 100, 1);
-        $bankAgg[$k]  = $b;
-    }
-    foreach ($safeAgg as $k => $s) {
-        $flow = max(($s['in'] ?? 0) + ($s['out'] ?? 0), 0.00001);
-        $s['net']     = ($s['in'] ?? 0) - ($s['out'] ?? 0);
-        $s['in_pct']  = round(($s['in']  ?? 0) / $flow * 100, 1);
-        $s['out_pct'] = round(($s['out'] ?? 0) / $flow * 100, 1);
-        $safeAgg[$k]  = $s;
-    }
+    $bankTotalIn  = (float)($bankTotals['in']  ?? $bankAgg->sum('in'));
+    $bankTotalOut = (float)($bankTotals['out'] ?? $bankAgg->sum('out'));
+    $bankNet      = $bankTotalIn - $bankTotalOut;
 
-    $bankAgg = collect($bankAgg)->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
-    $safeAgg = collect($safeAgg)->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
+    // ==== SAFES ====
+    $safesFromSvc = collect($safes ?? []);
+    $safeAgg = $safesFromSvc->map(function($s){
+        $name = is_array($s) ? ($s['name'] ?? '') : ($s->name ?? '');
+        $in   = (float)(is_array($s) ? ($s['in']   ?? $s['total_in']  ?? 0) : ($s->in   ?? 0));
+        $out  = (float)(is_array($s) ? ($s['out']  ?? $s['total_out'] ?? 0) : ($s->out  ?? 0));
+        $flow = max($in + $out, 0.00001);
+        return [
+            'name'    => $name,
+            'in'      => $in,
+            'out'     => $out,
+            'net'     => $in - $out,
+            'in_pct'  => round($in  / $flow * 100, 1),
+            'out_pct' => round($out / $flow * 100, 1),
+        ];
+    });
 
-    // ====== كروت إضافية: المكاتبة / فرق البيع / ربح المكتب (داخل فقط من دفتر القيود للمكتب) ======
-    $containsAny = function($txt, $words){
-        $txt = mb_strtolower($txt ?? '');
-        foreach ($words as $w) {
-            if ($w === null || $w === '') continue;
-            if (mb_stripos($txt, mb_strtolower($w)) !== false) return true;
+    if ($safeAgg->isEmpty()) {
+        // Fallback من القيود
+        $safeAgg = collect();
+        $safeBucket = [];
+        foreach (($entries instanceof \Illuminate\Pagination\LengthAwarePaginator ? $entries->getCollection() : $entries) as $e) {
+            if (!$e->safe) continue;
+            $key = (string)$e->safe_id;
+            $safeBucket[$key] ??= ['name'=>$e->safe->name ?? ('#'.$key), 'in'=>0.0, 'out'=>0.0];
+            if ($e->direction === 'in')  $safeBucket[$key]['in']  += (float)$e->amount;
+            if ($e->direction === 'out') $safeBucket[$key]['out'] += (float)$e->amount;
         }
-        return false;
-    };
-
-    $saleKeywords      = ['بيع','مبيع','مبيعات','sale','sales','فرق بيع','فرق البيع'];
-    $mukatabaKeywords  = ['مكاتبة','مُكاتبة','كتابة','mukataba','mukātaba'];
-    $officeProfitInKW  = ['ربح','أرباح','عوائد','عمولة','عمولات','profit','revenue','return'];
-
-    $saleOnlyIn = $mktOnlyIn = $officeProfitOnlyIn = 0.0;
-
-    foreach ($coll as $e) {
-        if (!($e->is_office ?? false)) continue;          // المكتب فقط
-        if (($e->direction ?? null) !== 'in') continue;   // داخل فقط
-
-        $statusName = trim($e->status->name ?? '');
-        $amt        = (float)($e->amount ?? 0);
-
-        if ($containsAny($statusName, $saleKeywords))     $saleOnlyIn         += $amt;
-        if ($containsAny($statusName, $mukatabaKeywords)) $mktOnlyIn          += $amt;
-        if ($containsAny($statusName, $officeProfitInKW)) $officeProfitOnlyIn += $amt;
+        foreach ($safeBucket as $s) {
+            $flow = max(($s['in']+$s['out']), 0.00001);
+            $safeAgg->push([
+                'name'=>$s['name'],
+                'in'=>$s['in'],
+                'out'=>$s['out'],
+                'net'=>$s['in']-$s['out'],
+                'in_pct'=>round($s['in']/$flow*100,1),
+                'out_pct'=>round($s['out']/$flow*100,1),
+            ]);
+        }
+        $safeAgg = $safeAgg->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
     }
+
+    $safeTotalIn  = (float)($safeTotals['in']  ?? $safeAgg->sum('in'));
+    $safeTotalOut = (float)($safeTotals['out'] ?? $safeAgg->sum('out'));
+    $safeNet      = $safeTotalIn - $safeTotalOut;
+
+    // ==== KPIs المكتب ====
+    $mukatabaTotal = (float)($officeKpis['mukataba']['total'] ?? 0);
+    $profitTotal   = (float)($officeKpis['profit']['total']   ?? 0);
+    $salesDisplay  = (float)($officeKpis['sales']['total']    ?? 0);
 @endphp
 
 {{-- كروت: الحسابات البنكية + الخزن --}}
@@ -206,7 +222,6 @@
                 <div class="stat-box mb-2">
                     <div class="d-flex justify-content-between mini"><span>إجمالي داخل</span><strong class="text-success">{{ number_format($bankTotalIn,2) }}</strong></div>
                     <div class="d-flex justify-content-between mini"><span>إجمالي خارج</span><strong class="text-danger">{{ number_format($bankTotalOut,2) }}</strong></div>
-                    @php $bankNet = $bankTotalIn - $bankTotalOut; @endphp
                     <div class="d-flex justify-content-between mini">
                         <span>الصافي</span>
                         <strong class="{{ $bankNet>=0?'text-success':'text-danger' }}">{{ number_format($bankNet,2) }}</strong>
@@ -278,7 +293,6 @@
                 <div class="stat-box mb-2">
                     <div class="d-flex justify-content-between mini"><span>إجمالي داخل</span><strong class="text-success">{{ number_format($safeTotalIn,2) }}</strong></div>
                     <div class="d-flex justify-content-between mini"><span>إجمالي خارج</span><strong class="text-danger">{{ number_format($safeTotalOut,2) }}</strong></div>
-                    @php $safeNet = $safeTotalIn - $safeTotalOut; @endphp
                     <div class="d-flex justify-content-between mini">
                         <span>الصافي</span>
                         <strong class="{{ $safeNet>=0?'text-success':'text-danger' }}">{{ number_format($safeNet,2) }}</strong>
@@ -341,10 +355,10 @@
                 <div class="kpi-icon"><i class="bi bi-journal-text fs-4 text-primary"></i></div>
                 <div>
                     <div class="fw-bold">المكاتبة</div>
-                    <div class="subnote">مجمّعة من دفتر القيود</div>
+                    <div class="subnote">مجمّعة من خدمة المكتب</div>
                 </div>
             </div>
-            <div class="kpi-value fw-bold text-success">{{ number_format($mktOnlyIn,2) }}</div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($mukatabaTotal,2) }}</div>
         </div>
     </div>
 
@@ -354,10 +368,10 @@
                 <div class="kpi-icon"><i class="bi bi-bag-check fs-4 text-success"></i></div>
                 <div>
                     <div class="fw-bold">فرق البيع</div>
-                    <div class="subnote">مجمّعة من دفتر القيود</div>
+                    <div class="subnote">مجمّعة من خدمة المكتب</div>
                 </div>
             </div>
-            <div class="kpi-value fw-bold text-success">{{ number_format($saleOnlyIn,2) }}</div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($salesDisplay,2) }}</div>
         </div>
     </div>
 
@@ -367,13 +381,71 @@
                 <div class="kpi-icon"><i class="bi bi-briefcase fs-4 text-warning"></i></div>
                 <div>
                     <div class="fw-bold">ربح المكتب</div>
-                    <div class="subnote">مجمّعة من دفتر القيود</div>
+                    <div class="subnote">مجمّعة من خدمة المكتب</div>
                 </div>
             </div>
-            <div class="kpi-value fw-bold text-success">{{ number_format($officeProfitOnlyIn,2) }}</div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($profitTotal,2) }}</div>
         </div>
     </div>
 </div>
+
+{{-- ========= (جديد) كروت "المتاح من البضائع لكل نوع" (وضع احترافي مختصر) ========= --}}
+@php
+    // يدعم متغيرين: $productsAvailability (الأحدث) أو $goodsAvailability (توافق خلفي)
+    $pa   = $productsAvailability ?? $goodsAvailability ?? null;
+    $list = collect($pa['items'] ?? []);
+    $lowThreshold = (int)($pa['totals']['low_threshold'] ?? 5);
+    $totalAvailable = (int)($pa['totals']['available'] ?? $list->sum('available'));
+    $totalTypes = $list->count();
+@endphp
+
+@if(!empty($pa) && $list->isNotEmpty())
+<div class="kpi-card p-0 mb-3">
+    <div class="card-head goods-grad p-3 d-flex flex-wrap align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <div class="kpi-icon"><i class="bi bi-box-seam fs-4"></i></div>
+            <div>
+                <div class="fw-bold">المتاح من البضائع حسب النوع</div>
+                <div class="subnote">يعرض المتاح فقط — بدون تفاصيل الحركات</div>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="p-3 pt-2">
+        <div class="row g-3">
+            @foreach($list as $row)
+                @php
+                    $name = (string)($row['name'] ?? '-');
+                    $av   = (int)($row['available'] ?? 0);
+                    $formatted = (string)($row['formatted'] ?? number_format($av));
+                    $isLow = (bool)($row['is_low'] ?? ($av <= $lowThreshold && $av > 0));
+                    $status = $av === 0 ? 'zero' : ($isLow ? 'low' : 'ok');
+                    $pillClass = $status === 'zero' ? 'pill-zero' : ($status === 'low' ? 'pill-low' : 'pill-ok');
+                    $pillIcon  = $status === 'zero' ? 'bi-x-circle' : ($status === 'low' ? 'bi-exclamation-circle' : 'bi-check-circle');
+                    $pillText  = $status === 'zero' ? 'نافد' : ($status === 'low' ? 'منخفض' : 'جيد');
+                @endphp
+                <div class="col-12 col-sm-6 col-lg-4 col-xxl-3">
+                    <div class="goods-card h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="fw-semibold text-truncate" title="{{ $name }}">
+                                <i class="bi bi-tag me-1"></i>{{ $name }}
+                            </div>
+                            <span class="pill {{ $pillClass }}"><i class="bi {{ $pillIcon }}"></i> {{ $pillText }}</span>
+                        </div>
+
+                        <div class="avail-badge" title="المتاح">
+                            <div class="avail-number">{{ $formatted }}</div>
+                            <div class="avail-label">المتاح</div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
+{{-- ========= نهاية كروت البضائع ========= --}}
 
 {{-- الجدول --}}
 <div class="card shadow-sm">
@@ -391,11 +463,16 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $isOffice = function($e){
+                        return (($e->is_office ?? null) === 1) || (($e->is_office ?? null) === true);
+                    };
+                @endphp
                 @forelse($entries as $e)
                     <tr>
                         <td>{{ $e->entry_date?->format('Y-m-d') }}</td>
                         <td>
-                            @if($e->is_office)
+                            @if($isOffice($e))
                                 <span class="badge bg-secondary">المكتب</span>
                             @else
                                 {{ $e->investor->name ?? '-' }}
@@ -461,6 +538,7 @@
   --card-r:1rem; --soft:0 6px 18px rgba(0,0,0,.06); --soft2:0 10px 24px rgba(0,0,0,.08);
   --grad-bank: linear-gradient(135deg,#e8f7ff 0%,#ffffff 70%);
   --grad-safe: linear-gradient(135deg,#fff7e6 0%,#ffffff 70%);
+  --grad-goods: linear-gradient(135deg,#f3f5ff 0%,#ffffff 70%);
 }
 .kpi-card{ border:1px solid #eef2f7; border-radius:var(--card-r); box-shadow:var(--soft); transition:.2s; }
 .kpi-card:hover{ box-shadow:var(--soft2); transform: translateY(-2px); }
@@ -468,6 +546,7 @@
 .card-head{ border-bottom:1px solid #eef2f7; border-top-left-radius:var(--card-r); border-top-right-radius:var(--card-r); }
 .bank-grad{ background: var(--grad-bank); }
 .safe-grad{ background: var(--grad-safe); }
+.goods-grad{ background: var(--grad-goods); }
 .kpi-icon{ width:52px;height:52px;border-radius:.9rem;display:grid;place-items:center;background:#f4f6fb; }
 .kpi-value{ font-size:1.65rem; line-height:1; }
 .subnote{ font-size:.85rem; color:#6b7280; }
@@ -480,6 +559,17 @@
 .stacked-bar > span{ display:block; height:100%; float:right; } /* RTL */
 .stacked-bar .in{ background:#16a34a55; }
 .stacked-bar .out{ background:#ef444455; }
+
+/* بطاقات البضائع */
+.goods-card{ border:1px solid #eef2f7; border-radius:.9rem; padding:1rem; background:#fff; box-shadow:var(--soft); height:100%; }
+.goods-card:hover{ box-shadow:var(--soft2); }
+.pill{ border-radius:999px; padding:.2rem .6rem; font-weight:700; font-size:.85rem; display:inline-flex; align-items:center; gap:.35rem; }
+.pill-ok{ background:#ecfdf5; color:#047857; }
+.pill-low{ background:#fff7ed; color:#c2410c; }
+.pill-zero{ background:#fef2f2; color:#b91c1c; }
+.avail-badge{ display:grid; place-items:center; padding:.75rem .5rem; border:1px dashed #e5e7eb; border-radius:.8rem; background:#fafafa; }
+.avail-number{ font-size:1.9rem; line-height:1; font-weight:800; letter-spacing:.5px; }
+.avail-label{ font-size:.85rem; color:#6b7280; margin-top:.25rem; }
 
 /* جدول */
 .table > :not(caption) > * > *{ vertical-align: middle; }

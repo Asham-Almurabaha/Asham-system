@@ -66,31 +66,23 @@
         .dr-toolbar .sep{width:1px;background:#eef2f7;height:32px}
     </style>
 
-    {{-- ====== شريط اختيار النطاق الزمني (بديل عن كار্ড التاريخ) ====== --}}
+    {{-- ====== شريط اختيار النطاق الزمني ====== --}}
     @php
-        // هنحافظ على كل البرامترات ما عدا from/to/page
         $qsBase = request()->except(['from','to','page']);
-
         $buildUrl = function (?string $from = null, ?string $to = null) use ($qsBase) {
-            $q = $qsBase;
-            if ($from) $q['from'] = $from;
-            if ($to)   $q['to']   = $to;
+            $q = $qsBase; if ($from) $q['from'] = $from; if ($to) $q['to'] = $to;
             return url()->current() . (empty($q) ? '' : ('?' . http_build_query($q)));
         };
 
         $todayFrom = \Carbon\Carbon::today()->toDateString();
         $todayTo   = \Carbon\Carbon::today()->toDateString();
-
         $now       = \Carbon\Carbon::now();
         $monthFrom = $now->copy()->startOfMonth()->toDateString();
         $monthTo   = $now->copy()->endOfMonth()->toDateString();
-
         $yearFrom  = $now->copy()->startOfYear()->toDateString();
         $yearTo    = $now->copy()->endOfYear()->toDateString();
 
-        $rFrom = request('from');
-        $rTo   = request('to');
-
+        $rFrom = request('from'); $rTo = request('to');
         $isToday = ($rFrom === $todayFrom && $rTo === $todayTo);
         $isMonth = ($rFrom === $monthFrom && $rTo === $monthTo);
         $isYear  = ($rFrom === $yearFrom  && $rTo === $yearTo);
@@ -100,23 +92,16 @@
     <div class="dr-toolbar p-3 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <a href="{{ $buildUrl($todayFrom,$todayTo) }}"
-                   class="btn btn-outline-secondary btn-sm btn-range {{ $isToday ? 'active' : '' }}">
+                <a href="{{ $buildUrl($todayFrom,$todayTo) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isToday ? 'active' : '' }}">
                     <i class="bi bi-calendar-day me-1"></i> اليوم {!! $isToday ? '<span class="dot"></span>' : '' !!}
                 </a>
-
-                <a href="{{ $buildUrl($monthFrom,$monthTo) }}"
-                   class="btn btn-outline-secondary btn-sm btn-range {{ $isMonth ? 'active' : '' }}">
+                <a href="{{ $buildUrl($monthFrom,$monthTo) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isMonth ? 'active' : '' }}">
                     <i class="bi bi-calendar3 me-1"></i> هذا الشهر {!! $isMonth ? '<span class="dot"></span>' : '' !!}
                 </a>
-
-                <a href="{{ $buildUrl($yearFrom,$yearTo) }}"
-                   class="btn btn-outline-secondary btn-sm btn-range {{ $isYear ? 'active' : '' }}">
+                <a href="{{ $buildUrl($yearFrom,$yearTo) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isYear ? 'active' : '' }}">
                     <i class="bi bi-calendar2-week me-1"></i> هذه السنة {!! $isYear ? '<span class="dot"></span>' : '' !!}
                 </a>
-
-                <a href="{{ $buildUrl(null,null) }}"
-                   class="btn btn-outline-secondary btn-sm btn-range {{ $isAll ? 'active' : '' }}">
+                <a href="{{ $buildUrl(null,null) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isAll ? 'active' : '' }}">
                     <i class="bi bi-infinity me-1"></i> الكل {!! $isAll ? '<span class="dot"></span>' : '' !!}
                 </a>
             </div>
@@ -125,34 +110,23 @@
 
             {{-- مدى مُخصّص --}}
             <form method="GET" action="{{ url()->current() }}" class="d-flex flex-wrap align-items-end gap-2">
-                {{-- الحفاظ على باقي معلمات الرابط --}}
                 @foreach($qsBase as $k => $v)
                     @if(is_array($v))
-                        @foreach($v as $vv)
-                            <input type="hidden" name="{{ $k }}[]" value="{{ e($vv) }}">
-                        @endforeach
+                        @foreach($v as $vv) <input type="hidden" name="{{ $k }}[]" value="{{ e($vv) }}"> @endforeach
                     @else
                         <input type="hidden" name="{{ $k }}" value="{{ e($v) }}">
                     @endif
                 @endforeach
 
                 <div class="label">مُخصّص:</div>
-                <div>
-                    <label class="form-label mb-1 small">من</label>
-                    <input type="date" class="form-control form-control-sm js-date" name="from" value="{{ e($rFrom) }}">
-                </div>
-                <div>
-                    <label class="form-label mb-1 small">إلى</label>
-                    <input type="date" class="form-control form-control-sm js-date" name="to" value="{{ e($rTo) }}">
-                </div>
+                <div><label class="form-label mb-1 small">من</label><input type="date" class="form-control form-control-sm js-date" name="from" value="{{ e($rFrom) }}"></div>
+                <div><label class="form-label mb-1 small">إلى</label><input type="date" class="form-control form-control-sm js-date" name="to" value="{{ e($rTo) }}"></div>
                 <button class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i> تطبيق</button>
                 <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i> مسح</a>
             </form>
 
             <div class="ms-auto d-flex align-items-center gap-2">
-                <span class="chip">
-                    <i class="bi bi-clock me-1"></i>
-                    النطاق الحالي:
+                <span class="chip"><i class="bi bi-clock me-1"></i> النطاق الحالي:
                     <strong>{{ $rFrom ? e($rFrom) : '—' }} — {{ $rTo ? e($rTo) : '—' }}</strong>
                 </span>
                 <span class="text-muted small d-none d-md-inline">آخر تحديث: {{ now()->format('Y-m-d H:i') }}</span>
@@ -160,7 +134,7 @@
         </div>
     </div>
 
-    {{-- ====== تطبيع المتغيّرات لتفادي أخطاء null ====== --}}
+    {{-- ====== تطبيع المتغيّرات ====== --}}
     @php
         $invTotals       = (object) ($invTotals      ?? ['net' => 0]);
         $officeTotals    = (object) ($officeTotals   ?? ['net' => 0]);
@@ -172,8 +146,28 @@
         $monthlySeries   = (array)  ($monthlySeries  ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
         $distribution    = (array)  ($distribution   ?? ['labels'=>['بنوك','خزن'], 'data'=>[0,0]]);
 
-        $bankAccountsSummary = collect($bankAccountsSummary ?? []);
-        $safesSummary        = collect($safesSummary       ?? []);
+        $banksWithOpen   = collect($banksWithOpen    ?? []);
+        $safesWithOpen   = collect($safesWithOpen    ?? []);
+
+        // Totals
+        $banksTotal  = isset($distribution['data'][0]) ? (float)$distribution['data'][0] : (float)$banksWithOpen->sum('balance');
+        $safesTotal  = isset($distribution['data'][1]) ? (float)$distribution['data'][1] : (float)$safesWithOpen->sum('balance');
+        $totalAll    = $banksTotal + $safesTotal;
+
+        // عدد البطاقات المتاح (من الكنترولر إن وُجِد، وإلا 0)
+        $cardsAvailable = (int) ($cardsAvailable ?? 0);
+
+        // صافي دخل المكتب = ربح المكتب + فرق البيع + المكاتبة (لو متوفر من الكنترولر أو من officeMetrics، وإلا fallback لصافي القيود)
+        $officeNet = isset($officeNet)
+            ? (float) $officeNet
+            : (isset($officeMetrics)
+                ? (float) (
+                    ($officeMetrics['profit']['total']   ?? 0) +
+                    ($officeMetrics['sales']['total']    ?? 0) +
+                    ($officeMetrics['mukataba']['total'] ?? 0)
+                  )
+                : (float) ($officeTotals->net ?? 0)
+              );
     @endphp
 
     {{-- ====== HERO ====== --}}
@@ -185,8 +179,7 @@
                     <h3 class="mb-1">لوحة التحكم</h3>
                     <div class="text-muted small">
                         نطاق البيانات:
-                        {{ request('from') ? e(request('from')) : '—' }}
-                        —
+                        {{ request('from') ? e(request('from')) : '—' }} —
                         {{ request('to') ? e(request('to')) : '—' }}
                     </div>
                 </div>
@@ -199,69 +192,139 @@
                 <span class="badge-chip" data-bs-toggle="tooltip" title="الصافي = داخل − خارج">
                     <i class="bi bi-people me-1"></i> صافي سيولة المستثمرين: {{ number_format(($invTotals->net ?? 0), 2) }}
                 </span>
-                <span class="badge-chip" data-bs-toggle="tooltip" title="الصافي = داخل − خارج">
-                    <i class="bi bi-building me-1"></i> صافي سيولة المكتب: {{ number_format(($officeTotals->net ?? 0), 2) }}
+                <span class="badge-chip" data-bs-toggle="tooltip" title="ربح المكتب + فرق البيع + المكاتبة">
+                    <i class="bi bi-building me-1"></i> صافي دخل المكتب: {{ number_format($officeNet, 2) }}
                 </span>
             </div>
         </div>
     </div>
 
-    {{-- ====== KPIs إضافية ====== --}}
-    @php
-        $invNet  = (float)($invTotals->net ?? 0);
-        $offNet  = (float)($officeTotals->net ?? 0);
-
-        // تقديرات آمنة لو مش متوفرة من الكنترولر:
-        $kpi = (object) [
-            'entries_count'    => (int)($entriesCount ?? ($contractsTotal ?? 0)),
-            'avg_amount'       => (float)($avgAmount ?? 0),
-            'active_investors' => (int)($activeInvestors ?? $invByInvestor->count()),
-        ];
-    @endphp
-
+    {{-- ====== KPIs الأساسية الأربعة ====== --}}
     <div class="row g-3">
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-collection fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">عدد القيود</div>
+                    <div class="kpi-icon"><i class="bi bi-credit-card-2-front fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">عدد البطاقات المتاح</div>
                 </div>
-                <div class="kpi-value fw-bold">{{ number_format($kpi->entries_count) }}</div>
-                <div class="small text-muted mt-2">إجمالي قيود دفتر القيود</div>
+                <div class="kpi-value fw-bold">{{ number_format($cardsAvailable) }}</div>
+                <div class="small text-muted mt-2">إجمالي المخزون المتاح</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-cash-coin fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">متوسط القيد</div>
+                    <div class="kpi-icon"><i class="bi bi-bank fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">إجمالي البنوك</div>
                 </div>
-                <div class="kpi-value fw-bold">{{ number_format($kpi->avg_amount, 2) }}</div>
-                <div class="small text-muted mt-2">قيمة متوسّطة لكل عملية</div>
+                <div class="kpi-value fw-bold text-pos">{{ number_format($banksTotal, 2) }}</div>
+                <div class="small text-muted mt-2">رصيد تقديري</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-people fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">مستثمرون نشطون</div>
+                    <div class="kpi-icon"><i class="bi bi-safe2 fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">إجمالي الكاش</div>
                 </div>
-                <div class="kpi-value fw-bold">{{ number_format($kpi->active_investors) }}</div>
-                <div class="small text-muted mt-2">عدد المستثمرين ذوي الحركة</div>
+                <div class="kpi-value fw-bold text-pos">{{ number_format($safesTotal, 2) }}</div>
+                <div class="small text-muted mt-2">رصيد تقديري</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-graph-up-arrow fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">صافي إجمالي</div>
+                    <div class="fw-bold text-muted">الإجمالي الكلي</div>
                 </div>
-                <div class="kpi-value fw-bold {{ ($invNet+$offNet)>=0 ? 'text-pos':'text-neg' }}">{{ number_format($invNet + $offNet, 2) }}</div>
-                <div class="small text-muted mt-2">مستثمرين + مكتب</div>
+                @php $totalClass = $totalAll >= 0 ? 'text-pos' : 'text-neg'; @endphp
+                <div class="kpi-value fw-bold {{ $totalClass }}">{{ number_format($totalAll, 2) }}</div>
+                <div class="small text-muted mt-2">بنوك + كاش</div>
             </div>
         </div>
     </div>
 
+    {{-- ====== KPIs إضافية (بدون المساس بالأساسية) ====== --}}
+    @php
+        // مفاتيح دخل المكتب التفصيلية (ربح/فرق بيع/مكاتبة)
+        $officeProfit   = (float)($officeMetrics['profit']['total']   ?? 0);
+        $salesDiff      = (float)($officeMetrics['sales']['total']    ?? 0);
+        $mukatabaTotal  = (float)($officeMetrics['mukataba']['total'] ?? 0);
+
+        // إجماليات المستثمرين
+        $invIn          = (float)($invTotals->inflow  ?? 0);
+        $invOut         = (float)($invTotals->outflow ?? 0);
+
+        // أعداد الحسابات
+        $banksCount     = ($banksWithOpen ?? collect())->count();
+        $safesCount     = ($safesWithOpen ?? collect())->count();
+
+        // صافي الحركة للحسابات
+        $banksIn        = (float)($banksWithOpen->sum('in')  ?? 0);
+        $banksOut       = (float)($banksWithOpen->sum('out') ?? 0);
+        $banksNet       = $banksIn - $banksOut;
+
+        $safesIn        = (float)($safesWithOpen->sum('in')  ?? 0);
+        $safesOut       = (float)($safesWithOpen->sum('out') ?? 0);
+        $safesNet       = $safesIn - $safesOut;
+
+        // إجمالي الافتتاحي
+        $openingBanks   = (float)($banksWithOpen->sum('opening_balance') ?? 0);
+        $openingSafes   = (float)($safesWithOpen->sum('opening_balance') ?? 0);
+        $openingTotal   = $openingBanks + $openingSafes;
+
+        // إجمالي داخل/خارج للفترة الحالية (تتأثر بالنطاق)
+        $periodIn       = (float)array_sum($timeSeries['in']  ?? []);
+        $periodOut      = (float)array_sum($timeSeries['out'] ?? []);
+        $periodNet      = $periodIn - $periodOut;
+    @endphp
+
+    <div class="row g-3 mt-1">
+        {{-- صافي دخل المكتب + تفصيله --}}
+        <div class="col-12 col-md-3">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-building fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">صافي دخل المكتب</div>
+                </div>
+                <div class="kpi-value fw-bold {{ $officeNet>=0?'text-pos':'text-neg' }}">{{ number_format($officeNet, 2) }}</div>
+                <div class="small text-muted mt-2">ربح + فرق بيع + مكاتبة</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-cash-coin fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">ربح المكتب</div>
+                </div>
+                <div class="kpi-value fw-bold {{ $officeProfit>=0?'text-pos':'text-neg' }}">{{ number_format($officeProfit, 2) }}</div>
+                <div class="small text-muted mt-2">إجمالي الربح</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-arrow-left-right fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">فرق البيع</div>
+                </div>
+                <div class="kpi-value fw-bold {{ $salesDiff>=0?'text-pos':'text-neg' }}">{{ number_format($salesDiff, 2) }}</div>
+                <div class="small text-muted mt-2">إجمالي فرق البيع</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-journal-text fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">المكاتبة</div>
+                </div>
+                <div class="kpi-value fw-bold {{ $mukatabaTotal>=0?'text-pos':'text-neg' }}">{{ number_format($mukatabaTotal, 2) }}</div>
+                <div class="small text-muted mt-2">إجمالي المكاتبة</div>
+            </div>
+        </div>
+    </div>
+
+    
+    
     {{-- ====== الحالات + توزيع ====== --}}
     <div class="row g-3 mt-1">
         <div class="col-lg-6">
@@ -315,13 +378,19 @@
 
     {{-- ====== تحليلات إضافية ====== --}}
     @php
-        // أفضل الأرصدة من ملخص البنوك والخزن (أعلى 7)
-        $topBalances = $bankAccountsSummary->map(function($b){
-            $opening=(float)($b->opening_balance ?? 0); $in=(float)($b->inflow ?? 0); $out=(float)($b->outflow ?? 0);
+        // أفضل الأرصدة (أعلى 7) باستخدام الحقول الجديدة
+        $topBalances = $banksWithOpen->map(function($b){
+            $b = (object) $b;
+            $opening=(float)($b->opening_balance ?? 0);
+            $in=(float)($b->in ?? 0);
+            $out=(float)($b->out ?? 0);
             return ['label'=>$b->name ?? ('#'.$b->id), 'bal'=>$opening + ($in-$out)];
         })->merge(
-            $safesSummary->map(function($s){
-                $opening=(float)($s->opening_balance ?? 0); $in=(float)($s->inflow ?? 0); $out=(float)($s->outflow ?? 0);
+            $safesWithOpen->map(function($s){
+                $s = (object) $s;
+                $opening=(float)($s->opening_balance ?? 0);
+                $in=(float)($s->in ?? 0);
+                $out=(float)($s->out ?? 0);
                 return ['label'=>$s->name ?? ('#'.$s->id), 'bal'=>$opening + ($in-$out)];
             })
         )->sortByDesc('bal')->take(7)->values();
@@ -383,17 +452,39 @@
         </div>
     </div>
 
-    {{-- ====== أعلى المستثمرين ====== --}}
+    {{-- ====== أعلى المستثمرين (سيولة فقط) ====== --}}
     <div class="row g-3 mt-1">
         <div class="col-12">
             <div class="section-card card border-0">
+                @php
+                    $rowsRaw = collect($invByInvestor ?? []);
+
+                    $liquid = $rowsRaw
+                        ->map(function ($r) {
+                            $in  = (float) ($r->inflow  ?? 0);
+                            $out = (float) ($r->outflow ?? 0);
+                            $net = $in - $out; // الصافي = داخل − خارج
+                            $r->inflow  = $in;
+                            $r->outflow = $out;
+                            $r->net     = $net;
+                            return $r;
+                        })
+                        ->filter(fn($r) => ($r->inflow > 0 || $r->outflow > 0) && $r->net > 0) // فقط سيولة موجبة
+                        ->sortByDesc('net')
+                        ->take(10)
+                        ->values();
+
+                    $liquidTotalNet = (float) $liquid->sum('net');
+                @endphp
+
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>أعلى 10 مستثمرين حسب الصافي</span>
+                    <span>أعلى 10 مستثمرين (صافي سيولة موجب)</span>
                     <span class="text-muted small" data-bs-toggle="tooltip"
-                          title="الصافي لكل مستثمر = داخل − خارج (التحويلات محايدة)">
-                        إجمالي صافي: {{ number_format(($invTotals->net ?? 0), 2) }}
+                        title="الصافي لكل مستثمر = داخل − خارج (التحويلات محايدة)">
+                        إجمالي صافي المعروض: {{ number_format($liquidTotalNet, 2) }}
                     </span>
                 </div>
+
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
@@ -407,28 +498,34 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            @forelse($invByInvestor as $idx => $row)
+                            @forelse($liquid as $idx => $row)
                                 @php
-                                    $rowNet = (float)($row->net ?? 0);
-                                    $rowClass = $rowNet >= 0 ? 'text-pos' : 'text-neg';
+                                    $in  = (float) ($row->inflow  ?? 0);
+                                    $out = (float) ($row->outflow ?? 0);
+                                    $net = (float) ($row->net     ?? ($in - $out));
                                 @endphp
                                 <tr class="text-center">
                                     <td>{{ $idx + 1 }}</td>
-                                    <td class="text-start fw-semibold">{{ $row->name }}</td>
-                                    <td>{{ number_format(($row->inflow ?? 0), 2) }}</td>
-                                    <td>{{ number_format(($row->outflow ?? 0), 2) }}</td>
-                                    <td class="fw-bold {{ $rowClass }}">{{ number_format($rowNet, 2) }}</td>
+                                    <td class="text-start fw-semibold">{{ $row->name ?? ('#'.($row->id ?? '')) }}</td>
+                                    <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
+                                    <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
+                                    <td class="fw-bold text-pos">{{ number_format($net, 2) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-muted text-center py-4">لا توجد بيانات للمستثمرين.</td></tr>
+                                <tr>
+                                    <td colspan="5" class="text-muted text-center py-4">
+                                        لا توجد بيانات لمستثمرين ذوي سيولة موجبة في النطاق الحالي.
+                                    </td>
+                                </tr>
                             @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
-                @if(($invByInvestor->count() ?? 0) > 0)
+
+                @if(($liquid->count() ?? 0) > 0)
                 <div class="card-footer small text-muted">
-                    * الأرقام أعلاه مبنية على اتجاه القيود (داخل/خارج). التحويلات الداخلية محايدة في الصافي العام.
+                    * الصافي = داخل − خارج. التحويلات الداخلية محايدة ولا تؤثر على الصافي.
                 </div>
                 @endif
             </div>
@@ -442,8 +539,7 @@
             <div class="section-card card border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>حالة الحسابات البنكية</span>
-                    <span class="small text-muted" data-bs-toggle="tooltip"
-                          title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
+                    <span class="small text-muted" data-bs-toggle="tooltip" title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
                         <i class="bi bi-calculator"></i>
                     </span>
                 </div>
@@ -461,22 +557,19 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            @php $banks = $bankAccountsSummary ?? collect(); @endphp
+                            @php $banks = ($banksWithOpen ?? collect())->map(fn($b) => (object)$b); @endphp
                             @forelse($banks as $b)
                                 @php
                                     $opening = (float)($b->opening_balance ?? 0);
-                                    $in      = (float)($b->inflow ?? 0);
-                                    $out     = (float)($b->outflow ?? 0);
+                                    $in      = (float)($b->in ?? 0);
+                                    $out     = (float)($b->out ?? 0);
                                     $net     = $in - $out;
                                     $bal     = $opening + $net;
                                     $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
                                     $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
                                 @endphp
                                 <tr class="text-center">
-                                    <td class="text-start">
-                                        <i class="bi bi-bank"></i>
-                                        {{ $b->name ?? ('#'.$b->id) }}
-                                    </td>
+                                    <td class="text-start"><i class="bi bi-bank"></i> {{ $b->name ?? ('#'.$b->id) }}</td>
                                     <td>{{ number_format($opening, 2) }}</td>
                                     <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
                                     <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
@@ -501,8 +594,7 @@
             <div class="section-card card border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span>حالة الخزن</span>
-                    <span class="small text-muted" data-bs-toggle="tooltip"
-                          title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
+                    <span class="small text-muted" data-bs-toggle="tooltip" title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
                         <i class="bi bi-safe2"></i>
                     </span>
                 </div>
@@ -520,22 +612,19 @@
                                 </tr>
                             </thead>
                             <tbody>
-                            @php $safes = $safesSummary ?? collect(); @endphp
+                            @php $safes = ($safesWithOpen ?? collect())->map(fn($s) => (object)$s); @endphp
                             @forelse($safes as $s)
                                 @php
                                     $opening = (float)($s->opening_balance ?? 0);
-                                    $in      = (float)($s->inflow ?? 0);
-                                    $out     = (float)($s->outflow ?? 0);
+                                    $in      = (float)($s->in ?? 0);
+                                    $out     = (float)($s->out ?? 0);
                                     $net     = $in - $out;
                                     $bal     = $opening + $net;
                                     $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
                                     $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
                                 @endphp
                                 <tr class="text-center">
-                                    <td class="text-start">
-                                        <i class="bi bi-safe2"></i>
-                                        {{ $s->name ?? ('#'.$s->id) }}
-                                    </td>
+                                    <td class="text-start"><i class="bi bi-safe2"></i> {{ $s->name ?? ('#'.$s->id) }}</td>
                                     <td>{{ number_format($opening, 2) }}</td>
                                     <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
                                     <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>

@@ -14,20 +14,36 @@ use Illuminate\Support\Facades\Storage;
 
 class InvestorController extends Controller
 {
-     public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
+     public function index(Request $request)
     {
-        // ====== الاستعلام الأساسي مع الفلاتر ======
-        $query = Investor::query()
-            ->with(['nationality','title'])
-            ->when($request->filled('q'),           fn($q) => $q->where('name','like','%'.$request->q.'%'))
-            ->when($request->filled('national_id'), fn($q) => $q->where('national_id','like','%'.$request->national_id.'%'))
-            ->when($request->filled('phone'),       fn($q) => $q->where('phone','like','%'.$request->phone.'%'))
-            ->when($request->filled('email'),       fn($q) => $q->where('email','like','%'.$request->email.'%'))
-            ->when($request->filled('nationality'), fn($q) => $q->where('nationality_id', $request->nationality))
-            ->when($request->filled('title'),       fn($q) => $q->where('title_id', $request->title))
-            ->latest();
+        // ====== الاستعلام الأساسي ======
+        $query = Investor::query();
 
-        $investors = $query->paginate(10)->withQueryString();
+        // فلتر دقيق بالـ ID القادم من الـ dropdown (إن وُجد)
+        $invId = $request->input('investor_id');
+        if ($invId !== null && $invId !== '' && $invId !== '_none') {
+            // حماية: نتأكد أنها رقمية
+            if (is_numeric($invId)) {
+                $query->whereKey((int) $invId);
+            } else {
+                // قيمة غير صالحة => رجّع لا شيء
+                $query->whereRaw('1=0');
+            }
+        } else {
+            // باقي الفلاتر النصية القديمة كما هي
+            $query
+                ->when($request->filled('q'),
+                    fn($q) => $q->where('name', 'like', '%'.trim($request->q).'%'))
+                ->when($request->filled('national_id') && Schema::hasColumn('investors','national_id'),
+                    fn($q) => $q->where('national_id', 'like', '%'.trim($request->national_id).'%'))
+                ->when($request->filled('phone'),
+                    fn($q) => $q->where('phone', 'like', '%'.trim($request->phone).'%'));
+        }
+
+        $investors = $query->latest()->paginate(10)->withQueryString();
+
+        // أسماء المستثمرين للـ dropdown
+        $investorNameOptions = Investor::orderBy('name')->get(['id', 'name']);
 
         // ====== كروت عامة (إجمالي كل المستثمرين) ======
         $investorsTotalAll = Investor::count();
@@ -78,7 +94,7 @@ class InvestorController extends Controller
                     }
                     if (Schema::hasColumn('investors','office_share_percentage')) {
                         $added ? $q->orWhere('office_share_percentage','>',0)
-                               : $q->where('office_share_percentage','>',0);
+                            : $q->where('office_share_percentage','>',0);
                     }
                 })
                 ->count();
@@ -87,19 +103,13 @@ class InvestorController extends Controller
         $newInvestorsThisMonthAll = Investor::whereBetween('created_at',[now()->startOfMonth(), now()])->count();
         $newInvestorsThisWeekAll  = Investor::whereBetween('created_at',[now()->startOfWeek(),  now()])->count();
 
-        // ====== إجمالي أقساط هذا الشهر (لكل المستثمرين) ======
-        // يستثني "مؤجل" و"معتذر" افتراضياً. تقدر تغيّر الفترة عبر ?m=2&y=2025
-        $m = $request->integer('m');   // 1..12
-        $y = $request->integer('y');   // YYYY
-        $installmentsMonthly = $installmentsSvc->build($m ?: null, $y ?: null, ['مؤجل','معتذر']);
-
-        // للفلاتر
-        $nationalities = class_exists(Nationality::class)
-            ? Nationality::select('id','name')->orderBy('name')->get()
-            : collect();
-        $titles = class_exists(Title::class)
-            ? Title::select('id','name')->orderBy('name')->get()
-            : collect();
+        // (لو عندك قوائم فلاتر إضافية ومحتاجة في الواجهة)
+        // $nationalities = class_exists(Nationality::class)
+        //     ? Nationality::select('id','name')->orderBy('name')->get()
+        //     : collect();
+        // $titles = class_exists(Title::class)
+        //     ? Title::select('id','name')->orderBy('name')->get()
+        //     : collect();
 
         return view('investors.index', compact(
             'investors',
@@ -107,11 +117,10 @@ class InvestorController extends Controller
             'activeInvestorsTotalAll',
             'newInvestorsThisMonthAll',
             'newInvestorsThisWeekAll',
-            'nationalities',
-            'titles',
-            'installmentsMonthly'
+            'investorNameOptions',
         ));
     }
+
 
     public function create()
     {
@@ -148,14 +157,40 @@ class InvestorController extends Controller
         return redirect()->route('investors.index')->with('success', 'تم إضافة المستثمر بنجاح');
     }
 
-    public function show(Investor $investor, InvestorDataService $service)
-    {
-        // ابني الداتا من السيرفس
-        $data = $service->build($investor, currencySymbol: 'ر.س');
+    public function show(Request $request,Investor $investor,InvestorDataService $service,InstallmentsMonthlyService $installmentsSvc)
+     {
+        // بيانات العرض الأساسية (توافق مع نسخ PHP لا تدعم named args)
+        try {
+            $data = $service->build($investor, currencySymbol: 'ر.س');
+        } catch (\Throwable $e) {
+            $data = $service->build($investor, 'ر.س');
+        }
 
-        // مرر الداتا + المستثمر للواجهة
-        return view('investors.show', ['investor' => $investor] + $data);
+        // باراميترات شهر/سنة + حالات مستثناة
+        $m = $request->integer('m') ?: null;   // 1..12
+        $y = $request->integer('y') ?: null;   // YYYY
+        $excluded = ['مؤجل', 'معتذر'];
+
+        // ملخص الأقساط — أولوية لاستخدام نسخة المستثمر فقط، مع fallback آمن
+        try {
+            if (method_exists($installmentsSvc, 'buildForInvestor')) {
+                // الإصدار الجديد من السيرفيس
+                $installmentsMonthly = $installmentsSvc->buildForInvestor($investor, $m, $y, $excluded);
+            } else {
+                // محاولة استخدام توقيع build الجديد (4 معاملات)
+                $installmentsMonthly = $installmentsSvc->build($m, $y, $excluded, $investor->id);
+            }
+        } catch (\ArgumentCountError $e) {
+            // fallback للإصدار القديم (3 معاملات) — إجمالي النظام
+            $installmentsMonthly = $installmentsSvc->build($m, $y, $excluded);
+        }
+
+        return view('investors.show', [
+            'investor'            => $investor,
+            'installmentsMonthly' => $installmentsMonthly,
+        ] + $data);
     }
+
 
     public function edit(Investor $investor)
     {

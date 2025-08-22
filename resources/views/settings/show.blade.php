@@ -49,7 +49,11 @@
             <table class="table table-sm align-middle mb-0">
               <tbody>
                 <tr>
-                  <th style="width:220px">{{ __('الاسم (EN)') }}</th>
+                  <th style="width:220px">{{ __('اسم المالك') }}</th>
+                  <td class="fw-medium">{{ $setting->owner_name }}</td>
+                </tr>
+                <tr>
+                  <th>{{ __('الاسم (EN)') }}</th>
                   <td class="fw-medium">{{ $setting->name }}</td>
                 </tr>
                 <tr>

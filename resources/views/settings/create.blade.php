@@ -13,31 +13,59 @@
           <form method="POST" action="{{ route('settings.store') }}" enctype="multipart/form-data" class="row g-3">
             @csrf
 
+            {{-- Owner Name --}}
+            <div class="col-md-12">
+              <label class="form-label">{{ __('اسم المالك') }} <span class="text-danger">*</span></label>
+              <input type="text"
+                     name="owner_name"
+                     class="form-control @error('owner_name') is-invalid @enderror"
+                     value="{{ old('owner_name') }}"
+                     maxlength="50" required>
+              @error('owner_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              <div class="form-text">{{ __('الحد الأقصى 50 حرفًا') }}</div>
+            </div>
+
+            {{-- Name (EN) --}}
             <div class="col-md-6">
               <label class="form-label">{{ __('Name (EN)') }} <span class="text-danger">*</span></label>
-              <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                     value="{{ old('name') }}" maxlength="255" required>
+              <input type="text"
+                     name="name"
+                     class="form-control @error('name') is-invalid @enderror"
+                     value="{{ old('name') }}"
+                     maxlength="50" required>
               @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              <div class="form-text">{{ __('الحد الأقصى 50 حرفًا') }}</div>
             </div>
 
+            {{-- Name (AR) --}}
             <div class="col-md-6">
               <label class="form-label">{{ __('Name (AR)') }} <span class="text-danger">*</span></label>
-              <input type="text" name="name_ar" class="form-control @error('name_ar') is-invalid @enderror"
-                     value="{{ old('name_ar') }}" maxlength="255" required>
+              <input type="text"
+                     name="name_ar"
+                     class="form-control @error('name_ar') is-invalid @enderror"
+                     value="{{ old('name_ar') }}"
+                     maxlength="50" required>
               @error('name_ar') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              <div class="form-text">{{ __('الحد الأقصى 50 حرفًا') }}</div>
             </div>
 
+            {{-- Logo --}}
             <div class="col-md-6">
               <label class="form-label">{{ __('Logo (PNG/JPG/WEBP/SVG)') }}</label>
-              <input type="file" name="logo" class="form-control @error('logo') is-invalid @enderror"
+              <input type="file"
+                     name="logo"
+                     class="form-control @error('logo') is-invalid @enderror"
                      accept=".png,.jpg,.jpeg,.gif,.webp,.svg">
               @error('logo') <div class="invalid-feedback">{{ $message }}</div> @enderror
               <div class="form-text">{{ __('الحد 4MB') }}</div>
             </div>
 
+            {{-- Favicon --}}
             <div class="col-md-6">
               <label class="form-label">{{ __('Favicon (ICO/PNG/JPG/WEBP/SVG)') }}</label>
-              <input type="file" name="favicon" class="form-control @error('favicon') is-invalid @enderror"
+              <input type="file"
+                     name="favicon"
+                     class="form-control @error('favicon') is-invalid @enderror"
                      accept=".ico,.png,.jpg,.jpeg,.gif,.webp,.svg">
               @error('favicon') <div class="invalid-feedback">{{ $message }}</div> @enderror
               <div class="form-text">{{ __('الحد 2MB') }}</div>

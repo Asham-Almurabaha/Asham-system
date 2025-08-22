@@ -1,3 +1,4 @@
+{{-- resources/views/customers/index.blade.php --}}
 @extends('layouts.master')
 
 @section('title', 'قائمة العملاء')
@@ -14,7 +15,6 @@
 </div>
 
 @php
-    // ===== ملخصات عامة على مستوى كل النظام =====
     $allTotal    = (int)($customersTotalAll ?? 0);
     $allActive   = (int)($activeCustomersTotalAll ?? 0);
     $allInactive = max($allTotal - $allActive, 0);
@@ -22,7 +22,6 @@
     $activePct   = $allTotal > 0 ? round(($allActive   / $allTotal) * 100, 1) : 0;
     $inactivePct = $allTotal > 0 ? round(($allInactive / $allTotal) * 100, 1) : 0;
 
-    // متوفرة من الكنترولر (المطلوب إبقاءها)
     $newThisMonthAll = (int)($newCustomersThisMonthAll ?? 0);
     $newThisWeekAll  = (int)($newCustomersThisWeekAll  ?? 0);
 @endphp
@@ -114,49 +113,35 @@
         </button>
     </div>
 
-    <div class="collapse @if(request()->hasAny(['q','national_id','phone','email','nationality','title'])) show @endif border-top" id="filterBar">
+    <div class="collapse @if(request()->hasAny(['customer_id','national_id','phone'])) show @endif border-top" id="filterBar">
         <div class="card-body">
-            <form action="{{ route('customers.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+            <form id="filterForm" action="{{ route('customers.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
                 <div class="col-12 col-md-3">
-                    <label class="form-label mb-1">الاسم</label>
-                    <input type="text" name="q" value="{{ request('q') }}" class="form-control form-control-sm" placeholder="اسم العميل">
+                    <label class="form-label mb-1">العميل</label>
+                    <select name="customer_id" class="form-select form-select-sm"
+                            onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+                        <option value="">الكل</option>
+                        @foreach($customerNameOptions as $cust)
+                            <option value="{{ $cust->id }}" @selected((string)request('customer_id') === (string)$cust->id)>
+                                {{ $cust->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
+
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">رقم الهوية</label>
-                    <input type="text" name="national_id" value="{{ request('national_id') }}" class="form-control form-control-sm" placeholder="مثال: 1234567890">
+                    <input type="text" name="national_id" value="{{ request('national_id') }}"
+                           class="form-control form-control-sm auto-submit-input" placeholder="مثال: 1234567890">
                 </div>
                 <div class="col-6 col-md-2">
                     <label class="form-label mb-1">الهاتف</label>
-                    <input type="text" name="phone" value="{{ request('phone') }}" class="form-control form-control-sm" placeholder="+9665XXXXXXXX">
+                    <input type="text" name="phone" value="{{ request('phone') }}"
+                           class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
                 </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">البريد الإلكتروني</label>
-                    <input type="email" name="email" value="{{ request('email') }}" class="form-control form-control-sm" placeholder="name@email.com">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">الجنسية</label>
-                    <select name="nationality" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        @isset($nationalities)
-                            @foreach($nationalities as $nat)
-                                <option value="{{ $nat->id }}" @selected(request('nationality') == $nat->id)>{{ $nat->name }}</option>
-                            @endforeach
-                        @endisset
-                    </select>
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">الوظيفة</label>
-                    <select name="title" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        @isset($titles)
-                            @foreach($titles as $t)
-                                <option value="{{ $t->id }}" @selected(request('title') == $t->id)>{{ $t->name }}</option>
-                            @endforeach
-                        @endisset
-                    </select>
-                </div>
-                <div class="col-12 col-md-2 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm w-100">بحث</button>
+
+                {{-- زر مسح فقط --}}
+                <div class="col-12 col-md-1">
                     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
                 </div>
             </form>
@@ -210,13 +195,6 @@
                             </td>
                             <td class="text-nowrap">
                                 <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
-                                {{-- <a href="{{ route('customers.edit', $customer) }}" class="btn btn-outline-primary btn-sm">تعديل</a>
-                                <form action="{{ route('customers.destroy', $customer) }}" method="POST" class="d-inline"
-                                      onsubmit="return confirm('هل أنت متأكد من حذف هذا العميل؟');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">حذف</button>
-                                </form> --}}
                             </td>
                         </tr>
                     @empty
@@ -251,8 +229,27 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // تفعيل التولتيب للصور
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
+
+    // Auto-submit عند تغيير أي select
+    document.querySelectorAll('.auto-submit').forEach(el => {
+        el.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+
+    // Auto-submit للمدخلات النصية مع تأخير بسيط
+    let typingTimer;
+    document.querySelectorAll('.auto-submit-input').forEach(el => {
+        el.addEventListener('input', function() {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 700); // 0.7 ثانية بعد آخر كتابة
+        });
+    });
 });
 </script>
 @endpush

@@ -19,6 +19,7 @@ use App\Models\ProductType;
 use App\Models\Safe;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
+use App\Services\InstallmentsMonthlyService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,27 +40,103 @@ class ContractController extends Controller
     private const DIR_CONTRACT_CUSTOMERS   = 'contracts/customers';
     private const DIR_CONTRACT_GUARANTORS  = 'contracts/guarantors';
 
-    public function index(Request $request)
+    public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
     {
-        $contracts = Contract::with(['customer','guarantor','contractStatus','productType','investors'])
-            ->when($request->customer, function ($q) use ($request) {
-                $q->whereHas('customer', function ($qq) use ($request) {
-                    $qq->where('name', 'like', '%' . $request->customer . '%');
+        $pivotTable = (new Contract)->investors()->getTable(); // مثال: contract_investor
+
+        $contracts = Contract::query()
+            ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors'])
+
+            // العميل بالاسم (اختياري)
+            ->when($request->filled('customer'), function ($q) use ($request) {
+                $name = trim((string) $request->customer);
+                $q->whereHas('customer', function ($qq) use ($name) {
+                    $qq->where('name', 'like', "%{$name}%");
                 });
             })
-            // ✅ التصفية أصبحت على product_type_id
-            ->when($request->type,   fn($q) => $q->where('product_type_id', $request->type))
-            ->when($request->status, fn($q) => $q->where('contract_status_id', $request->status))
-            ->when($request->from,   fn($q) => $q->whereDate('start_date', '>=', $request->from))
-            ->when($request->to,     fn($q) => $q->whereDate('start_date', '<=', $request->to))
+
+            // المستثمر (سلكت): investor_id = رقم | '_none' لبدون مستثمر
+            ->when($request->filled('investor_id'), function ($q) use ($request, $pivotTable) {
+                $investorId = $request->input('investor_id');
+
+                if ($investorId === '_none') {
+                    $q->doesntHave('investors');
+                } else {
+                    $q->whereHas('investors', function ($qq) use ($investorId, $pivotTable) {
+                        $qq->where('investors.id', $investorId)
+                        ->where($pivotTable . '.share_percentage', '<=', 100);
+                    });
+                }
+            })
+
+            // (اختياري) توافق قديم مع investor نصّي
+            ->when(!$request->filled('investor_id') && $request->filled('investor'), function ($q) use ($request, $pivotTable) {
+                $name = trim((string) $request->investor);
+                $q->whereHas('investors', function ($qq) use ($name, $pivotTable) {
+                    $qq->where('investors.name', 'like', "%{$name}%")
+                    ->where($pivotTable . '.share_percentage', '<=', 100);
+                });
+            })
+
+            // حالة العقد
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('contract_status_id', $request->input('status'));
+            })
+
+            // التاريخ: من/إلى
+            ->when($request->filled('from'), function ($q) use ($request) {
+                $q->whereDate('start_date', '>=', $request->input('from'));
+            })
+            ->when($request->filled('to'), function ($q) use ($request) {
+                $q->whereDate('start_date', '<=', $request->input('to'));
+            })
+
             ->latest()
             ->paginate(10);
 
-        // ✅ الأنواع من product_types
-        $productTypes    = ProductType::all();
-        $contractStatuses = ContractStatus::all();
+        // لائحة المستثمرين لسلكت الفلترة
+        $investors = Investor::orderBy('name')->get(['id', 'name']);
 
-        return view('contracts.index', compact('contracts','productTypes','contractStatuses'));
+        // لائحة حالات العقود
+        $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
+
+        // ====== ملخص الأقساط ======
+        // يستثني "مؤجل" و"معتذر" افتراضياً. تقدر تغيّر الفترة عبر ?m=2&y=2025
+        $m = $request->integer('m') ?: null;   // 1..12
+        $y = $request->integer('y') ?: null;   // YYYY
+        $exclude = ['مؤجل','معتذر'];
+
+        // لو محدَّد investor_id ومش '_none' هنحسب للمستثمر ده فقط، غير كده: إجمالي النظام (كل المستثمرين)
+        $investorIdForMonthly = ($request->filled('investor_id') && $request->investor_id !== '_none')
+            ? (int) $request->investor_id
+            : null;
+
+        try {
+            if ($investorIdForMonthly) {
+                // جرّب النسخة الحديثة أولاً
+                if (method_exists($installmentsSvc, 'buildForInvestor')) {
+                    // ممكن تمرِّر الموديل أو الـ id — السيرفيس اللي اقترحته يدعم الاتنين
+                    $investorModel = Investor::find($investorIdForMonthly);
+                    $installmentsMonthly = $installmentsSvc->buildForInvestor($investorModel ?: $investorIdForMonthly, $m, $y, $exclude);
+                } else {
+                    // توقيع build بـ 4 معاملات (لو مفعّل عندك)
+                    $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude, $investorIdForMonthly);
+                }
+            } else {
+                // إجمالي النظام (كل المستثمرين)
+                $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
+            }
+        } catch (\ArgumentCountError $e) {
+            // في حال السيرفيس القديم (3 معاملات فقط)
+            $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
+        }
+
+        return view('contracts.index', compact(
+            'contracts',
+            'contractStatuses',
+            'investors',
+            'installmentsMonthly'
+        ));
     }
 
     public function create()

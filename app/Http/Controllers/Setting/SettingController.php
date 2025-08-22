@@ -63,8 +63,9 @@ class SettingController extends Controller
         }
 
         $setting = new Setting();
-        $setting->name    = (string) $request->input('name');
-        $setting->name_ar = (string) $request->input('name_ar');
+        $setting->owner_name = (string) $request->input('owner_name');
+        $setting->name       = (string) $request->input('name');
+        $setting->name_ar    = (string) $request->input('name_ar');
 
         if ($request->hasFile('logo')) {
             $setting->logo = $this->storeFile($request->file('logo'));
@@ -108,8 +109,9 @@ class SettingController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
-        $setting->name    = (string) $request->input('name');
-        $setting->name_ar = (string) $request->input('name_ar');
+        $setting->owner_name = (string) $request->input('owner_name');
+        $setting->name       = (string) $request->input('name');
+        $setting->name_ar    = (string) $request->input('name_ar');
 
         // حذف الشعار عند الطلب
         if ($request->boolean('remove_logo')) {
@@ -161,13 +163,15 @@ class SettingController extends Controller
 
     /**
      * قواعد التحقق:
+     * - max:50 لتتوافق مع طول الحقول في قاعدة البيانات.
      * - تجنّبنا قاعدة "image" حتى لا ترفض SVG/ICO.
      */
     private function rules(): array
     {
         return [
-            'name'    => ['required', 'string', 'max:255'],
-            'name_ar' => ['required', 'string', 'max:255'],
+            'owner_name' => ['required', 'string', 'max:50'],
+            'name'       => ['required', 'string', 'max:50'],
+            'name_ar'    => ['required', 'string', 'max:50'],
 
             // Logo: صيغ شائعة + SVG
             'logo'    => [

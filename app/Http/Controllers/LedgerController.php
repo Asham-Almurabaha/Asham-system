@@ -12,6 +12,7 @@ use App\Models\Safe;
 use App\Models\TransactionStatus;
 use App\Services\CashAccountsDataService;
 use App\Services\OfficeIncomeMetricsService;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -34,133 +35,146 @@ class LedgerController extends Controller
     private const DIR_IN  = 'in';
     private const DIR_OUT = 'out';
 
-    public function index(Request $request,CashAccountsDataService $cashSvc,OfficeIncomeMetricsService $officeSvc)
-     {
-        /* ========================
-         * كويري الأساس لجدول العرض
-         * ======================== */
-        $base = LedgerEntry::query()
-            ->with(['investor', 'bankAccount', 'safe', 'status', 'type'])
+    public function index(Request $request, CashAccountsDataService $cashSvc, OfficeIncomeMetricsService $officeSvc, ProductAvailabilityService $goodsSvc)
+{
+    /* ========================
+     * كويري الأساس لجدول العرض
+     * ======================== */
+    $base = LedgerEntry::query()
+        ->with(['investor', 'bankAccount', 'safe', 'status', 'type'])
 
-            // فئة الجهة (مستثمر/مكتب)
-            ->when($request->filled('party_category'), function ($q) use ($request) {
-                if ($request->party_category === 'investors') {
-                    $q->where('is_office', false);
-                } elseif ($request->party_category === 'office') {
-                    $q->where('is_office', true);
-                }
-            })
+        // فئة الجهة (مستثمر/مكتب)
+        ->when($request->filled('party_category'), function ($q) use ($request) {
+            if ($request->party_category === 'investors') {
+                $q->where('is_office', false);
+            } elseif ($request->party_category === 'office') {
+                $q->where('is_office', true);
+            }
+        })
 
-            // المستثمر
-            ->when($request->filled('investor_id'), fn ($q) => $q->where('investor_id', $request->investor_id))
+        // المستثمر
+        ->when($request->filled('investor_id'), fn ($q) => $q->where('investor_id', $request->investor_id))
 
-            // الحالة (اسم العمود الصحيح في الجدول)
-            ->when($request->filled('status_id'), fn ($q) => $q->where('transaction_status_id', $request->status_id))
+        // الحالة (اسم العمود الصحيح في الجدول)
+        ->when($request->filled('status_id'), fn ($q) => $q->where('transaction_status_id', $request->status_id))
 
-            // نوع الحساب
-            ->when($request->filled('account_type'), function ($q) use ($request) {
-                if ($request->account_type === 'bank') {
-                    $q->whereNotNull('bank_account_id')->whereNull('safe_id');
-                } elseif ($request->account_type === 'safe') {
-                    $q->whereNotNull('safe_id')->whereNull('bank_account_id');
-                }
-            })
+        // نوع الحساب
+        ->when($request->filled('account_type'), function ($q) use ($request) {
+            if ($request->account_type === 'bank') {
+                $q->whereNotNull('bank_account_id')->whereNull('safe_id');
+            } elseif ($request->account_type === 'safe') {
+                $q->whereNotNull('safe_id')->whereNull('bank_account_id');
+            }
+        })
 
-            // التاريخ (شامل اليومين)
-            ->when($request->filled('from'), fn ($q) => $q->whereDate('entry_date', '>=', $request->from))
-            ->when($request->filled('to'),   fn ($q) => $q->whereDate('entry_date', '<=', $request->to));
+        // التاريخ (شامل اليومين)
+        ->when($request->filled('from'), fn ($q) => $q->whereDate('entry_date', '>=', $request->from))
+        ->when($request->filled('to'),   fn ($q) => $q->whereDate('entry_date', '<=', $request->to));
 
-        /* ========================
-         * مجاميع عامة للنتيجة الحالية
-         * ======================== */
-        $totIn  = (clone $base)->where('direction', 'in')->sum('amount');
-        $totOut = (clone $base)->where('direction', 'out')->sum('amount');
-        $net    = (float) $totIn - (float) $totOut;
+    /* ========================
+     * مجاميع عامة للنتيجة الحالية
+     * ======================== */
+    $totIn  = (clone $base)->where('direction', 'in')->sum('amount');
+    $totOut = (clone $base)->where('direction', 'out')->sum('amount');
+    $net    = (float) $totIn - (float) $totOut;
 
-        /* ========================
-         * جدول القيود (مع التصفح)
-         * ======================== */
-        $entries = (clone $base)
-            ->orderByDesc('entry_date')->orderByDesc('id')
-            ->paginate(20)
-            ->withQueryString();
+    /* ========================
+     * جدول القيود (مع التصفح)
+     * ======================== */
+    $entries = (clone $base)
+        ->orderByDesc('entry_date')->orderByDesc('id')
+        ->paginate(20)
+        ->withQueryString();
 
-        /* ========================
-         * بيانات فلاتر الواجهة
-         * ======================== */
-        $investors         = Investor::orderBy('name')->get();
-        $statusesInvestors = $this->statusesForCategory($this->CAT_INVESTORS);
-        $statusesOffice    = $this->statusesForCategory($this->CAT_OFFICE);
+    /* ========================
+     * بيانات فلاتر الواجهة
+     * ======================== */
+    $investors         = Investor::orderBy('name')->get();
+    $statusesInvestors = $this->statusesForCategory($this->CAT_INVESTORS);
+    $statusesOffice    = $this->statusesForCategory($this->CAT_OFFICE);
 
-        /* ===========================================================
-         * كروت "الحسابات البنكية والخزن" (بدون أي منطق يخص المستثمرين)
-         * =========================================================== */
-        $svcFilters = [
-            'account_type' => $request->account_type,                 // 'bank' | 'safe' | null
-            'status_id'    => $request->status_id,                    // يُطبّق على transaction_status_id
-            'from'         => $request->from,
-            'to'           => $request->to,
-            'bank_ids'     => (array) $request->input('bank_ids', []),
-            'safe_ids'     => (array) $request->input('safe_ids', []),
-        ];
-        $accountsData = $cashSvc->build($svcFilters);
-        // يرجع: totals, bankTotals, safeTotals, banks[], safes[]
+    /* ===========================================================
+     * كروت "الحسابات البنكية والخزن" (بدون أي منطق يخص المستثمرين)
+     * =========================================================== */
+    $svcFilters = [
+        'account_type' => $request->account_type,                 // 'bank' | 'safe' | null
+        'status_id'    => $request->status_id,                    // يُطبّق على transaction_status_id
+        'from'         => $request->from,
+        'to'           => $request->to,
+        'bank_ids'     => (array) $request->input('bank_ids', []),
+        'safe_ids'     => (array) $request->input('safe_ids', []),
+    ];
+    $accountsData = $cashSvc->build($svcFilters);
+    // يرجع: totals, bankTotals, safeTotals, banks[], safes[]
 
-        /* ===========================================================
-         * مؤشرات المكتب (داخل فقط): فرق البطاقات / المكاتبة / ربح المكتب
-         * =========================================================== */
-        $officeFilters = [
-            'from'         => $request->from,
-            'to'           => $request->to,
-            'account_type' => $request->account_type,
-            'bank_ids'     => (array) $request->input('bank_ids', []),
-            'safe_ids'     => (array) $request->input('safe_ids', []),
-        ];
-        if ($request->filled('status_id')) {
-            $officeFilters['status_ids'] = [(int) $request->status_id];
-        }
-
-        // (اختياري) لو عندك تعريف لأنواع المعاملات بالـ config استخدمه بدل الكلمات:
-        // config/ledger.php:
-        // 'office_types' => ['cards'=>[...], 'mukataba'=>[...], 'profit'=>[...]]
-        if (config('ledger.office_types')) {
-            $officeFilters['types'] = config('ledger.office_types');
-        }
-
-        $officeKpis = $officeSvc->build($officeFilters);
-        // يرجع مفاتيح: cards, mukataba, profit
-        // كل مفتاح: total, by_bank[], by_safe[], top_statuses[]
-
-        /* ========================
-         * تمرير القيم للواجهة
-         * ======================== */
-        return view('ledger.index', array_merge([
-            'entries'           => $entries,
-            'totIn'             => $totIn,
-            'totOut'            => $totOut,
-            'net'               => $net,
-
-            'investors'         => $investors,
-            'statusesInvestors' => $statusesInvestors,
-            'statusesOffice'    => $statusesOffice,
-
-            'filters' => [
-                'party_category' => $request->party_category,
-                'investor_id'    => $request->investor_id,
-                'status_id'      => $request->status_id,
-                'account_type'   => $request->account_type,
-                'from'           => $request->from,
-                'to'             => $request->to,
-                'bank_ids'       => $svcFilters['bank_ids'],
-                'safe_ids'       => $svcFilters['safe_ids'],
-            ],
-
-            // KPIs المكتب (داخل فقط)
-            'officeKpis'        => $officeKpis,
-        ], $accountsData));
+    /* ===========================================================
+     * مؤشرات المكتب (داخل فقط): فرق البطاقات / المكاتبة / ربح المكتب
+     * =========================================================== */
+    $officeFilters = [
+        'from'         => $request->from,
+        'to'           => $request->to,
+        'account_type' => $request->account_type,
+        'bank_ids'     => (array) $request->input('bank_ids', []),
+        'safe_ids'     => (array) $request->input('safe_ids', []),
+    ];
+    if ($request->filled('status_id')) {
+        $officeFilters['status_ids'] = [(int) $request->status_id];
     }
 
+    // (اختياري) لو عندك تعريف لأنواع المعاملات بالـ config استخدمه بدل الكلمات:
+    // config/ledger.php:
+    // 'office_types' => ['cards'=>[...], 'mukataba'=>[...], 'profit'=>[...]]
+    if (config('ledger.office_types')) {
+        $officeFilters['types'] = config('ledger.office_types');
+    }
 
+    $officeKpis = $officeSvc->build($officeFilters);
+    // يرجع مفاتيح: cards, mukataba, profit
+    // كل مفتاح: total, by_bank[], by_safe[], top_statuses[]
+
+    /* ===========================================================
+     * (جديد) متاح البضائع لكل نوع — نفس فلاتر التاريخ/نوع الحساب/الحسابات
+     * =========================================================== */
+    $goodsAvailability = $goodsSvc->build([
+        'from'         => $request->from,
+        'to'           => $request->to,
+        'account_type' => $request->account_type,
+        'bank_ids'     => (array) $request->input('bank_ids', []),
+        'safe_ids'     => (array) $request->input('safe_ids', []),
+        // 'product_type_ids' => (array) $request->input('product_type_ids', []), // اختياري
+    ]);
+
+    /* ========================
+     * تمرير القيم للواجهة
+     * ======================== */
+    return view('ledger.index', array_merge([
+        'entries'           => $entries,
+        'totIn'             => $totIn,
+        'totOut'            => $totOut,
+        'net'               => $net,
+
+        'investors'         => $investors,
+        'statusesInvestors' => $statusesInvestors,
+        'statusesOffice'    => $statusesOffice,
+
+        'filters' => [
+            'party_category' => $request->party_category,
+            'investor_id'    => $request->investor_id,
+            'status_id'      => $request->status_id,
+            'account_type'   => $request->account_type,
+            'from'           => $request->from,
+            'to'             => $request->to,
+            'bank_ids'       => $svcFilters['bank_ids'],
+            'safe_ids'       => $svcFilters['safe_ids'],
+        ],
+
+        // KPIs المكتب (داخل فقط)
+        'officeKpis'        => $officeKpis,
+
+        // (جديد) متاح البضائع لكل نوع
+        'goodsAvailability' => $goodsAvailability,
+    ], $accountsData));
+}
 
     public function create()
     {

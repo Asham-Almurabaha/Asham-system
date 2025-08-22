@@ -15,7 +15,7 @@
                 </span>
                 <span class="badge bg-light text-dark">👤 عدد المستثمرين: {{ $investorCount }}</span>
             @endif
-            <span id="outside-remaining" class="badge bg-warning text-dark">المتبقي: —%</span>
+            {{-- <span id="outside-remaining" class="badge bg-warning text-dark">المتبقي: —%</span> --}}
         </div>
     </div>
 

@@ -11,7 +11,7 @@ class Setting extends Model
 {
     use HasFactory;
     protected $table = 'settings';
-    protected $fillable = ['name','name_ar','logo','favicon'];
+    protected $fillable = ['owner_name','name','name_ar','logo','favicon'];
     protected $hidden = ['created_at','updated_at'];
 
     

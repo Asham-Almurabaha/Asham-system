@@ -53,6 +53,14 @@
                             <option value="{{ $investor->id }}" @selected(old('investor_id') == $investor->id)>{{ $investor->name }}</option>
                         @endforeach
                     </select>
+
+                    {{-- سيولة المستثمر (مخفية إلا بعد اختيار مستثمر) --}}
+                    <div class="form-text mt-1 d-none" id="invLiquidityWrap">
+                        <span class="text-muted">سيولة المستثمر المتاحة: </span>
+                        <strong id="invAvailValue">—</strong>
+                        <span id="invAvailLoading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                    </div>
+
                     @error('investor_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                 </div>
 
@@ -135,8 +143,6 @@
                                     inputmode="decimal" lang="en" dir="ltr" pattern="[0-9]*[.,]?[0-9]*">
                                 @error('bank_share') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                             </div>
-
-                            
                         </div>
                     </div>
 
@@ -159,7 +165,7 @@
                                 </div>
                                 @error('safe_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                             </div>
-                            
+
                             <div class="mb-2">
                                 <label class="form-label" for="safe_share">المبلغ (خزنة)</label>
                                 <input
@@ -168,8 +174,6 @@
                                     inputmode="decimal" lang="en" dir="ltr" pattern="[0-9]*[.,]?[0-9]*">
                                 @error('safe_share') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                             </div>
-
-                            
                         </div>
                     </div>
                 </div>
@@ -197,7 +201,7 @@
                                 <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
                                     <div class="col-md-8">
                                         <label class="form-label small mb-1">نوع البضاعة</label>
-                                        <select name="products[{{ $i }}][product_type_id]" class="form-select">
+                                        <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
                                             <option value="">— اختر —</option>
                                             @foreach($products as $p)
                                                 <option value="{{ $p->id }}" @selected($oldTypeId==$p->id)>{{ $p->name }}</option>
@@ -205,9 +209,12 @@
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label small mb-1">الكمية</label>
+                                        <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                            <span>الكمية</span>
+                                            <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                        </label>
                                         <div class="input-group">
-                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
+                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
                                             <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
                                         </div>
                                     </div>
@@ -217,7 +224,7 @@
                             <div class="row g-2 product-row align-items-end">
                                 <div class="col-md-8">
                                     <label class="form-label small mb-1">نوع البضاعة</label>
-                                    <select name="products[0][product_type_id]" class="form-select">
+                                    <select name="products[0][product_type_id]" class="form-select js-product-select">
                                         <option value="">— اختر —</option>
                                         @foreach($products as $p)
                                             <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -225,9 +232,12 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small mb-1">الكمية</label>
+                                    <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                        <span>الكمية</span>
+                                        <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                    </label>
                                     <div class="input-group">
-                                        <input type="number" min="1" name="products[0][quantity]" class="form-control" placeholder="0">
+                                        <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
                                         <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
                                     </div>
                                 </div>
@@ -275,7 +285,10 @@
             </select>
         </div>
         <div class="col-md-4">
-            <label class="form-label small mb-1">الكمية</label>
+            <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                <span>الكمية</span>
+                <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+            </label>
             <div class="input-group">
                 <input type="number" min="1" class="form-control js-qty-input" placeholder="0">
                 <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
@@ -295,6 +308,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const statusHid  = document.getElementById('status_id_hidden');
     const dirBadge   = document.getElementById('dirBadge');
 
+    // سيولة المستثمر
+    const investorSel      = document.getElementById('investor_id');
+    const invLiquidityWrap = document.getElementById('invLiquidityWrap');
+    const invAvailValue    = document.getElementById('invAvailValue');
+    const invAvailLoading  = document.getElementById('invAvailLoading');
+    let investorAvail = null;
+    const INVESTOR_LIQ_URL_TPL = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
+
     const amount     = document.getElementById('amount');
     const bankShare  = document.getElementById('bank_share');
     const safeShare  = document.getElementById('safe_share');
@@ -306,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnSpinner = document.getElementById('btnSpinner');
     const form       = document.getElementById('splitForm');
 
-    // المتاح
+    // المتاح في الحسابات
     const bankAvailValue   = document.getElementById('bankAvailValue');
     const bankAvailLoading = document.getElementById('bankAvailLoading');
     const safeAvailValue   = document.getElementById('safeAvailValue');
@@ -333,8 +354,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function currentDirectionType(){
         const sel = currentStatusSelect();
-        theOpt = sel.options[sel.selectedIndex];
+        const theOpt = sel.options[sel.selectedIndex];
         return theOpt ? (theOpt.dataset.type || '') : '';
+    }
+
+    function investorSelected(){
+        return catSel.value === 'investors' && investorSel && investorSel.value;
+    }
+    function toggleInvestorLiquidityUI(){
+        if (!invLiquidityWrap) return;
+        invLiquidityWrap.classList.toggle('d-none', !investorSelected());
+        if (!investorSelected()){
+            investorAvail = null;
+            if (invAvailValue) invAvailValue.textContent = '—';
+        }
     }
 
     function syncCategoryUI(){
@@ -344,12 +377,25 @@ document.addEventListener('DOMContentLoaded', function () {
         syncStatusHiddenAndBadge();
         toggleGoodsSection();
         enforceStatusBeforeAccounts();
-        enforceAccountBeforeShare(); // <-- جديد
+        enforceAccountBeforeShare();
+
+        // سيولة المستثمر عند تغيير الفئة
+        toggleInvestorLiquidityUI();
+        if (investorSelected()) {
+            refreshInvestorLiquidity();
+        } else {
+            investorAvail = null;
+        }
+
+        applyMaxByDirection();
+        validate();
+        // ✅ تحقق كميات البضائع
+        validateGoodsQuantities();
     }
 
     function syncStatusHiddenAndBadge(){
         const sel = currentStatusSelect();
-        // حماية: اخفاء أي option نوعه تحويل (type=3)
+        // إخفاء التحويلات (type=3)
         for (let i=0; i<sel.options.length; i++){
             const o = sel.options[i];
             if (o.dataset && o.dataset.type === '3') { o.hidden = true; o.disabled = true; }
@@ -368,7 +414,10 @@ document.addEventListener('DOMContentLoaded', function () {
         enforceStatusBeforeAccounts();
         applyMaxByDirection();
         validate();
-        enforceAccountBeforeShare(); // <-- جديد
+        enforceAccountBeforeShare();
+
+        // ✅ تحقق كميات البضائع
+        validateGoodsQuantities();
     }
 
     // الحالة أولاً قبل الحسابات
@@ -397,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!hasStatus){
             clearBankSelection();
             clearSafeSelection();
-            enforceAccountBeforeShare(); // <-- جديد
+            enforceAccountBeforeShare();
         }
     }
 
@@ -414,7 +463,6 @@ document.addEventListener('DOMContentLoaded', function () {
         safeShare.classList.toggle('bg-light', !safeChosen);
         if (!safeChosen) { safeShare.value = '0'; }
 
-        // إعادة الحسابات والتأكد من صحة المجموع بعد أي قفل/فتح
         validate();
     }
 
@@ -429,6 +477,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const ids = goodsIdsFrom(sel);
         const cur = selectedStatusId();
         return ids.includes(cur);
+    }
+    function isSaleGoods(){
+        // بيع بضائع = (حالة بضائع) + اتجاه داخل (type=1)
+        return isGoodsStatus() && currentDirectionType() === '1';
     }
     function toggleGoodsSection(){
         goodsSection.style.display = isGoodsStatus() ? '' : 'none';
@@ -446,7 +498,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     function wireRowNames(row, index){
         const sel = row.querySelector('.js-product-select');
-        theQty = row.querySelector('.js-qty-input');
+        const theQty = row.querySelector('.js-qty-input');
         if (sel) sel.setAttribute('name', `products[${index}][product_type_id]`);
         if (theQty) theQty.setAttribute('name', `products[${index}][quantity]`);
     }
@@ -455,6 +507,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = frag.querySelector('.product-row');
         wireRowNames(row, nextProductIndex());
         productsWrapper.appendChild(frag);
+        const appended = productsWrapper.querySelector('.product-row:last-child');
+        if (appended) bindProductRow(appended);
+        // ✅ تحقق الكميات
+        validateGoodsQuantities();
     }
     function handleRemoveClick(e){
         if (!e.target.classList.contains('js-remove-product')) return;
@@ -462,10 +518,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!row) return;
         if (productsWrapper.querySelectorAll('.product-row').length > 1){
             row.remove();
+            // ✅ تحقق الكميات
+            validateGoodsQuantities();
         }
     }
 
-    // ===== أرقام (بدون تغيير لوجيك التقسيم)
+    // ===== أرقام
     function parseDec(v){
         if (v == null) return null;
         const s = String(v).trim().replace(',', '.');
@@ -482,7 +540,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateFromBank(){
-        if (programmatic || bankShare.readOnly) return; // احترام القفل
+        if (programmatic || bankShare.readOnly) return;
         lastEdited = 'bank';
         const a = parseDec(amount.value);
         const b = parseDec(bankShare.value);
@@ -495,7 +553,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateFromSafe(){
-        if (programmatic || safeShare.readOnly) return; // احترام القفل
+        if (programmatic || safeShare.readOnly) return;
         lastEdited = 'safe';
         const a = parseDec(amount.value);
         const s = parseDec(safeShare.value);
@@ -510,7 +568,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateFromAmount(){
         if (programmatic) return;
         programmatic = true;
-        // نسيب القيم 0 لو الحقول مقفولة
         if (!bankShare.readOnly) bankShare.value = '0';
         if (!safeShare.readOnly) safeShare.value  = '0';
         lastEdited = null;
@@ -518,22 +575,7 @@ document.addEventListener('DOMContentLoaded', function () {
         validate();
     }
 
-    // ===== المتاح + منع تجاوز المتاح في حالة السحب
-    function applyMaxByDirection(){
-        const t = currentDirectionType();
-        if (t === '2'){ // سحب فقط
-            if (bankAvail !== null) bankShare.setAttribute('max', String(bankAvail)); else bankShare.removeAttribute('max');
-            if (safeAvail !== null) safeShare.setAttribute('max', String(safeAvail)); else safeShare.removeAttribute('max');
-        } else {
-            bankShare.removeAttribute('max');
-            safeShare.removeAttribute('max');
-            bankShare.setCustomValidity('');
-            safeShare.setCustomValidity('');
-            bankShare.classList.remove('is-invalid');
-            safeShare.classList.remove('is-invalid');
-        }
-    }
-
+    // ===== جلب المتاح في الحسابات
     async function fetchAvailability(type, id){
         const url = `{{ route('ajax.accounts.availability') }}?account_type=${encodeURIComponent(type)}&account_id=${encodeURIComponent(id)}`;
         const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
@@ -565,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function () {
             bankAvailLoading.classList.add('d-none');
             applyMaxByDirection();
             validate();
-            enforceAccountBeforeShare(); // <-- مهم بعد الاختيار
+            enforceAccountBeforeShare();
         }
     }
 
@@ -586,7 +628,77 @@ document.addEventListener('DOMContentLoaded', function () {
             safeAvailLoading.classList.add('d-none');
             applyMaxByDirection();
             validate();
-            enforceAccountBeforeShare(); // <-- مهم بعد الاختيار
+            enforceAccountBeforeShare();
+        }
+    }
+
+    // سيولة المستثمر (تشتغل فقط لو مختار مستثمر)
+    async function refreshInvestorLiquidity(){
+        toggleInvestorLiquidityUI();
+        if (!investorSelected()){
+            applyMaxByDirection();
+            validate();
+            return;
+        }
+        const id = investorSel.value || '';
+        investorAvail = null;
+        if (invAvailValue) invAvailValue.textContent = '—';
+        if (!id){
+            applyMaxByDirection();
+            validate();
+            return;
+        }
+        if (invAvailLoading) invAvailLoading.classList.remove('d-none');
+        try{
+            const url = INVESTOR_LIQ_URL_TPL.replace('__ID__', encodeURIComponent(id));
+            const res = await fetch(url, { headers: { 'Accept':'application/json' }, credentials: 'same-origin' });
+            if (res.ok){
+                const data = await res.json();
+                const raw = Number(data.cash ?? data.balance ?? 0);
+                if (Number.isFinite(raw)){
+                    investorAvail = raw;
+                    const fmt = (data.formatted ?? raw.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
+                    if (invAvailValue) invAvailValue.textContent = fmt;
+                }
+            }
+        }catch(e){ /* ignore */ }
+        finally{
+            if (invAvailLoading) invAvailLoading.classList.add('d-none');
+            applyMaxByDirection();
+            validate();
+        }
+    }
+
+    // ===== المتاح + منع تجاوز المتاح في حالة السحب
+    function applyMaxByDirection(){
+        const t = currentDirectionType();
+
+        if (t === '2'){ // سحب
+            // إجمالي القيد لا يتجاوز سيولة المستثمر (فقط لو مختار مستثمر)
+            if (investorSelected() && investorAvail !== null){
+                amount.setAttribute('max', String(investorAvail));
+            } else {
+                amount.removeAttribute('max');
+            }
+
+            // حد أقصى لحصة البنك/الخزنة = min(متاح الحساب, سيولة المستثمر إن وجدت ومختار)
+            let bankCap = (bankAvail !== null) ? bankAvail : null;
+            let safeCap = (safeAvail !== null) ? safeAvail : null;
+            if (investorSelected() && investorAvail !== null){
+                bankCap = (bankCap === null) ? investorAvail : Math.min(bankCap, investorAvail);
+                safeCap = (safeCap === null) ? investorAvail : Math.min(safeCap, investorAvail);
+            }
+
+            if (bankCap !== null) bankShare.setAttribute('max', String(bankCap)); else bankShare.removeAttribute('max');
+            if (safeCap !== null) safeShare.setAttribute('max', String(safeCap)); else safeShare.removeAttribute('max');
+        } else {
+            amount.removeAttribute('max');
+            bankShare.removeAttribute('max');
+            safeShare.removeAttribute('max');
+            bankShare.setCustomValidity('');
+            safeShare.setCustomValidity('');
+            bankShare.classList.remove('is-invalid');
+            safeShare.classList.remove('is-invalid');
         }
     }
 
@@ -611,43 +723,177 @@ document.addEventListener('DOMContentLoaded', function () {
         bankSel.required = !!(b && b > 0);
         safeSel.required = !!(s && s > 0);
 
-        // قيود السحب: لا تتجاوز المتاح
         const t = currentDirectionType();
-        let bankOk = true, safeOk = true;
+        let bankOk = true, safeOk = true, investorOk = true;
 
-        if (t === '2'){ // سحب
+        if (t === '2'){
             if (bankAvail !== null && b != null && b > bankAvail + 1e-9) { bankOk = false; }
             if (safeAvail !== null && s != null && s > safeAvail + 1e-9) { safeOk = false; }
+
+            // شرط سيولة المستثمر على الإجمالي (فقط لو مختار مستثمر)
+            if (investorSelected() && investorAvail !== null && a != null && a > investorAvail + 1e-9){
+                investorOk = false;
+            }
         }
 
-        // رسائل صلاحية
         bankShare.setCustomValidity(bankOk ? '' : 'المبلغ أكبر من المتاح في الحساب البنكي');
         safeShare.setCustomValidity(safeOk ? '' : 'المبلغ أكبر من المتاح في الخزنة');
         bankShare.classList.toggle('is-invalid', !bankOk);
         safeShare.classList.toggle('is-invalid', !safeOk);
 
-        // جاهزية الزر
-        let ok = okSum;
+        amount.setCustomValidity(investorOk ? '' : 'إجمالي المبلغ أكبر من سيولة المستثمر المتاحة');
+        amount.classList.toggle('is-invalid', !investorOk);
+
+        let ok = okSum && bankOk && safeOk && investorOk;
         if (ok && b && b > 0 && !bankSel.value) ok = false;
         if (ok && s && s > 0 && !safeSel.value) ok = false;
-        ok = ok && bankOk && safeOk;
 
         btnSubmit.disabled = !ok;
     }
 
+    // ====== المتاح لكل نوع بضاعة (جلب من السيرفر + ضبط max في الكمية *فقط عند بيع البضائع*) ======
+    const PT_AVAIL_URL = @json(route('product-types.available', ['productType' => '__ID__']));
+    const ptAvailCache = Object.create(null);
+
+    async function fetchPtAvailable(typeId){
+        if (!typeId) return { success:true, available:0 };
+        if (ptAvailCache[typeId] !== undefined) return ptAvailCache[typeId];
+        try{
+            const url = PT_AVAIL_URL.replace('__ID__', encodeURIComponent(typeId));
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP '+res.status);
+            const data = await res.json();
+            ptAvailCache[typeId] = data;
+            return data;
+        }catch(e){
+            ptAvailCache[typeId] = { success:false, message:e.message };
+            return ptAvailCache[typeId];
+        }
+    }
+
+    function setRowAvailabilityUI(row, payload){
+        const badge = row.querySelector('.js-available-badge');
+        const qty   = row.querySelector('.js-qty-input');
+        if (!badge || !qty) return;
+
+        if (!payload || payload.success !== true){
+            const msg = (payload && payload.message) ? payload.message : 'تعذّر جلب المتاح';
+            badge.textContent = 'خطأ: ' + msg;
+            badge.className = 'badge bg-danger text-white js-available-badge';
+            qty.removeAttribute('max');
+            return;
+        }
+
+        const avail = Number(payload.available ?? payload.stock?.available ?? 0);
+        const safeAvailQty = Number.isFinite(avail) ? Math.max(0, Math.floor(avail)) : 0;
+        badge.textContent = 'المتاح: ' + safeAvailQty.toLocaleString('ar-EG');
+        badge.className = 'badge bg-light text-dark js-available-badge';
+
+        // ✅ نعيّن max فقط عند "بيع بضائع"
+        if (isSaleGoods()) {
+            qty.setAttribute('max', String(safeAvailQty)); // قد تكون 0
+        } else {
+            qty.removeAttribute('max');
+        }
+
+        // لقط الكمية ضمن الحدود
+        const maxAttr = qty.getAttribute('max');
+        const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
+        let v = parseInt(qty.value || '0', 10) || 0;
+        if (v < 0) v = 0;
+        if (isFinite(max) && v > max) v = max;
+        qty.value = v ? String(v) : '';
+    }
+
+    async function reloadRowAvailability(row){
+        const sel = row.querySelector('.js-product-select');
+        const badge = row.querySelector('.js-available-badge');
+        if (!sel || !badge) return;
+
+        badge.textContent = 'جاري التحميل...';
+        badge.className = 'badge bg-secondary text-white js-available-badge';
+
+        const typeId = sel.value || '';
+        const payload = await fetchPtAvailable(typeId);
+        setRowAvailabilityUI(row, payload);
+
+        // ✅ تحقق الكميات بعد التحديث
+        validateGoodsQuantities();
+    }
+
+    function bindProductRow(row){
+        const sel = row.querySelector('.js-product-select');
+        const qty = row.querySelector('.js-qty-input');
+        if (sel){
+            sel.addEventListener('change', () => reloadRowAvailability(row));
+            if (sel.value) reloadRowAvailability(row); else setRowAvailabilityUI(row, { success:true, available:0 });
+        }
+        if (qty){
+            const clampQty = () => {
+                const maxAttr = qty.getAttribute('max');
+                const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
+                let v = parseInt(qty.value || '0', 10) || 0;
+                if (v < 0) v = 0;
+                if (isFinite(max) && v > max) v = max;
+                qty.value = v ? String(v) : '';
+            };
+            qty.addEventListener('input', () => { clampQty(); validateGoodsQuantities(); });
+            qty.addEventListener('blur',  () => { clampQty(); validateGoodsQuantities(); });
+        }
+    }
+
+    // ✅ تحقق عام للبضائع: لا بيع > المتاح
+    function validateGoodsQuantities(){
+        const sale = isSaleGoods();
+        let ok = true;
+
+        if (!productsWrapper) return true;
+
+        productsWrapper.querySelectorAll('.product-row').forEach(row => {
+            const sel = row.querySelector('.js-product-select');
+            const qty = row.querySelector('.js-qty-input');
+            if (!sel || !qty || !sel.value) return;
+
+            qty.classList.remove('is-invalid');
+            qty.setCustomValidity('');
+
+            if (!sale) return; // التحقق فقط عند البيع
+
+            const maxAttr = qty.getAttribute('max');
+            const max = (maxAttr !== null) ? parseInt(maxAttr,10) : null;
+            const val = parseInt(qty.value || '0', 10) || 0;
+
+            if (max !== null && !Number.isNaN(max) && val > max){
+                ok = false;
+                qty.classList.add('is-invalid');
+                qty.setCustomValidity('الكمية أكبر من المتاح في المخزون.');
+            }
+        });
+
+        // لا نغيّر لوجيك الزر هنا؛ نكتفي بمنع الإرسال في الـ submit handler أدناه
+        return ok;
+    }
+
+    // اربط الصفوف الحالية
+    if (productsWrapper){
+        productsWrapper.querySelectorAll('.product-row').forEach(bindProductRow);
+    }
+
     // Events
-    catSel.addEventListener('change', syncCategoryUI);
+    catSel.addEventListener('change', () => { syncCategoryUI(); validateGoodsQuantities(); });
     statusInv.addEventListener('change', function(){
         syncStatusHiddenAndBadge();
         clearBankSelection();
         clearSafeSelection();
         enforceAccountBeforeShare();
+        validateGoodsQuantities();
     });
     statusOff.addEventListener('change', function(){
         syncStatusHiddenAndBadge();
         clearBankSelection();
         clearSafeSelection();
         enforceAccountBeforeShare();
+        validateGoodsQuantities();
     });
 
     amount.addEventListener('input',  updateFromAmount);
@@ -662,8 +908,25 @@ document.addEventListener('DOMContentLoaded', function () {
     bankSel.addEventListener('change', refreshBankAvailability);
     safeSel.addEventListener('change', refreshSafeAvailability);
 
+    if (investorSel){
+        investorSel.addEventListener('change', () => {
+            toggleInvestorLiquidityUI();
+            refreshInvestorLiquidity();
+        });
+    }
+
     if (btnAddProduct) btnAddProduct.addEventListener('click', addProductRow);
     if (productsWrapper) productsWrapper.addEventListener('click', handleRemoveClick);
+
+    // ✅ مانع إرسال مستقل للبضائع قبل الليسنر الأصلي
+    form.addEventListener('submit', function(e){
+        if (!validateGoodsQuantities()){
+            e.preventDefault();
+            e.stopPropagation();
+            alert('لا يمكنك بيع كمية أكبر من المتاح في المخزون.');
+            return;
+        }
+    }, { capture: true });
 
     form.addEventListener('submit', function(){
         btnSubmit.disabled = true;
@@ -674,12 +937,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // init
     syncCategoryUI();
     syncStatusHiddenAndBadge();
-    // إجمالي يبدأ بـ 0 إن لم يكن موجود
     if (!amount.value || isNaN(parseFloat(String(amount.value).replace(',', '.')))) amount.value = '0';
     updateFromAmount();
-
-    // اقفل مبالغ البنك/الخزنة لحدّ ما تختار الحسابات
     enforceAccountBeforeShare();
+
+    // تهيئة السيولة والمتاحات (لو فيه old values)
+    toggleInvestorLiquidityUI();
+    refreshInvestorLiquidity();
+    refreshBankAvailability();
+    refreshSafeAvailability();
 });
 </script>
 @endpush

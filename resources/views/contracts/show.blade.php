@@ -17,6 +17,21 @@
 <div class="d-flex flex-wrap gap-2 mb-3">
     {{-- <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-primary">✏️ تعديل</a> --}}
     <a href="{{ route('contracts.index') }}" class="btn btn-secondary">↩ رجوع للقائمة</a>
+    @php
+        $paidTotal = $contract->installments->sum('payment_amount'); 
+    @endphp
+
+    @if($paidTotal == 0)
+        <a href="{{ route('contracts.print', $contract->id) }}" target="_blank" class="btn btn-primary">
+            🖨 طباعة العقد
+        </a>
+    @endif
+
+    @if($paidTotal >= $contract->total_value - $contract->discount_amount )
+        <a href="{{ route('contracts.closure', $contract->id) }}" target="_blank" class="btn btn-success">
+            ✅ طباعة مخالصة
+        </a>
+    @endif
     {{-- <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="ms-auto" 
           onsubmit="return confirm('⚠️ هل أنت متأكد من حذف هذا العقد؟');">
         @csrf

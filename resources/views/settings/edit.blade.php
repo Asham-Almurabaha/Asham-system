@@ -18,6 +18,18 @@
             @csrf
             @method('PUT')
 
+            {{-- Owner Name --}}
+            <div class="col-md-12">
+              <label class="form-label">{{ __('اسم المالك') }} <span class="text-danger">*</span></label>
+              <input type="text"
+                     name="owner_name"
+                     class="form-control @error('owner_name') is-invalid @enderror"
+                     value="{{ old('owner_name',$setting->owner_name) }}"
+                     maxlength="50" required>
+              @error('owner_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              <div class="form-text">{{ __('الحد الأقصى 50 حرفًا') }}</div>
+            </div>
+
             <div class="col-md-6">
               <label class="form-label">{{ __('Name (EN)') }} <span class="text-danger">*</span></label>
               <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"

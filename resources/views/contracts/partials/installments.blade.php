@@ -23,15 +23,13 @@
         return stripos($inst->notes ?? '', 'معتذر') !== false;
     })->count();
 
-    // البحث عن أول قسط ناقصه فلوس
+    // أول قسط غير مُسدّد (تصحيح: first مع كولباك بدلاً من firstWhere)
     $firstUnpaidInstallment = $contract->installments
         ->sortBy('installment_number')
-        ->firstWhere(function($inst) {
-            return $inst->payment_amount < $inst->due_amount;
-        });
+        ->first(fn($inst) => (float)$inst->payment_amount < (float)$inst->due_amount);
 
     $defaultPaymentAmount = $firstUnpaidInstallment
-        ? max(0, $firstUnpaidInstallment->due_amount - $firstUnpaidInstallment->payment_amount)
+        ? max(0, (float)$firstUnpaidInstallment->due_amount - (float)$firstUnpaidInstallment->payment_amount)
         : $remainingContract;
 
     // خصم السداد المبكر
@@ -40,6 +38,11 @@
     // تأمين المتغيرات لو مش متبوعة من الكنترولر
     $banks = $banks ?? collect();
     $safes = $safes ?? collect();
+
+    // حالة العقد + كشف السداد المبكر
+    $contractStatusName     = $contract->contractStatus->name ?? '';
+    $earlySettlementNames   = ['سداد مبكر','سداد مُبكر','سداد مبكّر','Early Settlement'];
+    $isEarlySettlement      = $contractStatusName && in_array($contractStatusName, $earlySettlementNames, true);
 @endphp
 
 <div class="card shadow-sm mb-4">
@@ -64,20 +67,13 @@
         </div>
     </div>
 
-    @php
-        $contractStatusName = $contract->contractStatus->name ?? '';
-    @endphp
-
     <div class="card-body p-0">
         <div class="p-3">
-            @if($remainingContract > 0 && !in_array($contractStatusName, ['سداد مبكر']) && (float)$discountAmount <= 0)
-            {{-- زر سداد --}}
-            @if($remainingContract > 0)
+            {{-- إظهار الأزرار الرئيسية فقط إذا لم تكن حالة العقد "سداد مبكر" --}}
+            @if($remainingContract > 0 && !$isEarlySettlement && (float)$discountAmount <= 0)
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#payContractModal">
                     💰 سداد
                 </button>
-            @endif
-            {{-- زر سداد مبكر --}}
                 <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#earlySettleModal">
                     ⚡ سداد مبكر
                 </button>
@@ -101,9 +97,9 @@
             <tbody>
                 @foreach($contract->installments as $i => $inst)
                     @php
-                        $dueDate = \Carbon\Carbon::parse($inst->due_date);
+                        $dueDate     = \Carbon\Carbon::parse($inst->due_date);
                         $isThisMonth = $dueDate->isSameMonth(now());
-                        $statusName = $inst->installmentStatus->name ?? '';
+                        $statusName  = $inst->installmentStatus->name ?? '';
                     @endphp
                     <tr>
                         <td>{{ $i + 1 }}</td>
@@ -147,26 +143,28 @@
 
                         {{-- الإجراءات --}}
                         <td>
-                            {{-- زر التأجيل --}}
-                            @if($isThisMonth && $inst->payment_amount < $inst->due_amount && $statusName !== 'مؤجل' && $statusName !== 'معتذر')
-                                <button type="button" class="btn btn-sm btn-warning defer-btn" data-id="{{ $inst->id }}">
-                                    ⏳ تأجيل
-                                </button>
-                            @endif
+                            @unless($isEarlySettlement)
+                                {{-- زر التأجيل --}}
+                                @if($isThisMonth && $inst->payment_amount < $inst->due_amount && $statusName !== 'مؤجل' && $statusName !== 'معتذر')
+                                    <button type="button" class="btn btn-sm btn-warning defer-btn" data-id="{{ $inst->id }}">
+                                        ⏳ تأجيل
+                                    </button>
+                                @endif
 
-                            {{-- زر المعتذر --}}
-                            @php
-                                $daysDiff = now()->diffInDays($dueDate, false);
-                            @endphp
-                            @if(
-                                $inst->payment_amount < $inst->due_amount &&
-                                $statusName !== 'معتذر' &&
-                                $daysDiff >= -15
-                            )
-                                <button type="button" class="btn btn-sm btn-secondary excuse-btn" data-id="{{ $inst->id }}">
-                                    🙏 معتذر
-                                </button>
-                            @endif
+                                {{-- زر المعتذر --}}
+                                @php
+                                    $daysDiff = now()->diffInDays($dueDate, false);
+                                @endphp
+                                @if(
+                                    $inst->payment_amount < $inst->due_amount &&
+                                    $statusName !== 'معتذر' &&
+                                    $daysDiff >= -15
+                                )
+                                    <button type="button" class="btn btn-sm btn-secondary excuse-btn" data-id="{{ $inst->id }}">
+                                        🙏 معتذر
+                                    </button>
+                                @endif
+                            @endunless
                         </td>
                     </tr>
                 @endforeach
@@ -313,11 +311,21 @@
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        flatpickr(".js-date", {
-            dateFormat: "Y-m-d",
-            locale: "ar",
-            defaultDate: "{{ now()->format('Y-m-d') }}"
-        });
+        // تفعيل التاريخ لو متاح flatpickr عالمياً
+        if (window.flatpickr) {
+            flatpickr(".js-date", {
+                dateFormat: "Y-m-d",
+                locale: "ar",
+                defaultDate: "{{ now()->format('Y-m-d') }}"
+            });
+        }
+
+        // Tooltips لعرض الملاحظات
+        if (window.bootstrap && bootstrap.Tooltip) {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                new bootstrap.Tooltip(el, {container: 'body'});
+            });
+        }
 
         // مزامنة على التغيير الفوري
         const accPay   = document.getElementById('account_picker_pay');
@@ -331,7 +339,6 @@
             payForm.addEventListener("submit", function(e) {
                 e.preventDefault();
 
-                // تأكد من ضبط الحقول قبل جمع FormData
                 syncAccountHiddenGeneric('account_picker_pay','bank_account_id_pay','safe_id_pay');
 
                 let form = e.target;
@@ -417,7 +424,6 @@
         earlyForm.addEventListener("submit", function(e) {
             e.preventDefault();
 
-            // مزامنة الحساب قبل جمع البيانات
             syncAccountHiddenGeneric('account_picker_early','bank_account_id_early','safe_id_early');
 
             let form = e.target;
