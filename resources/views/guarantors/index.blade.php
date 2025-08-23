@@ -6,11 +6,7 @@
 
 <div class="pagetitle mb-3">
     <h1 class="h3 mb-1">قائمة الكفلاء</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item active">الكفلاء</li>
-        </ol>
-    </nav>
+    <nav><ol class="breadcrumb"><li class="breadcrumb-item active">الكفلاء</li></ol></nav>
 </div>
 
 @php
@@ -37,7 +33,7 @@
     .bar-8{ height:8px; }
 </style>
 
-{{-- ====== كروت عامة ====== --}}
+{{-- ====== الكروت ====== --}}
 <div class="row g-4 mb-3" dir="rtl">
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
@@ -51,7 +47,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
             <div class="d-flex align-items-center gap-3">
@@ -63,13 +58,10 @@
                 </div>
             </div>
             <div class="mt-3">
-                <div class="progress bar-8">
-                    <div class="progress-bar" style="width: {{ $activePct }}%"></div>
-                </div>
+                <div class="progress bar-8"><div class="progress-bar" style="width: {{ $activePct }}%"></div></div>
             </div>
         </div>
     </div>
-
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
             <div class="d-flex align-items-center gap-3">
@@ -81,13 +73,10 @@
                 </div>
             </div>
             <div class="mt-3">
-                <div class="progress bar-8">
-                    <div class="progress-bar bg-danger" style="width: {{ $inactivePct }}%"></div>
-                </div>
+                <div class="progress bar-8"><div class="progress-bar bg-danger" style="width: {{ $inactivePct }}%"></div></div>
             </div>
         </div>
     </div>
-
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
             <div class="d-flex align-items-center gap-3">
@@ -104,44 +93,61 @@
 
 {{-- ====== شريط الأدوات ====== --}}
 <div class="card shadow-sm mb-3">
-    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <a href="{{ route('guarantors.create') }}" class="btn btn-outline-success">+ إضافة كفيل جديد</a>
-        <span class="ms-auto small text-muted">النتائج: <strong>{{ $guarantors->total() }}</strong></span>
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
-            تصفية متقدمة
-        </button>
+  <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
+
+    <div class="btn-group" role="group" aria-label="Actions">
+      <a href="{{ route('guarantors.create') }}" class="btn btn-success">
+        <i class="bi bi-plus-lg"></i> إضافة كفيل
+      </a>
+
+      <a href="{{ route('guarantors.import.form') }}" class="btn btn-outline-primary">
+        <i class="bi bi-upload"></i> استيراد Excel
+      </a>
+
+      {{-- 🔥 شيلنا زر "تمبليت" زى العملاء --}}
     </div>
 
-    <div class="collapse @if(request()->hasAny(['guarantor_id','national_id','phone'])) show @endif border-top" id="filterBar">
-        <div class="card-body">
-            <form id="filterForm" action="{{ route('guarantors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-                <div class="col-12 col-md-3">
-                    <label class="form-label mb-1">الكفيل</label>
-                    <select name="guarantor_id" class="form-select form-select-sm auto-submit">
-                        <option value="">الكل</option>
-                        @foreach($guarantorNameOptions as $g)
-                            <option value="{{ $g->id }}" @selected((string)request('guarantor_id') === (string)$g->id)>
-                                {{ $g->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">رقم الهوية</label>
-                    <input type="text" name="national_id" value="{{ request('national_id') }}" 
-                           class="form-control form-control-sm auto-submit-input" placeholder="مثال: 1234567890">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">الهاتف</label>
-                    <input type="text" name="phone" value="{{ request('phone') }}" 
-                           class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
-                </div>
-                <div class="col-12 col-md-1">
-                    <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
-                </div>
-            </form>
+    <span class="ms-auto small text-muted">
+      النتائج: <strong>{{ $guarantors->total() }}</strong>
+    </span>
+
+    <button class="btn btn-outline-secondary btn-sm" type="button"
+            data-bs-toggle="collapse" data-bs-target="#filterBar"
+            aria-expanded="false" aria-controls="filterBar">
+      تصفية
+    </button>
+  </div>
+
+  <div class="collapse @if(request()->hasAny(['guarantor_q','national_id','phone'])) show @endif border-top" id="filterBar">
+    <div class="card-body">
+      <form id="filterForm" action="{{ route('guarantors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+        {{-- ✅ بحث باسم الكفيل فقط --}}
+        <div class="col-12 col-md-4">
+          <label class="form-label mb-1">الكفيل (بالاسم)</label>
+          <input type="text"
+                 name="guarantor_q"
+                 value="{{ request('guarantor_q') }}"
+                 class="form-control form-control-sm auto-submit-input"
+                 placeholder="اكتب اسم الكفيل...">
         </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">رقم الهوية</label>
+          <input type="text" name="national_id" value="{{ request('national_id') }}"
+                 class="form-control form-control-sm auto-submit-input" placeholder="1234567890">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">الهاتف</label>
+          <input type="text" name="phone" value="{{ request('phone') }}"
+                 class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
+        </div>
+
+        <div class="col-12 col-md-2">
+          <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 {{-- ====== الجدول ====== --}}
@@ -160,26 +166,26 @@
                         <th>العنوان</th>
                         <th>الوظيفة</th>
                         <th style="min-width:110px;">صورة الهوية</th>
-                        <th style="width:190px">إجراءات</th>
+                        <th style="width:150px">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($guarantors as $guarantor)
+                    @forelse ($guarantors as $g)
                         <tr>
                             <td class="text-muted">
                                 {{ $loop->iteration + ($guarantors->currentPage() - 1) * $guarantors->perPage() }}
                             </td>
-                            <td class="text-start">{{ $guarantor->name }}</td>
-                            <td dir="ltr">{{ $guarantor->national_id ?? '—' }}</td>
-                            <td dir="ltr">{{ $guarantor->phone ?? '—' }}</td>
-                            <td class="text-start">{{ $guarantor->email ?? '—' }}</td>
-                            <td>{{ optional($guarantor->nationality)->name ?? '—' }}</td>
-                            <td class="text-start">{{ $guarantor->address ?? '—' }}</td>
-                            <td>{{ optional($guarantor->title)->name ?? '—' }}</td>
+                            <td class="text-start">{{ $g->name }}</td>
+                            <td dir="ltr">{{ $g->national_id ?? '—' }}</td>
+                            <td dir="ltr">{{ $g->phone ?? '—' }}</td>
+                            <td class="text-start">{{ $g->email ?? '—' }}</td>
+                            <td>{{ optional($g->nationality)->name ?? '—' }}</td>
+                            <td class="text-start">{{ $g->address ?? '—' }}</td>
+                            <td>{{ optional($g->title)->name ?? '—' }}</td>
                             <td>
-                                @if($guarantor->id_card_image)
-                                    <a href="{{ asset('storage/' . $guarantor->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="عرض الصورة بالحجم الكامل">
-                                        <img src="{{ asset('storage/' . $guarantor->id_card_image) }}"
+                                @if($g->id_card_image)
+                                    <a href="{{ asset('storage/' . $g->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="عرض الصورة بالحجم الكامل">
+                                        <img src="{{ asset('storage/' . $g->id_card_image) }}"
                                              alt="صورة الهوية" width="70" height="48"
                                              style="object-fit: cover; border-radius: .25rem;">
                                     </a>
@@ -188,14 +194,14 @@
                                 @endif
                             </td>
                             <td class="text-nowrap">
-                                <a href="{{ route('guarantors.show', $guarantor) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
+                                <a href="{{ route('guarantors.show', $g) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="10" class="py-5">
                                 <div class="text-muted">
-                                    لا توجد نتائج مطابقة.
+                                    لا توجد نتائج مطابقة لبحثك.
                                     <a href="{{ route('guarantors.index') }}" class="ms-1">عرض الكل</a>
                                 </div>
                                 <div class="mt-3">
@@ -227,21 +233,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
 
-    // auto submit select
-    document.querySelectorAll('.auto-submit').forEach(el => {
-        el.addEventListener('change', function() {
-            document.getElementById('filterForm').submit();
-        });
-    });
-
-    // auto submit inputs with debounce
+    // auto submit للمدخلات النصية مع تأخير بسيط
     let typingTimer;
     document.querySelectorAll('.auto-submit-input').forEach(el => {
         el.addEventListener('input', function() {
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => {
                 document.getElementById('filterForm').submit();
-            }, 700);
+            }, 600);
         });
     });
 });

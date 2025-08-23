@@ -14,7 +14,6 @@
 </div>
 
 @php
-    // أرقام الكروت
     $allTotal    = (int)($investorsTotalAll ?? 0);
     $allActive   = (int)($activeInvestorsTotalAll ?? 0);
     $allInactive = max($allTotal - $allActive, 0);
@@ -105,59 +104,70 @@
 
 {{-- ====== شريط الأدوات + فلاتر ====== --}}
 <div class="card shadow-sm mb-3">
-    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <a href="{{ route('investors.create') }}" class="btn btn-outline-success">+ إضافة مستثمر جديد</a>
-        {{-- ✅ Dropdown للتقارير --}}
-                <div class="btn-group">
-                    <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                        📊 التقارير
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end text-end">
-                        <li>
-                            <a class="dropdown-item" href="{{ route('reports.investors.Allliquidity') }}">
-                                📄 تقرير سيولات المستثمرين
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-        <span class="ms-auto small text-muted">النتائج: <strong>{{ $investors->total() }}</strong></span>
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
-            تصفية متقدمة
-        </button>
+  <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
+
+    <div class="btn-group" role="group" aria-label="Investor Actions">
+      <a href="{{ route('investors.create') }}" class="btn btn-success">
+        <i class="bi bi-plus-lg"></i> إضافة مستثمر
+      </a>
+
+      <a href="{{ route('investors.import.form') }}" class="btn btn-outline-primary">
+        <i class="bi bi-upload"></i> استيراد Excel
+      </a>
+
+      {{-- تم حذف زر التمبليت زي العملاء --}}
+      {{-- @if (Route::has('investors.import.template'))
+        <a href="{{ route('investors.import.template') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-file-earmark-spreadsheet"></i> تمبليت
+        </a>
+      @endif --}}
+
+      @if (session('failures') && count(session('failures')))
+        <a href="{{ route('investors.import.export_failures') }}" class="btn btn-warning">
+          <i class="bi bi-exclamation-triangle"></i> تصدير الأخطاء
+        </a>
+      @endif
     </div>
 
-    <div class="collapse @if(request()->hasAny(['investor_id','national_id','phone'])) show @endif border-top" id="filterBar">
-        <div class="card-body">
-            <form id="filterForm" action="{{ route('investors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-                <div class="col-12 col-md-3">
-                    <label class="form-label mb-1">المستثمر</label>
-                    <select name="investor_id" class="form-select form-select-sm auto-submit">
-                        <option value="">الكل</option>
-                        @foreach(($investorNameOptions ?? []) as $inv)
-                            @if(is_object($inv))
-                                <option value="{{ $inv->id }}" @selected((string)request('investor_id') === (string)$inv->id)>
-                                    {{ $inv->name }}
-                                </option>
-                            @endif
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">رقم الهوية</label>
-                    <input type="text" name="national_id" value="{{ request('national_id') }}" 
-                           class="form-control form-control-sm auto-submit-input" placeholder="مثال: 1234567890">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">الهاتف</label>
-                    <input type="text" name="phone" value="{{ request('phone') }}" 
-                           class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
-                </div>
-                <div class="col-12 col-md-1">
-                    <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
-                </div>
-            </form>
-        </div>
+    <div class="btn-group">
+      <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        📊 التقارير
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end text-end">
+        <li>
+          <a class="dropdown-item" href="{{ route('reports.investors.Allliquidity') }}">
+            📄 تقرير سيولات المستثمرين
+          </a>
+        </li>
+      </ul>
     </div>
+
+    <span class="ms-auto small text-muted">
+      النتائج: <strong>{{ $investors->total() }}</strong>
+    </span>
+
+    <button class="btn btn-outline-secondary btn-sm" type="button"
+            data-bs-toggle="collapse" data-bs-target="#filterBar"
+            aria-expanded="false" aria-controls="filterBar">
+      تصفية
+    </button>
+  </div>
+
+  <div class="collapse @if(request()->has('investor_q')) show @endif border-top" id="filterBar">
+    <div class="card-body">
+      <form id="filterForm" action="{{ route('investors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+        <div class="col-12 col-md-4">
+          <label class="form-label mb-1">المستثمر (بالاسم)</label>
+          <input type="text" name="investor_q" value="{{ request('investor_q') }}"
+                 class="form-control form-control-sm auto-submit-input" placeholder="اكتب اسم المستثمر">
+        </div>
+
+        <div class="col-12 col-md-1">
+          <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 {{-- ====== الجدول ====== --}}
@@ -240,17 +250,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
 
-    // auto-submit select
-    document.querySelectorAll('.auto-submit').forEach(el => {
-        el.addEventListener('change', () => document.getElementById('filterForm').submit());
-    });
-
-    // auto-submit input
+    // auto-submit inputs with debounce (اسم فقط)
     let typingTimer;
     document.querySelectorAll('.auto-submit-input').forEach(el => {
         el.addEventListener('input', function () {
             clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => document.getElementById('filterForm').submit(), 700);
+            typingTimer = setTimeout(() => {
+                document.getElementById('filterForm').submit();
+            }, 700);
         });
     });
 });

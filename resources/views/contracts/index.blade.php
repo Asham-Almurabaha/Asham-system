@@ -151,7 +151,7 @@
             <button class="btn btn-outline-primary btn-sm">تحديث</button>
         </form>
     </div>
-    <div class="card-body">
+    <div class="card-body p-20">
         <div class="row g-3">
             {{-- عدد الأقساط --}}
             <div class="col-12 col-md-3">
@@ -321,69 +321,80 @@
 
 {{-- ====== شريط الأدوات ====== --}}
 <div class="card shadow-sm mb-3">
-    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <a href="{{ route('contracts.create') }}" class="btn btn-outline-success">
-            + إضافة عقد جديد
-        </a>
+  <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
 
-        <span class="ms-auto small text-muted">
-            النتائج: <strong>{{ $contracts->total() }}</strong>
-        </span>
+    {{-- أزرار الإجراءات --}}
+    <div class="btn-group" role="group" aria-label="Contract Actions">
+      <a href="{{ route('contracts.create') }}" class="btn btn-success">
+        <i class="bi bi-plus-lg"></i> إضافة عقد جديد
+      </a>
 
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false">
-            تصفية متقدمة
-        </button>
+      {{-- <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
+        <i class="bi bi-upload"></i> استيراد Excel
+      </a> --}}
+      
     </div>
 
-    {{-- ✅ أزلنا type وأضفنا investor_id --}}
-    <div class="collapse @if(request()->hasAny(['customer','investor_id','status','from','to'])) show @endif border-top" id="filterBar">
-        <div class="card-body">
-            <form action="{{ route('contracts.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-                <div class="col-12 col-md-3">
-                    <label class="form-label mb-1">العميل</label>
-                    <input type="text" name="customer" value="{{ request('customer') }}" class="form-control form-control-sm" placeholder="اسم العميل">
-                </div>
+    <span class="ms-auto small text-muted">
+      النتائج: <strong>{{ $contracts->total() }}</strong>
+    </span>
 
-                <div class="col-12 col-md-3">
-                    <label class="form-label mb-1">المستثمر</label>
-                    <select name="investor_id" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        <option value="_none" @selected(request('investor_id') === '_none')>بدون مستثمر</option>
-                        @foreach($investors as $inv)
-                            <option value="{{ $inv->id }}" @selected((string)request('investor_id') === (string)$inv->id)>
-                                {{ $inv->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+    <button class="btn btn-outline-secondary btn-sm" type="button"
+            data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
+      تصفية متقدمة
+    </button>
+  </div>
 
-                <div class="col-6 col-md-1">
-                    <label class="form-label mb-1">حالة العقد</label>
-                    <select name="status" class="form-select form-select-sm">
-                        <option value="">الكل</option>
-                        @foreach($contractStatuses as $status)
-                            <option value="{{ $status->id }}" @selected(request('status') == $status->id)>{{ $status->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">من تاريخ</label>
-                    <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">إلى تاريخ</label>
-                    <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
-                </div>
-
-                <div class="col-12 col-md-1 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm w-100">بحث</button>
-                    <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
-                </div>
-            </form>
+  {{-- ✅ أزلنا type وأضفنا investor_id --}}
+  <div class="collapse @if(request()->hasAny(['customer','investor_id','status','from','to'])) show @endif border-top" id="filterBar">
+    <div class="card-body">
+      <form action="{{ route('contracts.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">العميل</label>
+          <input type="text" name="customer" value="{{ request('customer') }}" class="form-control form-control-sm" placeholder="اسم العميل">
         </div>
+
+        <div class="col-12 col-md-3">
+          <label class="form-label mb-1">المستثمر</label>
+          <select name="investor_id" class="form-select form-select-sm">
+            <option value="">الكل</option>
+            <option value="_none" @selected(request('investor_id') === '_none')>بدون مستثمر</option>
+            @foreach($investors as $inv)
+              <option value="{{ $inv->id }}" @selected((string)request('investor_id') === (string)$inv->id)>
+                {{ $inv->name }}
+              </option>
+            @endforeach
+          </select>
+        </div>
+
+        <div class="col-6 col-md-1">
+          <label class="form-label mb-1">حالة العقد</label>
+          <select name="status" class="form-select form-select-sm">
+            <option value="">الكل</option>
+            @foreach($contractStatuses as $status)
+              <option value="{{ $status->id }}" @selected(request('status') == $status->id)>{{ $status->name }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">من تاريخ</label>
+          <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">إلى تاريخ</label>
+          <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
+        </div>
+
+        <div class="col-12 col-md-1 d-flex gap-2">
+          <button class="btn btn-primary btn-sm w-100">بحث</button>
+          <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
+
 
 {{-- ====== الجدول ====== --}}
 <div class="card shadow-sm">

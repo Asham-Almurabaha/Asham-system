@@ -5,14 +5,17 @@ use App\Http\Controllers\AjaxInvestorController;
 use App\Http\Controllers\AjaxProductTypeController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\ContractImportController;
 use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Controllers\ContractPrintController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CustomerImportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuarantorController;
+use App\Http\Controllers\GuarantorImportController;
 use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\InvestorImportController;
 use App\Http\Controllers\InvestorReportController;
-use App\Http\Controllers\InvestorStatementController;
 use App\Http\Controllers\InvestorTransactionController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LedgerController;
@@ -29,12 +32,6 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
-
-
-
-
-
-
 
 
 
@@ -75,6 +72,35 @@ Route::prefix('settings')->group(function () {
     Route::resource('transaction_statuses', TransactionStatusController::class);
     Route::resource('categories', CategoryController::class);
 });
+
+Route::prefix('customers/import')->name('customers.')->group(function () {
+    Route::get('/',               [CustomerImportController::class, 'create'])->name('import.form');
+    Route::post('/',              [CustomerImportController::class, 'store'])->name('import');
+    Route::get('/template',       [CustomerImportController::class, 'template'])->name('import.template');
+    Route::get('/failures/fix',[CustomerImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+
+});
+
+Route::prefix('guarantors/import')->name('guarantors.')->group(function () {
+    Route::get('/',               [GuarantorImportController::class, 'create'])->name('import.form');
+    Route::post('/',              [GuarantorImportController::class, 'store'])->name('import');
+    Route::get('/template',       [GuarantorImportController::class, 'template'])->name('import.template');
+    Route::get('/failures/fix',[GuarantorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+});
+
+Route::prefix('investors/import')->name('investors.')->group(function () {
+    Route::get('/',                [InvestorImportController::class, 'create'])->name('import.form');
+    Route::post('/',               [InvestorImportController::class, 'store'])->name('import');
+    Route::get('/template',        [InvestorImportController::class, 'template'])->name('import.template');
+    Route::get('/failures/fix',[InvestorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+});
+
+// Route::prefix('contracts/import')->name('contracts.')->group(function () {
+//     Route::get('/',                [ContractImportController::class, 'create'])->name('import.form');
+//     Route::post('/',               [ContractImportController::class, 'store'])->name('import');
+//     Route::get('/template',        [ContractImportController::class, 'template'])->name('import.template');
+//     Route::get('/failures/fix',[ContractImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+// });
 
 Route::resource('customers', CustomerController::class);
 Route::resource('guarantors', GuarantorController::class);

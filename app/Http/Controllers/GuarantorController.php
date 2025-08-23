@@ -15,94 +15,70 @@ class GuarantorController extends Controller
 {
     public function index(Request $request)
     {
-        // ====== الاستعلام الأساسي ======
         $query = Guarantor::query();
 
-        // فلتر دقيق بالـ ID القادم من الـ dropdown
-        $guarantorId = $request->input('guarantor_id');
-        if ($guarantorId !== null && $guarantorId !== '' && $guarantorId !== '_none') {
-            // التحقق سريعًا لتفادي إدخالات غير متوقعة
-            if (is_numeric($guarantorId)) {
-                $query->where('guarantors.id', (int) $guarantorId);
-            } else {
-                // قيمة غير صالحة => لا نتائج
-                $query->whereRaw('1=0');
-            }
+        // ===== بحث باسم الكفيل فقط =====
+        $nameQ = trim((string) $request->input('guarantor_q', ''));
+        if ($nameQ !== '') {
+            $query->where('guarantors.name', 'like', '%' . $nameQ . '%');
         } else {
-            // فلاتر النص التقليدية عند عدم اختيار ID
-            $query
-                ->when($request->filled('q'),
-                    fn($q) => $q->where('name', 'like', '%' . trim($request->q) . '%'))
-                ->when($request->filled('national_id') && Schema::hasColumn('guarantors','national_id'),
-                    fn($q) => $q->where('national_id', 'like', '%' . trim($request->national_id) . '%'))
+            // فلاتر إضافية اختيارية
+            $query->when($request->filled('national_id') && Schema::hasColumn('guarantors', 'national_id'),
+                    fn($q) => $q->where('national_id', 'like', '%'.trim($request->national_id).'%'))
                 ->when($request->filled('phone'),
-                    fn($q) => $q->where('phone', 'like', '%' . trim($request->phone) . '%'));
+                    fn($q) => $q->where('phone', 'like', '%'.trim($request->phone).'%'));
         }
 
-        $guarantors = $query->latest()->paginate(10)->withQueryString();
+        // 20 صف في الصفحة
+        $guarantors = $query->latest()->paginate(20)->withQueryString();
 
-        // أسماء الكفلاء للـ dropdown
-        $guarantorNameOptions = Guarantor::orderBy('name')->get(['id','name']);
-
-        // ====== كروت عامة ======
+        // ===== كروت عامة (غير متأثرة بالفلاتر) =====
         $guarantorsTotalAll = Guarantor::count();
 
-        // تعريف الحالات المنتهية
+        // “النشط” من جدول العقود
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
-
-        // IDs للحالات إن وُجد جدول حالة العقود
         $endedStatusIds = [];
         if (class_exists(\App\Models\ContractStatus::class)) {
             $endedStatusIds = \App\Models\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
-                ->pluck('id')
-                ->all();
+                ->pluck('id')->all();
         }
 
-        // تحديد أعمدة الحالة المتوفرة في جدول العقود
+        // الأعمدة المحتملة لحالة العقد
         $statusIdCol = null;
-        foreach (['status_id', 'contract_status_id', 'state_id'] as $col) {
+        foreach (['contract_status_id','status_id','state_id'] as $col) {
             if (Schema::hasColumn('contracts', $col)) { $statusIdCol = $col; break; }
         }
         $statusNameCol = null;
-        foreach (['status', 'state'] as $col) {
+        foreach (['contract_status','status','state'] as $col) {
             if (Schema::hasColumn('contracts', $col)) { $statusNameCol = $col; break; }
         }
 
-        // كلوجر يطبق شرط "عقد نشط"
         $applyActiveContractWhere = function ($c) use ($statusIdCol, $statusNameCol, $endedStatusIds, $endedStatusNames) {
             if ($statusIdCol && !empty($endedStatusIds)) {
-                $c->whereNotIn("contracts.$statusIdCol", $endedStatusIds);
+                $c->whereNotIn($statusIdCol, $endedStatusIds);
             } elseif ($statusNameCol) {
-                $c->whereNotIn("contracts.$statusNameCol", $endedStatusNames);
+                $c->whereNotIn($statusNameCol, $endedStatusNames);
             } elseif (Schema::hasColumn('contracts', 'is_closed')) {
-                $c->where('contracts.is_closed', 0);
+                $c->where('is_closed', 0);
             } elseif (Schema::hasColumn('contracts', 'closed_at')) {
-                $c->whereNull('contracts.closed_at');
+                $c->whereNull('closed_at');
             } else {
-                // لو ماعندناش معلومة حالة الإغلاق، اعتبر وجود أي عقد = نشط
                 $c->whereRaw('1=1');
             }
         };
 
-        // حساب الكفلاء النشطين بحسب شكل الربط
+        // نحاول نعد “الكفلاء النشطين” حسب شكل الربط
         if (method_exists(Guarantor::class, 'contracts')) {
-            // علاقة contracts معرّفة على الموديل
-            $activeGuarantorsTotalAll = Guarantor::whereHas('contracts', function ($c) use ($applyActiveContractWhere) {
-                $applyActiveContractWhere($c);
-            })->count();
-
+            $activeGuarantorsTotalAll = Guarantor::whereHas('contracts', fn($c) => $applyActiveContractWhere($c))->count();
         } elseif (Schema::hasColumn('contracts', 'guarantor_id')) {
-            // ربط مباشر عبر عمود guarantor_id
             $activeGuarantorsTotalAll = Guarantor::whereExists(function ($q) use ($applyActiveContractWhere) {
                 $q->select(DB::raw(1))
                 ->from('contracts')
                 ->whereColumn('contracts.guarantor_id', 'guarantors.id');
                 $applyActiveContractWhere($q);
             })->count();
-
         } elseif (Schema::hasTable('contract_guarantors') || Schema::hasTable('contract_guarantor')) {
-            // ربط Pivot
             $pivot = Schema::hasTable('contract_guarantors') ? 'contract_guarantors' : 'contract_guarantor';
             $activeGuarantorsTotalAll = Guarantor::whereExists(function ($q) use ($pivot, $applyActiveContractWhere) {
                 $q->select(DB::raw(1))
@@ -115,13 +91,10 @@ class GuarantorController extends Controller
                     $applyActiveContractWhere($qq);
                 });
             })->count();
-
         } else {
-            // شكل الربط غير معروف
             $activeGuarantorsTotalAll = 0;
         }
 
-        // أرقام إضافية (الجدد)
         $newGuarantorsThisMonthAll = Guarantor::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
         $newGuarantorsThisWeekAll  = Guarantor::whereBetween('created_at', [now()->startOfWeek(),  now()])->count();
 
@@ -130,8 +103,7 @@ class GuarantorController extends Controller
             'guarantorsTotalAll',
             'activeGuarantorsTotalAll',
             'newGuarantorsThisMonthAll',
-            'newGuarantorsThisWeekAll',
-            'guarantorNameOptions'
+            'newGuarantorsThisWeekAll'
         ));
     }
 

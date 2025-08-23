@@ -60,7 +60,6 @@
       </div>
       <div class="text-end">
         <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
-        <button class="btn btn-primary btn-sm no-print" onclick="window.print()">🖨 طباعة</button>
       </div>
     </div>
 

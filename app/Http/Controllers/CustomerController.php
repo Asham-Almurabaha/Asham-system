@@ -18,57 +18,46 @@ class CustomerController extends Controller
     // عرض كل العملاء
     public function index(Request $request)
     {
-        // ====== الاستعلام الأساسي ======
         $query = Customer::query();
 
-        // فلتر دقيق بالـ ID القادم من الـ dropdown
-        $customerId = $request->input('customer_id');
-        if ($customerId !== null && $customerId !== '' && $customerId !== '_none') {
-            // تحقّق سريع أن القيمة رقمية لتفادي أي قيم غريبة
-            if (is_numeric($customerId)) {
-                $query->where('customers.id', (int) $customerId);
-            } else {
-                // قيمة غير صالحة => رجّع لا شيء بشكل آمن
-                $query->whereRaw('1=0');
-            }
+        // ===== بحث باسم العميل فقط =====
+        $nameQ = trim((string) $request->input('customer_q', ''));
+        if ($nameQ !== '') {
+            $query->where('customers.name', 'like', '%' . $nameQ . '%');
         } else {
-            // فلاتر النص التقليدية
+            // فلاتر إضافية اختيارية
             $query->when($request->filled('national_id'),
                     fn($q) => $q->where('national_id', 'like', '%'.trim($request->national_id).'%'))
-                ->when($request->filled('phone'),
+                  ->when($request->filled('phone'),
                     fn($q) => $q->where('phone', 'like', '%'.trim($request->phone).'%'));
         }
 
-        $customers = $query->latest()->paginate(10)->withQueryString();
+        // 20 صف في الصفحة
+        $customers = $query->latest()->paginate(20)->withQueryString();
 
-        // أسماء العملاء للـ dropdown
-        $customerNameOptions = Customer::orderBy('name')->get(['id','name']);
-
-        // ====== كروت عامة ======
+        // كروت عامة (غير متأثرة بالفلاتر)
         $customersTotalAll = Customer::count();
 
-        // الحالات غير النشطة
+        // تقدير "النشط" من جدول العقود
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
 
         $endedStatusIds = [];
         if (class_exists(\App\Models\ContractStatus::class)) {
             $endedStatusIds = \App\Models\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
-                ->pluck('id')
-                ->all();
+                ->pluck('id')->all();
         }
 
-        // محاولة معرفة عمود الحالة في جدول العقود
+        // اكتشاف عمود الحالة
         $statusIdCol = null;
-        foreach (['status_id', 'contract_status_id', 'state_id'] as $col) {
+        foreach (['contract_status_id', 'status_id', 'state_id'] as $col) {
             if (Schema::hasColumn('contracts', $col)) { $statusIdCol = $col; break; }
         }
         $statusNameCol = null;
-        foreach (['status', 'state'] as $col) {
+        foreach (['status', 'state', 'contract_status'] as $col) {
             if (Schema::hasColumn('contracts', $col)) { $statusNameCol = $col; break; }
         }
 
-        // عدد العملاء ذوي العقود النشطة
         $activeCustomersTotalAll = Customer::query()
             ->whereHas('contracts', function ($c) use ($statusIdCol, $statusNameCol, $endedStatusIds, $endedStatusNames) {
                 if ($statusIdCol && !empty($endedStatusIds)) {
@@ -85,11 +74,10 @@ class CustomerController extends Controller
             })
             ->count();
 
-        // إحصائيات إضافية
         $newCustomersThisMonthAll = Customer::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
         $newCustomersThisWeekAll  = Customer::whereBetween('created_at', [now()->startOfWeek(),  now()])->count();
 
-        // (اختياري) فلاتر إضافية
+        // (اختياري) لو بتستخدمهم في فلاتر إضافية
         $nationalities = class_exists(Nationality::class)
             ? Nationality::select('id','name')->orderBy('name')->get()
             : collect();
@@ -103,7 +91,6 @@ class CustomerController extends Controller
             'activeCustomersTotalAll',
             'newCustomersThisMonthAll',
             'newCustomersThisWeekAll',
-            'customerNameOptions',
             'nationalities',
             'titles'
         ));

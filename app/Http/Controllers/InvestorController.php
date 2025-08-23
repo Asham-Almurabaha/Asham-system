@@ -16,57 +16,36 @@ use Illuminate\Contracts\Validation\Rule;
 
 class InvestorController extends Controller
 {
-     public function index(Request $request)
+    public function index(Request $request)
     {
-        // ====== الاستعلام الأساسي ======
+        // استعلام أساسي
         $query = Investor::query();
 
-        // فلتر دقيق بالـ ID القادم من الـ dropdown (إن وُجد)
-        $invId = $request->input('investor_id');
-        if ($invId !== null && $invId !== '' && $invId !== '_none') {
-            // حماية: نتأكد أنها رقمية
-            if (is_numeric($invId)) {
-                $query->whereKey((int) $invId);
-            } else {
-                // قيمة غير صالحة => رجّع لا شيء
-                $query->whereRaw('1=0');
-            }
-        } else {
-            // باقي الفلاتر النصية القديمة كما هي
-            $query
-                ->when($request->filled('q'),
-                    fn($q) => $q->where('name', 'like', '%'.trim($request->q).'%'))
-                ->when($request->filled('national_id') && Schema::hasColumn('investors','national_id'),
-                    fn($q) => $q->where('national_id', 'like', '%'.trim($request->national_id).'%'))
-                ->when($request->filled('phone'),
-                    fn($q) => $q->where('phone', 'like', '%'.trim($request->phone).'%'));
+        // حقل واحد للبحث بالاسم فقط (زي العملاء)
+        $name = trim((string) $request->input('investor_q', ''));
+        if ($name !== '') {
+            $query->where('name', 'like', '%' . $name . '%');
         }
 
-        $investors = $query->latest()->paginate(10)->withQueryString();
+        // 20 نتيجة لكل صفحة
+        $investors = $query->latest()->paginate(20)->withQueryString();
 
-        // أسماء المستثمرين للـ dropdown
-        $investorNameOptions = Investor::orderBy('name')->get(['id', 'name']);
-
-        // ====== كروت عامة (إجمالي كل المستثمرين) ======
+        // كروت عامة (غير متأثرة بالفلاتر)
         $investorsTotalAll = Investor::count();
 
-        // تعريف حالات منتهية/مغلقة لاستبعادها عند حساب "نشِط"
-        $endedStatusNames = [
-            'منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر',
-            'Completed','Early Settlement','Closed','Inactive'
-        ];
+        // تقدير “نشط” — نفس منطقك السابق إن وُجد investments، وإلا بديل منطقي
+        $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement','Closed','Inactive'];
 
-        // IDs للحالات لو فيه جدول statuses
         $endedStatusIds = [];
         if (class_exists(InvestmentStatus::class)) {
-            $endedStatusIds = InvestmentStatus::whereIn('name',$endedStatusNames)->pluck('id')->all();
+            $endedStatusIds = InvestmentStatus::whereIn('name', $endedStatusNames)->pluck('id')->all();
         } elseif (class_exists(ContractStatus::class)) {
-            $endedStatusIds = ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all();
+            $endedStatusIds = ContractStatus::whereIn('name', $endedStatusNames)->pluck('id')->all();
         }
 
-        // ====== حساب عدد المستثمرين النشطين على مستوى النظام ======
-        if (Schema::hasTable('investments') && Schema::hasColumn('investments','investor_id')) {
-            // محاولة تعرّف اسم عمود الحالة
+        if (Schema::hasTable('investments') &&
+            Schema::hasColumn('investments', 'investor_id')) {
+
             $statusIdCol = null; foreach (['status_id','investment_status_id','state_id'] as $c){ if(Schema::hasColumn('investments',$c)){ $statusIdCol=$c; break; } }
             $statusNmCol = null; foreach (['status','state'] as $c){ if(Schema::hasColumn('investments',$c)){ $statusNmCol=$c; break; } }
 
@@ -86,7 +65,6 @@ class InvestorController extends Controller
                 }
             })->count();
         } else {
-            // بديل منطقي لو ما فيش جدول investments
             $activeInvestorsTotalAll = Investor::query()
                 ->where(function($q){
                     $added = false;
@@ -105,23 +83,15 @@ class InvestorController extends Controller
         $newInvestorsThisMonthAll = Investor::whereBetween('created_at',[now()->startOfMonth(), now()])->count();
         $newInvestorsThisWeekAll  = Investor::whereBetween('created_at',[now()->startOfWeek(),  now()])->count();
 
-        // (لو عندك قوائم فلاتر إضافية ومحتاجة في الواجهة)
-        // $nationalities = class_exists(Nationality::class)
-        //     ? Nationality::select('id','name')->orderBy('name')->get()
-        //     : collect();
-        // $titles = class_exists(Title::class)
-        //     ? Title::select('id','name')->orderBy('name')->get()
-        //     : collect();
-
         return view('investors.index', compact(
             'investors',
             'investorsTotalAll',
             'activeInvestorsTotalAll',
             'newInvestorsThisMonthAll',
             'newInvestorsThisWeekAll',
-            'investorNameOptions',
         ));
     }
+
 
 
     public function create()

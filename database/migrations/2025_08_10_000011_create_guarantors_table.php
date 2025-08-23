@@ -20,19 +20,6 @@ class CreateGuarantorsTable extends Migration
             $table->text('notes')->nullable();
             $table->timestamps();
         });
-        // ✅ إضافة ضامن افتراضي
-        DB::table('guarantors')->insert([
-            'name' => 'ضامن افتراضي',
-            'national_id'=> '2000000000',
-            'phone' => '0500000000',
-            'email' => 'default@example.com',
-            'address' => 'الرياض - السعودية',
-            'nationality_id' => null,
-            'title_id' => null,
-            'id_card_image' => null,
-            'notes' => 'هذا ضامن تم إضافته تلقائيًا',
-        ]);
-
     }
 
     public function down()

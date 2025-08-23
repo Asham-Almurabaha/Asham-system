@@ -19,6 +19,9 @@ class InvestorTransaction extends Model
         'transaction_date',
         'notes'
     ];
+    protected $casts = [
+        'transaction_date' => 'date',
+    ];
 
     /**
      * العلاقة مع المستثمر

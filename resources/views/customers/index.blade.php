@@ -7,11 +7,7 @@
 
 <div class="pagetitle mb-3">
     <h1 class="h3 mb-1">قائمة العملاء</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item active">العملاء</li>
-        </ol>
-    </nav>
+    <nav><ol class="breadcrumb"><li class="breadcrumb-item active">العملاء</li></ol></nav>
 </div>
 
 @php
@@ -105,48 +101,62 @@
 
 {{-- ====== شريط الأدوات ====== --}}
 <div class="card shadow-sm mb-3">
-    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <a href="{{ route('customers.create') }}" class="btn btn-outline-success">+ إضافة عميل جديد</a>
-        <span class="ms-auto small text-muted">النتائج: <strong>{{ $customers->total() }}</strong></span>
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
-            تصفية متقدمة
-        </button>
+  <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
+
+    <div class="btn-group" role="group" aria-label="Actions">
+      <a href="{{ route('customers.create') }}" class="btn btn-success">
+        <i class="bi bi-plus-lg"></i> إضافة عميل
+      </a>
+
+      <a href="{{ route('customers.import.form') }}" class="btn btn-outline-primary">
+        <i class="bi bi-upload"></i> استيراد Excel
+      </a>
+
+      {{-- 🔥 تم حذف زر "تمبليت" كما طلبت --}}
     </div>
 
-    <div class="collapse @if(request()->hasAny(['customer_id','national_id','phone'])) show @endif border-top" id="filterBar">
-        <div class="card-body">
-            <form id="filterForm" action="{{ route('customers.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-                <div class="col-12 col-md-3">
-                    <label class="form-label mb-1">العميل</label>
-                    <select name="customer_id" class="form-select form-select-sm"
-                            onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
-                        <option value="">الكل</option>
-                        @foreach($customerNameOptions as $cust)
-                            <option value="{{ $cust->id }}" @selected((string)request('customer_id') === (string)$cust->id)>
-                                {{ $cust->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+    <span class="ms-auto small text-muted">
+      النتائج: <strong>{{ $customers->total() }}</strong>
+    </span>
 
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">رقم الهوية</label>
-                    <input type="text" name="national_id" value="{{ request('national_id') }}"
-                           class="form-control form-control-sm auto-submit-input" placeholder="مثال: 1234567890">
-                </div>
-                <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">الهاتف</label>
-                    <input type="text" name="phone" value="{{ request('phone') }}"
-                           class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
-                </div>
+    <button class="btn btn-outline-secondary btn-sm" type="button"
+            data-bs-toggle="collapse" data-bs-target="#filterBar"
+            aria-expanded="false" aria-controls="filterBar">
+      تصفية
+    </button>
+  </div>
 
-                {{-- زر مسح فقط --}}
-                <div class="col-12 col-md-1">
-                    <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
-                </div>
-            </form>
+  <div class="collapse @if(request()->hasAny(['customer_q','national_id','phone'])) show @endif border-top" id="filterBar">
+    <div class="card-body">
+      <form id="filterForm" action="{{ route('customers.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+        {{-- ✅ بحث باسم العميل فقط --}}
+        <div class="col-12 col-md-4">
+          <label class="form-label mb-1">العميل (بالاسم)</label>
+          <input type="text"
+                 name="customer_q"
+                 value="{{ request('customer_q') }}"
+                 class="form-control form-control-sm auto-submit-input"
+                 placeholder="اكتب اسم العميل...">
         </div>
+
+        {{-- فلاتر إضافية (اختياري) --}}
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">رقم الهوية</label>
+          <input type="text" name="national_id" value="{{ request('national_id') }}"
+                 class="form-control form-control-sm auto-submit-input" placeholder="1234567890">
+        </div>
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">الهاتف</label>
+          <input type="text" name="phone" value="{{ request('phone') }}"
+                 class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
+        </div>
+
+        <div class="col-12 col-md-2">
+          <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
 {{-- ====== الجدول ====== --}}
@@ -165,7 +175,7 @@
                         <th>العنوان</th>
                         <th>الوظيفة</th>
                         <th style="min-width:110px;">صورة الهوية</th>
-                        <th style="width:190px">إجراءات</th>
+                        <th style="width:150px">إجراءات</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -229,16 +239,9 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // تفعيل التولتيب للصور
+    // Tooltip للصور
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
-
-    // Auto-submit عند تغيير أي select
-    document.querySelectorAll('.auto-submit').forEach(el => {
-        el.addEventListener('change', function() {
-            document.getElementById('filterForm').submit();
-        });
-    });
 
     // Auto-submit للمدخلات النصية مع تأخير بسيط
     let typingTimer;
@@ -247,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => {
                 document.getElementById('filterForm').submit();
-            }, 700); // 0.7 ثانية بعد آخر كتابة
+            }, 600);
         });
     });
 });

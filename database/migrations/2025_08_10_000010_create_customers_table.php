@@ -22,18 +22,6 @@ class CreateCustomersTable extends Migration
             $table->timestamps();
         });
         
-        // ✅ إضافة عميل افتراضي
-        DB::table('customers')->insert([
-            'name' => 'عميل افتراضي',
-            'national_id'=> '2000000000',
-            'phone' => '0500000000',
-            'email' => 'default@example.com',
-            'address' => 'الرياض - السعودية',
-            'nationality_id' => null,
-            'title_id' => null,
-            'id_card_image' => null,
-            'notes' => 'هذا عميل تم إضافته تلقائيًا',
-        ]);
     }
 
     public function down()
