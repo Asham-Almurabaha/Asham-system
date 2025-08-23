@@ -8,6 +8,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractImportController;
 use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Controllers\ContractPrintController;
+use App\Http\Controllers\ContractsImportController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerImportController;
 use App\Http\Controllers\DashboardController;
@@ -34,6 +35,7 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -99,12 +101,12 @@ Route::prefix('investors/import')->name('investors.')->group(function () {
     Route::get('/failures/fix',[InvestorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
 });
 
-// Route::prefix('contracts/import')->name('contracts.')->group(function () {
-//     Route::get('/',                [ContractImportController::class, 'create'])->name('import.form');
-//     Route::post('/',               [ContractImportController::class, 'store'])->name('import');
-//     Route::get('/template',        [ContractImportController::class, 'template'])->name('import.template');
-//     Route::get('/failures/fix',[ContractImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-// });
+Route::prefix('contracts/import')->name('contracts.')->group(function () {
+    Route::get('/',                [ContractsImportController::class, 'create'])->name('import.form');
+    Route::post('/',               [ContractsImportController::class, 'store'])->name('import');
+    Route::get('/template',        [ContractsImportController::class, 'template'])->name('import.template');
+    Route::get('/failures/fix',[ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+});
 
 Route::prefix('ledger/import')->name('ledger.')->group(function () {
     Route::get('/',                [LedgerEntriesImportController::class, 'create'])->name('import.form');

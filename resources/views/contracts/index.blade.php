@@ -329,9 +329,9 @@
         <i class="bi bi-plus-lg"></i> إضافة عقد جديد
       </a>
 
-      {{-- <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
+      <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
         <i class="bi bi-upload"></i> استيراد Excel
-      </a> --}}
+      </a>
       
     </div>
 
