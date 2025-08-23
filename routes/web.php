@@ -19,6 +19,8 @@ use App\Http\Controllers\InvestorReportController;
 use App\Http\Controllers\InvestorTransactionController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\LedgerEntriesImportController;
+use App\Http\Controllers\LedgerImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Setting\CategoryController;
 use App\Http\Controllers\Setting\ContractStatusController;
@@ -32,6 +34,8 @@ use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+
+
 
 
 
@@ -101,6 +105,13 @@ Route::prefix('investors/import')->name('investors.')->group(function () {
 //     Route::get('/template',        [ContractImportController::class, 'template'])->name('import.template');
 //     Route::get('/failures/fix',[ContractImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
 // });
+
+Route::prefix('ledger/import')->name('ledger.')->group(function () {
+    Route::get('/',                [LedgerEntriesImportController::class, 'create'])->name('import.form');
+    Route::post('/',               [LedgerEntriesImportController::class, 'store'])->name('import');
+    Route::get('/template',        [LedgerEntriesImportController::class, 'template'])->name('import.template');
+    Route::get('/failures/fix',[LedgerEntriesImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+});
 
 Route::resource('customers', CustomerController::class);
 Route::resource('guarantors', GuarantorController::class);

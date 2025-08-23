@@ -1,12 +1,11 @@
-{{-- resources/views/investors/import.blade.php --}}
+{{-- resources/views/ledger/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', 'استيراد المستثمرين من Excel')
+@section('title', 'استيراد قيود الدفتر من Excel')
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
 
-  {{-- ===== Header ===== --}}
   <div class="rounded-3 p-4 mb-4 position-relative overflow-hidden bg-light border">
     <div class="d-flex align-items-center gap-3">
       <div class="rounded-4 bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
@@ -14,29 +13,30 @@
         <i class="bi bi-cloud-arrow-up fs-3"></i>
       </div>
       <div>
-        <h1 class="h4 mb-1">استيراد المستثمرين</h1>
+        <h1 class="h4 mb-1">استيراد قيود الدفتر</h1>
         <p class="text-muted mb-0">
           ارفع ملف Excel/CSV بالمواصفات:
-          <code>name, national_id, phone, email, address, nationality, title, office_share_percentage, notes, id_card_image, contract_image</code>
-          — الصف الأول عناوين.
+          <code>party_category, investor_id, status_id, bank_account_id, safe_id, amount, transaction_date, contract_id, installment_id, ref, notes</code>
+          — الصف الأول عناوين الأعمدة.
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <a href="{{ route('investors.import.template') }}" class="btn btn-outline-secondary btn-sm">
+        <a href="{{ route('ledger.import.template') }}" class="btn btn-outline-secondary btn-sm">
           <i class="bi bi-filetype-xlsx me-1"></i> تنزيل تمبليت
         </a>
       </div>
     </div>
   </div>
 
-  {{-- ===== Alerts ===== --}}
   @if ($errors->any())
     <div class="alert alert-danger border-0 shadow-sm">
       <div class="d-flex align-items-start">
         <i class="bi bi-x-octagon me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
-          <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
+          <ul class="mb-0">
+            @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+          </ul>
         </div>
       </div>
     </div>
@@ -54,9 +54,8 @@
     </div>
   @endif
 
-  {{-- ===== Summary KPIs ===== --}}
   @php
-    // نفس لوجيك الكفلاء: مفاتيح عامة
+    // نفس منطق customers: نقرأ من مفاتيح عامة فقط
     $summary      = session('summary') ?: [];
     $failuresBag  = session('failures') ?? session('failures_simple') ?? [];
     $errorsSimple = session('errors_simple') ?? [];
@@ -75,7 +74,7 @@
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
   @endphp
 
-  @if ($rows || $changed || $unchanged || $skipped)
+  @if ($rows || $changed || $skipped)
     <div class="row g-3 mb-4">
       <div class="col-12 col-md-3">
         <div class="card shadow-sm h-100 border-0">
@@ -133,23 +132,23 @@
     </div>
   @endif
 
-  {{-- ===== Generic read/save errors ===== --}}
   @if (!empty($errorsSimple))
     <div class="alert alert-warning border-0 shadow-sm mb-4">
       <div class="d-flex align-items-start">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">أخطاء أثناء القراءة/الحفظ:</div>
-          <ul class="mb-0">@foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach</ul>
+          <ul class="mb-0">
+            @foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach
+          </ul>
         </div>
       </div>
     </div>
   @endif
 
-  {{-- ===== Upload Card ===== --}}
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <form action="{{ route('investors.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+      <form action="{{ route('ledger.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
         @csrf
 
         <div class="col-12">
@@ -174,8 +173,8 @@
             <i class="bi bi-upload me-1"></i> استيراد الآن
           </button>
 
-          @if ($hasFailures && Route::has('investors.import.failures.fix'))
-            <a class="btn btn-warning" href="{{ route('investors.import.failures.fix') }}">
+          @if ($hasFailures && Route::has('ledger.import.failures.fix'))
+            <a class="btn btn-warning" href="{{ route('ledger.import.failures.fix') }}">
               <i class="bi bi-wrench-adjustable me-1"></i> تنزيل ملف لتصحيح الصفوف
             </a>
           @endif
@@ -184,7 +183,6 @@
     </div>
   </div>
 
-  {{-- ===== Failures Table ===== --}}
   @if ($hasFailures)
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
@@ -222,15 +220,15 @@
                     <td>{{ is_array($attr) ? implode(', ', $attr) : (string)$attr }}</td>
                     <td>
                       @if (count($msgs))
-                        <ul class="mb-0 ps-3">@foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach</ul>
+                        <ul class="mb-0 ps-3">
+                          @foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach
+                        </ul>
                       @else
                         <span class="text-muted">—</span>
                       @endif
                     </td>
                     <td class="text-break">
-                      <code class="small" style="white-space: pre-wrap; word-break: break-word;">
-                        {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
-                      </code>
+                      <code class="small code-wrap">{{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}</code>
                     </td>
                   </tr>
                 @endforeach
@@ -238,7 +236,7 @@
             </table>
           </div>
           <div class="p-3 text-muted small">
-            صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف لتصحيح الصفوف”.
+            صحّح الصفوف بالأعلى ثم أعد رفع الملف. يُفضّل استخدام زر “تنزيل ملف لتصحيح الصفوف”.
           </div>
         </div>
       </div>
@@ -256,6 +254,7 @@
   .dz{ position: relative; transition: .2s ease-in-out; background: linear-gradient(180deg,#fff, #fbfbfc); }
   .dz.dragover{ background:#f0f7ff; border-color:#0d6efd !important; box-shadow:0 0 0 0.25rem rgba(13,110,253,.15); }
   .sticky-top{ top:0; z-index: 1; }
+  .code-wrap{ white-space: pre-wrap; word-break: break-word; }
 </style>
 @endpush
 
@@ -279,12 +278,21 @@
   }
 
   function validate(file){
-    if (!err || !btn) return;
-    err.classList.add('d-none'); err.textContent = ''; btn.disabled = true;
+    err.classList.add('d-none');
+    err.textContent = '';
+    btn.disabled = true;
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!okExt.includes(ext)) { err.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv'; err.classList.remove('d-none'); return; }
-    if (file.size > MAX_SIZE) { err.textContent = 'حجم الملف يتجاوز 10MB.'; err.classList.remove('d-none'); return; }
+    if (!okExt.includes(ext)) {
+      err.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv';
+      err.classList.remove('d-none');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      err.textContent = 'حجم الملف يتجاوز 10MB.';
+      err.classList.remove('d-none');
+      return;
+    }
     btn.disabled = false;
   }
 
@@ -300,8 +308,8 @@
       if (e.dataTransfer?.files?.length) {
         inp.files = e.dataTransfer.files;
         const f = e.dataTransfer.files[0];
-        if (name) name.textContent = f.name;
-        if (meta) meta.textContent = ' (' + fmtSize(f.size) + ')';
+        name.textContent = f.name;
+        meta.textContent = ' (' + fmtSize(f.size) + ')';
         validate(f);
       }
     });

@@ -1,3 +1,4 @@
+{{-- resources/views/guarantors/import.blade.php --}}
 @extends('layouts.master')
 
 @section('title', 'استيراد الكفلاء من Excel')
@@ -5,6 +6,7 @@
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
 
+  {{-- ===== Header ===== --}}
   <div class="rounded-3 p-4 mb-4 position-relative overflow-hidden bg-light border">
     <div class="d-flex align-items-center gap-3">
       <div class="rounded-4 bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
@@ -14,26 +16,29 @@
       <div>
         <h1 class="h4 mb-1">استيراد الكفلاء</h1>
         <p class="text-muted mb-0">
-          الأعمدة: <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image</code> — الصف الأول عناوين.
+          ارفع ملف Excel/CSV بالمواصفات:
+          <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image</code>
+          — الصف الأول عناوين.
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        @if (Route::has('guarantors.import.template'))
-          <a href="{{ route('guarantors.import.template') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-filetype-xlsx me-1"></i> تنزيل تمبليت
-          </a>
-        @endif
+        <a href="{{ route('guarantors.import.template') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-filetype-xlsx me-1"></i> تنزيل تمبليت
+        </a>
       </div>
     </div>
   </div>
 
+  {{-- ===== Alerts ===== --}}
   @if ($errors->any())
     <div class="alert alert-danger border-0 shadow-sm">
       <div class="d-flex align-items-start">
         <i class="bi bi-x-octagon me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
-          <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
+          <ul class="mb-0">
+            @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+          </ul>
         </div>
       </div>
     </div>
@@ -51,17 +56,19 @@
     </div>
   @endif
 
+  {{-- ===== Summary KPIs ===== --}}
   @php
-    $summary      = session('summary') ?: session('guarantors_import.summary') ?: [];
-    $failuresBag  = session('failures') ?? session('failures_simple') ?? session('guarantors_import.failures_simple') ?? [];
+    // نفس لوجيك العملاء: مفاتيح عامة فقط
+    $summary      = session('summary') ?: [];
+    $failuresBag  = session('failures') ?? session('failures_simple') ?? [];
     $errorsSimple = session('errors_simple') ?? [];
 
-    $rows     = (int)($summary['rows']     ?? 0);
-    $inserted = (int)($summary['inserted'] ?? 0);
-    $updated  = (int)($summary['updated']  ?? 0);
-    $unchanged= (int)($summary['unchanged']?? 0);
-    $skipped  = (int)($summary['skipped']  ?? 0);
-    $changed  = (int)($summary['changed']  ?? ($inserted + $updated));
+    $rows      = (int)($summary['rows']      ?? 0);
+    $inserted  = (int)($summary['inserted']  ?? 0);
+    $updated   = (int)($summary['updated']   ?? 0);
+    $unchanged = (int)($summary['unchanged'] ?? 0);
+    $skipped   = (int)($summary['skipped']   ?? 0);
+    $changed   = (int)($summary['changed']   ?? ($inserted + $updated));
 
     $failuresCount = is_countable($failuresBag) ? count($failuresBag) : (method_exists($failuresBag, 'count') ? (int)$failuresBag->count() : 0);
     $hasFailures   = $failuresCount > 0;
@@ -70,7 +77,7 @@
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
   @endphp
 
-  @if ($rows || $changed || $skipped)
+  @if ($rows || $changed || $unchanged || $skipped)
     <div class="row g-3 mb-4">
       <div class="col-12 col-md-3">
         <div class="card shadow-sm h-100 border-0">
@@ -128,18 +135,22 @@
     </div>
   @endif
 
+  {{-- ===== Generic read/save errors ===== --}}
   @if (!empty($errorsSimple))
     <div class="alert alert-warning border-0 shadow-sm mb-4">
       <div class="d-flex align-items-start">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">أخطاء أثناء القراءة/الحفظ:</div>
-          <ul class="mb-0">@foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach</ul>
+          <ul class="mb-0">
+            @foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach
+          </ul>
         </div>
       </div>
     </div>
   @endif
 
+  {{-- ===== Upload Card ===== --}}
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
       <form action="{{ route('guarantors.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
@@ -149,7 +160,7 @@
           <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
             <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
             <div class="mb-2 fw-semibold">اسحب الملف إلى هنا أو اضغط للاختيار</div>
-            <div class="text-muted small mb-3">Excel/CSV — سيتم التحقق قبل الحفظ</div>
+            <div class="text-muted small mb-3">ملف Excel/CSV فقط — سيتم التحقق قبل الحفظ</div>
             <input id="fileInput" type="file" name="file"
                    class="position-absolute w-100 h-100 top-0 start-0 opacity-0"
                    accept=".xlsx,.xls,.csv" required>
@@ -177,6 +188,7 @@
     </div>
   </div>
 
+  {{-- ===== Failures Table ===== --}}
   @if ($hasFailures)
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
@@ -264,7 +276,11 @@
   const MAX_SIZE = 10 * 1024 * 1024;
   const okExt = ['xlsx','xls','csv'];
 
-  function fmtSize(bytes){ if (bytes < 1024) return bytes + ' B'; if (bytes < 1024*1024) return (bytes/1024).toFixed(1)+' KB'; return (bytes/1024/1024).toFixed(1)+' MB'; }
+  function fmtSize(bytes){
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1)+' KB';
+    return (bytes/1024/1024).toFixed(1)+' MB';
+  }
 
   function validate(file){
     if (!err || !btn) return;
