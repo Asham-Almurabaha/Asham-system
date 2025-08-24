@@ -1,3 +1,4 @@
+{{-- resources/views/customers/import.blade.php --}}
 @extends('layouts.master')
 
 @section('title', 'استيراد العملاء من Excel')
@@ -5,6 +6,7 @@
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
 
+  {{-- ===== Header ===== --}}
   <div class="rounded-3 p-4 mb-4 position-relative overflow-hidden bg-light border">
     <div class="d-flex align-items-center gap-3">
       <div class="rounded-4 bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
@@ -14,7 +16,9 @@
       <div>
         <h1 class="h4 mb-1">استيراد العملاء</h1>
         <p class="text-muted mb-0">
-          ارفع ملف Excel/CSV بالمواصفات: <code>name, national_id, phone, email, address</code> — الصف الأول عناوين الأعمدة.
+          ارفع ملف Excel/CSV بالمواصفات:
+          <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image</code>
+          — الصف الأول عناوين.
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
@@ -25,15 +29,14 @@
     </div>
   </div>
 
+  {{-- ===== Alerts ===== --}}
   @if ($errors->any())
     <div class="alert alert-danger border-0 shadow-sm">
       <div class="d-flex align-items-start">
         <i class="bi bi-x-octagon me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
-          <ul class="mb-0">
-            @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-          </ul>
+          <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
         </div>
       </div>
     </div>
@@ -51,26 +54,35 @@
     </div>
   @endif
 
+  {{-- ===== Summary KPIs ===== --}}
   @php
-    $summary      = session('summary') ?: [];
+    // نقرأ من المفاتيح القديمة أو الجديدة (flash) — أيهما موجود
+    $summary      = session('summary') ?: session('customers_import.summary') ?: [];
     $failuresBag  = session('failures') ?? session('failures_simple') ?? [];
     $errorsSimple = session('errors_simple') ?? [];
 
-    $rows     = (int)($summary['rows']     ?? 0);
-    $inserted = (int)($summary['inserted'] ?? 0);
-    $updated  = (int)($summary['updated']  ?? 0);
-    $unchanged= (int)($summary['unchanged']?? 0);
-    $skipped  = (int)($summary['skipped']  ?? 0);
-    $changed  = (int)($summary['changed']  ?? ($inserted + $updated));
+    $rows      = (int)($summary['rows']      ?? 0);
+    $inserted  = (int)($summary['inserted']  ?? 0);
+    $updated   = (int)($summary['updated']   ?? 0);
+    $unchanged = (int)($summary['unchanged'] ?? 0);
+    $skipped   = (int)($summary['skipped']   ?? 0);
+    $changed   = (int)($summary['changed']   ?? ($inserted + $updated));
 
     $failuresCount = is_countable($failuresBag) ? count($failuresBag) : (method_exists($failuresBag, 'count') ? (int)$failuresBag->count() : 0);
     $hasFailures   = $failuresCount > 0;
 
     $successPct = $rows > 0 ? round(($changed / $rows) * 100, 1) : 0;
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
+
+    // المتخطّى بالتفصيل (للتصدير + جدول العرض)
+    $skippedBag   = session('customers_import.skipped_simple') ?? [];
+    $skippedCount = is_countable($skippedBag) ? count($skippedBag)
+                    : (method_exists($skippedBag, 'count') ? (int)$skippedBag->count() : 0);
+
+    $hasIssues = $hasFailures || $skippedCount > 0;
   @endphp
 
-  @if ($rows || $changed || $skipped)
+  @if ($rows || $changed || $unchanged || $skipped)
     <div class="row g-3 mb-4">
       <div class="col-12 col-md-3">
         <div class="card shadow-sm h-100 border-0">
@@ -128,20 +140,20 @@
     </div>
   @endif
 
+  {{-- ===== Generic read/save errors ===== --}}
   @if (!empty($errorsSimple))
     <div class="alert alert-warning border-0 shadow-sm mb-4">
       <div class="d-flex align-items-start">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">أخطاء أثناء القراءة/الحفظ:</div>
-          <ul class="mb-0">
-            @foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach
-          </ul>
+          <ul class="mb-0">@foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach</ul>
         </div>
       </div>
     </div>
   @endif
 
+  {{-- ===== Upload Card ===== --}}
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
       <form action="{{ route('customers.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
@@ -169,9 +181,16 @@
             <i class="bi bi-upload me-1"></i> استيراد الآن
           </button>
 
-          @if ($hasFailures && Route::has('customers.import.failures.fix'))
+          @if ($hasIssues && Route::has('customers.import.failures.fix'))
             <a class="btn btn-warning" href="{{ route('customers.import.failures.fix') }}">
-              <i class="bi bi-wrench-adjustable me-1"></i> تنزيل ملف لتصحيح الصفوف
+              <i class="bi bi-wrench-adjustable me-1"></i>
+              تنزيل ملف الأخطاء/المتخطّى
+              @if($hasFailures)
+                <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+              @endif
+              @if($skippedCount > 0)
+                <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
+              @endif
             </a>
           @endif
         </div>
@@ -179,6 +198,7 @@
     </div>
   </div>
 
+  {{-- ===== Failures Table ===== --}}
   @if ($hasFailures)
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
@@ -216,15 +236,15 @@
                     <td>{{ is_array($attr) ? implode(', ', $attr) : (string)$attr }}</td>
                     <td>
                       @if (count($msgs))
-                        <ul class="mb-0 ps-3">
-                          @foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach
-                        </ul>
+                        <ul class="mb-0 ps-3">@foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach</ul>
                       @else
                         <span class="text-muted">—</span>
                       @endif
                     </td>
                     <td class="text-break">
-                      <code class="small code-wrap">{{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}</code>
+                      <code class="small" style="white-space: pre-wrap; word-break: break-word;">
+                        {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
+                      </code>
                     </td>
                   </tr>
                 @endforeach
@@ -232,7 +252,60 @@
             </table>
           </div>
           <div class="p-3 text-muted small">
-            صحّح الصفوف بالأعلى ثم أعد رفع الملف. يُفضّل استخدام زر “تنزيل ملف لتصحيح الصفوف”.
+            صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف الأخطاء/المتخطّى”.
+          </div>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  {{-- ===== Skipped Table ===== --}}
+  @php $hasSkipped = $skippedCount > 0; @endphp
+  @if ($hasSkipped)
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header d-flex align-items-center bg-white">
+        <i class="bi bi-skip-forward-fill me-2"></i>
+        <span>الصفوف المتخطّاة</span>
+        <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
+        <button class="btn btn-sm btn-outline-secondary ms-auto"
+                data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
+          إظهار/إخفاء
+        </button>
+      </div>
+
+      <div id="skippedTable" class="collapse show">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th style="width:110px">رقم الصف</th>
+                  <th style="width:260px">السبب</th>
+                  <th style="min-width:260px">القيم</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ($skippedBag as $r)
+                  @php
+                    $rowNum = (int)($r['row'] ?? 0);
+                    $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
+                    $vals   = $r['values'] ?? [];
+                  @endphp
+                  <tr>
+                    <td class="text-muted">{{ $rowNum }}</td>
+                    <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                    <td class="text-break">
+                      <code class="small" style="white-space: pre-wrap; word-break: break-word;">
+                        {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
+                      </code>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 text-muted small">
+            راجع القيم والسبب ثم صحّح الصفوف وأعد الرفع.
           </div>
         </div>
       </div>
@@ -250,7 +323,6 @@
   .dz{ position: relative; transition: .2s ease-in-out; background: linear-gradient(180deg,#fff, #fbfbfc); }
   .dz.dragover{ background:#f0f7ff; border-color:#0d6efd !important; box-shadow:0 0 0 0.25rem rgba(13,110,253,.15); }
   .sticky-top{ top:0; z-index: 1; }
-  .code-wrap{ white-space: pre-wrap; word-break: break-word; }
 </style>
 @endpush
 
@@ -274,21 +346,12 @@
   }
 
   function validate(file){
-    err.classList.add('d-none');
-    err.textContent = '';
-    btn.disabled = true;
+    if (!err || !btn) return;
+    err.classList.add('d-none'); err.textContent = ''; btn.disabled = true;
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!okExt.includes(ext)) {
-      err.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv';
-      err.classList.remove('d-none');
-      return;
-    }
-    if (file.size > MAX_SIZE) {
-      err.textContent = 'حجم الملف يتجاوز 10MB.';
-      err.classList.remove('d-none');
-      return;
-    }
+    if (!okExt.includes(ext)) { err.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv'; err.classList.remove('d-none'); return; }
+    if (file.size > MAX_SIZE) { err.textContent = 'حجم الملف يتجاوز 10MB.'; err.classList.remove('d-none'); return; }
     btn.disabled = false;
   }
 
@@ -304,8 +367,8 @@
       if (e.dataTransfer?.files?.length) {
         inp.files = e.dataTransfer.files;
         const f = e.dataTransfer.files[0];
-        name.textContent = f.name;
-        meta.textContent = ' (' + fmtSize(f.size) + ')';
+        if (name) name.textContent = f.name;
+        if (meta) meta.textContent = ' (' + fmtSize(f.size) + ')';
         validate(f);
       }
     });

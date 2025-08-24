@@ -1,43 +1,40 @@
-{{-- resources/views/investors/import.blade.php --}}
+{{-- resources/views/customers/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', 'استيراد المستثمرين من Excel')
+@section('title', 'استيراد العملاء من Excel')
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
 
-  {{-- ===== Header ===== --}}
+  {{-- Header --}}
   <div class="rounded-3 p-4 mb-4 position-relative overflow-hidden bg-light border">
     <div class="d-flex align-items-center gap-3">
-      <div class="rounded-4 bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
-           style="width:54px;height:54px;">
+      <div class="rounded-4 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width:54px;height:54px;">
         <i class="bi bi-cloud-arrow-up fs-3"></i>
       </div>
       <div>
-        <h1 class="h4 mb-1">استيراد المستثمرين</h1>
+        <h1 class="h4 mb-1">استيراد العملاء</h1>
         <p class="text-muted mb-0">
           ارفع ملف Excel/CSV بالمواصفات:
-          <code>name, national_id, phone, email, address, nationality, title, office_share_percentage, notes, id_card_image, contract_image</code>
+          <code>name, national_id, phone, email, address, nationality, title, id_card_image, contract_image, ...</code>
           — الصف الأول عناوين.
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <a href="{{ route('investors.import.template') }}" class="btn btn-outline-secondary btn-sm">
+        <a href="{{ route('customers.import.template') }}" class="btn btn-outline-secondary btn-sm">
           <i class="bi bi-filetype-xlsx me-1"></i> تنزيل تمبليت
         </a>
       </div>
     </div>
   </div>
 
-  {{-- ===== Alerts ===== --}}
+  {{-- Alerts --}}
   @if ($errors->any())
     <div class="alert alert-danger border-0 shadow-sm">
-      <div class="d-flex align-items-start">
-        <i class="bi bi-x-octagon me-2 fs-5"></i>
-        <div>
-          <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
-          <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
-        </div>
+      <i class="bi bi-x-octagon me-2 fs-5"></i>
+      <div class="d-inline-block">
+        <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
+        <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
       </div>
     </div>
   @endif
@@ -54,10 +51,9 @@
     </div>
   @endif
 
-  {{-- ===== Summary KPIs ===== --}}
+  {{-- Summary KPIs --}}
   @php
-    // ✅ اقرأ من المفتاح القديم أو الجديد (flash) — أيهما موجود
-    $summary      = session('summary') ?: session('investors_import.summary') ?: [];
+    $summary      = session('summary') ?: session('customers_import.summary') ?: [];
     $failuresBag  = session('failures') ?? session('failures_simple') ?? [];
     $errorsSimple = session('errors_simple') ?? [];
 
@@ -74,12 +70,10 @@
     $successPct = $rows > 0 ? round(($changed / $rows) * 100, 1) : 0;
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
 
-    // المتخطّى بالتفصيل (لملف التصدير + جدول العرض)
-    $skippedBag   = session('investors_import.skipped_simple') ?? [];
+    $skippedBag   = session('customers_import.skipped_simple') ?? [];
     $skippedCount = is_countable($skippedBag) ? count($skippedBag)
                     : (method_exists($skippedBag, 'count') ? (int)$skippedBag->count() : 0);
 
-    // وجود مشاكل = Failures أو Skipped
     $hasIssues = $hasFailures || $skippedCount > 0;
   @endphp
 
@@ -96,7 +90,6 @@
           </div>
         </div>
       </div>
-
       <div class="col-12 col-md-3">
         <div class="card shadow-sm h-100 border-0">
           <div class="card-body d-flex align-items-center gap-3">
@@ -109,7 +102,6 @@
           </div>
         </div>
       </div>
-
       <div class="col-12 col-md-3">
         <div class="card shadow-sm h-100 border-0">
           <div class="card-body d-flex align-items-center gap-3">
@@ -122,7 +114,6 @@
           </div>
         </div>
       </div>
-
       <div class="col-12 col-md-3">
         <div class="card shadow-sm h-100 border-0">
           <div class="card-body d-flex align-items-center gap-3">
@@ -141,33 +132,24 @@
     </div>
   @endif
 
-  {{-- ===== Generic read/save errors ===== --}}
   @if (!empty($errorsSimple))
     <div class="alert alert-warning border-0 shadow-sm mb-4">
-      <div class="d-flex align-items-start">
-        <i class="bi bi-exclamation-circle me-2 fs-5"></i>
-        <div>
-          <div class="fw-semibold mb-1">أخطاء أثناء القراءة/الحفظ:</div>
-          <ul class="mb-0">@foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach</ul>
-        </div>
-      </div>
+      <i class="bi bi-exclamation-circle me-2 fs-5"></i>
+      <ul class="mb-0">@foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach</ul>
     </div>
   @endif
 
-  {{-- ===== Upload Card ===== --}}
+  {{-- Upload --}}
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <form action="{{ route('investors.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+      <form action="{{ route('customers.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
         @csrf
-
         <div class="col-12">
           <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
             <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
             <div class="mb-2 fw-semibold">اسحب الملف إلى هنا أو اضغط للاختيار</div>
             <div class="text-muted small mb-3">ملف Excel/CSV فقط — سيتم التحقق قبل الحفظ</div>
-            <input id="fileInput" type="file" name="file"
-                   class="position-absolute w-100 h-100 top-0 start-0 opacity-0"
-                   accept=".xlsx,.xls,.csv" required>
+            <input id="fileInput" type="file" name="file" class="position-absolute w-100 h-100 top-0 start-0 opacity-0" accept=".xlsx,.xls,.csv" required>
             <div class="small">
               <span class="text-secondary">الملف المختار:</span>
               <span id="fileName" class="fw-semibold">—</span>
@@ -182,8 +164,9 @@
             <i class="bi bi-upload me-1"></i> استيراد الآن
           </button>
 
-          @if ($hasIssues && Route::has('investors.import.failures.fix'))
-            <a class="btn btn-warning" href="{{ route('investors.import.failures.fix') }}">
+          @php $hasIssues = ($hasFailures || $skippedCount > 0); @endphp
+          @if ($hasIssues && Route::has('customers.import.failures.fix'))
+            <a class="btn btn-warning" href="{{ route('customers.import.failures.fix') }}">
               <i class="bi bi-wrench-adjustable me-1"></i>
               تنزيل ملف الأخطاء/المتخطّى
               @if($hasFailures)
@@ -199,19 +182,17 @@
     </div>
   </div>
 
-  {{-- ===== Failures Table ===== --}}
+  {{-- Failures Table --}}
   @if ($hasFailures)
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
         <i class="bi bi-list-check me-2"></i>
         <span>أخطاء التحقق</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
-        <button class="btn btn-sm btn-outline-secondary ms-auto"
-                data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
+        <button class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
           إظهار/إخفاء
         </button>
       </div>
-
       <div id="failuresTable" class="collapse show">
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -252,15 +233,13 @@
               </tbody>
             </table>
           </div>
-          <div class="p-3 text-muted small">
-            صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف الأخطاء/المتخطّى”.
-          </div>
+          <div class="p-3 text-muted small">صحّح الصفوف ثم أعد الرفع.</div>
         </div>
       </div>
     </div>
   @endif
 
-  {{-- ===== Skipped Table ===== --}}
+  {{-- Skipped Table --}}
   @php $hasSkipped = $skippedCount > 0; @endphp
   @if ($hasSkipped)
     <div class="card border-0 shadow-sm mt-4">
@@ -268,12 +247,10 @@
         <i class="bi bi-skip-forward-fill me-2"></i>
         <span>الصفوف المتخطّاة</span>
         <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
-        <button class="btn btn-sm btn-outline-secondary ms-auto"
-                data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
+        <button class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
           إظهار/إخفاء
         </button>
       </div>
-
       <div id="skippedTable" class="collapse show">
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -305,9 +282,7 @@
               </tbody>
             </table>
           </div>
-          <div class="p-3 text-muted small">
-            راجع القيم والسبب ثم صحّح الصفوف وأعد الرفع.
-          </div>
+          <div class="p-3 text-muted small">راجع القيم والسبب ثم صحّح الصفوف وأعد الرفع.</div>
         </div>
       </div>
     </div>
@@ -337,7 +312,7 @@
   const err  = document.getElementById('fileError');
   const btn  = document.getElementById('submitBtn');
 
-  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  const MAX_SIZE = 10 * 1024 * 1024;
   const okExt = ['xlsx','xls','csv'];
 
   function fmtSize(bytes){

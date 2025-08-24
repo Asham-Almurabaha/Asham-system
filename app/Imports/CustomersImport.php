@@ -28,48 +28,57 @@ class CustomersImport implements
     WithBatchInserts
 {
     use Importable;
-    // نحتاج alias علشان نزود عدّادنا ونحتفظ بسلوك SkipsFailures
     use \Maatwebsite\Excel\Concerns\SkipsFailures { onFailure as traitOnFailure; }
     use SkipsErrors;
 
-    protected int $rows      = 0;   // اللي وصلت لـ model()
+    protected int $rows      = 0;
     protected int $inserted  = 0;
-    protected int $updated   = 0;   // تحديثات حقيقية فقط (Dirty)
-    protected int $unchanged = 0;   // اتلاقت بس بدون أي تغيير
-    protected int $skipped   = 0;   // تخطّي داخل model()
-
-    // صفوف فشلت في الـ validation قبل ما توصل model()
+    protected int $updated   = 0;   // تكملة الناقص فقط
+    protected int $unchanged = 0;
+    protected int $skipped   = 0;
     protected int $failedByValidation = 0;
+
+    protected array $skippedSimple = [];
 
     public function headingRow(): int { return 1; }
 
-    // نعد صفوف الـ validation failures ونخزنها داخليًا
     public function onFailure(Failure ...$failures): void
     {
         $this->failedByValidation += count($failures);
+
         $this->traitOnFailure(...$failures);
+
+        foreach ($failures as $f) {
+            $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => (int)$f->row(),
+                'values' => (array)$f->values(),
+                'reason' => implode(' | ', (array)$f->errors()),
+            ];
+        }
     }
 
     public function model(array $row)
     {
         $this->rows++;
 
-        // رؤوس عربي/إنجليزي
-        $name        = $this->safeStr($row['name'] ?? $row['الاسم'] ?? null);
-        $nationalId  = $this->digitsOnly($row['national_id'] ?? $row['الهوية'] ?? null);
-        $phoneRaw    = $row['phone'] ?? $row['الجوال'] ?? null;
-        $phone       = $this->normalizeSaudiPhone($phoneRaw);
-        $email       = $this->safeStr($row['email'] ?? null);
-        $address     = $this->safeStr($row['address'] ?? $row['العنوان'] ?? null);
-        $notes       = $this->safeStr($row['notes'] ?? $row['ملاحظات'] ?? null);
+        // خرائط عربي/إنجليزي
+        $name       = $this->safeStr($row['name'] ?? $row['الاسم'] ?? null);
+        $nationalId = $this->digitsOnly($row['national_id'] ?? $row['الهوية'] ?? null);
+        $phoneRaw   = $row['phone'] ?? $row['الجوال'] ?? null;
+        $phone      = $this->normalizeSaudiPhone($phoneRaw);
+        $email      = $this->safeStr($row['email'] ?? null);
+        $address    = $this->safeStr($row['address'] ?? $row['العنوان'] ?? null);
+        $notes      = $this->safeStr($row['notes'] ?? $row['ملاحظات'] ?? null);
 
-        // IDs مباشرة
-        $nationalityId = $row['nationality_id'] ?? $row['الجنسية_id'] ?? null;
-        $titleId       = $row['title_id']       ?? $row['الوظيفة_id']   ?? null;
+        $idCardImage   = $this->safeStr($row['id_card_image']   ?? $row['صورة_الهوية'] ?? null);
+        $contractImage = $this->safeStr($row['contract_image']  ?? $row['صورة_العقد']  ?? null);
 
-        // أسماء تتحوّل لـ IDs
-        $nationalityName = $row['nationality'] ?? $row['الجنسية'] ?? null;
-        $titleName       = $row['title']       ?? $row['الوظيفة']  ?? null;
+        // IDs مباشرة أو بالأسماء
+        $nationalityId   = $row['nationality_id'] ?? $row['الجنسية_id'] ?? null;
+        $titleId         = $row['title_id']       ?? $row['الوظيفة_id']   ?? null;
+        $nationalityName = $row['nationality']    ?? $row['الجنسية']     ?? null;
+        $titleName       = $row['title']          ?? $row['الوظيفة']      ?? null;
 
         if (!$nationalityId && $nationalityName) {
             $nationalityId = $this->resolveIdByName($nationalityName, Nationality::class, ['name','name_en']);
@@ -78,15 +87,18 @@ class CustomersImport implements
             $titleId = $this->resolveIdByName($titleName, Title::class, ['name','name_en']);
         }
 
-        $idCardImage = $this->safeStr($row['id_card_image'] ?? null);
-
-        // إلزاميات دنيا
-        if (!$name || !$nationalId || !$phone) {
+        // أقل تعريف: لازم name + (national_id أو phone)
+        if (!$name || (!$nationalId && !$phone)) {
             $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => $this->rows,
+                'values' => $row,
+                'reason' => 'Missing identifier (name + national_id/phone)',
+            ];
             return null;
         }
 
-        // مفتاح تعرّف للتحديث (أولوية: national_id ثم phone ثم name)
+        // تعريف السجل القائم
         $found = Customer::where('national_id', $nationalId)->first()
             ?: Customer::where('phone', $phone)->first()
             ?: Customer::where('name', $name)->first();
@@ -101,11 +113,18 @@ class CustomersImport implements
             'nationality_id' => $nationalityId ?: null,
             'title_id'       => $titleId ?: null,
             'id_card_image'  => $idCardImage ?: null,
+            'contract_image' => $contractImage ?: null,
         ];
 
         try {
             if ($found) {
+                // تكملة الناقص فقط: لا نغيّر قيمة موجودة بالفعل
+                foreach ($payload as $k => $v) {
+                    if (is_null($v)) unset($payload[$k]);
+                }
+
                 $found->fill($payload);
+
                 if ($found->isDirty()) {
                     $found->save();
                     $this->updated++;
@@ -118,56 +137,70 @@ class CustomersImport implements
             }
         } catch (\Throwable $e) {
             $this->skipped++;
-            // لتجميع الخطأ في $this->errors()
+            $this->skippedSimple[] = [
+                'row'    => $this->rows,
+                'values' => $row,
+                'reason' => 'Save error: '.$e->getMessage(),
+            ];
             $this->onError($e);
         }
 
-        // احنا حفظنا يدويًا؛ ما نرجعش موديل عشان ما يحصلش حفظ مزدوج
         return null;
     }
 
+    /** رجّعنا (المشدّد) كمعلّق — فعّل لو عايزه صارم */
     public function rules(): array
     {
         return [
-            '*.name'           => 'required|string|max:255',
-            '*.national_id'    => ['required','digits:10','regex:/^[12]\d{9}$/'],
-            '*.phone'          => ['required','regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8}|9665\d{8})$/'],
-            '*.email'          => 'nullable|email|max:255',
-            '*.address'        => 'nullable|string',
-            '*.notes'          => 'nullable|string',
+            '*.name'        => 'required|string|max:255',
+
+            // لو عايز صارم:
+            // '*.national_id' => ['required','digits:10','regex:/^[12]\d{9}$/'],
+            // '*.phone'       => ['required','regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8}|9665\d{8})$/'],
+
+            '*.national_id' => 'nullable',
+            '*.phone'       => 'nullable',
+
+            '*.email'       => 'nullable|email|max:255',
+            '*.address'     => 'nullable|string',
+            '*.notes'       => 'nullable|string',
             '*.nationality_id' => 'nullable|integer|exists:nationalities,id',
-            '*.nationality'    => 'nullable|string|max:255',
-            '*.title_id'       => 'nullable|integer|exists:titles,id',
-            '*.title'          => 'nullable|string|max:255',
+            '*.nationality' => 'nullable|string|max:255',
+            '*.title_id'    => 'nullable|integer|exists:titles,id',
+            '*.title'       => 'nullable|string|max:255',
             '*.id_card_image'  => 'nullable|string|max:255',
+            '*.contract_image' => 'nullable|string|max:255',
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            '*.name.required'        => 'الاسم مطلوب.',
+            '*.name.required'      => 'الاسم مطلوب.',
             '*.national_id.required' => 'رقم الهوية مطلوب.',
             '*.national_id.digits'   => 'رقم الهوية يجب أن يكون 10 أرقام.',
-            '*.national_id.regex'    => 'رقم الهوية يجب أن يبدأ بـ 1 (مواطن) أو 2 (مقيم).',
+            '*.national_id.regex'    => 'رقم الهوية يجب أن يبدأ بـ 1 أو 2.',
             '*.phone.required'       => 'رقم الجوال مطلوب.',
             '*.phone.regex'          => 'صيغة رقم الجوال غير صحيحة.',
             '*.email.email'          => 'البريد الإلكتروني غير صالح.',
-            '*.nationality_id.exists'=> 'الجنسية غير موجودة.',
-            '*.title_id.exists'      => 'المسمى الوظيفي غير موجود.',
         ];
     }
 
     public function chunkSize(): int { return 1000; }
     public function batchSize(): int { return 1000; }
 
-    // ===== Counters/Getters =====
+    // ===== Getters =====
     public function getRowCount(): int       { return $this->rows; }
     public function getInsertedCount(): int  { return $this->inserted; }
     public function getUpdatedCount(): int   { return $this->updated; }
     public function getUnchangedCount(): int { return $this->unchanged; }
     public function getSkippedCount(): int   { return $this->skipped; }
     public function getFailedValidationCount(): int { return $this->failedByValidation; }
+
+    public function skipped(): array
+    {
+        return $this->skippedSimple;
+    }
 
     // ===== Helpers =====
     private function safeStr($v): ?string
@@ -187,11 +220,10 @@ class CustomersImport implements
     {
         if (!$phone) return null;
         $d = preg_replace('/\D+/', '', (string)$phone);
-
         if (preg_match('/^009665(\d{8})$/', $d, $m)) return '9665'.$m[1];
         if (preg_match('/^9665(\d{8})$/',   $d, $m)) return '9665'.$m[1];
         if (preg_match('/^05(\d{8})$/',     $d, $m)) return '9665'.$m[1];
-
+        if (preg_match('/^\+9665(\d{8})$/', (string)$phone, $m)) return '9665'.$m[1];
         return $d;
     }
 
@@ -204,12 +236,8 @@ class CustomersImport implements
         $table = $instance->getTable();
 
         $available = [];
-        foreach ($columns as $col) {
-            if (Schema::hasColumn($table, $col)) $available[] = $col;
-        }
-        if (empty($available)) {
-            if (Schema::hasColumn($table, 'name')) $available = ['name']; else return null;
-        }
+        foreach ($columns as $col) if (Schema::hasColumn($table, $col)) $available[] = $col;
+        if (empty($available)) { if (Schema::hasColumn($table, 'name')) $available = ['name']; else return null; }
 
         $q = $modelClass::query();
         $q->where(function($qq) use ($name, $available) {
@@ -226,7 +254,6 @@ class CustomersImport implements
             }
             return false;
         });
-
         return $found ? (int)$found->id : null;
     }
 }

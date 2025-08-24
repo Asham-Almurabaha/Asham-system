@@ -31,12 +31,14 @@ class GuarantorsImport implements
     use \Maatwebsite\Excel\Concerns\SkipsFailures { onFailure as traitOnFailure; }
     use SkipsErrors;
 
-    protected int $rows      = 0;   // وصلت لـ model()
+    protected int $rows      = 0;
     protected int $inserted  = 0;
-    protected int $updated   = 0;   // تغييرات حقيقية
-    protected int $unchanged = 0;   // لا تغيّر
-    protected int $skipped   = 0;   // تخطّي داخل model()
-    protected int $failedByValidation = 0; // فشل قبل model()
+    protected int $updated   = 0;   // تكملة الناقص فقط
+    protected int $unchanged = 0;
+    protected int $skipped   = 0;
+    protected int $failedByValidation = 0;
+
+    protected array $skippedSimple = [];
 
     public function headingRow(): int { return 1; }
 
@@ -44,26 +46,36 @@ class GuarantorsImport implements
     {
         $this->failedByValidation += count($failures);
         $this->traitOnFailure(...$failures);
+
+        foreach ($failures as $f) {
+            $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => (int)$f->row(),
+                'values' => (array)$f->values(),
+                'reason' => implode(' | ', (array)$f->errors()),
+            ];
+        }
     }
 
     public function model(array $row)
     {
         $this->rows++;
 
-        // عربي/إنجليزي
-        $name        = $this->safeStr($row['name'] ?? $row['الاسم'] ?? null);
-        $nationalId  = $this->digitsOnly($row['national_id'] ?? $row['الهوية'] ?? null);
-        $phoneRaw    = $row['phone'] ?? $row['الجوال'] ?? null;
-        $phone       = $this->normalizeSaudiPhone($phoneRaw);
-        $email       = $this->safeStr($row['email'] ?? null);
-        $address     = $this->safeStr($row['address'] ?? $row['العنوان'] ?? null);
-        $notes       = $this->safeStr($row['notes'] ?? $row['ملاحظات'] ?? null);
+        $name       = $this->safeStr($row['name'] ?? $row['الاسم'] ?? null);
+        $nationalId = $this->digitsOnly($row['national_id'] ?? $row['الهوية'] ?? null);
+        $phoneRaw   = $row['phone'] ?? $row['الجوال'] ?? null;
+        $phone      = $this->normalizeSaudiPhone($phoneRaw);
+        $email      = $this->safeStr($row['email'] ?? null);
+        $address    = $this->safeStr($row['address'] ?? $row['العنوان'] ?? null);
+        $notes      = $this->safeStr($row['notes'] ?? $row['ملاحظات'] ?? null);
 
-        $nationalityId = $row['nationality_id'] ?? $row['الجنسية_id'] ?? null;
-        $titleId       = $row['title_id']       ?? $row['الوظيفة_id']   ?? null;
+        $idCardImage   = $this->safeStr($row['id_card_image']   ?? $row['صورة_الهوية'] ?? null);
+        $contractImage = $this->safeStr($row['contract_image']  ?? $row['صورة_العقد']  ?? null);
 
-        $nationalityName = $row['nationality'] ?? $row['الجنسية'] ?? null;
-        $titleName       = $row['title']       ?? $row['الوظيفة']  ?? null;
+        $nationalityId   = $row['nationality_id'] ?? $row['الجنسية_id'] ?? null;
+        $titleId         = $row['title_id']       ?? $row['الوظيفة_id']   ?? null;
+        $nationalityName = $row['nationality']    ?? $row['الجنسية']     ?? null;
+        $titleName       = $row['title']          ?? $row['الوظيفة']      ?? null;
 
         if (!$nationalityId && $nationalityName) {
             $nationalityId = $this->resolveIdByName($nationalityName, Nationality::class, ['name','name_en']);
@@ -72,15 +84,17 @@ class GuarantorsImport implements
             $titleId = $this->resolveIdByName($titleName, Title::class, ['name','name_en']);
         }
 
-        $idCardImage = $this->safeStr($row['id_card_image'] ?? null);
-
-        // إلزاميات دنيا
-        if (!$name || !$nationalId || !$phone) {
+        // تعريف أدنى: name + (national_id أو phone)
+        if (!$name || (!$nationalId && !$phone)) {
             $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => $this->rows,
+                'values' => $row,
+                'reason' => 'Missing identifier (name + national_id/phone)',
+            ];
             return null;
         }
 
-        // تعريف
         $found = Guarantor::where('national_id', $nationalId)->first()
             ?: Guarantor::where('phone', $phone)->first()
             ?: Guarantor::where('name', $name)->first();
@@ -95,11 +109,18 @@ class GuarantorsImport implements
             'nationality_id' => $nationalityId ?: null,
             'title_id'       => $titleId ?: null,
             'id_card_image'  => $idCardImage ?: null,
+            'contract_image' => $contractImage ?: null,
         ];
 
         try {
             if ($found) {
+                // تكملة الناقص فقط
+                foreach ($payload as $k => $v) {
+                    if (is_null($v)) unset($payload[$k]);
+                }
+
                 $found->fill($payload);
+
                 if ($found->isDirty()) {
                     $found->save();
                     $this->updated++;
@@ -112,26 +133,37 @@ class GuarantorsImport implements
             }
         } catch (\Throwable $e) {
             $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => $this->rows,
+                'values' => $row,
+                'reason' => 'Save error: '.$e->getMessage(),
+            ];
             $this->onError($e);
         }
 
-        return null; // منع الحفظ المزدوج
+        return null;
     }
 
     public function rules(): array
     {
         return [
-            '*.name'           => 'required|string|max:255',
-            '*.national_id'    => ['required','digits:10','regex:/^[12]\d{9}$/'],
-            '*.phone'          => ['required','regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8}|9665\d{8})$/'],
-            '*.email'          => 'nullable|email|max:255',
-            '*.address'        => 'nullable|string',
-            '*.notes'          => 'nullable|string',
+            '*.name'        => 'required|string|max:255',
+            // مشدّد (اختياري):
+            // '*.national_id' => ['required','digits:10','regex:/^[12]\d{9}$/'],
+            // '*.phone'       => ['required','regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8}|9665\d{8})$/'],
+
+            '*.national_id' => 'nullable',
+            '*.phone'       => 'nullable',
+
+            '*.email'       => 'nullable|email|max:255',
+            '*.address'     => 'nullable|string',
+            '*.notes'       => 'nullable|string',
             '*.nationality_id' => 'nullable|integer|exists:nationalities,id',
-            '*.nationality'    => 'nullable|string|max:255',
-            '*.title_id'       => 'nullable|integer|exists:titles,id',
-            '*.title'          => 'nullable|string|max:255',
+            '*.nationality' => 'nullable|string|max:255',
+            '*.title_id'    => 'nullable|integer|exists:titles,id',
+            '*.title'       => 'nullable|string|max:255',
             '*.id_card_image'  => 'nullable|string|max:255',
+            '*.contract_image' => 'nullable|string|max:255',
         ];
     }
 
@@ -145,8 +177,6 @@ class GuarantorsImport implements
             '*.phone.required'       => 'رقم الجوال مطلوب.',
             '*.phone.regex'          => 'صيغة رقم الجوال غير صحيحة.',
             '*.email.email'          => 'البريد الإلكتروني غير صالح.',
-            '*.nationality_id.exists'=> 'الجنسية غير موجودة.',
-            '*.title_id.exists'      => 'المسمى الوظيفي غير موجود.',
         ];
     }
 
@@ -160,6 +190,11 @@ class GuarantorsImport implements
     public function getUnchangedCount(): int { return $this->unchanged; }
     public function getSkippedCount(): int   { return $this->skipped; }
     public function getFailedValidationCount(): int { return $this->failedByValidation; }
+
+    public function skipped(): array
+    {
+        return $this->skippedSimple;
+    }
 
     // Helpers
     private function safeStr($v): ?string
@@ -180,6 +215,7 @@ class GuarantorsImport implements
         if (preg_match('/^009665(\d{8})$/', $d, $m)) return '9665'.$m[1];
         if (preg_match('/^9665(\d{8})$/',   $d, $m)) return '9665'.$m[1];
         if (preg_match('/^05(\d{8})$/',     $d, $m)) return '9665'.$m[1];
+        if (preg_match('/^\+9665(\d{8})$/', (string)$phone, $m)) return '9665'.$m[1];
         return $d;
     }
     private function resolveIdByName(?string $name, string $modelClass, array $columns = ['name']): ?int

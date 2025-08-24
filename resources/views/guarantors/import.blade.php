@@ -1,12 +1,12 @@
 {{-- resources/views/guarantors/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', 'استيراد الكفلاء من Excel')
+@section('title', 'استيراد الكُفلاء من Excel')
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
 
-  {{-- ===== Header ===== --}}
+  {{-- Header --}}
   <div class="rounded-3 p-4 mb-4 position-relative overflow-hidden bg-light border">
     <div class="d-flex align-items-center gap-3">
       <div class="rounded-4 bg-primary-subtle text-primary d-flex align-items-center justify-content-center"
@@ -14,10 +14,10 @@
         <i class="bi bi-cloud-arrow-up fs-3"></i>
       </div>
       <div>
-        <h1 class="h4 mb-1">استيراد الكفلاء</h1>
+        <h1 class="h4 mb-1">استيراد الكُفلاء</h1>
         <p class="text-muted mb-0">
           ارفع ملف Excel/CSV بالمواصفات:
-          <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image</code>
+          <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image</code>
           — الصف الأول عناوين.
         </p>
       </div>
@@ -29,16 +29,14 @@
     </div>
   </div>
 
-  {{-- ===== Alerts ===== --}}
+  {{-- Alerts --}}
   @if ($errors->any())
     <div class="alert alert-danger border-0 shadow-sm">
       <div class="d-flex align-items-start">
         <i class="bi bi-x-octagon me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
-          <ul class="mb-0">
-            @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-          </ul>
+          <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
         </div>
       </div>
     </div>
@@ -56,10 +54,9 @@
     </div>
   @endif
 
-  {{-- ===== Summary KPIs ===== --}}
+  {{-- KPI --}}
   @php
-    // نفس لوجيك العملاء: مفاتيح عامة فقط
-    $summary      = session('summary') ?: [];
+    $summary      = session('summary') ?: session('guarantors_import.summary') ?: [];
     $failuresBag  = session('failures') ?? session('failures_simple') ?? [];
     $errorsSimple = session('errors_simple') ?? [];
 
@@ -75,6 +72,12 @@
 
     $successPct = $rows > 0 ? round(($changed / $rows) * 100, 1) : 0;
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
+
+    $skippedBag   = session('guarantors_import.skipped_simple') ?? [];
+    $skippedCount = is_countable($skippedBag) ? count($skippedBag)
+                    : (method_exists($skippedBag, 'count') ? (int)$skippedBag->count() : 0);
+
+    $hasIssues = $hasFailures || $skippedCount > 0;
   @endphp
 
   @if ($rows || $changed || $unchanged || $skipped)
@@ -135,22 +138,20 @@
     </div>
   @endif
 
-  {{-- ===== Generic read/save errors ===== --}}
+  {{-- read/save errors --}}
   @if (!empty($errorsSimple))
     <div class="alert alert-warning border-0 shadow-sm mb-4">
       <div class="d-flex align-items-start">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i>
         <div>
           <div class="fw-semibold mb-1">أخطاء أثناء القراءة/الحفظ:</div>
-          <ul class="mb-0">
-            @foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach
-          </ul>
+          <ul class="mb-0">@foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach</ul>
         </div>
       </div>
     </div>
   @endif
 
-  {{-- ===== Upload Card ===== --}}
+  {{-- Upload --}}
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
       <form action="{{ route('guarantors.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
@@ -178,9 +179,16 @@
             <i class="bi bi-upload me-1"></i> استيراد الآن
           </button>
 
-          @if ($hasFailures && Route::has('guarantors.import.failures.fix'))
+          @if ($hasIssues && Route::has('guarantors.import.failures.fix'))
             <a class="btn btn-warning" href="{{ route('guarantors.import.failures.fix') }}">
-              <i class="bi bi-wrench-adjustable me-1"></i> تنزيل ملف لتصحيح الصفوف
+              <i class="bi bi-wrench-adjustable me-1"></i>
+              تنزيل ملف الأخطاء/المتخطّى
+              @if($hasFailures)
+                <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+              @endif
+              @if($skippedCount > 0)
+                <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
+              @endif
             </a>
           @endif
         </div>
@@ -188,7 +196,7 @@
     </div>
   </div>
 
-  {{-- ===== Failures Table ===== --}}
+  {{-- Failures Table --}}
   @if ($hasFailures)
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
@@ -242,7 +250,60 @@
             </table>
           </div>
           <div class="p-3 text-muted small">
-            صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف لتصحيح الصفوف”.
+            صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف الأخطاء/المتخطّى”.
+          </div>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  {{-- Skipped Table --}}
+  @php $hasSkipped = $skippedCount > 0; @endphp
+  @if ($hasSkipped)
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header d-flex align-items-center bg-white">
+        <i class="bi bi-skip-forward-fill me-2"></i>
+        <span>الصفوف المتخطّاة</span>
+        <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
+        <button class="btn btn-sm btn-outline-secondary ms-auto"
+                data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
+          إظهار/إخفاء
+        </button>
+      </div>
+
+      <div id="skippedTable" class="collapse show">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th style="width:110px">رقم الصف</th>
+                  <th style="width:260px">السبب</th>
+                  <th style="min-width:260px">القيم</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ($skippedBag as $r)
+                  @php
+                    $rowNum = (int)($r['row'] ?? 0);
+                    $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
+                    $vals   = $r['values'] ?? [];
+                  @endphp
+                  <tr>
+                    <td class="text-muted">{{ $rowNum }}</td>
+                    <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                    <td class="text-break">
+                      <code class="small" style="white-space: pre-wrap; word-break: break-word;">
+                        {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
+                      </code>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 text-muted small">
+            راجع القيم والسبب ثم صحّح الصفوف وأعد الرفع.
           </div>
         </div>
       </div>
@@ -278,8 +339,8 @@
 
   function fmtSize(bytes){
     if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024*1024) return (bytes/1024).toFixed(1)+' KB';
-    return (bytes/1024/1024).toFixed(1)+' MB';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/1024/1024).toFixed(1) + ' MB';
   }
 
   function validate(file){
@@ -287,14 +348,18 @@
     err.classList.add('d-none'); err.textContent = ''; btn.disabled = true;
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!okExt.includes(ext)) { err.textContent = 'صيغة الملف غير مدعومة.'; err.classList.remove('d-none'); return; }
+    if (!okExt.includes(ext)) { err.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv'; err.classList.remove('d-none'); return; }
     if (file.size > MAX_SIZE) { err.textContent = 'حجم الملف يتجاوز 10MB.'; err.classList.remove('d-none'); return; }
     btn.disabled = false;
   }
 
   if (dz && inp) {
-    ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); }));
-    ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); }));
+    ['dragenter','dragover'].forEach(ev =>
+      dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); })
+    );
+    ['dragleave','drop'].forEach(ev =>
+      dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); })
+    );
 
     dz.addEventListener('drop', e => {
       if (e.dataTransfer?.files?.length) {
@@ -308,8 +373,8 @@
 
     inp.addEventListener('change', () => {
       const f = inp.files?.[0];
-      if (name) name.textContent = f?.name || '—';
-      if (meta) meta.textContent = f ? ' (' + fmtSize(f.size) + ')' : '';
+      name.textContent = f?.name || '—';
+      meta.textContent = f ? ' (' + fmtSize(f.size) + ')' : '';
       validate(f || null);
     });
   }
