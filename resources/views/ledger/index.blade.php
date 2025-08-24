@@ -19,10 +19,11 @@
         <a href="{{ route('ledger.create') }}" class="btn btn-outline-success">+ إضافة قيد</a>
         <a href="{{ route('ledger.transfer.create') }}" class="btn btn-outline-primary">تحويل داخلي (مكتب)</a>
         <a href="{{ route('ledger.split.create') }}" class="btn btn-outline-secondary">قيد مُجزّأ (بنك + خزنة)</a>
-
-        <a href="{{ route('ledger.import.form') }}" class="btn btn-outline-primary">
-        <i class="bi bi-upload"></i> استيراد Excel
-      </a>
+        @role('admin')
+            <a href="{{ route('ledger.import.form') }}" class="btn btn-outline-primary">
+                <i class="bi bi-upload"></i> استيراد Excel
+            </a>
+        @endrole
 
         <span class="ms-auto small text-muted">
             النتائج: <strong>{{ $entries->total() }}</strong>

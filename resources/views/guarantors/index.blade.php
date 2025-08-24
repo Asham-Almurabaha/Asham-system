@@ -99,10 +99,11 @@
       <a href="{{ route('guarantors.create') }}" class="btn btn-success">
         <i class="bi bi-plus-lg"></i> إضافة كفيل
       </a>
-
-      <a href="{{ route('guarantors.import.form') }}" class="btn btn-outline-primary">
-        <i class="bi bi-upload"></i> استيراد Excel
-      </a>
+      @role('admin')
+        <a href="{{ route('guarantors.import.form') }}" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> استيراد Excel
+        </a>
+    @endrole
 
       {{-- 🔥 شيلنا زر "تمبليت" زى العملاء --}}
     </div>

@@ -134,4 +134,53 @@ class ContractPrintController extends Controller
             'settlementDate'=> $settlementDate,
         ]);
     }
+
+    public function paidInstallments(Contract $contract)
+    {
+        // حمّل العلاقات المطلوبة
+        $contract->load([
+            'customer',
+            'installments' => fn($q) => $q->orderBy('due_date'),
+        ]);
+
+        // إعدادات (شعار + اسم)
+        $setting = Setting::first();
+
+        $logoUrl = $setting && $setting->logo
+            ? asset('storage/'.$setting->logo)
+            : asset('assets/img/logo.png');
+
+        $brandName = $setting?->name_ar
+            ?? $setting?->name
+            ?? config('app.name', 'اسم المنشأة');
+
+        // الأقساط المسددة فقط (بأي قيمة مدفوعة)
+        $paidInstallments = $contract->installments->filter(function ($i) {
+            return (float) ($i->paid_amount ?? 0) > 0
+                || !empty($i->paid_at);
+        })->values();
+
+        // الإجماليات
+        $contractTotal = (float) ($contract->installments->sum('amount') ?: ($contract->total_value ?? 0));
+        $totalPaid     = (float) $contract->installments->sum('paid_amount');
+        $remaining     = max(0.0, $contractTotal - $totalPaid);
+
+        // رمز العملة (عدّله لو احتجت)
+        $currency = 'ر.س';
+
+        return view('contracts.paid', [
+            'contract'          => $contract,
+            'setting'           => $setting,
+            'logoUrl'           => $logoUrl,
+            'brandName'         => $brandName,
+            'currency'          => $currency,
+            'paidInstallments'  => $paidInstallments,
+            'contractTotal'     => $contractTotal,
+            'totalPaid'         => $totalPaid,
+            'remaining'         => $remaining,
+        ]);
+    }
+
+
 }
+

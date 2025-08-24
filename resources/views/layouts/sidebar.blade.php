@@ -13,7 +13,8 @@
       || $isRoute('installment_statuses.*') || $isRoute('installment_types.*')
       || $isRoute('products.*') || $isRoute('product_entries.*')
       || $isRoute('bank_cash_accounts.*') || $isRoute('transaction_types.*') || $isRoute('transaction_statuses.*')
-      || $isRoute('categories.*');
+      || $isRoute('categories.*')
+      || $isRoute('users.*');
 @endphp
 
 <ul class="sidebar-nav" id="sidebar-nav">
@@ -77,6 +78,7 @@
   
 
   {{-- الإعدادات (قابلة للطي) --}}
+  @role('admin')
   <li class="nav-item">
     <a class="nav-link {{ $coll($settingsOpen) }}"
        data-bs-target="#settings-nav" data-bs-toggle="collapse" href="#"
@@ -91,6 +93,13 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
         </a>
       </li>
+      {{-- ✅ المستخدمون والصلاحيات (يظهر للأدمن فقط) --}}
+        <li class="nav-heading">المستخدمون والصلاحيات</li>
+        <li>
+          <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
+            <i class="bi bi-circle"></i><span>تعيين الأدوار للمستخدمين</span>
+          </a>
+        </li>
       {{-- <li>
         <a class="{{ $active($isRoute('nationalities.*')) }}" href="{{ route('nationalities.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Nationalities')</span>
@@ -138,4 +147,5 @@
       </li> --}}
     </ul>
   </li>
+  @endrole
 </ul>

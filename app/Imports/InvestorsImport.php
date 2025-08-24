@@ -38,12 +38,33 @@ class InvestorsImport implements
     protected int $skipped   = 0;   // تخطّي داخل model()
     protected int $failedByValidation = 0; // فشل قبل model()
 
+    /** المتخطّي بصيغة مبسطة للتصدير: كل عنصر ['row'=>int,'values'=>array,'reason'=>string] */
+    protected array $skippedSimple = [];
+
     public function headingRow(): int { return 1; }
 
+    /**
+     * إخفاقات التحقق قبل دخول model():
+     * - نمررها للـ trait لتظل متاحة عبر failures()
+     * - نزيد عداد failedByValidation
+     * - نضيفها لقائمة skippedSimple كصفوف متخطّاة مع السبب
+     */
     public function onFailure(Failure ...$failures): void
     {
         $this->failedByValidation += count($failures);
+
+        // احتفظ بنسخة كاملة عبر الـ trait
         $this->traitOnFailure(...$failures);
+
+        // وأضف نسخة مبسطة للمتخطّي
+        foreach ($failures as $f) {
+            $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => (int)$f->row(),
+                'values' => (array)$f->values(),
+                'reason' => implode(' | ', (array)$f->errors()),
+            ];
+        }
     }
 
     public function model(array $row)
@@ -61,7 +82,7 @@ class InvestorsImport implements
         $idCardImage   = $this->safeStr($row['id_card_image']   ?? $row['صورة_الهوية'] ?? null);
         $contractImage = $this->safeStr($row['contract_image']  ?? $row['صورة_العقد']  ?? null);
 
-        $shareRaw = $row['office_share_percentage'] ?? $row['نسبة_مشاركة_المكتب'] ?? null;
+        $shareRaw   = $row['office_share_percentage'] ?? $row['نسبة_مشاركة_المكتب'] ?? null;
         $officeShare = is_null($shareRaw) ? null : (float)str_replace(['%',' '], '', (string)$shareRaw);
 
         // IDs مباشرة أو بالأسماء
@@ -77,9 +98,14 @@ class InvestorsImport implements
             $titleId = $this->resolveIdByName($titleName, Title::class, ['name','name_en']);
         }
 
-        // إلزاميات دنيا
-        if (!$name || !$nationalId || !$phone) {
+        // إلزاميات دنيا لتعريف السجل — (التصديق النهائي على الإلزاميات يتم في rules())
+        if (!$name || (!$nationalId && !$phone)) {
             $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => $this->rows,         // رقم الصف التقريبي أثناء المعالجة
+                'values' => $row,
+                'reason' => 'Missing identifier (name + national_id/phone)',
+            ];
             return null;
         }
 
@@ -89,45 +115,66 @@ class InvestorsImport implements
             ?: Investor::where('name', $name)->first();
 
         $payload = [
-            'name'                   => $name,
-            'national_id'            => $nationalId,
-            'phone'                  => $phone,
-            'email'                  => $email ?: null,
-            'address'                => $address ?: null,
-            'nationality_id'         => $nationalityId ?: null,
-            'title_id'               => $titleId ?: null,
-            'id_card_image'          => $idCardImage ?: null,
-            'contract_image'         => $contractImage ?: null,
-            'office_share_percentage'=> $officeShare,
+            'name'                    => $name,
+            'national_id'             => $nationalId,
+            'phone'                   => $phone,
+            'email'                   => $email ?: null,
+            'address'                 => $address ?: null,
+            'nationality_id'          => $nationalityId ?: null,
+            'title_id'                => $titleId ?: null,
+            'id_card_image'           => $idCardImage ?: null,
+            'contract_image'          => $contractImage ?: null,
+            'office_share_percentage' => $officeShare,
         ];
 
         try {
             if ($found) {
+                // "تكملة الناقص فقط": ما نعدّلش قيمة موجودة فعلاً
+                foreach ($payload as $k => $v) {
+                    if (is_null($v)) {
+                        unset($payload[$k]);
+                    }
+                }
+                $original = $found->replicate();
+
                 $found->fill($payload);
+
                 if ($found->isDirty()) {
                     $found->save();
                     $this->updated++;
                 } else {
-                    $this->unchanged++;
+                    $this->unchanged++; // لا نضيفه للمتخطّى — يُعرض في KPI كـ unchanged
                 }
             } else {
                 Investor::create($payload);
                 $this->inserted++;
             }
         } catch (\Throwable $e) {
+            // اعتبره متخطّي بسبب خطأ أثناء الحفظ
             $this->skipped++;
+            $this->skippedSimple[] = [
+                'row'    => $this->rows,
+                'values' => $row,
+                'reason' => 'Save error: '.$e->getMessage(),
+            ];
+            // مرّر للـ trait ليجمع errors() لو حبيت تستخدمها
             $this->onError($e);
         }
 
         return null; // منع الحفظ المزدوج
     }
 
+    /** ✅ رجّعنا الفاليديشن الصارم للهوية والجوال */
     public function rules(): array
     {
         return [
             '*.name'                    => 'required|string|max:255',
-            '*.national_id'             => ['required','digits:10','regex:/^[12]\d{9}$/'],
-            '*.phone'                   => ['required','regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8}|9665\d{8})$/'],
+            // '*.national_id'             => ['required','digits:10','regex:/^[12]\d{9}$/'],
+            // '*.phone'                   => ['required','regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8}|9665\d{8})$/'],
+
+            '*.national_id'             => 'nullable',
+            '*.phone'                   => 'nullable',
+
             '*.email'                   => 'nullable|email|max:255',
             '*.address'                 => 'nullable|string',
             '*.nationality_id'          => 'nullable|integer|exists:nationalities,id',
@@ -159,7 +206,7 @@ class InvestorsImport implements
     public function chunkSize(): int { return 1000; }
     public function batchSize(): int { return 1000; }
 
-    // Getters
+    // ===== Getters للأرقام والنتائج =====
     public function getRowCount(): int       { return $this->rows; }
     public function getInsertedCount(): int  { return $this->inserted; }
     public function getUpdatedCount(): int   { return $this->updated; }
@@ -167,7 +214,13 @@ class InvestorsImport implements
     public function getSkippedCount(): int   { return $this->skipped; }
     public function getFailedValidationCount(): int { return $this->failedByValidation; }
 
-    // Helpers
+    /** المتخطّي بصيغته المبسّطة للتصدير (failures + skips داخل model) */
+    public function skipped(): array
+    {
+        return $this->skippedSimple;
+    }
+
+    // ===== Helpers =====
     private function safeStr($v): ?string
     {
         if ($v === null) return null;
@@ -186,6 +239,7 @@ class InvestorsImport implements
         if (preg_match('/^009665(\d{8})$/', $d, $m)) return '9665'.$m[1];
         if (preg_match('/^9665(\d{8})$/',   $d, $m)) return '9665'.$m[1];
         if (preg_match('/^05(\d{8})$/',     $d, $m)) return '9665'.$m[1];
+        if (preg_match('/^\+9665(\d{8})$/', (string)$phone, $m)) return '9665'.$m[1];
         return $d;
     }
     private function resolveIdByName(?string $name, string $modelClass, array $columns = ['name']): ?int

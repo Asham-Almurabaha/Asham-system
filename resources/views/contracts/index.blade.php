@@ -328,10 +328,11 @@
       <a href="{{ route('contracts.create') }}" class="btn btn-success">
         <i class="bi bi-plus-lg"></i> إضافة عقد جديد
       </a>
-
-      <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
-        <i class="bi bi-upload"></i> استيراد Excel
-      </a>
+      @role('admin')
+        <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> استيراد Excel
+        </a>
+      @endrole
       
     </div>
 

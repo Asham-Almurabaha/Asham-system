@@ -21,8 +21,7 @@ use App\Http\Controllers\InvestorTransactionController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\LedgerEntriesImportController;
-use App\Http\Controllers\LedgerImportController;
-use App\Http\Controllers\ProfileController;
+// use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Setting\CategoryController;
 use App\Http\Controllers\Setting\ContractStatusController;
 use App\Http\Controllers\Setting\InstallmentStatusController;
@@ -32,25 +31,16 @@ use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\TitleController;
 use App\Http\Controllers\Setting\TransactionStatusController;
 use App\Http\Controllers\Setting\TransactionTypeController;
+use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-
-
-
-
-
-
-
-
+// لغة الواجهة
 Route::post('/lang/toggle', [LanguageController::class, 'toggle'])->name('lang.toggle');
 Route::get('/lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
 
-
-// Route::view('/', 'welcome');
-
-
+// الصفحة الرئيسية (لو مفيش يوزر يوجّه للتسجيل، غير كده تسجيل الدخول)
 Route::get('/', function () {
     return User::count() == 0
         ? redirect()->route('register')
@@ -59,93 +49,95 @@ Route::get('/', function () {
 
 Route::middleware('auth')->group(function () {
 
-Route::get('/home', function () {
-    return Setting::count() > 0
-        ? redirect()->route('dashboard')
-        : redirect()->route('settings.create');
-})->middleware('auth')->name('home');
+    Route::get('/home', function () {
+        return Setting::count() > 0
+            ? redirect()->route('dashboard')
+            : redirect()->route('settings.create');
+    })->name('home');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('can:view-dashboard')->name('dashboard');
+    // الداشبورد (متزوّد عندك بـ can:view-dashboard)
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('can:view-dashboard')
+        ->name('dashboard');
 
-Route::prefix('settings')->group(function () {
-    Route::resource('settings', SettingController::class);
-    Route::resource('nationalities', NationalityController::class);
-    Route::resource('titles', TitleController::class);
-    Route::resource('contract_statuses', ContractStatusController::class);
-    Route::resource('installment_statuses', InstallmentStatusController::class);
-    Route::resource('installment_types', InstallmentTypeController::class);
-    Route::resource('transaction_types', TransactionTypeController::class);
-    Route::resource('transaction_statuses', TransactionStatusController::class);
-    Route::resource('categories', CategoryController::class);
-});
+    // الإعدادات
+    Route::prefix('settings')->group(function () {
+        Route::resource('settings', SettingController::class);
+        Route::resource('nationalities', NationalityController::class);
+        Route::resource('titles', TitleController::class);
+        Route::resource('contract_statuses', ContractStatusController::class);
+        Route::resource('installment_statuses', InstallmentStatusController::class);
+        Route::resource('installment_types', InstallmentTypeController::class);
+        Route::resource('transaction_types', TransactionTypeController::class);
+        Route::resource('transaction_statuses', TransactionStatusController::class);
+        Route::resource('categories', CategoryController::class);
+    });
 
-Route::prefix('customers/import')->name('customers.')->group(function () {
-    Route::get('/',               [CustomerImportController::class, 'create'])->name('import.form');
-    Route::post('/',              [CustomerImportController::class, 'store'])->name('import');
-    Route::get('/template',       [CustomerImportController::class, 'template'])->name('import.template');
-    Route::get('/failures/fix',[CustomerImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+    // استيراد العملاء
+    Route::prefix('customers/import')->name('customers.')->group(function () {
+        Route::get('/',               [CustomerImportController::class, 'create'])->name('import.form');
+        Route::post('/',              [CustomerImportController::class, 'store'])->name('import');
+        Route::get('/template',       [CustomerImportController::class, 'template'])->name('import.template');
+        Route::get('/failures/fix',   [CustomerImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+    });
 
-});
+    // استيراد الضامنين
+    Route::prefix('guarantors/import')->name('guarantors.')->group(function () {
+        Route::get('/',               [GuarantorImportController::class, 'create'])->name('import.form');
+        Route::post('/',              [GuarantorImportController::class, 'store'])->name('import');
+        Route::get('/template',       [GuarantorImportController::class, 'template'])->name('import.template');
+        Route::get('/failures/fix',   [GuarantorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+    });
 
-Route::prefix('guarantors/import')->name('guarantors.')->group(function () {
-    Route::get('/',               [GuarantorImportController::class, 'create'])->name('import.form');
-    Route::post('/',              [GuarantorImportController::class, 'store'])->name('import');
-    Route::get('/template',       [GuarantorImportController::class, 'template'])->name('import.template');
-    Route::get('/failures/fix',[GuarantorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-});
+    // استيراد المستثمرين
+    Route::prefix('investors/import')->name('investors.')->group(function () {
+        Route::get('/',               [InvestorImportController::class, 'create'])->name('import.form');
+        Route::post('/',              [InvestorImportController::class, 'store'])->name('import');
+        Route::get('/template',       [InvestorImportController::class, 'template'])->name('import.template');
+        Route::get('/failures/fix',   [InvestorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+    });
 
-Route::prefix('investors/import')->name('investors.')->group(function () {
-    Route::get('/',                [InvestorImportController::class, 'create'])->name('import.form');
-    Route::post('/',               [InvestorImportController::class, 'store'])->name('import');
-    Route::get('/template',        [InvestorImportController::class, 'template'])->name('import.template');
-    Route::get('/failures/fix',[InvestorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-});
+    // استيراد العقود
+    Route::prefix('contracts/import')->name('contracts.')->group(function () {
+        Route::get('/',               [ContractsImportController::class, 'create'])->name('import.form');
+        Route::post('/',              [ContractsImportController::class, 'store'])->name('import');
+        Route::get('/template',       [ContractsImportController::class, 'template'])->name('import.template');
+        Route::get('/failures/fix',   [ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+    });
 
-Route::prefix('contracts/import')->name('contracts.')->group(function () {
-    Route::get('/',                [ContractsImportController::class, 'create'])->name('import.form');
-    Route::post('/',               [ContractsImportController::class, 'store'])->name('import');
-    Route::get('/template',        [ContractsImportController::class, 'template'])->name('import.template');
-    Route::get('/failures/fix',[ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-});
+    // استيراد القيود
+    Route::prefix('ledger/import')->name('ledger.')->group(function () {
+        Route::get('/',               [LedgerEntriesImportController::class, 'create'])->name('import.form');
+        Route::post('/',              [LedgerEntriesImportController::class, 'store'])->name('import');
+        Route::get('/template',       [LedgerEntriesImportController::class, 'template'])->name('import.template');
+        Route::get('/failures/fix',   [LedgerEntriesImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+    });
 
-Route::prefix('ledger/import')->name('ledger.')->group(function () {
-    Route::get('/',                [LedgerEntriesImportController::class, 'create'])->name('import.form');
-    Route::post('/',               [LedgerEntriesImportController::class, 'store'])->name('import');
-    Route::get('/template',        [LedgerEntriesImportController::class, 'template'])->name('import.template');
-    Route::get('/failures/fix',[LedgerEntriesImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-});
+    // CRUDات رئيسية
+    Route::resource('customers', CustomerController::class);
+    Route::resource('guarantors', GuarantorController::class);
+    Route::resource('investors', InvestorController::class);
+    Route::resource('contracts', ContractController::class);
+    Route::resource('investor-transactions', InvestorTransactionController::class);
 
-Route::resource('customers', CustomerController::class);
-Route::resource('guarantors', GuarantorController::class);
-Route::resource('investors', InvestorController::class);
-Route::resource('contracts', ContractController::class);
-Route::resource('investor-transactions', InvestorTransactionController::class);
+    // القيود
+    Route::prefix('ledger')->name('ledger.')->group(function () {
+        Route::get('/',                 [LedgerController::class, 'index'])->name('index');
+        Route::get('/create',           [LedgerController::class, 'create'])->name('create');
+        Route::post('/',                [LedgerController::class, 'store'])->name('store');
+        Route::get('/transfer/create',  [LedgerController::class, 'transferCreate'])->name('transfer.create');
+        Route::post('/transfer',        [LedgerController::class, 'transferStore'])->name('transfer.store');
+        Route::get('/split/create',     [LedgerController::class, 'splitCreate'])->name('split.create');
+        Route::post('/split',           [LedgerController::class, 'splitStore'])->name('split.store');
+    });
 
-Route::prefix('ledger')->name('ledger.')->group(function () {
-    Route::get('/',            [LedgerController::class, 'index'])->name('index');
+    // الأقساط
+    Route::prefix('installments')->name('installments.')->group(function () {
+        Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
+        Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
+    });
 
-    // قيد عادي (بنك أو خزنة)
-    Route::get('/create',      [LedgerController::class, 'create'])->name('create');
-    Route::post('/',           [LedgerController::class, 'store'])->name('store');
-
-    // تحويل داخلي بين حسابات المكتب
-    Route::get('/transfer/create', [LedgerController::class, 'transferCreate'])->name('transfer.create');
-    Route::post('/transfer',       [LedgerController::class, 'transferStore'])->name('transfer.store');
-
-    // قيد مُجزّأ (جزء بنك + جزء خزنة)
-    Route::get('/split/create',    [LedgerController::class, 'splitCreate'])->name('split.create');
-    Route::post('/split',          [LedgerController::class, 'splitStore'])->name('split.store');
-});
-
-
-Route::prefix('installments')->name('installments.')->group(function () {
-   
-    Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
-    
-    Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
-    
-});
-
+    // AJAX مساعدة
     Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])
         ->name('product-types.available');
 
@@ -173,34 +165,36 @@ Route::prefix('installments')->name('installments.')->group(function () {
     Route::get('/ajax/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
         ->name('ajax.investors.liquidity');
 
-    Route::get('/contracts/{contract}/print', [ContractPrintController::class, 'show'])
-        ->name('contracts.print');
+    // طباعة/إقفال العقد
+    Route::get('/contracts/{contract}/print',   [ContractPrintController::class, 'show'])->name('contracts.print');
+    Route::get('/contracts/{contract}/closure', [ContractPrintController::class, 'closure'])->name('contracts.closure');
+    Route::get('/contracts/{contract}/paid', [ContractPrintController::class, 'paidInstallments'])->name('contracts.paid');
 
-    Route::get('/contracts/{contract}/closure', [ContractPrintController::class, 'closure'])
-        ->name('contracts.closure');
-
-    
-
+    // سجلات التدقيق
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
+    // المتاح في الحسابات (بنكي/خزنة)
+    Route::get('/ajax/accounts/availability',      [AjaxAccountController::class, 'availability'])->name('ajax.accounts.availability');
+    Route::get('/ajax/accounts/availability-bulk', [AjaxAccountController::class, 'availabilityBulk'])->name('ajax.accounts.availability.bulk');
 
-    // المتاح في الحسابات (بنكي/خزنة) — لو مش موجودة عندك فعلًا
-    Route::get('/ajax/accounts/availability', [AjaxAccountController::class, 'availability'])
-        ->name('ajax.accounts.availability');
+    // مستثمرين العقد
+    Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');
 
-    Route::get('/ajax/accounts/availability-bulk', [AjaxAccountController::class, 'availabilityBulk'])
-        ->name('ajax.accounts.availability.bulk');
-
-    Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])
-        ->name('contracts.investors.store');
-        
-    Route::post('/installments/defer/{id}', [ContractInstallmentController::class, 'deferAjax']);
+    // أعذار/تأجيل الأقساط Ajax
+    Route::post('/installments/defer/{id}',  [ContractInstallmentController::class, 'deferAjax']);
     Route::post('/installments/excuse/{id}', [ContractInstallmentController::class, 'excuseAjax']);
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+    // // البروفايل
+    // Route::get('/profile',   [ProfileController::class, 'edit'])->name('profile.edit');
+    // Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile',[ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // ✅ إدارة أدوار المستخدمين (محمية بدور admin)
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/users',               [UserRoleController::class, 'index'])->name('users.index');
+        Route::get('/users/{user}/roles',  [UserRoleController::class, 'edit'])->name('users.roles.edit');
+        Route::put('/users/{user}/roles',  [UserRoleController::class, 'update'])->name('users.roles.update');
+    });
+});
 
 require __DIR__.'/auth.php';

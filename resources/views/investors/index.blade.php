@@ -110,10 +110,11 @@
       <a href="{{ route('investors.create') }}" class="btn btn-success">
         <i class="bi bi-plus-lg"></i> إضافة مستثمر
       </a>
-
-      <a href="{{ route('investors.import.form') }}" class="btn btn-outline-primary">
-        <i class="bi bi-upload"></i> استيراد Excel
-      </a>
+      @role('admin')
+        <a href="{{ route('investors.import.form') }}" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> استيراد Excel
+        </a>
+      @endrole
 
       {{-- تم حذف زر التمبليت زي العملاء --}}
       {{-- @if (Route::has('investors.import.template'))

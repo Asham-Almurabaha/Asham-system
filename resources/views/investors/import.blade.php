@@ -56,8 +56,8 @@
 
   {{-- ===== Summary KPIs ===== --}}
   @php
-    // نفس لوجيك الكفلاء: مفاتيح عامة
-    $summary      = session('summary') ?: [];
+    // ✅ اقرأ من المفتاح القديم أو الجديد (flash) — أيهما موجود
+    $summary      = session('summary') ?: session('investors_import.summary') ?: [];
     $failuresBag  = session('failures') ?? session('failures_simple') ?? [];
     $errorsSimple = session('errors_simple') ?? [];
 
@@ -73,6 +73,14 @@
 
     $successPct = $rows > 0 ? round(($changed / $rows) * 100, 1) : 0;
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
+
+    // المتخطّى بالتفصيل (لملف التصدير + جدول العرض)
+    $skippedBag   = session('investors_import.skipped_simple') ?? [];
+    $skippedCount = is_countable($skippedBag) ? count($skippedBag)
+                    : (method_exists($skippedBag, 'count') ? (int)$skippedBag->count() : 0);
+
+    // وجود مشاكل = Failures أو Skipped
+    $hasIssues = $hasFailures || $skippedCount > 0;
   @endphp
 
   @if ($rows || $changed || $unchanged || $skipped)
@@ -174,9 +182,16 @@
             <i class="bi bi-upload me-1"></i> استيراد الآن
           </button>
 
-          @if ($hasFailures && Route::has('investors.import.failures.fix'))
+          @if ($hasIssues && Route::has('investors.import.failures.fix'))
             <a class="btn btn-warning" href="{{ route('investors.import.failures.fix') }}">
-              <i class="bi bi-wrench-adjustable me-1"></i> تنزيل ملف لتصحيح الصفوف
+              <i class="bi bi-wrench-adjustable me-1"></i>
+              تنزيل ملف الأخطاء/المتخطّى
+              @if($hasFailures)
+                <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+              @endif
+              @if($skippedCount > 0)
+                <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
+              @endif
             </a>
           @endif
         </div>
@@ -238,7 +253,60 @@
             </table>
           </div>
           <div class="p-3 text-muted small">
-            صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف لتصحيح الصفوف”.
+            صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف الأخطاء/المتخطّى”.
+          </div>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  {{-- ===== Skipped Table ===== --}}
+  @php $hasSkipped = $skippedCount > 0; @endphp
+  @if ($hasSkipped)
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header d-flex align-items-center bg-white">
+        <i class="bi bi-skip-forward-fill me-2"></i>
+        <span>الصفوف المتخطّاة</span>
+        <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
+        <button class="btn btn-sm btn-outline-secondary ms-auto"
+                data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
+          إظهار/إخفاء
+        </button>
+      </div>
+
+      <div id="skippedTable" class="collapse show">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th style="width:110px">رقم الصف</th>
+                  <th style="width:260px">السبب</th>
+                  <th style="min-width:260px">القيم</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ($skippedBag as $r)
+                  @php
+                    $rowNum = (int)($r['row'] ?? 0);
+                    $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
+                    $vals   = $r['values'] ?? [];
+                  @endphp
+                  <tr>
+                    <td class="text-muted">{{ $rowNum }}</td>
+                    <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                    <td class="text-break">
+                      <code class="small" style="white-space: pre-wrap; word-break: break-word;">
+                        {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
+                      </code>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 text-muted small">
+            راجع القيم والسبب ثم صحّح الصفوف وأعد الرفع.
           </div>
         </div>
       </div>

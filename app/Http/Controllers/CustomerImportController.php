@@ -135,4 +135,16 @@ class CustomerImportController extends Controller
 
         return Excel::download(new CustomersFailuresFixExport($failures), 'customers_to_fix.xlsx');
     }
+
+    public function exportSkipped()
+    {
+        $skipped = session('customers_import.skipped_simple', []);
+
+        if (empty($skipped) || (is_countable($skipped) && count($skipped) === 0)) {
+            return redirect()->route('customers.import.form')
+                ->with('info', 'لا توجد بيانات متخطاة لتوليد ملف.');
+        }
+
+        return Excel::download(new CustomersFailuresFixExport($skipped), 'customers_skipped.xlsx');
+    }
 }

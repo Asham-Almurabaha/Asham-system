@@ -27,6 +27,12 @@
         </a>
     @endif
 
+    @if($paidTotal <= $contract->total_value - $contract->discount_amount)
+        <a href="{{ route('contracts.paid.print', $contract->id) }}" target="_blank" class="btn btn-success">
+    💰      طباعة سجل السداد
+        </a>
+    @endif
+
     @if($paidTotal >= $contract->total_value - $contract->discount_amount )
         <a href="{{ route('contracts.closure', $contract->id) }}" target="_blank" class="btn btn-success">
             ✅ طباعة مخالصة
