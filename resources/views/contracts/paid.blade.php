@@ -18,25 +18,19 @@
     @page { size: A4; margin: 0; }
 
     .page {
-      width: 210mm;
-      min-height: 297mm;
-      margin: auto;
-      padding: 15mm;
-      background: #fff;
-      position: relative;
-      box-sizing: border-box;
+      width: 297mm; min-height: 210mm; margin: auto; padding: 15mm;
+      background: #fff; position: relative; box-sizing: border-box;
     }
-
     .watermark {
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
       opacity:0.07; z-index:0; pointer-events:none;
     }
     .watermark img { max-width:70%; max-height:70%; transform:rotate(-15deg); }
     .content { position:relative; z-index:1; }
-
     .line { margin: .35rem 0; }
-    .section-title { font-weight:700; margin: .75rem 0 .5rem; }
+    .stat { border:1px solid #eee; border-radius:.75rem; padding:.75rem .9rem; background:#fafafa }
+    .stat .label { font-size:.85rem; color:#6c757d }
+    .stat .value { font-weight:700; font-size:1.05rem }
 
     @media print {
       .no-print { display:none !important; }
@@ -48,8 +42,32 @@
 </head>
 <body>
 @php
+  use Carbon\Carbon;
+
   $logoUrl   = $logoUrl   ?? (!empty($setting?->logo) ? asset('storage/'.$setting->logo) : asset('assets/img/logo.png'));
   $brandName = $brandName ?? ($setting?->name_ar ?? $setting?->name ?? config('app.name','اسم المنشأة'));
+
+  // مُساعد: يعمل مع كائنات/مصفوفات
+  $get = function($item, $key, $default = null) {
+      return data_get($item, $key, $default);
+  };
+
+  $fmtDate = function($date) {
+      if (!$date) return '—';
+      try {
+          if ($date instanceof \DateTimeInterface) return $date->format('Y-m-d');
+          return Carbon::parse($date)->format('Y-m-d');
+      } catch (\Throwable $e) {
+          return (string) $date;
+      }
+  };
+
+  $fmtNum = fn($n) => number_format((float)$n, 2);
+
+  // لو جت أقساط بالخطأ بدون paid_amount>0، تأكد من تصفيتها هنا أيضاً
+  $rows = collect($paidInstallments ?? [])->filter(function ($i) use ($get) {
+      return (float)$get($i, 'paid_amount', 0) > 0;
+  })->values();
 @endphp
 
 <div class="page shadow-sm">
@@ -75,6 +93,46 @@
       <div class="line"><strong>الهوية/الإقامة:</strong> {{ $contract->customer->national_id ?? '—' }}</div>
     </div>
 
+    {{-- Summary stats --}}
+    <div class="row g-2 mb-3">
+      <div class="col-6 col-md-4">
+        <div class="stat">
+          <div class="label">إجمالي قيمة العقد</div>
+          <div class="value">{{ $fmtNum($contractTotal) }} {{ $currency }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4">
+        <div class="stat">
+          <div class="label">إجمالي المدفوع</div>
+          <div class="value">{{ $fmtNum($totalPaid) }} {{ $currency }}</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4">
+        <div class="stat">
+          <div class="label">المتبقي</div>
+          <div class="value">{{ $fmtNum($remaining) }} {{ $currency }}</div>
+        </div>
+      </div>
+
+      @isset($countPaidFully)
+      <div class="col-6 col-md-4">
+        <div class="stat">
+          <div class="label">عدد الأقساط المدفوعة كليًا</div>
+          <div class="value">{{ $countPaidFully }}</div>
+        </div>
+      </div>
+      @endisset
+
+      @isset($countRemaining)
+      <div class="col-6 col-md-4">
+        <div class="stat">
+          <div class="label">عدد الأقساط المتبقية</div>
+          <div class="value">{{ $countRemaining }}</div>
+        </div>
+      </div>
+      @endisset
+    </div>
+
     {{-- Table --}}
     <div class="table-responsive mb-3">
       <table class="table table-bordered align-middle">
@@ -85,37 +143,40 @@
             <th>المبلغ المستحق ({{ $currency }})</th>
             <th>تاريخ السداد</th>
             <th>المبلغ المدفوع ({{ $currency }})</th>
-            <th>ملاحظات</th>
+            <th>المتبقي على القسط ({{ $currency }})</th>
           </tr>
         </thead>
         <tbody>
-          @forelse ($paidInstallments as $idx => $ins)
+          @forelse ($rows as $idx => $ins)
+            @php
+              $amount = (float) $get($ins, 'amount', 0);        // من الكنترولر: due_amount -> amount
+              $paid   = (float) $get($ins, 'paid_amount', 0);    // من الكنترولر: payment_amount -> paid_amount
+              $still  = max(0.0, $amount - $paid);
+            @endphp
             <tr>
               <td class="text-center">{{ $idx + 1 }}</td>
-              <td>{{ optional($ins->due_date)->format('Y-m-d') ?? '—' }}</td>
-              <td class="text-end">{{ number_format((float)($ins->amount ?? 0), 2) }}</td>
-              <td>{{ optional($ins->paid_at)->format('Y-m-d') ?? '—' }}</td>
-              <td class="text-end">{{ number_format((float)($ins->paid_amount ?? 0), 2) }}</td>
-              <td>{{ $ins->note ?? '—' }}</td>
+              <td>{{ $fmtDate($get($ins, 'due_date')) }}</td>   {{-- من الكنترولر: due_date --}}
+              <td class="text-end">{{ $fmtNum($amount) }}</td>
+              <td>{{ $fmtDate($get($ins, 'paid_at')) }}</td>    {{-- من الكنترولر: payment_date -> paid_at --}}
+              <td class="text-end">{{ $fmtNum($paid) }}</td>
+              <td class="text-end">{{ $fmtNum($still) }}</td>
             </tr>
           @empty
             <tr>
-              <td colspan="6" class="text-center text-muted">لا توجد أقساط مسددة بعد.</td>
+              <td colspan="7" class="text-center text-muted">لا توجد أقساط مسددة بعد.</td>
             </tr>
           @endforelse
         </tbody>
-        @if($paidInstallments->isNotEmpty())
+
+        @if($rows->isNotEmpty())
         <tfoot>
           <tr>
             <th colspan="2" class="text-end">إجمالي قيمة العقد:</th>
-            <th class="text-end">{{ number_format($contractTotal, 2) }}</th>
+            <th class="text-end">{{ $fmtNum($contractTotal) }}</th>
             <th class="text-end">إجمالي المدفوع:</th>
-            <th class="text-end">{{ number_format($totalPaid, 2) }}</th>
+            <th class="text-end">{{ $fmtNum($totalPaid) }}</th>
+            <th class="text-end">{{ $fmtNum($remaining) }}</th>
             <th></th>
-          </tr>
-          <tr>
-            <th colspan="4" class="text-end">المتبقي على العقد:</th>
-            <th class="text-end" colspan="2">{{ number_format($remaining, 2) }} {{ $currency }}</th>
           </tr>
         </tfoot>
         @endif
