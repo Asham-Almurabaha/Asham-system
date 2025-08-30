@@ -160,7 +160,7 @@
               <td>{{ $fmtDate($get($ins, 'paid_at')) }}</td>    {{-- من الكنترولر: payment_date -> paid_at --}}
               <td class="text-end">{{ $fmtNum($paid) }}</td>
               <td class="text-end">{{ $fmtNum($still) }}</td>
-            </tr>
+ؤؤؤ            </tr>
           @empty
             <tr>
               <td colspan="7" class="text-center text-muted">لا توجد أقساط مسددة بعد.</td>
