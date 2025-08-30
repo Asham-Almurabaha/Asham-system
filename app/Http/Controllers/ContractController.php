@@ -41,103 +41,88 @@ class ContractController extends Controller
     private const DIR_CONTRACT_GUARANTORS  = 'contracts/guarantors';
 
     public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
-    {
-        $pivotTable = (new Contract)->investors()->getTable(); // مثال: contract_investor
+{
+    $pivotTable = (new Contract)->investors()->getTable();
 
-        $contracts = Contract::query()
-            ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors'])
+    // الاستعلام الأساسي للعقود
+    $contractsQuery = Contract::query()
+        ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors']);
 
-            // العميل بالاسم (اختياري)
-            ->when($request->filled('customer'), function ($q) use ($request) {
-                $name = trim((string) $request->customer);
-                $q->whereHas('customer', function ($qq) use ($name) {
-                    $qq->where('name', 'like', "%{$name}%");
-                });
-            })
+    // فلترة حسب العميل
+    if ($request->filled('customer')) {
+        $name = trim($request->customer);
+        $contractsQuery->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$name}%"));
+    }
 
-            // المستثمر (سلكت): investor_id = رقم | '_none' لبدون مستثمر
-            ->when($request->filled('investor_id'), function ($q) use ($request, $pivotTable) {
-                $investorId = $request->input('investor_id');
+    // فلترة حسب المستثمر
+    if ($request->filled('investor_id')) {
+        $investorId = $request->investor_id;
+        if ($investorId === '_none') {
+            $contractsQuery->doesntHave('investors');
+        } else {
+            $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.id', $investorId)
+                ->where($pivotTable . '.share_percentage', '<=', 100));
+        }
+    } elseif ($request->filled('investor')) {
+        $name = trim($request->investor);
+        $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.name', 'like', "%{$name}%")
+            ->where($pivotTable . '.share_percentage', '<=', 100));
+    }
 
-                if ($investorId === '_none') {
-                    $q->doesntHave('investors');
-                } else {
-                    $q->whereHas('investors', function ($qq) use ($investorId, $pivotTable) {
-                        $qq->where('investors.id', $investorId)
-                        ->where($pivotTable . '.share_percentage', '<=', 100);
-                    });
-                }
-            })
+    // فلترة حسب حالة العقد
+    if ($request->filled('status')) {
+        $contractsQuery->where('contract_status_id', $request->status);
+    }
 
-            // (اختياري) توافق قديم مع investor نصّي
-            ->when(!$request->filled('investor_id') && $request->filled('investor'), function ($q) use ($request, $pivotTable) {
-                $name = trim((string) $request->investor);
-                $q->whereHas('investors', function ($qq) use ($name, $pivotTable) {
-                    $qq->where('investors.name', 'like', "%{$name}%")
-                    ->where($pivotTable . '.share_percentage', '<=', 100);
-                });
-            })
+    // فلترة حسب التواريخ
+    if ($request->filled('from')) {
+        $contractsQuery->whereDate('start_date', '>=', $request->from);
+    }
+    if ($request->filled('to')) {
+        $contractsQuery->whereDate('start_date', '<=', $request->to);
+    }
 
-            // حالة العقد
-            ->when($request->filled('status'), function ($q) use ($request) {
-                $q->where('contract_status_id', $request->input('status'));
-            })
+    $contracts = $contractsQuery->latest()->paginate(10);
 
-            // التاريخ: من/إلى
-            ->when($request->filled('from'), function ($q) use ($request) {
-                $q->whereDate('start_date', '>=', $request->input('from'));
-            })
-            ->when($request->filled('to'), function ($q) use ($request) {
-                $q->whereDate('start_date', '<=', $request->input('to'));
-            })
+    // ===== تحديث حالات الأقساط لكل عقد باستخدام نفس لوجيك show() =====
+    foreach ($contracts as $contract) {
+        $this->updateInstallmentsStatuses($contract);
+    }
 
-            ->latest()
-            ->paginate(10);
+    $investors = Investor::orderBy('name')->get(['id', 'name']);
+    $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
 
-        // لائحة المستثمرين لسلكت الفلترة
-        $investors = Investor::orderBy('name')->get(['id', 'name']);
+    // ===== ملخص الأقساط =====
+    $m = $request->integer('m') ?: null;
+    $y = $request->integer('y') ?: null;
+    $exclude = ['مؤجل','معتذر'];
+    $investorIdForMonthly = ($request->filled('investor_id') && $request->investor_id !== '_none')
+        ? (int)$request->investor_id
+        : null;
 
-        // لائحة حالات العقود
-        $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
-
-        // ====== ملخص الأقساط ======
-        // يستثني "مؤجل" و"معتذر" افتراضياً. تقدر تغيّر الفترة عبر ?m=2&y=2025
-        $m = $request->integer('m') ?: null;   // 1..12
-        $y = $request->integer('y') ?: null;   // YYYY
-        $exclude = ['مؤجل','معتذر'];
-
-        // لو محدَّد investor_id ومش '_none' هنحسب للمستثمر ده فقط، غير كده: إجمالي النظام (كل المستثمرين)
-        $investorIdForMonthly = ($request->filled('investor_id') && $request->investor_id !== '_none')
-            ? (int) $request->investor_id
-            : null;
-
-        try {
-            if ($investorIdForMonthly) {
-                // جرّب النسخة الحديثة أولاً
-                if (method_exists($installmentsSvc, 'buildForInvestor')) {
-                    // ممكن تمرِّر الموديل أو الـ id — السيرفيس اللي اقترحته يدعم الاتنين
-                    $investorModel = Investor::find($investorIdForMonthly);
-                    $installmentsMonthly = $installmentsSvc->buildForInvestor($investorModel ?: $investorIdForMonthly, $m, $y, $exclude);
-                } else {
-                    // توقيع build بـ 4 معاملات (لو مفعّل عندك)
-                    $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude, $investorIdForMonthly);
-                }
+    try {
+        if ($investorIdForMonthly) {
+            if (method_exists($installmentsSvc, 'buildForInvestor')) {
+                $investorModel = Investor::find($investorIdForMonthly);
+                $installmentsMonthly = $installmentsSvc->buildForInvestor($investorModel ?: $investorIdForMonthly, $m, $y, $exclude);
             } else {
-                // إجمالي النظام (كل المستثمرين)
-                $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
+                $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude, $investorIdForMonthly);
             }
-        } catch (\ArgumentCountError $e) {
-            // في حال السيرفيس القديم (3 معاملات فقط)
+        } else {
             $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
         }
-
-        return view('contracts.index', compact(
-            'contracts',
-            'contractStatuses',
-            'investors',
-            'installmentsMonthly'
-        ));
+    } catch (\ArgumentCountError $e) {
+        $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
     }
+
+    return view('contracts.index', compact(
+        'contracts',
+        'contractStatuses',
+        'investors',
+        'installmentsMonthly'
+    ));
+}
+
 
     public function create()
     {

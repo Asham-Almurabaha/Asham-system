@@ -160,7 +160,7 @@
               <td>{{ $fmtDate($get($ins, 'paid_at')) }}</td>    {{-- من الكنترولر: payment_date -> paid_at --}}
               <td class="text-end">{{ $fmtNum($paid) }}</td>
               <td class="text-end">{{ $fmtNum($still) }}</td>
-ؤؤؤ            </tr>
+            </tr>
           @empty
             <tr>
               <td colspan="7" class="text-center text-muted">لا توجد أقساط مسددة بعد.</td>
@@ -185,8 +185,8 @@
 
     {{-- Buttons --}}
     <div class="no-print d-flex justify-content-end gap-2">
-      <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ رجوع للقائمة</a>
-      <button onclick="window.print()" class="btn btn-success">✅ طباعة</button>
+      <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ رجوع</a>
+      <button onclick="window.print()" class="btn btn-primary">🖨 طباعة</button>
     </div>
   </div>
 </div>
