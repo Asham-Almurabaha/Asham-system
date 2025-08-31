@@ -1,14 +1,14 @@
 @extends('layouts.master')
 
-@section('title', 'قائمة العقود')
+@section('title', __('Contracts List'))
 
 @section('content')
 
 <div class="pagetitle mb-3">
-    <h1 class="h3 mb-1">قائمة العقود</h1>
+    <h1 class="h3 mb-1">{{ __('Contracts List') }}</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item active">العقود</li>
+            <li class="breadcrumb-item active">{{ __('Contracts') }}</li>
         </ol>
     </nav>
 </div>
@@ -131,8 +131,8 @@
 <div class="card shadow-sm mb-4" dir="rtl">
     <div class="card-header bg-white d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-3">
-            <h6 class="mb-0">ملخص أقساط هذا الشهر <span class="text-muted">({{ $monthLabel }})</span></h6>
-            <span class="subnote"><i class="bi bi-filter"></i> يستثني الحالات: {{ $excludedStatusesTx }}</span>
+            <h6 class="mb-0">{{ __('Monthly Installments Summary') }} <span class="text-muted">({{ $monthLabel }})</span></h6>
+            <span class="subnote"><i class="bi bi-filter"></i> {{ __('Excludes statuses:') }} {{ $excludedStatusesTx }}</span>
         </div>
         {{-- اختيار سريع للشهر/السنة مع الحفاظ على فلاتر العقود الحالية --}}
         <form action="{{ route('contracts.index') }}" method="GET" class="d-flex align-items-center gap-2">
@@ -146,9 +146,9 @@
                 @endif
             @endforeach
 
-            <input type="number" name="m" min="1" max="12" class="form-control form-control-sm" style="width:86px" value="{{ request('m', $mVal) }}" placeholder="شهر">
-            <input type="number" name="y" min="2000" max="2100" class="form-control form-control-sm" style="width:92px" value="{{ request('y', $yVal) }}" placeholder="سنة">
-            <button class="btn btn-outline-primary btn-sm">تحديث</button>
+            <input type="number" name="m" min="1" max="12" class="form-control form-control-sm" style="width:86px" value="{{ request('m', $mVal) }}" placeholder="{{ __('Month') }}">
+            <input type="number" name="y" min="2000" max="2100" class="form-control form-control-sm" style="width:92px" value="{{ request('y', $yVal) }}" placeholder="{{ __('Year') }}">
+            <button class="btn btn-outline-primary btn-sm">{{ __('Update') }}</button>
         </form>
     </div>
     <div class="card-body p-20">
@@ -159,9 +159,9 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="kpi-icon"><i class="bi bi-journal-check fs-4 text-primary"></i></div>
                         <div>
-                            <div class="subnote">عدد الأقساط المستحقة</div>
+                            <div class="subnote">{{ __('Number of Due Installments') }}</div>
                             <div class="kpi-value fw-bold">{{ number_format($dueCount) }}</div>
-                            <div class="subnote">هذا الشهر</div>
+                            <div class="subnote">{{ __('This Month') }}</div>
                         </div>
                     </div>
                 </div>
@@ -173,7 +173,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
                             <div>
-                                <div class="subnote">إجمالي المستحق</div>
+                                <div class="subnote">{{ __('Total Due') }}</div>
                                 <div class="kpi-value fw-bold">
                                     {{ number_format($dueSum, 2) }}
                                     <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
@@ -181,16 +181,16 @@
                             </div>
                         </div>
                         <div class="text-end">
-                            <div class="subnote">مدفوع</div>
+                            <div class="subnote">{{ __('Paid') }}</div>
                             <div class="fw-bold">{{ number_format($paidSum,2) }}</div>
                         </div>
                     </div>
-                    <div class="progress bar-8" title="نسبة المدفوع">
+                    <div class="progress bar-8" title="{{ __('Paid Percentage') }}">
                         <div class="progress-bar" style="width: {{ $paidPct2 }}%"></div>
                     </div>
                     <div class="d-flex justify-content-between subnote mt-1">
-                        <span>النسبة: {{ number_format($paidPct2,1) }}%</span>
-                        <span>المتبقي: {{ number_format($remainSum,2) }}</span>
+                        <span>{{ __('Percentage:') }} {{ number_format($paidPct2,1) }}%</span>
+                        <span>{{ __('Remaining:') }} {{ number_format($remainSum,2) }}</span>
                     </div>
                 </div>
             </div>
@@ -200,12 +200,12 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
                         <div>
-                            <div class="subnote">المتبقي للدفع</div>
+                            <div class="subnote">{{ __('Remaining to Pay') }}</div>
                             <div class="kpi-value fw-bold">
                                 {{ number_format($remainSum, 2) }}
                                 <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
                             </div>
-                            <div class="subnote">ضمن الفترة المحددة</div>
+                            <div class="subnote">{{ __('Within the Specified Period') }}</div>
                         </div>
                     </div>
                 </div>
@@ -222,9 +222,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-journal-text fs-4 text-primary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">إجمالي العقود — كل النظام</div>
+                    <div class="subnote">{{ __('Total Contracts — Entire System') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsTotalAll) }}</div>
-                    <div class="subnote">غير متأثر بالفلاتر</div>
+                    <div class="subnote">{{ __('Not Affected by Filters') }}</div>
                 </div>
             </div>
         </div>
@@ -235,13 +235,13 @@
                 <div class="kpi-icon"><i class="bi bi-check2-circle fs-4 text-success"></i></div>
                 <div class="flex-grow-1">
                     <div class="subnote">
-                        عقود نشطة
-                        <span class="hint" data-bs-toggle="tooltip" title="نشط = كل الحالات ما عدا ({{ $endedNamesTx }}) و({{ $pendingNamesTx }})">
+                        {{ __('Active Contracts') }}
+                        <span class="hint" data-bs-toggle="tooltip" title="{{ __('Active = All statuses except') }} ({{ $endedNamesTx }}) و({{ $pendingNamesTx }})">
                             <i class="bi bi-info-circle"></i>
                         </span>
                     </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsActiveAll) }}</div>
-                    <div class="subnote">النسبة: {{ number_format($activePct,1) }}%</div>
+                    <div class="subnote">{{ __('Percentage:') }} {{ number_format($activePct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -257,13 +257,13 @@
                 <div class="kpi-icon"><i class="bi bi-hourglass-split fs-4 text-warning"></i></div>
                 <div class="flex-grow-1">
                     <div class="subnote">
-                        عقود معلّقة
-                        <span class="hint" data-bs-toggle="tooltip" title="يشمل فقط: {{ $pendingNamesTx }}">
+                        {{ __('Pending Contracts') }}
+                        <span class="hint" data-bs-toggle="tooltip" title="{{ __('Includes only:') }} {{ $pendingNamesTx }}">
                             <i class="bi bi-info-circle"></i>
                         </span>
                     </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsPendingAll) }}</div>
-                    <div class="subnote">النسبة: {{ number_format($pendingPct,1) }}%</div>
+                    <div class="subnote">{{ __('Percentage:') }} {{ number_format($pendingPct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -279,13 +279,13 @@
                 <div class="kpi-icon"><i class="bi bi-people fs-4 text-danger"></i></div>
                 <div class="flex-grow-1">
                     <div class="subnote">
-                        بدون مستثمر
-                        <span class="hint" data-bs-toggle="tooltip" title="العقود التي لا ترتبط بأي مستثمر (من العلاقة)">
+                        {{ __('Without Investor') }}
+                        <span class="hint" data-bs-toggle="tooltip" title="{{ __('Contracts that are not linked to any investor (from the relationship)') }}">
                             <i class="bi bi-info-circle"></i>
                         </span>
                     </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsNoInvestorAll) }}</div>
-                    <div class="subnote">النسبة: {{ number_format($noInvPct,1) }}%</div>
+                    <div class="subnote">{{ __('Percentage:') }} {{ number_format($noInvPct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -301,13 +301,13 @@
                 <div class="kpi-icon"><i class="bi bi-flag-fill fs-4 text-secondary"></i></div>
                 <div class="flex-grow-1">
                     <div class="subnote">
-                        عقود منتهية
-                        <span class="hint" data-bs-toggle="tooltip" title="يشمل: {{ $endedNamesTx }}">
+                        {{ __('Ended Contracts') }}
+                        <span class="hint" data-bs-toggle="tooltip" title="{{ __('Includes:') }} {{ $endedNamesTx }}">
                             <i class="bi bi-info-circle"></i>
                         </span>
                     </div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsEndedAll) }}</div>
-                    <div class="subnote">النسبة: {{ number_format($endedPct,1) }}%</div>
+                    <div class="subnote">{{ __('Percentage:') }} {{ number_format($endedPct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -326,23 +326,23 @@
     {{-- أزرار الإجراءات --}}
     <div class="btn-group" role="group" aria-label="Contract Actions">
       <a href="{{ route('contracts.create') }}" class="btn btn-success">
-        <i class="bi bi-plus-lg"></i> إضافة عقد جديد
+        <i class="bi bi-plus-lg"></i> {{ __('Add New Contract') }}
       </a>
       @role('admin')
         <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
-            <i class="bi bi-upload"></i> استيراد Excel
+            <i class="bi bi-upload"></i> {{ __('Import Excel') }}
         </a>
       @endrole
-      
+
     </div>
 
     <span class="ms-auto small text-muted">
-      النتائج: <strong>{{ $contracts->total() }}</strong>
+      {{ __('Results') }}: <strong>{{ $contracts->total() }}</strong>
     </span>
 
     <button class="btn btn-outline-secondary btn-sm" type="button"
             data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
-      تصفية متقدمة
+      {{ __('Advanced Filter') }}
     </button>
   </div>
 
@@ -351,15 +351,15 @@
     <div class="card-body">
       <form action="{{ route('contracts.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
         <div class="col-12 col-md-3">
-          <label class="form-label mb-1">العميل</label>
-          <input type="text" name="customer" value="{{ request('customer') }}" class="form-control form-control-sm" placeholder="اسم العميل">
+          <label class="form-label mb-1">{{ __('Customer') }}</label>
+          <input type="text" name="customer" value="{{ request('customer') }}" class="form-control form-control-sm" placeholder="{{ __('Customer Name') }}">
         </div>
 
         <div class="col-12 col-md-3">
-          <label class="form-label mb-1">المستثمر</label>
+          <label class="form-label mb-1">{{ __('Investor') }}</label>
           <select name="investor_id" class="form-select form-select-sm">
-            <option value="">الكل</option>
-            <option value="_none" @selected(request('investor_id') === '_none')>بدون مستثمر</option>
+            <option value="">{{ __('All') }}</option>
+            <option value="_none" @selected(request('investor_id') === '_none')>{{ __('Without Investor') }}</option>
             @foreach($investors as $inv)
               <option value="{{ $inv->id }}" @selected((string)request('investor_id') === (string)$inv->id)>
                 {{ $inv->name }}
@@ -369,9 +369,9 @@
         </div>
 
         <div class="col-6 col-md-1">
-          <label class="form-label mb-1">حالة العقد</label>
+          <label class="form-label mb-1">{{ __('Contract Status') }}</label>
           <select name="status" class="form-select form-select-sm">
-            <option value="">الكل</option>
+            <option value="">{{ __('All') }}</option>
             @foreach($contractStatuses as $status)
               <option value="{{ $status->id }}" @selected(request('status') == $status->id)>{{ $status->name }}</option>
             @endforeach
@@ -379,17 +379,17 @@
         </div>
 
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1">من تاريخ</label>
+          <label class="form-label mb-1">{{ __('From Date') }}</label>
           <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1">إلى تاريخ</label>
+          <label class="form-label mb-1">{{ __('To Date') }}</label>
           <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
         </div>
 
         <div class="col-12 col-md-1 d-flex gap-2">
-          <button class="btn btn-primary btn-sm w-100">بحث</button>
-          <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+          <button class="btn btn-primary btn-sm w-100">{{ __('Search') }}</button>
+          <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('Clear') }}</a>
         </div>
       </form>
     </div>
@@ -405,15 +405,15 @@
                 <thead class="table-light position-sticky top-0">
                     <tr>
                         <th style="width:60px">#</th>
-                        <th>العميل</th>
-                        <th>الكفيل</th>
-                        <th>نوع البضاعة</th>
-                        <th>الحالة</th>
-                        <th>إجمالي العقد</th>
-                        <th>ربح المستثمر</th>
-                        <th style="min-width:160px;">المستثمرون</th>
-                        <th>تاريخ البداية</th>
-                        <th style="width:190px">إجراءات</th>
+                        <th>{{ __('Customer') }}</th>
+                        <th>{{ __('Guarantor') }}</th>
+                        <th>{{ __('Product Type') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th>{{ __('Total Contract') }}</th>
+                        <th>{{ __('Investor Profit') }}</th>
+                        <th style="min-width:160px;">{{ __('Investors') }}</th>
+                        <th>{{ __('Start Date') }}</th>
+                        <th style="width:190px">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -444,29 +444,29 @@
                             <td class="text-center">
                                 @if($count)
                                     <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="{{ $tip }}">
-                                        {{ $count }} مستثمر
+                                        {{ $count }} {{ __('Investor') }}
                                     </span>
                                 @else
                                     <span class="badge bg-danger" title="0.00%">
-                                        0 مستثمر
+                                        0 {{ __('Investor') }}
                                     </span>
                                 @endif
                             </td>
                             <td>{{ optional($contract->start_date)->format('Y-m-d') }}</td>
                             <td class="text-nowrap">
-                                <a href="{{ route('contracts.show', $contract) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
+                                <a href="{{ route('contracts.show', $contract) }}" class="btn btn-outline-secondary btn-sm">{{ __('View') }}</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="10" class="py-5">
                                 <div class="text-muted">
-                                    لا توجد عقود مطابقة لبحثك.
-                                    <a href="{{ route('contracts.index') }}" class="ms-1">عرض الكل</a>
+                                    {{ __('No matching contracts for your search.') }}
+                                    <a href="{{ route('contracts.index') }}" class="ms-1">{{ __('View All') }}</a>
                                 </div>
                                 <div class="mt-3">
                                     <a href="{{ route('contracts.create') }}" class="btn btn-sm btn-success">
-                                        + إضافة أول عقد
+                                        + {{ __('Add First Contract') }}
                                     </a>
                                 </div>
                             </td>

@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'لوحة التحكم')
+@section('title', __('dashboard.Dashboard'))
 
 @section('content')
 <div class="container py-4" dir="rtl">
@@ -93,16 +93,16 @@
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <a href="{{ $buildUrl($todayFrom,$todayTo) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isToday ? 'active' : '' }}">
-                    <i class="bi bi-calendar-day me-1"></i> اليوم {!! $isToday ? '<span class="dot"></span>' : '' !!}
+                    <i class="bi bi-calendar-day me-1"></i> {{ __('dashboard.Today') }} {!! $isToday ? '<span class="dot"></span>' : '' !!}
                 </a>
                 <a href="{{ $buildUrl($monthFrom,$monthTo) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isMonth ? 'active' : '' }}">
-                    <i class="bi bi-calendar3 me-1"></i> هذا الشهر {!! $isMonth ? '<span class="dot"></span>' : '' !!}
+                    <i class="bi bi-calendar3 me-1"></i> {{ __('dashboard.This Month') }} {!! $isMonth ? '<span class="dot"></span>' : '' !!}
                 </a>
                 <a href="{{ $buildUrl($yearFrom,$yearTo) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isYear ? 'active' : '' }}">
-                    <i class="bi bi-calendar2-week me-1"></i> هذه السنة {!! $isYear ? '<span class="dot"></span>' : '' !!}
+                    <i class="bi bi-calendar2-week me-1"></i> {{ __('dashboard.This Year') }} {!! $isYear ? '<span class="dot"></span>' : '' !!}
                 </a>
                 <a href="{{ $buildUrl(null,null) }}" class="btn btn-outline-secondary btn-sm btn-range {{ $isAll ? 'active' : '' }}">
-                    <i class="bi bi-infinity me-1"></i> الكل {!! $isAll ? '<span class="dot"></span>' : '' !!}
+                    <i class="bi bi-infinity me-1"></i> {{ __('dashboard.All') }} {!! $isAll ? '<span class="dot"></span>' : '' !!}
                 </a>
             </div>
 
@@ -118,18 +118,18 @@
                     @endif
                 @endforeach
 
-                <div class="label">مُخصّص:</div>
-                <div><label class="form-label mb-1 small">من</label><input type="date" class="form-control form-control-sm js-date" name="from" value="{{ e($rFrom) }}"></div>
-                <div><label class="form-label mb-1 small">إلى</label><input type="date" class="form-control form-control-sm js-date" name="to" value="{{ e($rTo) }}"></div>
-                <button class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i> تطبيق</button>
-                <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i> مسح</a>
+                <div class="label">{{ __('dashboard.Custom') }}:</div>
+                <div><label class="form-label mb-1 small">{{ __('dashboard.From') }}</label><input type="date" class="form-control form-control-sm js-date" name="from" value="{{ e($rFrom) }}"></div>
+                <div><label class="form-label mb-1 small">{{ __('dashboard.To') }}</label><input type="date" class="form-control form-control-sm js-date" name="to" value="{{ e($rTo) }}"></div>
+                <button class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i> {{ __('dashboard.Apply') }}</button>
+                <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-x-circle me-1"></i> {{ __('dashboard.Clear') }}</a>
             </form>
 
             <div class="ms-auto d-flex align-items-center gap-2">
-                <span class="chip"><i class="bi bi-clock me-1"></i> النطاق الحالي:
+                <span class="chip"><i class="bi bi-clock me-1"></i> {{ __('dashboard.Current Range') }}:
                     <strong>{{ $rFrom ? e($rFrom) : '—' }} — {{ $rTo ? e($rTo) : '—' }}</strong>
                 </span>
-                <span class="text-muted small d-none d-md-inline">آخر تحديث: {{ now()->format('Y-m-d H:i') }}</span>
+                <span class="text-muted small d-none d-md-inline">{{ __('dashboard.Last Update') }}: {{ now()->format('Y-m-d H:i') }}</span>
             </div>
         </div>
     </div>
@@ -176,9 +176,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-speedometer2 fs-4 text-primary"></i></div>
                 <div>
-                    <h3 class="mb-1">لوحة التحكم</h3>
+                    <h3 class="mb-1">{{ __('dashboard.Dashboard') }}</h3>
                     <div class="text-muted small">
-                        نطاق البيانات:
+                        {{ __('dashboard.Data Range') }}:
                         {{ request('from') ? e(request('from')) : '—' }} —
                         {{ request('to') ? e(request('to')) : '—' }}
                     </div>
@@ -186,14 +186,14 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge-chip" data-bs-toggle="tooltip" title="إجمالي عدد العقود في النظام">
-                    <i class="bi bi-files me-1"></i> إجمالي العقود: {{ number_format($contractsTotal ?? 0) }}
+                <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Total Contracts') }}">
+                    <i class="bi bi-files me-1"></i> {{ __('dashboard.Total Contracts') }}: {{ number_format($contractsTotal ?? 0) }}
                 </span>
-                <span class="badge-chip" data-bs-toggle="tooltip" title="الصافي = داخل − خارج">
-                    <i class="bi bi-people me-1"></i> صافي سيولة المستثمرين: {{ number_format(($invTotals->net ?? 0), 2) }}
+                <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Net = In - Out') }}">
+                    <i class="bi bi-people me-1"></i> {{ __('dashboard.Investors Liquidity Net') }}: {{ number_format(($invTotals->net ?? 0), 2) }}
                 </span>
-                <span class="badge-chip" data-bs-toggle="tooltip" title="ربح المكتب + فرق البيع + المكاتبة">
-                    <i class="bi bi-building me-1"></i> صافي دخل المكتب: {{ number_format($officeNet, 2) }}
+                <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Profit + Sales Difference + Mukataba') }}">
+                    <i class="bi bi-building me-1"></i> {{ __('dashboard.Office Income Net') }}: {{ number_format($officeNet, 2) }}
                 </span>
             </div>
         </div>
@@ -205,41 +205,41 @@
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-credit-card-2-front fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">عدد البطاقات المتاح</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Available Cards Count') }}</div>
                 </div>
                 <div class="kpi-value fw-bold">{{ number_format($cardsAvailable) }}</div>
-                <div class="small text-muted mt-2">إجمالي المخزون المتاح</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Total Stock Available') }}</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-bank fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">إجمالي البنوك</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Total Banks') }}</div>
                 </div>
                 <div class="kpi-value fw-bold text-pos">{{ number_format($banksTotal, 2) }}</div>
-                <div class="small text-muted mt-2">رصيد تقديري</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Estimated Balance') }}</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-safe2 fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">إجمالي الكاش</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Total Cash') }}</div>
                 </div>
                 <div class="kpi-value fw-bold text-pos">{{ number_format($safesTotal, 2) }}</div>
-                <div class="small text-muted mt-2">رصيد تقديري</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Estimated Balance') }}</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-graph-up-arrow fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">الإجمالي الكلي</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Grand Total') }}</div>
                 </div>
                 @php $totalClass = $totalAll >= 0 ? 'text-pos' : 'text-neg'; @endphp
                 <div class="kpi-value fw-bold {{ $totalClass }}">{{ number_format($totalAll, 2) }}</div>
-                <div class="small text-muted mt-2">بنوك + كاش</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Banks + Cash') }}</div>
             </div>
         </div>
     </div>
@@ -285,40 +285,40 @@
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-building fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">صافي دخل المكتب</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Office Income Net') }}</div>
                 </div>
                 <div class="kpi-value fw-bold {{ $officeNet>=0?'text-pos':'text-neg' }}">{{ number_format($officeNet, 2) }}</div>
-                <div class="small text-muted mt-2">ربح + فرق بيع + مكاتبة</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Profit + Sales Difference + Mukataba') }}</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-cash-coin fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">ربح المكتب</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Office Profit') }}</div>
                 </div>
                 <div class="kpi-value fw-bold {{ $officeProfit>=0?'text-pos':'text-neg' }}">{{ number_format($officeProfit, 2) }}</div>
-                <div class="small text-muted mt-2">إجمالي الربح</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Total Profit') }}</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-arrow-left-right fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">فرق البيع</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Sales Difference') }}</div>
                 </div>
                 <div class="kpi-value fw-bold {{ $salesDiff>=0?'text-pos':'text-neg' }}">{{ number_format($salesDiff, 2) }}</div>
-                <div class="small text-muted mt-2">إجمالي فرق البيع</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Total Sales Difference') }}</div>
             </div>
         </div>
         <div class="col-12 col-md-3">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-journal-text fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">المكاتبة</div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Mukataba') }}</div>
                 </div>
                 <div class="kpi-value fw-bold {{ $mukatabaTotal>=0?'text-pos':'text-neg' }}">{{ number_format($mukatabaTotal, 2) }}</div>
-                <div class="small text-muted mt-2">إجمالي المكاتبة</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Total Mukataba') }}</div>
             </div>
         </div>
     </div>
@@ -330,9 +330,9 @@
         <div class="col-lg-6">
             <div class="section-card card h-100 border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>توزيع حالات العقود</span>
+                    <span>{{ __('dashboard.Contract Statuses Distribution') }}</span>
                     <span class="small text-muted"><i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                        title="النِّسب محسوبة من إجمالي العقود الحالي"></i></span>
+                        title="{{ __('dashboard.Percentages calculated from current total contracts') }}"></i></span>
                 </div>
                 <div class="card-body p-0">
                     @if(($statuses->count() ?? 0) > 0)
@@ -353,11 +353,11 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="p-3 text-muted">لا توجد بيانات للحالات.</div>
+                        <div class="p-3 text-muted">{{ __('dashboard.No data for statuses.') }}</div>
                     @endif
                 </div>
                 <div class="card-footer text-end small text-muted">
-                    إجمالي الحالات: {{ number_format($contractsTotal ?? 0) }}
+                    {{ __('dashboard.Total Statuses') }}: {{ number_format($contractsTotal ?? 0) }}
                 </div>
             </div>
         </div>
@@ -365,9 +365,9 @@
         <div class="col-lg-6">
             <div class="section-card card h-100 border-0 chart-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>مخطط الحالات (Doughnut)</span>
+                    <span>{{ __('dashboard.Statuses Chart (Doughnut)') }}</span>
                     <span class="small text-muted"><i class="bi bi-graph-up" data-bs-toggle="tooltip"
-                        title="المخطط يعكس نفس التوزيع المعروض يمينًا"></i></span>
+                        title="{{ __('dashboard.The chart reflects the same distribution shown on the right') }}"></i></span>
                 </div>
                 <div class="card-body">
                     <canvas id="statusChart" height="220"></canvas>
@@ -402,9 +402,9 @@
         <div class="col-xl-6">
             <div class="section-card card border-0 chart-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>التدفق النقدي اليومي</span>
+                    <span>{{ __('dashboard.Daily Cash Flow') }}</span>
                     <span class="small text-muted"><i class="bi bi-calendar-range" data-bs-toggle="tooltip"
-                        title="عرض يومي: داخل/خارج/صافي"></i></span>
+                        title="{{ __('dashboard.Daily view: in/out/net') }}"></i></span>
                 </div>
                 <div class="card-body">
                     <canvas id="cashLineChart" height="240"></canvas>
@@ -414,9 +414,9 @@
         <div class="col-xl-6">
             <div class="section-card card border-0 chart-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>التدفق الشهري (داخل/خارج)</span>
+                    <span>{{ __('dashboard.Monthly Flow (In/Out)') }}</span>
                     <span class="small text-muted"><i class="bi bi-bar-chart-steps" data-bs-toggle="tooltip"
-                        title="قِيَم مكدّسة لكل شهر"></i></span>
+                        title="{{ __('dashboard.Stacked values for each month') }}"></i></span>
                 </div>
                 <div class="card-body">
                     <canvas id="monthlyBarChart" height="240"></canvas>
@@ -429,9 +429,9 @@
         <div class="col-xl-4">
             <div class="section-card card border-0 chart-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>توزيع الرصيد (بنوك/خزن)</span>
+                    <span>{{ __('dashboard.Balance Distribution (Banks/Safes)') }}</span>
                     <span class="small text-muted"><i class="bi bi-pie-chart" data-bs-toggle="tooltip"
-                        title="توزيع إجمالي الأرصدة التقديرية"></i></span>
+                        title="{{ __('dashboard.Distribution of estimated total balances') }}"></i></span>
                 </div>
                 <div class="card-body">
                     <canvas id="acctDistChart" height="220"></canvas>
@@ -441,9 +441,9 @@
         <div class="col-xl-8">
             <div class="section-card card border-0 chart-card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>أفضل الأرصدة على الحسابات</span>
+                    <span>{{ __('dashboard.Top Balances on Accounts') }}</span>
                     <span class="small text-muted"><i class="bi bi-arrow-up-right-circle" data-bs-toggle="tooltip"
-                        title="أعلى 7 أرصدة من البنوك والخزن"></i></span>
+                        title="{{ __('dashboard.Top 7 balances from banks and safes') }}"></i></span>
                 </div>
                 <div class="card-body">
                     <canvas id="topBalancesChart" height="220"></canvas>
@@ -478,10 +478,10 @@
                 @endphp
 
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>أعلى 10 مستثمرين (صافي سيولة موجب)</span>
+                    <span>{{ __('dashboard.Top 10 Investors (Positive Net Liquidity)') }}</span>
                     <span class="text-muted small" data-bs-toggle="tooltip"
-                        title="الصافي لكل مستثمر = داخل − خارج (التحويلات محايدة)">
-                        إجمالي صافي المعروض: {{ number_format($liquidTotalNet, 2) }}
+                        title="{{ __('dashboard.Net = In - Out. Internal transfers are neutral and do not affect the net.') }}">
+                        {{ __('dashboard.Total Net Displayed') }}: {{ number_format($liquidTotalNet, 2) }}
                     </span>
                 </div>
 
@@ -491,10 +491,10 @@
                             <thead>
                                 <tr class="text-center">
                                     <th style="width:60px;">#</th>
-                                    <th class="text-start">المستثمر</th>
-                                    <th>داخل</th>
-                                    <th>خارج</th>
-                                    <th>صافي</th>
+                                    <th class="text-start">{{ __('dashboard.Investor') }}</th>
+                                    <th>{{ __('dashboard.In') }}</th>
+                                    <th>{{ __('dashboard.Out') }}</th>
+                                    <th>{{ __('dashboard.Net') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -514,7 +514,7 @@
                             @empty
                                 <tr>
                                     <td colspan="5" class="text-muted text-center py-4">
-                                        لا توجد بيانات لمستثمرين ذوي سيولة موجبة في النطاق الحالي.
+                                        {{ __('dashboard.No data for investors with positive liquidity in the current range.') }}
                                     </td>
                                 </tr>
                             @endforelse
@@ -525,7 +525,7 @@
 
                 @if(($liquid->count() ?? 0) > 0)
                 <div class="card-footer small text-muted">
-                    * الصافي = داخل − خارج. التحويلات الداخلية محايدة ولا تؤثر على الصافي.
+                    {{ __('dashboard.Net = In - Out. Internal transfers are neutral and do not affect the net.') }}
                 </div>
                 @endif
             </div>
@@ -538,8 +538,8 @@
         <div class="col-lg-6">
             <div class="section-card card border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>حالة الحسابات البنكية</span>
-                    <span class="small text-muted" data-bs-toggle="tooltip" title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
+                    <span>{{ __('dashboard.Bank Accounts Status') }}</span>
+                    <span class="small text-muted" data-bs-toggle="tooltip" title="{{ __('dashboard.Estimated Balance = Opening Balance + In - Out') }}">
                         <i class="bi bi-calculator"></i>
                     </span>
                 </div>
@@ -548,12 +548,12 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr class="text-center">
-                                    <th class="text-start">الحساب</th>
-                                    <th>افتتاحي</th>
-                                    <th>داخل</th>
-                                    <th>خارج</th>
-                                    <th>صافي حركة</th>
-                                    <th>رصيد تقديري</th>
+                                    <th class="text-start">{{ __('dashboard.Account') }}</th>
+                                    <th>{{ __('dashboard.Opening') }}</th>
+                                    <th>{{ __('dashboard.In') }}</th>
+                                    <th>{{ __('dashboard.Out') }}</th>
+                                    <th>{{ __('dashboard.Movement Net') }}</th>
+                                    <th>{{ __('dashboard.Estimated Balance') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -577,14 +577,14 @@
                                     <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="text-muted text-center py-4">لا توجد حسابات بنكية.</td></tr>
+                                <tr><td colspan="6" class="text-muted text-center py-4">{{ __('dashboard.No bank accounts.') }}</td></tr>
                             @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
                 <div class="card-footer small text-muted">
-                    * الأرقام محسوبة من دفتر القيود، وتشمل التحويلات الداخلية حسب اتجاهها (داخل/خارج).
+                    {{ __('dashboard.The numbers are calculated from the ledger, and include internal transfers according to their direction (in/out).') }}
                 </div>
             </div>
         </div>
@@ -593,8 +593,8 @@
         <div class="col-lg-6">
             <div class="section-card card border-0">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>حالة الخزن</span>
-                    <span class="small text-muted" data-bs-toggle="tooltip" title="الرصيد التقديري = رصيد افتتاحي + داخل − خارج">
+                    <span>{{ __('dashboard.Safes Status') }}</span>
+                    <span class="small text-muted" data-bs-toggle="tooltip" title="{{ __('dashboard.Estimated Balance = Opening Balance + In - Out') }}">
                         <i class="bi bi-safe2"></i>
                     </span>
                 </div>
@@ -603,12 +603,12 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr class="text-center">
-                                    <th class="text-start">الخزنة</th>
-                                    <th>افتتاحي</th>
-                                    <th>داخل</th>
-                                    <th>خارج</th>
-                                    <th>صافي حركة</th>
-                                    <th>رصيد تقديري</th>
+                                    <th class="text-start">{{ __('dashboard.Safe') }}</th>
+                                    <th>{{ __('dashboard.Opening') }}</th>
+                                    <th>{{ __('dashboard.In') }}</th>
+                                    <th>{{ __('dashboard.Out') }}</th>
+                                    <th>{{ __('dashboard.Movement Net') }}</th>
+                                    <th>{{ __('dashboard.Estimated Balance') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -632,14 +632,14 @@
                                     <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="text-muted text-center py-4">لا توجد خزن.</td></tr>
+                                <tr><td colspan="6" class="text-muted text-center py-4">{{ __('dashboard.No safes.') }}</td></tr>
                             @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
                 <div class="card-footer small text-muted">
-                    * الأرقام محسوبة من دفتر القيود، وتشمل التحويلات الداخلية حسب اتجاهها (داخل/خارج).
+                    {{ __('dashboard.The numbers are calculated from the ledger, and include internal transfers according to their direction (in/out).') }}
                 </div>
             </div>
         </div>
@@ -649,6 +649,22 @@
 
 {{-- ====== Scripts ====== --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Translation variables for charts
+    const chartTranslations = {
+        in: '{{ __("dashboard.In") }}',
+        out: '{{ __("dashboard.Out") }}',
+        net: '{{ __("dashboard.Net") }}',
+        estimatedBalance: '{{ __("dashboard.Estimated Balance") }}',
+        banks: '{{ __("dashboard.Banks") }}',
+        safes: '{{ __("dashboard.Safes") }}',
+        noDailyData: '{{ __("dashboard.No daily data.") }}',
+        noMonthlyData: '{{ __("dashboard.No monthly data.") }}',
+        noDistributionData: '{{ __("dashboard.No distribution data.") }}',
+        noSufficientBalances: '{{ __("dashboard.No sufficient balances to display.") }}',
+        noDataForChart: '{{ __("dashboard.No data for the chart.") }}'
+    };
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
     // Tooltips
@@ -662,7 +678,7 @@ document.addEventListener('DOMContentLoaded', function(){
         const labels = @json(($chartLabels ?? collect())->values());
         const data   = @json(($chartData ?? collect())->values());
         if (!labels.length || !data.length) {
-            el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات للمخطط.</div>';
+            el.parentElement.innerHTML = '<div class="text-muted">' + chartTranslations.noDataForChart + '</div>';
             return;
         }
         new Chart(el, {
@@ -684,15 +700,15 @@ document.addEventListener('DOMContentLoaded', function(){
         const inflow = @json(($timeSeries['in']     ?? ($timeSeries['in']     ?? [])));
         const outflow= @json(($timeSeries['out']    ?? ($timeSeries['out']    ?? [])));
         const net    = @json(($timeSeries['net']    ?? ($timeSeries['net']    ?? [])));
-        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات يومية.</div>'; return; }
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">' + chartTranslations.noDailyData + '</div>'; return; }
         new Chart(el, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    { label: 'داخل', data: inflow, tension:.3, borderWidth:2, fill:false },
-                    { label: 'خارج', data: outflow, tension:.3, borderWidth:2, fill:false },
-                    { label: 'صافي', data: net, tension:.3, borderWidth:2, fill:false }
+                    { label: chartTranslations.in, data: inflow, tension:.3, borderWidth:2, fill:false },
+                    { label: chartTranslations.out, data: outflow, tension:.3, borderWidth:2, fill:false },
+                    { label: chartTranslations.net, data: net, tension:.3, borderWidth:2, fill:false }
                 ]
             },
             options: {
@@ -711,14 +727,14 @@ document.addEventListener('DOMContentLoaded', function(){
         const labels = @json(($monthlySeries['labels'] ?? ($monthlySeries['labels'] ?? [])));
         const inflow = @json(($monthlySeries['in']     ?? ($monthlySeries['in']     ?? [])));
         const outflow= @json(($monthlySeries['out']    ?? ($monthlySeries['out']    ?? [])));
-        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات شهرية.</div>'; return; }
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">' + chartTranslations.noMonthlyData + '</div>'; return; }
         new Chart(el, {
             type: 'bar',
             data: {
                 labels,
                 datasets: [
-                    { label:'داخل', data: inflow, borderWidth:1, stack:'s' },
-                    { label:'خارج', data: outflow, borderWidth:1, stack:'s' }
+                    { label: chartTranslations.in, data: inflow, borderWidth:1, stack:'s' },
+                    { label: chartTranslations.out, data: outflow, borderWidth:1, stack:'s' }
                 ]
             },
             options: {

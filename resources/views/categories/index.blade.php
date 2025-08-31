@@ -1,22 +1,22 @@
 @extends('layouts.master')
 
-@section('title', 'قائمة المجالات')
+@section('title', __('Categories List'))
 
 @section('content')
 
 <div class="pagetitle">
-    <h1>قائمة المجالات</h1>
+    <h1>{{ __('Categories List') }}</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">Setting</li>
-            <li class="breadcrumb-item active">Categories</li>
+            <li class="breadcrumb-item">{{ __('Settings') }}</li>
+            <li class="breadcrumb-item active">{{ __('Categories') }}</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->
 
 <div class="card d-inline-block mb-3">
     <div class="card-body p-20">
-        <a href="{{ route('categories.create') }}" class="btn btn-success">إضافة مجال جديد</a>
+        <a href="{{ route('categories.create') }}" class="btn btn-success">{{ __('Add New Category') }}</a>
     </div>
 </div>
 
@@ -27,9 +27,9 @@
                 <thead>
                     <tr>
                         <th class="col-1">#</th>
-                        <th class="col-4">الاسم</th>
-                        <th class="col-5">حالات العمليات المرتبطة</th>
-                        <th class="col-2">الإجراءات</th>
+                        <th class="col-4">{{ __('Name') }}</th>
+                        <th class="col-5">{{ __('Related Transaction Statuses') }}</th>
+                        <th class="col-2">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,17 +43,17 @@
                                 @endforeach
                             </td>
                             <td>
-                                <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-primary btn-sm me-1">تعديل</a>
-                                <form action="{{ route('categories.destroy', $category->id) }}" method="POST" class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا المجال؟');">
+                                <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-primary btn-sm me-1">{{ __('Edit') }}</a>
+                                <form action="{{ route('categories.destroy', $category->id) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ __('Are you sure to delete this category?') }}');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">حذف</button>
+                                    <button type="submit" class="btn btn-danger btn-sm">{{ __('Delete') }}</button>
                                 </form>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="text-center">لا توجد مجالات بعد.</td>
+                            <td colspan="4" class="text-center">{{ __('No categories found.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

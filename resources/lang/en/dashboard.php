@@ -1,8 +1,7 @@
 <?php
 
 return [
-    // Dashboard specific terms
-    'Control Panel' => 'Control Panel',
+    'Dashboard' => 'Dashboard',
     'Data Range' => 'Data Range',
     'Total Contracts' => 'Total Contracts',
     'Investors Liquidity Net' => 'Investors Liquidity Net',
@@ -63,4 +62,6 @@ return [
     'Percentages calculated from current total contracts' => 'Percentages calculated from current total contracts',
     'Profit + Sales Difference + Mukataba' => 'Profit + Sales Difference + Mukataba',
     'Total Stock Available' => 'Total Stock Available',
+    'Banks' => 'Banks',
+    'Safes' => 'Safes',
 ];

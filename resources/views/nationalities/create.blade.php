@@ -1,16 +1,16 @@
 @extends('layouts.master')
 
-@section('title', 'إضافة جنسية جديدة')
+@section('title', __('Add New Nationality'))
 
 @section('content')
 
     <div class="pagetitle">
-        <h1>إضافة جنسية جديدة</h1>
+        <h1>{{ __('Add New Nationality') }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">Setting</li>
-                <li class="breadcrumb-item">Nationality</li>
-                <li class="breadcrumb-item active">Create</li>
+                <li class="breadcrumb-item">{{ __('Settings') }}</li>
+                <li class="breadcrumb-item">{{ __('Nationalities') }}</li>
+                <li class="breadcrumb-item active">{{ __('Create') }}</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->
@@ -32,12 +32,12 @@
                     @csrf
 
                     <div class="mb-3">
-                        <label for="name" class="form-label">اسم الجنسية</label>
+                        <label for="name" class="form-label">{{ __('Name') }}</label>
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-success">حفظ</button>
-                    <a href="{{ route('nationalities.index') }}" class="btn btn-secondary">إلغاء</a>
+                    <button type="submit" class="btn btn-success">{{ __('Save') }}</button>
+                    <a href="{{ route('nationalities.index') }}" class="btn btn-secondary">{{ __('Cancel') }}</a>
                 </form>
             </div>
         </div>

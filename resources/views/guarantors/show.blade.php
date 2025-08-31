@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'عرض بيانات الكفيل')
+@section('title', __('guarantors.View Guarantor'))
 
 @section('content')
 <div class="container py-3" dir="rtl">
@@ -108,10 +108,10 @@
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{{ route('guarantors.edit', $guarantor) }}" class="btn btn-primary">
-                    <i class="bi bi-pencil-square me-1"></i> تعديل
+                    <i class="bi bi-pencil-square me-1"></i> {{ __('guarantors.Edit') }}
                 </a>
                 <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-right-circle me-1"></i> العودة للقائمة
+                    <i class="bi bi-arrow-right-circle me-1"></i> {{ __('guarantors.Back to List') }}
                 </a>
             </div>
         </div>
@@ -123,20 +123,20 @@
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-files fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">إجمالي العقود المكفولة</div>
+                    <div class="fw-bold text-muted">{{ __('guarantors.Total Guaranteed Contracts') }}</div>
                 </div>
                 <div class="fs-2 fw-bold">{{ number_format($contractsCount) }}</div>
-                <div class="small text-muted">جميع العقود المرتبطة بالكفيل</div>
+                <div class="small text-muted">{{ __('guarantors.All contracts linked to the guarantor') }}</div>
             </div>
         </div>
         <div class="col-12 col-md-4">
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-person-check fs-5 text-success"></i></div>
-                    <div class="fw-bold text-muted">العقود النشطة</div>
+                    <div class="fw-bold text-muted">{{ __('guarantors.Active Contracts') }}</div>
                 </div>
                 <div class="fs-2 fw-bold text-pos">{{ number_format($activeContractsCount) }}</div>
-                <div class="small text-muted">النسبة: {{ $contractsCount>0 ? number_format($activePct,1) : 0 }}%</div>
+                <div class="small text-muted">{{ __('guarantors.Ratio:') }} {{ $contractsCount>0 ? number_format($activePct,1) : 0 }}%</div>
                 <div class="progress mt-2" style="height:8px;">
                     <div class="progress-bar" role="progressbar" style="width: {{ $activePct }}%"></div>
                 </div>
@@ -146,31 +146,31 @@
             <div class="kpi-card p-3">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-clock-history fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">تاريخ الإنشاء / آخر تحديث</div>
+                    <div class="fw-bold text-muted">{{ __('guarantors.Creation Date / Last Update') }}</div>
                 </div>
                 <div class="fw-bold">{{ optional($guarantor->created_at)->format('Y-m-d') ?? '—' }}</div>
-                <div class="small text-muted">آخر تحديث: {{ optional($guarantor->updated_at)->format('Y-m-d H:i') ?? '—' }}</div>
+                <div class="small text-muted">{{ __('guarantors.Last Update:') }} {{ optional($guarantor->updated_at)->format('Y-m-d H:i') ?? '—' }}</div>
             </div>
         </div>
     </div>
 
     {{-- ====== تفاصيل الكفيل ====== --}}
     <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-white fw-bold">بيانات أساسية</div>
+        <div class="card-header bg-white fw-bold">{{ __('guarantors.Basic Information') }}</div>
         <div class="card-body">
             <div class="row g-3">
 
                 <div class="col-md-6">
                     <div class="row">
-                        <div class="col-5 label-col">الاسم</div>
+                        <div class="col-5 label-col">{{ __('guarantors.Name') }}</div>
                         <div class="col-7 value-col">{{ $guarantor->name }}</div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-5 label-col">رقم الهوية</div>
+                        <div class="col-5 label-col">{{ __('guarantors.National ID') }}</div>
                         <div class="col-7 value-col">
                             @if($guarantor->national_id)
                                 <span>{{ $guarantor->national_id }}</span>
-                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->national_id }}')" title="نسخ">
+                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->national_id }}')" title="{{ __('guarantors.Copy') }}">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
                             @else
@@ -179,22 +179,22 @@
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-5 label-col">الجنسية</div>
+                        <div class="col-5 label-col">{{ __('guarantors.Nationality') }}</div>
                         <div class="col-7 value-col">{{ optional($guarantor->nationality)->name ?? '—' }}</div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-5 label-col">الوظيفة</div>
+                        <div class="col-5 label-col">{{ __('guarantors.Job Title') }}</div>
                         <div class="col-7 value-col">{{ optional($guarantor->title)->name ?? '—' }}</div>
                     </div>
                 </div>
 
                 <div class="col-md-6">
                     <div class="row">
-                        <div class="col-5 label-col">الهاتف</div>
+                        <div class="col-5 label-col">{{ __('guarantors.Phone') }}</div>
                         <div class="col-7 value-col">
                             @if($guarantor->phone)
                                 <a href="tel:{{ $guarantor->phone }}">{{ $guarantor->phone }}</a>
-                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->phone }}')" title="نسخ">
+                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->phone }}')" title="{{ __('guarantors.Copy') }}">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
                             @else
@@ -203,7 +203,7 @@
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-5 label-col">البريد الإلكتروني</div>
+                        <div class="col-5 label-col">{{ __('guarantors.Email') }}</div>
                         <div class="col-7 value-col">
                             @if($guarantor->email)
                                 <a href="mailto:{{ $guarantor->email }}">{{ $guarantor->email }}</a>
@@ -213,7 +213,7 @@
                         </div>
                     </div>
                     <div class="row mt-2">
-                        <div class="col-5 label-col">العنوان</div>
+                        <div class="col-5 label-col">{{ __('guarantors.Address') }}</div>
                         <div class="col-7 value-col">{{ $guarantor->address ?? '—' }}</div>
                     </div>
                 </div>
@@ -226,22 +226,22 @@
     <div class="row g-3">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white fw-bold">صورة الهوية</div>
+                <div class="card-header bg-white fw-bold">{{ __('guarantors.ID Card Image') }}</div>
                 <div class="card-body">
                     @if($guarantor->id_card_image)
-                        <a href="{{ asset('storage/'.$guarantor->id_card_image) }}" target="_blank" title="عرض بالحجم الكامل">
-                            <img class="img-thumb" src="{{ asset('storage/'.$guarantor->id_card_image) }}" alt="صورة الهوية">
+                        <a href="{{ asset('storage/'.$guarantor->id_card_image) }}" target="_blank" title="{{ __('guarantors.View full size image') }}">
+                            <img class="img-thumb" src="{{ asset('storage/'.$guarantor->id_card_image) }}" alt="{{ __('guarantors.ID Card Image') }}">
                         </a>
-                        <div class="small text-muted mt-2">انقر لفتح الصورة في نافذة جديدة</div>
+                        <div class="small text-muted mt-2">{{ __('guarantors.Click to open the image in a new window') }}</div>
                     @else
-                        <div class="text-muted">لا توجد صورة هوية مرفوعة.</div>
+                        <div class="text-muted">{{ __('guarantors.No ID card image uploaded.') }}</div>
                     @endif
                 </div>
             </div>
         </div>
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white fw-bold">ملاحظات</div>
+                <div class="card-header bg-white fw-bold">{{ __('guarantors.Notes') }}</div>
                 <div class="card-body">
                     <div class="text-wrap" style="white-space: pre-line;">
                         {{ $guarantor->notes ?? '—' }}
@@ -260,7 +260,7 @@ function copyText(txt){
     navigator.clipboard?.writeText(txt).then(() => {
         // Toast خفيف
         const el = document.createElement('div');
-        el.textContent = 'تم النسخ';
+        el.textContent = '{{ __('guarantors.Copied') }}';
         el.style.position = 'fixed';
         el.style.bottom = '16px';
         el.style.left = '50%';

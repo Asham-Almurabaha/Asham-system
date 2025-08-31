@@ -1,12 +1,12 @@
 @extends('layouts.master')
 
-@section('title', 'قائمة الكفلاء')
+@section('title', __('guarantors.Guarantors List'))
 
 @section('content')
 
 <div class="pagetitle mb-3">
-    <h1 class="h3 mb-1">قائمة الكفلاء</h1>
-    <nav><ol class="breadcrumb"><li class="breadcrumb-item active">الكفلاء</li></ol></nav>
+    <h1 class="h3 mb-1">{{ __('guarantors.Guarantors List') }}</h1>
+    <nav><ol class="breadcrumb"><li class="breadcrumb-item active">{{ __('guarantors.Guarantors') }}</li></ol></nav>
 </div>
 
 @php
@@ -40,9 +40,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-people fs-4 text-primary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">إجمالي الكفلاء — كل النظام</div>
+                    <div class="subnote">{{ __('guarantors.Total Guarantors — All System') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allTotal) }}</div>
-                    <div class="subnote">غير متأثر بالفلاتر</div>
+                    <div class="subnote">{{ __('guarantors.Not affected by filters') }}</div>
                 </div>
             </div>
         </div>
@@ -52,9 +52,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-person-check fs-4 text-success"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">الكفلاء النشطون</div>
+                    <div class="subnote">{{ __('guarantors.Active Guarantors') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allActive) }}</div>
-                    <div class="subnote">نسبة النشطين: {{ number_format($activePct,1) }}%</div>
+                    <div class="subnote">{{ __('guarantors.Active Percentage') }}: {{ number_format($activePct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -67,9 +67,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-person-x fs-4 text-danger"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">غير نشطين</div>
+                    <div class="subnote">{{ __('guarantors.Inactive') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allInactive) }}</div>
-                    <div class="subnote">النسبة: {{ number_format($inactivePct,1) }}%</div>
+                    <div class="subnote">{{ __('guarantors.Percentage') }}: {{ number_format($inactivePct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -82,9 +82,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-calendar2-plus fs-4 text-primary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">كفلاء جدد هذا الشهر</div>
+                    <div class="subnote">{{ __('guarantors.New Guarantors This Month') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($newThisMonthAll) }}</div>
-                    <div class="subnote">هذا الأسبوع: {{ number_format($newThisWeekAll) }}</div>
+                    <div class="subnote">{{ __('guarantors.This Week') }}: {{ number_format($newThisWeekAll) }}</div>
                 </div>
             </div>
         </div>
@@ -97,11 +97,11 @@
 
     <div class="btn-group" role="group" aria-label="Actions">
       <a href="{{ route('guarantors.create') }}" class="btn btn-success">
-        <i class="bi bi-plus-lg"></i> إضافة كفيل
+        <i class="bi bi-plus-lg"></i> {{ __('guarantors.Add Guarantor') }}
       </a>
       @role('admin')
         <a href="{{ route('guarantors.import.form') }}" class="btn btn-outline-primary">
-            <i class="bi bi-upload"></i> استيراد Excel
+            <i class="bi bi-upload"></i> {{ __('guarantors.Import Excel') }}
         </a>
     @endrole
 
@@ -109,13 +109,13 @@
     </div>
 
     <span class="ms-auto small text-muted">
-      النتائج: <strong>{{ $guarantors->total() }}</strong>
+      {{ __('guarantors.Results') }}: <strong>{{ $guarantors->total() }}</strong>
     </span>
 
     <button class="btn btn-outline-secondary btn-sm" type="button"
             data-bs-toggle="collapse" data-bs-target="#filterBar"
             aria-expanded="false" aria-controls="filterBar">
-      تصفية
+      {{ __('guarantors.Filter') }}
     </button>
   </div>
 
@@ -124,27 +124,27 @@
       <form id="filterForm" action="{{ route('guarantors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
         {{-- ✅ بحث باسم الكفيل فقط --}}
         <div class="col-12 col-md-4">
-          <label class="form-label mb-1">الكفيل (بالاسم)</label>
+          <label class="form-label mb-1">{{ __('guarantors.Guarantor (by name)') }}</label>
           <input type="text"
                  name="guarantor_q"
                  value="{{ request('guarantor_q') }}"
                  class="form-control form-control-sm auto-submit-input"
-                 placeholder="اكتب اسم الكفيل...">
+                 placeholder="{{ __('guarantors.Type guarantor name...') }}">
         </div>
 
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1">رقم الهوية</label>
+          <label class="form-label mb-1">{{ __('guarantors.National ID') }}</label>
           <input type="text" name="national_id" value="{{ request('national_id') }}"
-                 class="form-control form-control-sm auto-submit-input" placeholder="1234567890">
+                 class="form-control form-control-sm auto-submit-input" placeholder="{{ __('guarantors.1234567890') }}">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1">الهاتف</label>
+          <label class="form-label mb-1">{{ __('guarantors.Phone') }}</label>
           <input type="text" name="phone" value="{{ request('phone') }}"
-                 class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
+                 class="form-control form-control-sm auto-submit-input" placeholder="{{ __('guarantors.+9665XXXXXXXX') }}">
         </div>
 
         <div class="col-12 col-md-2">
-          <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+          <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('guarantors.Clear') }}</a>
         </div>
       </form>
     </div>
@@ -158,16 +158,16 @@
             <table class="table table-hover align-middle text-center mb-0">
                 <thead class="table-light position-sticky top-0" style="z-index: 1;">
                     <tr>
-                        <th style="width:60px">#</th>
-                        <th>الاسم</th>
-                        <th>رقم الهوية</th>
-                        <th>الهاتف</th>
-                        <th>البريد الإلكتروني</th>
-                        <th>الجنسية</th>
-                        <th>العنوان</th>
-                        <th>الوظيفة</th>
-                        <th style="min-width:110px;">صورة الهوية</th>
-                        <th style="width:150px">إجراءات</th>
+                        <th style="width:60px">{{ __('guarantors.#') }}</th>
+                        <th>{{ __('guarantors.Name') }}</th>
+                        <th>{{ __('guarantors.National ID') }}</th>
+                        <th>{{ __('guarantors.Phone') }}</th>
+                        <th>{{ __('guarantors.Email') }}</th>
+                        <th>{{ __('guarantors.Nationality') }}</th>
+                        <th>{{ __('guarantors.Address') }}</th>
+                        <th>{{ __('guarantors.Job Title') }}</th>
+                        <th style="min-width:110px;">{{ __('guarantors.ID Card Image') }}</th>
+                        <th style="width:150px">{{ __('guarantors.Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -185,9 +185,9 @@
                             <td>{{ optional($g->title)->name ?? '—' }}</td>
                             <td>
                                 @if($g->id_card_image)
-                                    <a href="{{ asset('storage/' . $g->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="عرض الصورة بالحجم الكامل">
+                                    <a href="{{ asset('storage/' . $g->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('guarantors.View full size image') }}">
                                         <img src="{{ asset('storage/' . $g->id_card_image) }}"
-                                             alt="صورة الهوية" width="70" height="48"
+                                             alt="{{ __('guarantors.ID Card Image') }}" width="70" height="48"
                                              style="object-fit: cover; border-radius: .25rem;">
                                     </a>
                                 @else
@@ -195,19 +195,19 @@
                                 @endif
                             </td>
                             <td class="text-nowrap">
-                                <a href="{{ route('guarantors.show', $g) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
+                                <a href="{{ route('guarantors.show', $g) }}" class="btn btn-outline-secondary btn-sm">{{ __('guarantors.View') }}</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="10" class="py-5">
                                 <div class="text-muted">
-                                    لا توجد نتائج مطابقة لبحثك.
-                                    <a href="{{ route('guarantors.index') }}" class="ms-1">عرض الكل</a>
+                                    {{ __('guarantors.No matching results for your search.') }}
+                                    <a href="{{ route('guarantors.index') }}" class="ms-1">{{ __('guarantors.Show All') }}</a>
                                 </div>
                                 <div class="mt-3">
                                     <a href="{{ route('guarantors.create') }}" class="btn btn-sm btn-success">
-                                        + إضافة أول كفيل
+                                        + {{ __('guarantors.Add First Guarantor') }}
                                     </a>
                                 </div>
                             </td>

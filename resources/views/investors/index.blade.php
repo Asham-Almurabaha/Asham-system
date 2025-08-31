@@ -1,14 +1,14 @@
 @extends('layouts.master')
 
-@section('title', 'قائمة المستثمرين')
+@section('title', __('Investors List'))
 
 @section('content')
 
 <div class="pagetitle mb-3">
-    <h1 class="h3 mb-1">قائمة المستثمرين</h1>
+    <h1 class="h3 mb-1">{{ __('Investors List') }}</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item active">المستثمرون</li>
+            <li class="breadcrumb-item active">{{ __('Investors') }}</li>
         </ol>
     </nav>
 </div>
@@ -44,9 +44,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-people fs-4 text-primary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">إجمالي المستثمرين — كل النظام</div>
+                    <div class="subnote">{{ __('Total Investors — All System') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allTotal) }}</div>
-                    <div class="subnote">غير متأثر بالفلاتر</div>
+                    <div class="subnote">{{ __('Not affected by filters') }}</div>
                 </div>
             </div>
         </div>
@@ -57,9 +57,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-person-check fs-4 text-success"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">المستثمرون النشطون</div>
+                    <div class="subnote">{{ __('Active Investors') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allActive) }}</div>
-                    <div class="subnote">نسبة النشطين: {{ number_format($activePct,1) }}%</div>
+                    <div class="subnote">{{ __('Active Percentage') }}: {{ number_format($activePct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -75,9 +75,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-person-x fs-4 text-danger"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">غير نشطين</div>
+                    <div class="subnote">{{ __('Inactive Investors') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allInactive) }}</div>
-                    <div class="subnote">النسبة: {{ number_format($inactivePct,1) }}%</div>
+                    <div class="subnote">{{ __('Percentage') }}: {{ number_format($inactivePct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -93,9 +93,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-calendar2-plus fs-4 text-primary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">مستثمرون جدد هذا الشهر</div>
+                    <div class="subnote">{{ __('New Investors This Month') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($newThisMonthAll) }}</div>
-                    <div class="subnote">هذا الأسبوع: {{ number_format($newThisWeekAll) }}</div>
+                    <div class="subnote">{{ __('This Week') }}: {{ number_format($newThisWeekAll) }}</div>
                 </div>
             </div>
         </div>
@@ -108,11 +108,11 @@
 
     <div class="btn-group" role="group" aria-label="Investor Actions">
       <a href="{{ route('investors.create') }}" class="btn btn-success">
-        <i class="bi bi-plus-lg"></i> إضافة مستثمر
+        <i class="bi bi-plus-lg"></i> {{ __('Add Investor') }}
       </a>
       @role('admin')
         <a href="{{ route('investors.import.form') }}" class="btn btn-outline-primary">
-            <i class="bi bi-upload"></i> استيراد Excel
+            <i class="bi bi-upload"></i> {{ __('Import Excel') }}
         </a>
       @endrole
 
@@ -125,32 +125,32 @@
 
       @if (session('failures') && count(session('failures')))
         <a href="{{ route('investors.import.export_failures') }}" class="btn btn-warning">
-          <i class="bi bi-exclamation-triangle"></i> تصدير الأخطاء
+          <i class="bi bi-exclamation-triangle"></i> {{ __('Export Failures') }}
         </a>
       @endif
     </div>
 
     <div class="btn-group">
       <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        📊 التقارير
+        📊 {{ __('Reports') }}
       </button>
       <ul class="dropdown-menu dropdown-menu-end text-end">
         <li>
           <a class="dropdown-item" href="{{ route('reports.investors.Allliquidity') }}">
-            📄 تقرير سيولات المستثمرين
+            📄 {{ __('Investors Liquidity Report') }}
           </a>
         </li>
       </ul>
     </div>
 
     <span class="ms-auto small text-muted">
-      النتائج: <strong>{{ $investors->total() }}</strong>
+      {{ __('Results') }}: <strong>{{ $investors->total() }}</strong>
     </span>
 
     <button class="btn btn-outline-secondary btn-sm" type="button"
             data-bs-toggle="collapse" data-bs-target="#filterBar"
             aria-expanded="false" aria-controls="filterBar">
-      تصفية
+      {{ __('Filter') }}
     </button>
   </div>
 
@@ -158,13 +158,13 @@
     <div class="card-body">
       <form id="filterForm" action="{{ route('investors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
         <div class="col-12 col-md-4">
-          <label class="form-label mb-1">المستثمر (بالاسم)</label>
+          <label class="form-label mb-1">{{ __('Investor (by name)') }}</label>
           <input type="text" name="investor_q" value="{{ request('investor_q') }}"
-                 class="form-control form-control-sm auto-submit-input" placeholder="اكتب اسم المستثمر">
+                 class="form-control form-control-sm auto-submit-input" placeholder="{{ __('Type investor name...') }}">
         </div>
 
         <div class="col-12 col-md-1">
-          <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+          <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('Clear') }}</a>
         </div>
       </form>
     </div>
@@ -179,17 +179,17 @@
                 <thead class="table-light position-sticky top-0" style="z-index: 1;">
                     <tr>
                         <th style="width:60px">#</th>
-                        <th>الاسم</th>
-                        <th>رقم الهوية</th>
-                        <th>الهاتف</th>
-                        <th>البريد الإلكتروني</th>
-                        <th>الجنسية</th>
-                        <th>العنوان</th>
-                        <th>الوظيفة</th>
-                        <th style="min-width:110px;">صورة الهوية</th>
-                        <th style="min-width:110px;">صورة العقد</th>
-                        <th style="width:140px">حصة المكتب %</th>
-                        <th style="width:190px">إجراءات</th>
+                        <th>{{ __('Name') }}</th>
+                        <th>{{ __('National ID') }}</th>
+                        <th>{{ __('Phone') }}</th>
+                        <th>{{ __('Email') }}</th>
+                        <th>{{ __('Nationality') }}</th>
+                        <th>{{ __('Address') }}</th>
+                        <th>{{ __('Job Title') }}</th>
+                        <th style="min-width:110px;">{{ __('ID Card Image') }}</th>
+                        <th style="min-width:110px;">{{ __('Contract Image') }}</th>
+                        <th style="width:140px">{{ __('Office Share %') }}</th>
+                        <th style="width:190px">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -205,28 +205,28 @@
                             <td>{{ optional($investor->title)->name ?? '—' }}</td>
                             <td>
                                 @if($investor->id_card_image)
-                                    <a href="{{ asset('storage/' . $investor->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="عرض صورة الهوية">
+                                    <a href="{{ asset('storage/' . $investor->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('View ID Card Image') }}">
                                         <img src="{{ asset('storage/' . $investor->id_card_image) }}" width="70" height="48" style="object-fit:cover; border-radius:.25rem;">
                                     </a>
                                 @else <span class="text-muted">—</span> @endif
                             </td>
                             <td>
                                 @if($investor->contract_image)
-                                    <a href="{{ asset('storage/' . $investor->contract_image) }}" target="_blank" data-bs-toggle="tooltip" title="عرض صورة العقد">
+                                    <a href="{{ asset('storage/' . $investor->contract_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('View Contract Image') }}">
                                         <img src="{{ asset('storage/' . $investor->contract_image) }}" width="70" height="48" style="object-fit:cover; border-radius:.25rem;">
                                     </a>
                                 @else <span class="text-muted">—</span> @endif
                             </td>
                             <td>{{ is_numeric($investor->office_share_percentage) ? number_format($investor->office_share_percentage, 2) : '—' }}</td>
                             <td class="text-nowrap">
-                                <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
+                                <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary btn-sm">{{ __('View') }}</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="12" class="py-5">
-                                <div class="text-muted">لا توجد نتائج مطابقة. <a href="{{ route('investors.index') }}" class="ms-1">عرض الكل</a></div>
-                                <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ إضافة أول مستثمر</a></div>
+                                <div class="text-muted">{{ __('No matching results.') }} <a href="{{ route('investors.index') }}" class="ms-1">{{ __('Show All') }}</a></div>
+                                <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ {{ __('Add First Investor') }}</a></div>
                             </td>
                         </tr>
                     @endforelse

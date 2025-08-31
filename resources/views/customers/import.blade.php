@@ -350,8 +350,8 @@
     err.classList.add('d-none'); err.textContent = ''; btn.disabled = true;
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!okExt.includes(ext)) { err.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv'; err.classList.remove('d-none'); return; }
-    if (file.size > MAX_SIZE) { err.textContent = 'حجم الملف يتجاوز 10MB.'; err.classList.remove('d-none'); return; }
+    if (!okExt.includes(ext)) { err.textContent = 'Unsupported file format. Allowed formats: xlsx, xls, csv'; err.classList.remove('d-none'); return; }
+    if (file.size > MAX_SIZE) { err.textContent = 'File size exceeds 10MB.'; err.classList.remove('d-none'); return; }
     btn.disabled = false;
   }
 

@@ -1,7 +1,7 @@
 {{-- resources/views/customers/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', 'استيراد العملاء من Excel')
+@section('title', __('Import Customers from Excel'))
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
@@ -13,7 +13,7 @@
         <i class="bi bi-cloud-arrow-up fs-3"></i>
       </div>
       <div>
-        <h1 class="h4 mb-1">استيراد العملاء</h1>
+        <h1 class="h4 mb-1">{{ __('Import Customers') }}</h1>
         <p class="text-muted mb-0">
           ارفع ملف Excel/CSV بالمواصفات:
           <code>name, national_id, phone, email, address, nationality, title, id_card_image, contract_image, ...</code>

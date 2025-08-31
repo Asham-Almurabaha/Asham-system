@@ -1,16 +1,16 @@
 @extends('layouts.master')
 
-@section('title', 'إضافة كفيل جديد')
+@section('title', __('guarantors.Add New Guarantor'))
 
 @section('content')
 <div class="container py-3" dir="rtl">
 
     <div class="pagetitle">
-        <h1 class="h3 mb-1">إضافة كفيل جديد</h1>
+        <h1 class="h3 mb-1">{{ __('guarantors.Add New Guarantor') }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">الكفلاء</li>
-                <li class="breadcrumb-item active">إضافة</li>
+                <li class="breadcrumb-item">{{ __('guarantors.Guarantors') }}</li>
+                <li class="breadcrumb-item active">{{ __('guarantors.Add Guarantor') }}</li>
             </ol>
         </nav>
     </div>
@@ -18,7 +18,7 @@
     {{-- تنبيهات التحقق العامة --}}
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm">
-            يوجد بعض الأخطاء، فضلاً راجع الحقول المظلّلة بالأسفل.
+            {{ __('guarantors.There are some errors, please review the highlighted fields below.') }}
         </div>
     @endif
 
@@ -30,7 +30,7 @@
                 <div class="row g-3">
                     {{-- الاسم --}}
                     <div class="col-12">
-                        <label for="name" class="form-label">الاسم <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ __('guarantors.Name') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="name"
@@ -41,13 +41,13 @@
                             autofocus
                             maxlength="190"
                             autocomplete="name"
-                            placeholder="اكتب الاسم الثلاثي">
+                            placeholder="{{ __('guarantors.Write the full name') }}">
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- رقم الهوية --}}
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">رقم الهوية الوطنية</label>
+                        <label for="national_id" class="form-label">{{ __('guarantors.National ID Number') }}</label>
                         <input
                             type="text"
                             name="national_id"
@@ -57,14 +57,14 @@
                             inputmode="numeric"
                             dir="ltr"
                             maxlength="20"
-                            placeholder="مثال: 1234567890">
-                        <div class="form-text">يمكن إدخال أرقام فقط.</div>
+                            placeholder="{{ __('guarantors.Example: 1234567890') }}">
+                        <div class="form-text">{{ __('guarantors.Only numbers can be entered.') }}</div>
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- الهاتف --}}
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">الهاتف</label>
+                        <label for="phone" class="form-label">{{ __('guarantors.Phone') }}</label>
                         <input
                             type="text"
                             name="phone"
@@ -75,14 +75,14 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
-                            placeholder="+9665XXXXXXXX">
-                        <div class="form-text">يُفضّل إدخال المفتاح الدولي.</div>
+                            placeholder="{{ __('guarantors.+9665XXXXXXXX') }}">
+                        <div class="form-text">{{ __('guarantors.It is preferable to enter the international code.') }}</div>
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- البريد --}}
                     <div class="col-md-6">
-                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                        <label for="email" class="form-label">{{ __('guarantors.Email Address') }}</label>
                         <input
                             type="email"
                             name="email"
@@ -91,18 +91,18 @@
                             value="{{ old('email') }}"
                             maxlength="190"
                             autocomplete="email"
-                            placeholder="name@email.com">
+                            placeholder="{{ __('guarantors.name@email.com') }}">
                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- الجنسية --}}
                     <div class="col-md-6">
-                        <label for="nationality_id" class="form-label">الجنسية</label>
+                        <label for="nationality_id" class="form-label">{{ __('guarantors.Nationality') }}</label>
                         <select
                             name="nationality_id"
                             id="nationality_id"
                             class="form-select @error('nationality_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">-- {{ __('guarantors.Choose') }} --</option>
                             @foreach (($nationalities ?? []) as $Nationality)
                                 @if(is_object($Nationality))
                                     <option value="{{ $Nationality->id }}" @selected(old('nationality_id') == $Nationality->id)>{{ $Nationality->name }}</option>
@@ -114,12 +114,12 @@
 
                     {{-- الوظيفة --}}
                     <div class="col-md-6">
-                        <label for="title_id" class="form-label">الوظيفة</label>
+                        <label for="title_id" class="form-label">{{ __('guarantors.Job Title') }}</label>
                         <select
                             name="title_id"
                             id="title_id"
                             class="form-select @error('title_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">-- {{ __('guarantors.Choose') }} --</option>
                             @foreach (($titles ?? []) as $title)
                                 @if(is_object($title))
                                     <option value="{{ $title->id }}" @selected(old('title_id') == $title->id)>{{ $title->name }}</option>
@@ -131,19 +131,19 @@
 
                     {{-- العنوان --}}
                     <div class="col-12">
-                        <label for="address" class="form-label">العنوان</label>
+                        <label for="address" class="form-label">{{ __('guarantors.Address') }}</label>
                         <textarea
                             name="address"
                             id="address"
                             rows="3"
                             class="form-control @error('address') is-invalid @enderror"
-                            placeholder="اكتب العنوان بالتفصيل">{{ old('address') }}</textarea>
+                            placeholder="{{ __('guarantors.Write the address in detail') }}">{{ old('address') }}</textarea>
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- صورة الهوية + معاينة --}}
                     <div class="col-md-6">
-                        <label for="id_card_image" class="form-label">صورة الهوية</label>
+                        <label for="id_card_image" class="form-label">{{ __('guarantors.ID Card Image') }}</label>
                         <input
                             type="file"
                             name="id_card_image"
@@ -151,34 +151,34 @@
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*"
                             aria-describedby="idCardHelp">
-                        <div id="idCardHelp" class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        <div id="idCardHelp" class="form-text">{{ __('guarantors.Allowed extensions: jpg/png/webp — suitable size less than 2MB.') }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
-                            <small class="text-muted d-block mb-1">معاينة:</small>
-                            <img id="id-preview" src="#" alt="معاينة الصورة" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                            <small class="text-muted d-block mb-1">{{ __('guarantors.Preview:') }}</small>
+                            <img id="id-preview" src="#" alt="{{ __('guarantors.Preview of the new image') }}" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
 
                     {{-- ملاحظات --}}
                     <div class="col-md-6">
-                        <label for="notes" class="form-label">ملاحظات</label>
+                        <label for="notes" class="form-label">{{ __('guarantors.Notes') }}</label>
                         <textarea
                             name="notes"
                             id="notes"
                             rows="3"
                             class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="أي معلومات إضافية عن الكفيل">{{ old('notes') }}</textarea>
+                            placeholder="{{ __('guarantors.Any additional information about the guarantor') }}">{{ old('notes') }}</textarea>
                         @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check2-circle me-1"></i> حفظ
+                        <i class="bi bi-check2-circle me-1"></i> {{ __('guarantors.Save') }}
                     </button>
                     <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary">
-                        إلغاء
+                        {{ __('guarantors.Cancel') }}
                     </a>
                 </div>
             </form>

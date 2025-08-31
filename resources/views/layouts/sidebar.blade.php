@@ -27,7 +27,7 @@
     </a>
   </li>
 
-  {{-- العملاء --}}
+  {{-- Customers --}}
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('customers.*')) }} {{ $active($isRoute('customers.*')) }}"
        href="{{ route('customers.index') }}">
@@ -35,7 +35,7 @@
     </a>
   </li>
 
-  {{-- الكفلاء --}}
+  {{-- Guarantors --}}
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('guarantors.*')) }} {{ $active($isRoute('guarantors.*')) }}"
        href="{{ route('guarantors.index') }}">

@@ -1,0 +1,123 @@
+<?php
+
+return [
+    // Guarantors page
+    'Guarantors' => 'Guarantors',
+    'Guarantors List' => 'Guarantors List',
+    'Add Guarantor' => 'Add Guarantor',
+    'Import Excel' => 'Import Excel',
+    'Results' => 'Results',
+    'Filter' => 'Filter',
+    'Clear' => 'Clear',
+    'Choose' => 'Choose',
+
+    // KPIs
+    'Total Guarantors — All System' => 'Total Guarantors — All System',
+    'Not affected by filters' => 'Not affected by filters',
+    'Active Guarantors' => 'Active Guarantors',
+    'Active Percentage' => 'Active Percentage',
+    'Inactive' => 'Inactive',
+    'Percentage' => 'Percentage',
+    'New Guarantors This Month' => 'New Guarantors This Month',
+    'This Week' => 'This Week',
+
+    // Table headers
+    '#' => '#',
+    'Name' => 'Name',
+    'National ID' => 'National ID',
+    'Phone' => 'Phone',
+    'Email' => 'Email',
+    'Nationality' => 'Nationality',
+    'Address' => 'Address',
+    'Job Title' => 'Job Title',
+    'ID Card Image' => 'ID Card Image',
+    'Actions' => 'Actions',
+
+    // Actions
+    'View' => 'View',
+    'Show All' => 'Show All',
+    'Add First Guarantor' => 'Add First Guarantor',
+
+    // Messages
+    'No matching results for your search.' => 'No matching results for your search.',
+    'View full size image' => 'View full size image',
+
+    // Placeholders
+    'Type guarantor name...' => 'Type guarantor name...',
+    '1234567890' => '1234567890',
+    '+9665XXXXXXXX' => '+9665XXXXXXXX',
+
+    // Additional
+    'Guarantor (by name)' => 'Guarantor (by name)',
+
+    // Create/Edit Form
+    'Add New Guarantor' => 'Add New Guarantor',
+    'Edit Guarantor' => 'Edit Guarantor',
+    'There are some errors, please review the highlighted fields below.' => 'There are some errors, please review the highlighted fields below.',
+    'National ID Number' => 'National ID Number',
+    'Email Address' => 'Email Address',
+    'Write the full name' => 'Write the full name',
+    'Example: 1234567890' => 'Example: 1234567890',
+    'name@email.com' => 'name@email.com',
+    'Write the address in detail' => 'Write the address in detail',
+    'Any additional information about the guarantor' => 'Any additional information about the guarantor',
+    'Only numbers can be entered.' => 'Only numbers can be entered.',
+    'It is preferable to enter the international code.' => 'It is preferable to enter the international code.',
+    'Allowed extensions: jpg/png/webp — suitable size less than 2MB.' => 'Allowed extensions: jpg/png/webp — suitable size less than 2MB.',
+    'Save' => 'Save',
+    'Cancel' => 'Cancel',
+    'Update' => 'Update',
+    'Preview:' => 'Preview:',
+    'Preview of the new image:' => 'Preview of the new image:',
+    'Current image:' => 'Current image:',
+    'Uploading a new image will replace the current one.' => 'Uploading a new image will replace the current one.',
+
+    // Show Page
+    'View Guarantor' => 'View Guarantor',
+    'Edit' => 'Edit',
+    'Back to List' => 'Back to List',
+    'Total Guaranteed Contracts' => 'Total Guaranteed Contracts',
+    'All contracts linked to the guarantor' => 'All contracts linked to the guarantor',
+    'Active Contracts' => 'Active Contracts',
+    'Ratio:' => 'Ratio:',
+    'Creation Date / Last Update' => 'Creation Date / Last Update',
+    'Last Update:' => 'Last Update:',
+    'Basic Information' => 'Basic Information',
+    'Notes' => 'Notes',
+    'Click to open the image in a new window' => 'Click to open the image in a new window',
+    'No ID card image uploaded.' => 'No ID card image uploaded.',
+    'Copy' => 'Copy',
+    'Copied' => 'Copied',
+
+    // Import Page
+    'Import Guarantors from Excel' => 'Import Guarantors from Excel',
+    'Import Guarantors' => 'Import Guarantors',
+    'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.' => 'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.',
+    'Download Template' => 'Download Template',
+    'Failed to execute the operation:' => 'Failed to execute the operation:',
+    'Total Rows' => 'Total Rows',
+    'Actually Saved' => 'Actually Saved',
+    'Success Rate:' => 'Success Rate:',
+    'Without Change' => 'Without Change',
+    'Matching records 1:1' => 'Matching records 1:1',
+    'Skipped' => 'Skipped',
+    'Rate:' => 'Rate:',
+    'Errors during reading/saving:' => 'Errors during reading/saving:',
+    'Drag the file here or click to select' => 'Drag the file here or click to select',
+    'Excel/CSV file only — will be verified before saving' => 'Excel/CSV file only — will be verified before saving',
+    'Selected File:' => 'Selected File:',
+    'Import Now' => 'Import Now',
+    'Download Errors/Skipped File' => 'Download Errors/Skipped File',
+    'Validation Errors' => 'Validation Errors',
+    'Show/Hide' => 'Show/Hide',
+    'Row Number' => 'Row Number',
+    'Field' => 'Field',
+    'Messages' => 'Messages',
+    'Values' => 'Values',
+    'Reason' => 'Reason',
+    'Correct the rows then re-upload. It is preferable to use the "Download Errors/Skipped File" button.' => 'Correct the rows then re-upload. It is preferable to use the "Download Errors/Skipped File" button.',
+    'Review the values and reason then correct the rows and re-upload.' => 'Review the values and reason then correct the rows and re-upload.',
+    'Skipped Rows' => 'Skipped Rows',
+    'File format not supported. Allowed formats: xlsx, xls, csv' => 'File format not supported. Allowed formats: xlsx, xls, csv',
+    'File size exceeds 10MB.' => 'File size exceeds 10MB.',
+];

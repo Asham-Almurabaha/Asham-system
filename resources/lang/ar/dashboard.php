@@ -1,8 +1,7 @@
 <?php
 
 return [
-    // Dashboard specific terms
-    'Control Panel' => 'لوحة التحكم',
+    'Dashboard' => 'لوحة التحكم',
     'Data Range' => 'نطاق البيانات',
     'Total Contracts' => 'إجمالي العقود',
     'Investors Liquidity Net' => 'صافي سيولة المستثمرين',

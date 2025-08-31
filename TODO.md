@@ -1,14 +1,42 @@
-# TODO: Review and Improve Layouts, CSS, JS for Professional Arabic/English Support
+# TODO - Internationalize Customer and Investor Views
 
-- [x] Review and edit head.blade.php for translations and accessibility
-- [x] Review and edit app.blade.php for translations and accessibility
-- [x] Review and edit master.blade.php for translations and accessibility
-- [x] Review and edit header.blade.php for translations and accessibility
-- [x] Review and edit sidebar.blade.php for translations and accessibility
-- [x] Review and edit script.blade.php for cleanup
-- [x] Edit style.css for RTL improvements and Arabic fonts
-- [x] Create and update language files (ar/en) for all translations
-- [ ] Replace hardcoded Arabic text in blade files with @lang calls
-- [ ] Improve CSS for better Arabic font support and RTL layout
-- [ ] Test language switching and RTL/LTR (Manual testing required)
-- [ ] Verify no errors (Check console for JS errors)
+## Step 1: Extract hardcoded Arabic text ✅ COMPLETED
+- Identify all hardcoded Arabic text in customer views:
+  - resources/views/customers/index.blade.php
+  - resources/views/customers/create.blade.php
+  - resources/views/customers/edit.blade.php
+  - resources/views/customers/show.blade.php
+  - resources/views/customers/import.blade.php
+- Identify all hardcoded Arabic text in investor views (except index.blade.php):
+  - resources/views/investors/create.blade.php
+  - resources/views/investors/edit.blade.php
+  - resources/views/investors/show.blade.php
+  - resources/views/investors/import.blade.php
+  - resources/views/investors/allliquidity.blade.php
+
+## Step 2: Add translation keys ✅ COMPLETED
+- Add new translation keys for extracted Arabic text to:
+  - resources/lang/ar.json ✅ COMPLETED
+  - resources/lang/en.json ✅ COMPLETED
+
+## Step 3: Replace hardcoded text with translation keys
+- Update customer views to use translation keys:
+  - resources/views/customers/index.blade.php ✅ COMPLETED
+  - resources/views/customers/create.blade.php ✅ COMPLETED
+  - resources/views/customers/edit.blade.php
+  - resources/views/customers/show.blade.php
+  - resources/views/customers/import.blade.php
+- Update investor views to use translation keys:
+  - resources/views/investors/create.blade.php
+  - resources/views/investors/edit.blade.php
+  - resources/views/investors/show.blade.php
+  - resources/views/investors/import.blade.php
+  - resources/views/investors/allliquidity.blade.php
+
+## Step 4: Testing and verification
+- Test views to ensure translations render correctly
+- Verify proper RTL/LTR text direction handling
+
+---
+
+I will start with Step 1: Extracting hardcoded Arabic text from customer views.

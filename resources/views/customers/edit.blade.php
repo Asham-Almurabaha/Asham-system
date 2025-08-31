@@ -1,24 +1,24 @@
 @extends('layouts.master')
 
-@section('title', 'تعديل بيانات العميل')
+@section('title', __('Edit Customer'))
 
 @section('content')
 <div class="container py-3" dir="rtl">
 
     <div class="pagetitle">
-        <h1 class="h3 mb-1">تعديل بيانات العميل</h1>
+        <h1 class="h3 mb-1">{{ __('Edit Customer') }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">العملاء</li>
-                <li class="breadcrumb-item active">تعديل</li>
+                <li class="breadcrumb-item">{{ __('Customers') }}</li>
+                <li class="breadcrumb-item active">{{ __('Edit') }}</li>
             </ol>
         </nav>
     </div>
 
-    {{-- تنبيهات التحقق العامة --}}
+    {{-- General validation alerts --}}
     @if ($errors->any())
         <div class="alert alert-danger shadow-sm">
-            يوجد بعض الأخطاء، فضلاً راجع الحقول المظلّلة بالأسفل.
+            {{ __('There are some errors, please review the highlighted fields below.') }}
         </div>
     @endif
 
@@ -29,9 +29,9 @@
                 @method('PUT')
 
                 <div class="row g-3">
-                    {{-- الاسم --}}
+                    {{-- Name --}}
                     <div class="col-12">
-                        <label for="name" class="form-label">الاسم <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ __('Name') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="name"
@@ -42,13 +42,13 @@
                             autofocus
                             maxlength="190"
                             autocomplete="name"
-                            placeholder="اكتب الاسم الثلاثي">
+                            placeholder="{{ __('Type the full name') }}">
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- رقم الهوية (لو العمود موجود في الجدول) --}}
+                    {{-- National ID --}}
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">رقم الهوية الوطنية</label>
+                        <label for="national_id" class="form-label">{{ __('National ID') }}</label>
                         <input
                             type="text"
                             name="national_id"
@@ -58,14 +58,14 @@
                             inputmode="numeric"
                             dir="ltr"
                             maxlength="20"
-                            placeholder="مثال: 1234567890">
-                        <div class="form-text">يمكن إدخال أرقام فقط.</div>
+                            placeholder="{{ __('Example: 1234567890') }}">
+                        <div class="form-text">{{ __('Numbers only.') }}</div>
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- الهاتف --}}
+                    {{-- Phone --}}
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">الهاتف</label>
+                        <label for="phone" class="form-label">{{ __('Phone') }}</label>
                         <input
                             type="text"
                             name="phone"
@@ -80,9 +80,9 @@
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- البريد --}}
+                    {{-- Email --}}
                     <div class="col-md-6">
-                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                        <label for="email" class="form-label">{{ __('Email') }}</label>
                         <input
                             type="email"
                             name="email"
@@ -95,14 +95,14 @@
                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- الجنسية --}}
+                    {{-- Nationality --}}
                     <div class="col-md-6">
-                        <label for="nationality_id" class="form-label">الجنسية</label>
+                        <label for="nationality_id" class="form-label">{{ __('Nationality') }}</label>
                         <select
                             name="nationality_id"
                             id="nationality_id"
                             class="form-select @error('nationality_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">-- {{ __('Choose') }} --</option>
                             @foreach (($nationalities ?? []) as $row)
                                 @php
                                     $nid   = is_object($row) ? $row->id   : (is_array($row) ? ($row['id'] ?? null)   : null);
@@ -116,14 +116,14 @@
                         @error('nationality_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- الوظيفة --}}
+                    {{-- Job Title --}}
                     <div class="col-md-6">
-                        <label for="title_id" class="form-label">الوظيفة</label>
+                        <label for="title_id" class="form-label">{{ __('Job Title') }}</label>
                         <select
                             name="title_id"
                             id="title_id"
                             class="form-select @error('title_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">-- {{ __('Choose') }} --</option>
                             @foreach (($titles ?? []) as $row)
                                 @php
                                     $tid   = is_object($row) ? $row->id   : (is_array($row) ? ($row['id'] ?? null)   : null);
@@ -137,29 +137,29 @@
                         @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- العنوان --}}
+                    {{-- Address --}}
                     <div class="col-12">
-                        <label for="address" class="form-label">العنوان</label>
+                        <label for="address" class="form-label">{{ __('Address') }}</label>
                         <textarea
                             name="address"
                             id="address"
                             rows="3"
                             class="form-control @error('address') is-invalid @enderror"
-                            placeholder="اكتب العنوان بالتفصيل">{{ old('address', $customer->address) }}</textarea>
+                            placeholder="{{ __('Type the address in detail') }}">{{ old('address', $customer->address) }}</textarea>
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- صورة الهوية + المعاينة --}}
+                    {{-- ID Card Image + Preview --}}
                     <div class="col-md-6">
-                        <label for="id_card_image" class="form-label">صورة الهوية</label>
+                        <label for="id_card_image" class="form-label">{{ __('ID Card Image') }}</label>
 
                         @if(!empty($customer->id_card_image))
                             <div class="mb-2">
-                                <small class="text-muted d-block mb-1">الصورة الحالية:</small>
+                                <small class="text-muted d-block mb-1">{{ __('Current Image:') }}</small>
                                 <a href="{{ asset('storage/'.$customer->id_card_image) }}" target="_blank">
-                                    <img src="{{ asset('storage/'.$customer->id_card_image) }}" alt="صورة الهوية" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                                    <img src="{{ asset('storage/'.$customer->id_card_image) }}" alt="{{ __('ID Card Image') }}" class="rounded border" style="max-height: 140px; object-fit: cover;">
                                 </a>
-                                <div class="text-muted small mt-1">رفع صورة جديدة سيستبدل الحالية.</div>
+                                <div class="text-muted small mt-1">{{ __('Uploading a new image will replace the current one.') }}</div>
                             </div>
                         @endif
 
@@ -170,34 +170,34 @@
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*"
                             aria-describedby="idCardHelp">
-                        <div id="idCardHelp" class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        <div id="idCardHelp" class="form-text">{{ __('Allowed extensions: jpg/png/webp — Size less than 2MB.') }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
-                            <small class="text-muted d-block mb-1">معاينة الصورة الجديدة:</small>
-                            <img id="id-preview" src="#" alt="معاينة الصورة" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                            <small class="text-muted d-block mb-1">{{ __('New Image Preview:') }}</small>
+                            <img id="id-preview" src="#" alt="{{ __('Image Preview') }}" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
 
-                    {{-- ملاحظات --}}
+                    {{-- Notes --}}
                     <div class="col-md-6">
-                        <label for="notes" class="form-label">ملاحظات</label>
+                        <label for="notes" class="form-label">{{ __('Notes') }}</label>
                         <textarea
                             name="notes"
                             id="notes"
                             rows="3"
                             class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="أي معلومات إضافية عن العميل">{{ old('notes', $customer->notes) }}</textarea>
+                            placeholder="{{ __('Any additional information about the customer') }}">{{ old('notes', $customer->notes) }}</textarea>
                         @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save2 me-1"></i> تحديث
+                        <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
                     </button>
                     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
-                        إلغاء
+                        {{ __('Cancel') }}
                     </a>
                 </div>
             </form>
@@ -214,7 +214,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // معاينة صورة الهوية الجديدة
+    // Preview of the new ID card image
     const input = document.getElementById('id_card_image');
     const wrap  = document.getElementById('id-preview-wrap');
     const img   = document.getElementById('id-preview');
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
         reader.readAsDataURL(file);
     });
 
-    // إخفاء أي تنبيه بعد 5 ثوانٍ
+    // Hide any alert after 5 seconds
     setTimeout(() => {
         document.querySelectorAll('.alert').forEach(el => {
             el.style.transition = 'opacity .4s ease';

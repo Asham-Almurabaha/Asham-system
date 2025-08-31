@@ -1,0 +1,123 @@
+<?php
+
+return [
+    // Guarantors page
+    'Guarantors' => 'الكفلاء',
+    'Guarantors List' => 'قائمة الكفلاء',
+    'Add Guarantor' => 'إضافة كفيل',
+    'Import Excel' => 'استيراد Excel',
+    'Results' => 'النتائج',
+    'Filter' => 'تصفية',
+    'Clear' => 'مسح',
+    'Choose' => 'اختر',
+
+    // KPIs
+    'Total Guarantors — All System' => 'إجمالي الكفلاء — كل النظام',
+    'Not affected by filters' => 'غير متأثر بالفلاتر',
+    'Active Guarantors' => 'الكفلاء النشطون',
+    'Active Percentage' => 'نسبة النشطين',
+    'Inactive' => 'غير نشطين',
+    'Percentage' => 'النسبة',
+    'New Guarantors This Month' => 'كفلاء جدد هذا الشهر',
+    'This Week' => 'هذا الأسبوع',
+
+    // Table headers
+    '#' => '#',
+    'Name' => 'الاسم',
+    'National ID' => 'رقم الهوية',
+    'Phone' => 'الهاتف',
+    'Email' => 'البريد الإلكتروني',
+    'Nationality' => 'الجنسية',
+    'Address' => 'العنوان',
+    'Job Title' => 'الوظيفة',
+    'ID Card Image' => 'صورة الهوية',
+    'Actions' => 'إجراءات',
+
+    // Actions
+    'View' => 'عرض',
+    'Show All' => 'عرض الكل',
+    'Add First Guarantor' => 'إضافة أول كفيل',
+
+    // Messages
+    'No matching results for your search.' => 'لا توجد نتائج مطابقة لبحثك.',
+    'View full size image' => 'عرض الصورة بحجم كامل',
+
+    // Placeholders
+    'Type guarantor name...' => 'اكتب اسم الكفيل...',
+    '1234567890' => '1234567890',
+    '+9665XXXXXXXX' => '+9665XXXXXXXX',
+
+    // Additional
+    'Guarantor (by name)' => 'الكفيل (بالاسم)',
+
+    // Create/Edit Form
+    'Add New Guarantor' => 'إضافة كفيل جديد',
+    'Edit Guarantor' => 'تعديل بيانات الكفيل',
+    'There are some errors, please review the highlighted fields below.' => 'يوجد بعض الأخطاء، فضلاً راجع الحقول المظلّلة بالأسفل.',
+    'National ID Number' => 'رقم الهوية الوطنية',
+    'Email Address' => 'البريد الإلكتروني',
+    'Write the full name' => 'اكتب الاسم الثلاثي',
+    'Example: 1234567890' => 'مثال: 1234567890',
+    'name@email.com' => 'name@email.com',
+    'Write the address in detail' => 'اكتب العنوان بالتفصيل',
+    'Any additional information about the guarantor' => 'أي معلومات إضافية عن الكفيل',
+    'Only numbers can be entered.' => 'يمكن إدخال أرقام فقط.',
+    'It is preferable to enter the international code.' => 'يُفضّل إدخال المفتاح الدولي.',
+    'Allowed extensions: jpg/png/webp — suitable size less than 2MB.' => 'الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.',
+    'Save' => 'حفظ',
+    'Cancel' => 'إلغاء',
+    'Update' => 'تحديث',
+    'Preview:' => 'معاينة:',
+    'Preview of the new image:' => 'معاينة الصورة الجديدة:',
+    'Current image:' => 'الصورة الحالية:',
+    'Uploading a new image will replace the current one.' => 'رفع صورة جديدة سيستبدل الحالية.',
+
+    // Show Page
+    'View Guarantor' => 'عرض بيانات الكفيل',
+    'Edit' => 'تعديل',
+    'Back to List' => 'العودة للقائمة',
+    'Total Guaranteed Contracts' => 'إجمالي العقود المكفولة',
+    'All contracts linked to the guarantor' => 'جميع العقود المرتبطة بالكفيل',
+    'Active Contracts' => 'العقود النشطة',
+    'Ratio:' => 'النسبة:',
+    'Creation Date / Last Update' => 'تاريخ الإنشاء / آخر تحديث',
+    'Last Update:' => 'آخر تحديث:',
+    'Basic Information' => 'بيانات أساسية',
+    'Notes' => 'ملاحظات',
+    'Click to open the image in a new window' => 'انقر لفتح الصورة في نافذة جديدة',
+    'No ID card image uploaded.' => 'لا توجد صورة هوية مرفوعة.',
+    'Copy' => 'نسخ',
+    'Copied' => 'تم النسخ',
+
+    // Import Page
+    'Import Guarantors from Excel' => 'استيراد الكُفلاء من Excel',
+    'Import Guarantors' => 'استيراد الكُفلاء',
+    'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.' => 'ارفع ملف Excel/CSV بالمواصفات: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — الصف الأول عناوين.',
+    'Download Template' => 'تنزيل تمبليت',
+    'Failed to execute the operation:' => 'تعذّر تنفيذ العملية:',
+    'Total Rows' => 'إجمالي الصفوف',
+    'Actually Saved' => 'المحفوظ فعليًا',
+    'Success Rate:' => 'نسبة النجاح:',
+    'Without Change' => 'بدون تغيير',
+    'Matching records 1:1' => 'سجلات مطابقة 1:1',
+    'Skipped' => 'متخطّى',
+    'Rate:' => 'النسبة:',
+    'Errors during reading/saving:' => 'أخطاء أثناء القراءة/الحفظ:',
+    'Drag the file here or click to select' => 'اسحب الملف إلى هنا أو اضغط للاختيار',
+    'Excel/CSV file only — will be verified before saving' => 'ملف Excel/CSV فقط — سيتم التحقق قبل الحفظ',
+    'Selected File:' => 'الملف المختار:',
+    'Import Now' => 'استيراد الآن',
+    'Download Errors/Skipped File' => 'تنزيل ملف الأخطاء/المتخطّى',
+    'Validation Errors' => 'أخطاء التحقق',
+    'Show/Hide' => 'إظهار/إخفاء',
+    'Row Number' => 'رقم الصف',
+    'Field' => 'الحقل',
+    'Messages' => 'الرسائل',
+    'Values' => 'القيم',
+    'Reason' => 'السبب',
+    'Correct the rows then re-upload. It is preferable to use the "Download Errors/Skipped File" button.' => 'صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر "تنزيل ملف الأخطاء/المتخطّى".',
+    'Review the values and reason then correct the rows and re-upload.' => 'راجع القيم والسبب ثم صحّح الصفوف وأعد الرفع.',
+    'Skipped Rows' => 'الصفوف المتخطّاة',
+    'File format not supported. Allowed formats: xlsx, xls, csv' => 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv',
+    'File size exceeds 10MB.' => 'حجم الملف يتجاوز 10MB.',
+];

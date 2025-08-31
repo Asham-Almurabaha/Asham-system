@@ -1,13 +1,13 @@
 {{-- resources/views/customers/index.blade.php --}}
 @extends('layouts.master')
 
-@section('title', 'قائمة العملاء')
+@section('title', __('Customers List'))
 
 @section('content')
 
 <div class="pagetitle mb-3">
-    <h1 class="h3 mb-1">قائمة العملاء</h1>
-    <nav><ol class="breadcrumb"><li class="breadcrumb-item active">العملاء</li></ol></nav>
+    <h1 class="h3 mb-1">{{ __('Customers List') }}</h1>
+    <nav><ol class="breadcrumb"><li class="breadcrumb-item active">{{ __('Customers') }}</li></ol></nav>
 </div>
 
 @php
@@ -34,16 +34,16 @@
     .bar-8{ height:8px; }
 </style>
 
-{{-- ====== كروت عامة ====== --}}
+{{-- ====== General Cards ====== --}}
 <div class="row g-4 mb-3" dir="rtl">
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-people fs-4 text-primary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">إجمالي العملاء — كل النظام</div>
+                    <div class="subnote">{{ __('Total Customers — All System') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allTotal) }}</div>
-                    <div class="subnote">غير متأثر بالفلاتر</div>
+                    <div class="subnote">{{ __('Not affected by filters') }}</div>
                 </div>
             </div>
         </div>
@@ -54,9 +54,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-person-check fs-4 text-success"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">العملاء النشطون</div>
+                    <div class="subnote">{{ __('Active Customers') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allActive) }}</div>
-                    <div class="subnote">نسبة النشطين: {{ number_format($activePct,1) }}%</div>
+                    <div class="subnote">{{ __('Active Percentage') }}: {{ number_format($activePct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -72,9 +72,9 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-person-x fs-4 text-danger"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">غير نشطين</div>
+                    <div class="subnote">{{ __('Inactive') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($allInactive) }}</div>
-                    <div class="subnote">النسبة: {{ number_format($inactivePct,1) }}%</div>
+                    <div class="subnote">{{ __('Percentage') }}: {{ number_format($inactivePct,1) }}%</div>
                 </div>
             </div>
             <div class="mt-3">
@@ -90,77 +90,77 @@
             <div class="d-flex align-items-center gap-3">
                 <div class="kpi-icon"><i class="bi bi-calendar2-plus fs-4 text-primary"></i></div>
                 <div class="flex-grow-1">
-                    <div class="subnote">عملاء جدد هذا الشهر</div>
+                    <div class="subnote">{{ __('New Customers This Month') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($newThisMonthAll) }}</div>
-                    <div class="subnote">هذا الأسبوع: {{ number_format($newThisWeekAll) }}</div>
+                    <div class="subnote">{{ __('This Week') }}: {{ number_format($newThisWeekAll) }}</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-{{-- ====== شريط الأدوات ====== --}}
+{{-- ====== Toolbar ====== --}}
 <div class="card shadow-sm mb-3">
   <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
 
     <div class="btn-group" role="group" aria-label="Actions">
       <a href="{{ route('customers.create') }}" class="btn btn-success">
-        <i class="bi bi-plus-lg"></i> إضافة عميل
+        <i class="bi bi-plus-lg"></i> {{ __('Add Customer') }}
       </a>
       @role('admin')
         <a href="{{ route('customers.import.form') }}" class="btn btn-outline-primary">
-            <i class="bi bi-upload"></i> استيراد Excel
+            <i class="bi bi-upload"></i> {{ __('Import Excel') }}
         </a>
       @endrole
 
-      {{-- 🔥 تم حذف زر "تمبليت" كما طلبت --}}
+      {{-- Template button removed as requested --}}
     </div>
 
     <span class="ms-auto small text-muted">
-      النتائج: <strong>{{ $customers->total() }}</strong>
+      {{ __('Results') }}: <strong>{{ $customers->total() }}</strong>
     </span>
 
     <button class="btn btn-outline-secondary btn-sm" type="button"
             data-bs-toggle="collapse" data-bs-target="#filterBar"
             aria-expanded="false" aria-controls="filterBar">
-      تصفية
+      {{ __('Filter') }}
     </button>
   </div>
 
   <div class="collapse @if(request()->hasAny(['customer_q','national_id','phone'])) show @endif border-top" id="filterBar">
     <div class="card-body">
       <form id="filterForm" action="{{ route('customers.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-        {{-- ✅ بحث باسم العميل فقط --}}
+        {{-- Search by customer name only --}}
         <div class="col-12 col-md-4">
-          <label class="form-label mb-1">العميل (بالاسم)</label>
+          <label class="form-label mb-1">{{ __('Customer (by name)') }}</label>
           <input type="text"
                  name="customer_q"
                  value="{{ request('customer_q') }}"
                  class="form-control form-control-sm auto-submit-input"
-                 placeholder="اكتب اسم العميل...">
+                 placeholder="{{ __('Type customer name...') }}">
         </div>
 
-        {{-- فلاتر إضافية (اختياري) --}}
+        {{-- Additional filters (optional) --}}
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1">رقم الهوية</label>
+          <label class="form-label mb-1">{{ __('National ID') }}</label>
           <input type="text" name="national_id" value="{{ request('national_id') }}"
                  class="form-control form-control-sm auto-submit-input" placeholder="1234567890">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1">الهاتف</label>
+          <label class="form-label mb-1">{{ __('Phone') }}</label>
           <input type="text" name="phone" value="{{ request('phone') }}"
                  class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
         </div>
 
         <div class="col-12 col-md-2">
-          <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+          <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('Clear') }}</a>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-{{-- ====== الجدول ====== --}}
+{{-- ====== Table ====== --}}
 <div class="card shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -168,15 +168,15 @@
                 <thead class="table-light position-sticky top-0" style="z-index: 1;">
                     <tr>
                         <th style="width:60px">#</th>
-                        <th>الاسم</th>
-                        <th>رقم الهوية</th>
-                        <th>الهاتف</th>
-                        <th>البريد الإلكتروني</th>
-                        <th>الجنسية</th>
-                        <th>العنوان</th>
-                        <th>الوظيفة</th>
-                        <th style="min-width:110px;">صورة الهوية</th>
-                        <th style="width:150px">إجراءات</th>
+                        <th>{{ __('Name') }}</th>
+                        <th>{{ __('National ID') }}</th>
+                        <th>{{ __('Phone') }}</th>
+                        <th>{{ __('Email') }}</th>
+                        <th>{{ __('Nationality') }}</th>
+                        <th>{{ __('Address') }}</th>
+                        <th>{{ __('Job Title') }}</th>
+                        <th style="min-width:110px;">{{ __('ID Card Image') }}</th>
+                        <th style="width:150px">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -194,9 +194,9 @@
                             <td>{{ optional($customer->title)->name ?? '—' }}</td>
                             <td>
                                 @if($customer->id_card_image)
-                                    <a href="{{ asset('storage/' . $customer->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="عرض الصورة بالحجم الكامل">
+                                    <a href="{{ asset('storage/' . $customer->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('View in full size') }}">
                                         <img src="{{ asset('storage/' . $customer->id_card_image) }}"
-                                             alt="صورة الهوية"
+                                             alt="{{ __('ID Card Image') }}"
                                              width="70" height="48"
                                              style="object-fit: cover; border-radius: .25rem;">
                                     </a>
@@ -205,19 +205,19 @@
                                 @endif
                             </td>
                             <td class="text-nowrap">
-                                <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary btn-sm">عرض</a>
+                                <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary btn-sm">{{ __('View') }}</a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="10" class="py-5">
                                 <div class="text-muted">
-                                    لا توجد نتائج مطابقة لبحثك.
-                                    <a href="{{ route('customers.index') }}" class="ms-1">عرض الكل</a>
+                                    {{ __('No matching results for your search.') }}
+                                    <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>
                                 </div>
                                 <div class="mt-3">
                                     <a href="{{ route('customers.create') }}" class="btn btn-sm btn-success">
-                                        + إضافة أول عميل
+                                        + {{ __('Add First Customer') }}
                                     </a>
                                 </div>
                             </td>
