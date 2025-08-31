@@ -7,7 +7,7 @@
 @endphp
 
 <div class="d-flex align-items-center justify-content-between w-100 pe-3">
-  <a href="{{ $homeUrl }}" class="logo d-flex align-items-center text-decoration-none">
+  <a href="{{ $homeUrl }}" class="logo d-flex align-items-center text-decoration-none" aria-label="{{ __('Home') }}">
     @if ($logo)
       <img src="{{ asset('storage/'.$logo) }}" alt="Logo" style="height: 40px;">
     @else
@@ -27,7 +27,7 @@
     {{-- بحث للجوال (اختياري) --}}
     <li class="nav-item d-block">
       <a class="nav-link nav-icon" href="#" data-bs-toggle="collapse" data-bs-target="#header-search"
-         aria-expanded="false" aria-controls="header-search" title="{{ __('Search') }}">
+         aria-expanded="false" aria-controls="header-search" aria-label="{{ __('Search') }}" title="{{ __('Search') }}">
         <i class="bi bi-search"></i>
       </a>
     </li>
@@ -35,7 +35,7 @@
     {{-- تبديل اللغة --}}
     <li class="nav-item dropdown">
       <a class="nav-link nav-icon d-flex align-items-center" href="#" role="button"
-         data-bs-toggle="dropdown" aria-expanded="false" title="{{ __('Switch language') }}">
+         data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('Switch language') }}" title="{{ __('Switch language') }}">
         <i class="bi bi-translate me-1"></i>
         <span class="badge bg-primary badge-number">{{ $currentLocaleBadge }}</span>
       </a>
@@ -68,7 +68,7 @@
     @if (Auth::check())
       <li class="nav-item dropdown pe-3">
         <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#"
-           data-bs-toggle="dropdown" aria-expanded="false">
+           data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('User menu') }}">
           <img src="{{ asset('assets/img/profile-img.jpg') }}" alt="Profile" class="rounded-circle" width="36" height="36">
           <span class="d-none d-md-block dropdown-toggle ps-2">{{ Auth::user()->name }}</span>
         </a>

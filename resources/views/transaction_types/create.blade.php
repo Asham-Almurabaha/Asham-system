@@ -1,16 +1,16 @@
 @extends('layouts.master')
 
-@section('title', 'إضافة نوع عملية جديدة')
+@section('title', __('transaction_types.Add Transaction Type'))
 
 @section('content')
 
 <div class="pagetitle">
-    <h1>إضافة نوع عملية جديدة</h1>
+    <h1>@lang('transaction_types.Add Transaction Type')</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">Setting</li>
-            <li class="breadcrumb-item">Transaction Types</li>
-            <li class="breadcrumb-item active">Create</li>
+            <li class="breadcrumb-item">@lang('sidebar.Settings')</li>
+            <li class="breadcrumb-item">@lang('sidebar.Transaction Types')</li>
+            <li class="breadcrumb-item active">@lang('transaction_types.Add Transaction Type')</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->
@@ -32,17 +32,17 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label for="name" class="form-label">اسم نوع العملية</label>
+                    <label for="name" class="form-label">@lang('transaction_types.Transaction Type Name')</label>
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
                 </div>
 
                 <div class="mb-3">
-                    <label for="description" class="form-label">الوصف (اختياري)</label>
+                    <label for="description" class="form-label">@lang('transaction_types.Description (Optional)')</label>
                     <textarea name="description" id="description" class="form-control">{{ old('description') }}</textarea>
                 </div>
 
-                <button type="submit" class="btn btn-success">حفظ</button>
-                <a href="{{ route('transaction_types.index') }}" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-success">@lang('transaction_types.Save')</button>
+                <a href="{{ route('transaction_types.index') }}" class="btn btn-secondary">@lang('transaction_types.Cancel')</a>
             </form>
         </div>
     </div>

@@ -1,13 +1,13 @@
 @extends('layouts.master')
 
-@section('title', 'تعديل أدوار المستخدم')
+@section('title', __('users.Edit User Roles'))
 
 @section('content')
-<div class="container-xxl py-4" dir="rtl">
+<div class="container-xxl py-4" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
   <div class="mb-3">
     <a href="{{ route('users.index') }}" class="btn btn-sm btn-outline-secondary">
-      رجوع للقائمة
+      @lang('users.Back to List')
     </a>
   </div>
 
@@ -15,8 +15,8 @@
     <div class="card-header bg-white">
       <div class="d-flex align-items-center">
         <i class="bi bi-people me-2"></i>
-        <strong>تعديل أدوار:</strong>
-        <span class="ms-2">{{ $user->name }} <small class="text-muted">&lt;{{ $user->email }}&gt;</small></span>
+        <strong>@lang('users.Edit Roles:')</strong>
+        <span class="ms-2">{{ $user->name }} <small class="text-muted"><{{ $user->email }}></small></span>
       </div>
     </div>
 
@@ -36,7 +36,7 @@
         @method('PUT')
 
         <div class="mb-3">
-          <label class="form-label">الأدوار المتاحة</label>
+          <label class="form-label">@lang('users.Available Roles')</label>
           <div class="row">
             @foreach ($roles as $roleName => $label)
               <div class="col-12 col-md-4 mb-2">
@@ -54,15 +54,15 @@
               </div>
             @endforeach
           </div>
-          <div class="form-text">اختَر الأدوار ثم احفظ.</div>
+          <div class="form-text">@lang('users.Choose roles then save.')</div>
         </div>
 
         <div class="d-flex gap-2">
           <button class="btn btn-primary">
-            حفظ
+            @lang('users.Save')
           </button>
           <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">
-            إلغاء
+            @lang('users.Cancel')
           </a>
         </div>
       </form>

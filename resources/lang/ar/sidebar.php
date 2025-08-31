@@ -1,8 +1,22 @@
 <?php
 
 return [
+    // Main Navigation
+    'Dashboard' => 'لوحة التحكم',
+    'Customers' => 'العملاء',
+    'Guarantors' => 'الكفلاء',
+    'Investors' => 'المستثمرين',
+    'Contracts' => 'العقود',
+    'Ledger' => 'دفتر القيود',
+
+    // Settings Section
     'Settings' => 'الإعدادات',
+    'General Settings' => 'الإعدادات العامة',
     'General Setting' => 'الإعدادات العامة',
+    'Users and Permissions' => 'المستخدمون والصلاحيات',
+    'Assign Roles to Users' => 'تعيين الأدوار للمستخدمين',
+
+    // Additional Settings
     'Nationalities' => 'الجنسيات',
     'titles' => 'العناوين',
     'Contract Statuses' => 'حالات العقود',
@@ -15,6 +29,50 @@ return [
     'Transaction Types' => 'أنواع العمليات',
     'Transaction Statuses' => 'حالات العمليات',
     'Categories' => 'التصنيفات',
+
+    // Settings Page Specific
+    'Control the name, owner name, logo, and site icon' => 'التحكم في الاسم، اسم المالك، الشعار، وأيقونة الموقع',
+    'Delete setting and images. Are you sure?' => 'حذف الإعداد والصور. هل أنت متأكد؟',
+    'Create Setting' => 'إنشاء إعداد',
+    'No saved setting yet' => 'لا يوجد إعداد محفوظ بعد',
+    'Create a setting to show the name, owner name, logo, and site icon across the system.' => 'إنشاء إعداد لعرض الاسم، اسم المالك، الشعار، وأيقونة الموقع عبر النظام.',
+    'Create Now' => 'إنشاء الآن',
+    'Basic Data' => 'البيانات الأساسية',
+    'Active' => 'نشط',
+    'Owner Name' => 'اسم المالك',
+    'Name (EN)' => 'الاسم (EN)',
+    'Name (AR)' => 'الاسم (AR)',
+    'Created At' => 'تم الإنشاء في',
+    'Last Updated' => 'آخر تحديث',
+    'Media' => 'الوسائط',
+    'Not uploaded' => 'غير محمل',
+    'View Details' => 'عرض التفاصيل',
+    'Brand Preview' => 'معاينة العلامة التجارية',
+    'Details of the general system setting' => 'تفاصيل الإعداد العام للنظام',
+    'Danger Zone' => 'منطقة الخطر',
+    'The record and associated images will be permanently deleted.' => 'سيتم حذف السجل والصور المرتبطة نهائياً.',
+    'Are you sure you want to delete this setting? The operation cannot be undone.' => 'هل أنت متأكد من حذف هذا الإعداد؟ لا يمكن التراجع عن العملية.',
+    'Delete Setting' => 'حذف الإعداد',
+    'Previews' => 'المعاينات',
+    'Open Original' => 'فتح الأصلي',
+    'No logo uploaded' => 'لم يتم تحميل شعار',
+    'Default preview for icon size' => 'المعاينة الافتراضية لحجم الأيقونة',
+    'No icon uploaded' => 'لم يتم تحميل أيقونة',
+    'Inline Preview' => 'معاينة مضمنة',
+    'Edit Settings' => 'تحرير الإعدادات',
+    'Maximum 50 characters' => 'حد أقصى 50 حرف',
+    'Logo (PNG/JPG/WEBP/SVG)' => 'الشعار (PNG/JPG/WEBP/SVG)',
+    'View Current' => 'عرض الحالي',
+    'Limit 4MB' => 'حد 4 ميجابايت',
+    'Delete current logo' => 'حذف الشعار الحالي',
+    'Favicon (ICO/PNG/JPG/WEBP/SVG)' => 'الأيقونة المفضلة (ICO/PNG/JPG/WEBP/SVG)',
+    'Limit 2MB' => 'حد 2 ميجابايت',
+    'Delete current icon' => 'حذف الأيقونة الحالية',
+    'Update' => 'تحديث',
+    'Cancel' => 'إلغاء',
+    'You can leave the upload fields empty if you do not want to change the images. Use the delete option to remove current images.' => 'يمكنك ترك حقول التحميل فارغة إذا كنت لا تريد تغيير الصور. استخدم خيار الحذف لإزالة الصور الحالية.',
+
+    // Other
     'sidebarpages' => 'الصفحات',
     'HR' => 'الموارد البشرية',
     'Employees' => 'الموظفين',

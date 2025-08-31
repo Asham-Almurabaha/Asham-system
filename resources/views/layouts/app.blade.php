@@ -28,13 +28,15 @@
                 {{-- زر تبديل اللغة --}}
                 <div class="ms-2">
                   @php $isAr = app()->getLocale() === 'ar'; @endphp
-                  <div class="btn-group btn-group-sm" role="group" aria-label="Language switch">
+                  <div class="btn-group btn-group-sm" role="group" aria-label="{{ __('Switch language') }}">
                     <a href="{{ route('lang.switch', 'ar') }}"
                        class="btn btn-outline-primary {{ $isAr ? 'active disabled' : '' }}"
-                       aria-disabled="{{ $isAr ? 'true' : 'false' }}">AR</a>
+                       aria-disabled="{{ $isAr ? 'true' : 'false' }}"
+                       title="{{ __('Arabic') }}">AR</a>
                     <a href="{{ route('lang.switch', 'en') }}"
                        class="btn btn-outline-primary {{ !$isAr ? 'active disabled' : '' }}"
-                       aria-disabled="{{ !$isAr ? 'true' : 'false' }}">EN</a>
+                       aria-disabled="{{ !$isAr ? 'true' : 'false' }}"
+                       title="{{ __('English') }}">EN</a>
                   </div>
                 </div>
               </div>
@@ -46,15 +48,15 @@
                   {{-- عناوين ديناميكية --}}
                   <div class="pt-2 pb-3">
                     @hasSection('auth_title')
-                      <h5 class="card-title text-center pb-0 fs-4">@yield('auth_title')</h5>
+                      <h5 class="card-title text-center pb-0 fs-4" id="auth-title">@yield('auth_title')</h5>
                     @else
-                      <h5 class="card-title text-center pb-0 fs-4">@yield('title', __('Welcome'))</h5>
+                      <h5 class="card-title text-center pb-0 fs-4" id="auth-title">@yield('title', __('Welcome'))</h5>
                     @endif
 
                     @hasSection('auth_subtitle')
-                      <p class="text-center small mb-0">@yield('auth_subtitle')</p>
+                      <p class="text-center small mb-0" id="auth-subtitle">@yield('auth_subtitle')</p>
                     @else
-                      <p class="text-center small mb-0">
+                      <p class="text-center small mb-0" id="auth-subtitle">
                         {{ __('Please enter your credentials to continue') }}
                       </p>
                     @endif
@@ -62,29 +64,29 @@
 
                   {{-- فلاش نجاح --}}
                   @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div class="alert alert-success alert-dismissible fade show" role="alert" aria-live="polite">
                       {{ session('success') }}
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
                     </div>
                   @endif
 
                   {{-- فلاش حالة عامة (مثل رابط إعادة تعيين) --}}
                   @if (session('status'))
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <div class="alert alert-info alert-dismissible fade show" role="alert" aria-live="polite">
                       {{ session('status') }}
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
                     </div>
                   @endif
 
                   {{-- قائمة أخطاء عامة (لو حبيت تظهرها في الأعلى) --}}
                   @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert" aria-live="polite">
                       <ul class="mb-0">
                         @foreach ($errors->all() as $error)
                           <li>{{ $error }}</li>
                         @endforeach
                       </ul>
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
                     </div>
                   @endif
 

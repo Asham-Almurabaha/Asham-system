@@ -25,6 +25,13 @@
 <meta property="og:title" content="{{ $title }}">
 <meta property="og:description" content="{{ $desc }}">
 <meta property="og:site_name" content="{{ $appName }}">
+<meta property="og:url" content="{{ $canonical }}">
+<meta property="og:type" content="website">
+
+{{-- Twitter Card --}}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ $title }}">
+<meta name="twitter:description" content="{{ $desc }}">
 
 {{-- Favicons --}}
 @if ($favicon)
@@ -34,11 +41,11 @@
 @endif
 <link rel="apple-touch-icon" href="{{ asset('assets/img/apple-touch-icon.png') }}">
 
-{{-- Google Fonts (روابط مباشرة) --}}
+{{-- Google Fonts (روابط مباشرة مع دعم عربي محسن) --}}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link
-  href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Open+Sans:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
   rel="stylesheet">
 
 {{-- Bootstrap & DataTables RTL/LTR --}}

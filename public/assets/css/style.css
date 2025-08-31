@@ -11,12 +11,16 @@
 --------------------------------------------------------------*/
 :root {
   scroll-behavior: smooth;
+  --main-font-family: 'Cairo', 'Open Sans', 'Nunito', 'Poppins', sans-serif;
 }
 
 body {
-  font-family: "Open Sans", sans-serif;
+  font-family: var(--main-font-family);
   background: #f6f9ff;
   color: #444444;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {

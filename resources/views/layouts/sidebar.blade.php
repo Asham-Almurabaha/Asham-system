@@ -23,7 +23,7 @@
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('dashboard')) }} {{ $active($isRoute('dashboard')) }}"
        href="{{ route('dashboard') }}">
-      <i class="bi bi-speedometer2"></i><span>لوحة التحكم</span>
+      <i class="bi bi-speedometer2"></i><span>@lang('sidebar.Dashboard')</span>
     </a>
   </li>
 
@@ -31,7 +31,7 @@
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('customers.*')) }} {{ $active($isRoute('customers.*')) }}"
        href="{{ route('customers.index') }}">
-      <i class="bi bi-people"></i><span>العملاء</span>
+      <i class="bi bi-people"></i><span>@lang('sidebar.Customers')</span>
     </a>
   </li>
 
@@ -39,7 +39,7 @@
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('guarantors.*')) }} {{ $active($isRoute('guarantors.*')) }}"
        href="{{ route('guarantors.index') }}">
-      <i class="bi bi-person-bounding-box"></i><span>الكفلاء</span>
+      <i class="bi bi-person-bounding-box"></i><span>@lang('sidebar.Guarantors')</span>
     </a>
   </li>
 
@@ -47,23 +47,15 @@
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('investors.*')) }} {{ $active($isRoute('investors.*')) }}"
        href="{{ route('investors.index') }}">
-      <i class="bi bi-briefcase"></i><span>المستثمرين</span>
+      <i class="bi bi-briefcase"></i><span>@lang('sidebar.Investors')</span>
     </a>
   </li>
-
-  {{-- عمليات المستثمرين --}}
-  {{-- <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('investor-transactions.*')) }} {{ $active($isRoute('investor-transactions.*')) }}"
-       href="{{ route('investor-transactions.index') }}">
-      <i class="bi bi-cash"></i><span>عمليات المستثمرين</span>
-    </a>
-  </li> --}}
 
   {{-- العقود --}}
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('contracts.*')) }} {{ $active($isRoute('contracts.*')) }}"
        href="{{ route('contracts.index') }}">
-      <i class="bi bi-file-earmark-text"></i><span>العقود</span>
+      <i class="bi bi-file-earmark-text"></i><span>@lang('sidebar.Contracts')</span>
     </a>
   </li>
 
@@ -71,7 +63,7 @@
   <li class="nav-item">
     <a class="nav-link {{ $coll($isRoute('ledger.*')) }} {{ $active($isRoute('ledger.*')) }}"
        href="{{ route('ledger.index') }}">
-      <i class="bi bi-journal"></i><span>دفتر القيود</span>
+      <i class="bi bi-journal"></i><span>@lang('sidebar.Ledger')</span>
     </a>
   </li>
 
@@ -87,64 +79,18 @@
     </a>
 
     <ul id="settings-nav" class="nav-content collapse {{ $open($settingsOpen) }}" data-bs-parent="#sidebar-nav">
-      <li class="nav-heading">الإعدادات العامة</li>
+      <li class="nav-heading">@lang('sidebar.General Settings')</li>
       <li>
         <a class="{{ $active($isRoute('settings.index')) }}" href="{{ route('settings.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
         </a>
       </li>
-      {{-- ✅ المستخدمون والصلاحيات (يظهر للأدمن فقط) --}}
-        <li class="nav-heading">المستخدمون والصلاحيات</li>
-        <li>
-          <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
-            <i class="bi bi-circle"></i><span>تعيين الأدوار للمستخدمين</span>
-          </a>
-        </li>
-      {{-- <li>
-        <a class="{{ $active($isRoute('nationalities.*')) }}" href="{{ route('nationalities.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Nationalities')</span>
+      <li class="nav-heading">@lang('sidebar.Users and Permissions')</li>
+      <li>
+        <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Assign Roles to Users')</span>
         </a>
       </li>
-      <li>
-        <a class="{{ $active($isRoute('titles.*')) }}" href="{{ route('titles.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.titles')</span>
-        </a>
-      </li>
-
-      <li class="nav-heading">إعدادات العقود</li>
-      <li>
-        <a class="{{ $active($isRoute('contract_statuses.*')) }}" href="{{ route('contract_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Contract Statuses')</span>
-        </a>
-      </li>
-      
-
-      <li class="nav-heading">إعدادات الأقساط</li>
-      <li>
-        <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Installment Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('installment_types.*')) }}" href="{{ route('installment_types.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Installment Types')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('transaction_types.*')) }}" href="{{ route('transaction_types.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Transaction Types')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Transaction Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Categories')</span>
-        </a>
-      </li> --}}
     </ul>
   </li>
   @endrole

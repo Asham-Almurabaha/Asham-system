@@ -16,23 +16,43 @@
 
 <script>
   (function () {
+    'use strict';
+
     // CSRF لـ Ajax
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (token && window.$) $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': token } });
+    if (token && window.$) {
+      $.ajaxSetup({
+        headers: { 'X-CSRF-TOKEN': token }
+      });
+    }
 
     // Tooltips + إخفاء الفلاش
     document.addEventListener('DOMContentLoaded', function () {
+      // تهيئة Tooltips
       const tooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-      tooltips.forEach(el => new bootstrap.Tooltip(el, { container: 'body' }));
+      tooltips.forEach(el => {
+        try {
+          new bootstrap.Tooltip(el, { container: 'body' });
+        } catch (e) {
+          console.warn('Tooltip initialization failed:', e);
+        }
+      });
 
-      const flashMessage = document.getElementById('flash-message');
-      if (flashMessage) {
-        setTimeout(() => {
-          flashMessage.style.transition = 'opacity .5s ease';
-          flashMessage.style.opacity = '0';
-          setTimeout(() => flashMessage.remove(), 500);
-        }, 5000);
-      }
+      // إخفاء رسائل الفلاش تلقائياً
+      const flashMessages = document.querySelectorAll('[id^="flash-"]');
+      flashMessages.forEach(flashMessage => {
+        if (flashMessage) {
+          setTimeout(() => {
+            flashMessage.style.transition = 'opacity .5s ease';
+            flashMessage.style.opacity = '0';
+            setTimeout(() => {
+              if (flashMessage.parentNode) {
+                flashMessage.parentNode.removeChild(flashMessage);
+              }
+            }, 500);
+          }, 5000);
+        }
+      });
     });
   })();
 </script>

@@ -1,16 +1,16 @@
 @extends('layouts.master')
 
-@section('title', 'المستخدمون')
+@section('title', __('users.Users'))
 
 @section('content')
-<div class="container-xxl py-4" dir="rtl">
+<div class="container-xxl py-4" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 
   @if (session('success'))
     <div class="alert alert-success">{{ session('success') }}</div>
   @endif
 
   <div class="d-flex align-items-center mb-3">
-    <h1 class="h4 mb-0">المستخدمون</h1>
+    <h1 class="h4 mb-0">@lang('users.Users')</h1>
   </div>
 
   <div class="card border-0 shadow-sm">
@@ -19,10 +19,10 @@
         <thead class="table-light">
           <tr>
             <th>#</th>
-            <th>الاسم</th>
-            <th>البريد</th>
-            <th>الأدوار</th>
-            <th class="text-end">إجراءات</th>
+            <th>@lang('users.Name')</th>
+            <th>@lang('users.Email')</th>
+            <th>@lang('users.Roles')</th>
+            <th class="text-end">@lang('users.Actions')</th>
           </tr>
         </thead>
         <tbody>
@@ -40,13 +40,13 @@
               </td>
               <td class="text-end">
                 <a href="{{ route('users.roles.edit', $u) }}" class="btn btn-sm btn-outline-primary">
-                  إدارة الأدوار
+                  @lang('users.Manage Roles')
                 </a>
               </td>
             </tr>
           @empty
             <tr>
-              <td colspan="5" class="text-center text-muted">لا يوجد مستخدمون.</td>
+              <td colspan="5" class="text-center text-muted">@lang('users.No users found.')</td>
             </tr>
           @endforelse
         </tbody>
