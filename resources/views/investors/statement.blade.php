@@ -3,7 +3,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <title>جرد حساب المستثمر — {{ $investor->name }}</title>
+  <title>@lang('app.Withdrawals Summary') — {{ $investor->name }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 
@@ -57,8 +57,8 @@
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
       <div>
-        <h5 class="mb-0 fw-bold">جرد حساب المستثمر</h5>
-        <div class="small-muted">المستثمر: <strong>{{ $investor->name }}</strong></div>
+        <h5 class="mb-0 fw-bold">@lang('app.Withdrawals Summary')</h5>
+        <div class="small-muted">@lang('app.Investor'): <strong>{{ $investor->name }}</strong></div>
       </div>
       <div class="text-end">
         <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
@@ -69,7 +69,7 @@
     <div class="row g-3 kpi mb-4">
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">عدد العقود ({{ $contractsTotal }})</div>
+          <div class="small-muted">{{ __('Contracts') }} ({{ $contractsTotal }})</div>
           <div class="fs-6">سارية: <strong>{{ $contractsActive }}</strong> — منتهية: <strong>{{ $contractsEnded }}</strong></div>
         </div></div>
       </div>
@@ -110,27 +110,27 @@
     <div class="row g-3 kpi mb-3">
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">رأس المال (المشارك بجميع العقود)</div>
+          <div class="small-muted">{{ __('Capital (participating in all contracts)') }}</div>
           <div class="fs-6 fw-bold">{{ number_format($totalCapitalShareAll,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
 
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">الربح الصافي (من جميع العقود)</div>
+          <div class="small-muted">{{ __('Net profit (from all contracts)') }}</div>
           <div class="fs-6 fw-bold">{{ number_format($totalProfitNetAll,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
 
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">رأس المال (العقود السارية)</div>
+          <div class="small-muted">{{ __('Capital (active contracts)') }}</div>
           <div class="fs-6 fw-bold">{{ number_format($totalCapitalShare,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">الربح الصافي (العقود السارية)</div>
+          <div class="small-muted">{{ __('Net profit (active contracts)') }}</div>
           <div class="fs-6 fw-bold">{{ number_format($totalProfitNet,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
@@ -179,7 +179,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="9" class="py-5 text-muted">لا توجد عقود سارية مرتبطة بهذا المستثمر.</td>
+              <td colspan="9" class="py-5 text-muted">{{ __('No active contracts linked to this investor.') }}</td>
             </tr>
           @endforelse
         </tbody>
@@ -190,8 +190,8 @@
     </div>
 
     <div class="no-print text-end mt-3">
-      <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary">↩ رجوع</a>
-      <button class="btn btn-primary" onclick="window.print()">🖨 طباعة</button>
+      <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨 @lang('app.Print')</button>
     </div>
   </div>
 </div>

@@ -47,8 +47,8 @@
                     <small class="form-text text-muted">يمكن اختيار أكثر من حالة بالضغط على Ctrl أو Cmd.</small>
                 </div>
 
-                <button type="submit" class="btn btn-success">حفظ</button>
-                <a href="{{ route('categories.index') }}" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-success">@lang('app.Save')</button>
+                <a href="{{ route('categories.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
             </form>
         </div>
     </div>

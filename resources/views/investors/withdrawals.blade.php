@@ -3,7 +3,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <title>جرد المسحوبات — {{ $investor->name }}</title>
+  <title>@lang('app.Withdrawals Summary') — {{ $investor->name }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 
@@ -50,19 +50,19 @@ use Illuminate\Support\Carbon;
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
       <div>
-        <h5 class="mb-0 fw-bold">جرد المسحوبات</h5>
+        <h5 class="mb-0 fw-bold">@lang('app.Withdrawals Summary')</h5>
         <div class="small-muted">
-          المستثمر: <strong>{{ $investor->name }}</strong>
+          @lang('app.Investor'): <strong>{{ $investor->name }}</strong>
           @if($from || $to)
-            — الفترة:
+            — @lang('app.Period'):
             <strong>{{ $from ? Carbon::parse($from)->format('d-m-Y') : '—' }}</strong>
-            إلى
+            @lang('app.to')
             <strong>{{ $to   ? Carbon::parse($to)->format('d-m-Y')   : '—' }}</strong>
           @endif
         </div>
       </div>
       <div class="text-end">
-        <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
+        <div class="small-muted">@lang('app.Date'): {{ now()->format('d-m-Y') }}</div>
       </div>
     </div>
 
@@ -70,13 +70,13 @@ use Illuminate\Support\Carbon;
     <div class="row g-3 kpi mb-4">
       <div class="col-6 col-md-6">
         <div class="card"><div class="card-body p-3 text-center">
-          <div class="small-muted">عدد عمليات السحب</div>
+          <div class="small-muted">@lang('app.Number of Withdrawals')</div>
           <div class="fs-4 fw-bold">{{ number_format($withdrawalsCount) }}</div>
         </div></div>
       </div>
       <div class="col-6 col-md-6">
         <div class="card"><div class="card-body p-3 text-center">
-          <div class="small-muted">إجمالي المسحوبات</div>
+          <div class="small-muted">@lang('app.Total Withdrawals')</div>
           <div class="fs-4 fw-bold text-danger">
             {{ number_format($withdrawalsTotal, 2) }} <span class="fs-6 small-muted">{{ $cs }}</span>
           </div>
@@ -90,11 +90,11 @@ use Illuminate\Support\Carbon;
         <thead class="table-light">
           <tr>
             <th style="width:56px">#</th>
-            <th>التاريخ</th>
-            <th>المبلغ</th>
-            <th>النوع</th>
-            <th>الحالة</th>
-            <th>الملاحظات</th>
+            <th>@lang('app.Date')</th>
+            <th>@lang('app.Amount')</th>
+            <th>@lang('app.Type')</th>
+            <th>@lang('app.Status')</th>
+            <th>@lang('app.Notes')</th>
           </tr>
         </thead>
         <tbody>
@@ -113,7 +113,7 @@ use Illuminate\Support\Carbon;
             </tr>
           @empty
             <tr>
-              <td colspan="7" class="py-5 text-muted">لا توجد مسحوبات مسجلة لهذا المستثمر ضمن النطاق الحالي.</td>
+              <td colspan="7" class="py-5 text-muted">@lang('app.No withdrawals found for this investor in the current range.')</td>
             </tr>
           @endforelse
         </tbody>
@@ -135,8 +135,8 @@ use Illuminate\Support\Carbon;
     </div>
 
     <div class="no-print text-end mt-3">
-      <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary">↩ رجوع</a>
-      <button class="btn btn-primary" onclick="window.print()">🖨 طباعة</button>
+      <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨 @lang('app.Print')</button>
     </div>
 
   </div>

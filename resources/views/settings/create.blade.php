@@ -73,9 +73,9 @@
 
             <div class="col-12 d-flex gap-2">
               <button class="btn btn-success">
-                <i class="bi bi-check2 me-1"></i>{{ __('حفظ') }}
+                <i class="bi bi-check2 me-1"></i>@lang('app.Save')
               </button>
-              <a href="{{ route('settings.index') }}" class="btn btn-light">{{ __('إلغاء') }}</a>
+              <a href="{{ route('settings.index') }}" class="btn btn-light">@lang('app.Cancel')</a>
             </div>
           </form>
         </div>

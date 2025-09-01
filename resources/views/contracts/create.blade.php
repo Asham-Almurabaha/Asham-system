@@ -22,8 +22,8 @@
             @include('contracts._form')
 
             <div class="mt-3">
-                <button type="submit" class="btn btn-primary">حفظ</button>
-                <a href="{{ route('contracts.index') }}" class="btn btn-secondary" type="button">إلغاء</a>
+                <button type="submit" class="btn btn-primary">@lang('app.Save')</button>
+                <a href="{{ route('contracts.index') }}" class="btn btn-secondary" type="button">@lang('app.Cancel')</a>
             </div>
         </form>
     </div>

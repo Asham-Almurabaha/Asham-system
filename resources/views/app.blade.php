@@ -14,20 +14,20 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ route('home') }}">نظام الأقساط</a>
+            <a class="navbar-brand" href="{{ route('home') }}">{{ $companyName }}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                aria-controls="navbarNav" aria-expanded="false" aria-label="تبديل التنقل">
+                aria-controls="navbarNav" aria-expanded="false" aria-label="@lang('app.Toggle navigation')">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="{{ route('customers.index') }}">العملاء</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('guarantors.index') }}">الكفلاء</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('investors.index') }}">المستثمرين</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('contracts.index') }}">العقود</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('installments.index') }}">الأقساط</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('payments.index') }}">المدفوعات</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ route('settings.index') }}">الإعدادات</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('customers.index') }}">@lang('app.Customers')</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('guarantors.index') }}">@lang('app.Guarantors')</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('investors.index') }}">@lang('app.Investors')</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('contracts.index') }}">@lang('app.Contracts')</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('installments.index') }}">@lang('app.Installments')</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('payments.index') }}">@lang('app.Payments')</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('settings.index') }}">@lang('app.Settings')</a></li>
                 </ul>
                 <ul class="navbar-nav">
                     @auth
@@ -35,11 +35,11 @@
                         <li class="nav-item">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="btn btn-link nav-link p-0" style="display:inline;">تسجيل خروج</button>
+                                <button type="submit" class="btn btn-link nav-link p-0" style="display:inline;">@lang('app.Logout')</button>
                             </form>
                         </li>
                     @else
-                        <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">تسجيل دخول</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ route('login') }}">@lang('app.Login')</a></li>
                     @endauth
                 </ul>
             </div>

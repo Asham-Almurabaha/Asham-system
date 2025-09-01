@@ -1,16 +1,16 @@
 @extends('layouts.master')
 
-@section('title', 'تعديل حالة العقد')
+@section('title', __('app.Edit Contract Status'))
 
 @section('content')
 
     <div class="pagetitle">
-      <h1>تعديل حالة العقد</h1>
+      <h1>@lang('app.Edit Contract Status')</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item">Setting</li>
-          <li class="breadcrumb-item">Contract Status</li>
-          <li class="breadcrumb-item active">Edit</li>
+          <li class="breadcrumb-item">@lang('app.Settings (Breadcrumb)')</li>
+          <li class="breadcrumb-item">@lang('app.Contract Statuses')</li>
+          <li class="breadcrumb-item active">@lang('app.Edit Contract Status')</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
@@ -33,12 +33,12 @@
                     @method('PUT')
 
                     <div class="mb-3">
-                        <label for="name" class="form-label">اسم الحالة</label>
+                        <label for="name" class="form-label">@lang('app.Status Name')</label>
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $contract_status->name) }}" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">تحديث</button>
-                    <a href="{{ route('contract_statuses.index') }}" class="btn btn-secondary">إلغاء</a>
+                    <button type="submit" class="btn btn-primary">@lang('app.Update')</button>
+                    <a href="{{ route('contract_statuses.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
                 </form>
             </div>
         </div>

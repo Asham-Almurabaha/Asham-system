@@ -9,7 +9,7 @@
         <h4 class="fw-bold mb-0">📑 سجل التغييرات (Audit Log)</h4>
         <div class="d-flex gap-2">
             <a href="{{ route('audit.logs') }}" class="btn btn-outline-secondary btn-sm">تحديث</a>
-            <button class="btn btn-primary btn-sm no-print" onclick="window.print()">🖨 طباعة</button>
+            <button class="btn btn-primary btn-sm no-print" onclick="window.print()">🖨 @lang('app.Print')</button>
         </div>
     </div>
 

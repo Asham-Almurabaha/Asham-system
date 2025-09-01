@@ -60,7 +60,7 @@
                         @lang('pages.Update')
                     </a>
 
-                    <form action="{{ route('settings.destroy', $setting->id) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف الإعداد؟');">
+                    <form action="{{ route('settings.destroy', $setting->id) }}" method="POST" onsubmit="return confirm('@lang('app.Confirm Delete')');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">
