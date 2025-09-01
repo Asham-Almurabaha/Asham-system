@@ -236,7 +236,7 @@
                 <div class="flex-grow-1">
                     <div class="subnote">
                         {{ __('Active Contracts') }}
-                        <span class="hint" data-bs-toggle="tooltip" title="{{ __('Active = All statuses except') }} ({{ $endedNamesTx }}) و({{ $pendingNamesTx }})">
+                        <span class="hint" data-bs-toggle="tooltip" title="{{ __('Active = All statuses except :ended and :pending', ['ended' => $endedNamesTx, 'pending' => $pendingNamesTx]) }}">
                             <i class="bi bi-info-circle"></i>
                         </span>
                     </div>
@@ -324,7 +324,7 @@
   <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
 
     {{-- أزرار الإجراءات --}}
-    <div class="btn-group" role="group" aria-label="Contract Actions">
+    <div class="btn-group" role="group" aria-label="{{ __('Contract Actions') }}">
       <a href="{{ route('contracts.create') }}" class="btn btn-success">
         <i class="bi bi-plus-lg"></i> {{ __('Add New Contract') }}
       </a>
@@ -380,11 +380,11 @@
 
         <div class="col-6 col-md-2">
           <label class="form-label mb-1">{{ __('From Date') }}</label>
-          <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
+          <input type="date" name="from" value="{{ request('from') }}" class="form-control form-control-sm js-date" placeholder="{{ __('YYYY-MM-DD') }}">
         </div>
         <div class="col-6 col-md-2">
           <label class="form-label mb-1">{{ __('To Date') }}</label>
-          <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm js-date" placeholder="YYYY-MM-DD">
+          <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm js-date" placeholder="{{ __('YYYY-MM-DD') }}">
         </div>
 
         <div class="col-12 col-md-1 d-flex gap-2">
@@ -427,9 +427,10 @@
                                 default => 'success'
                             };
                             $count = $contract->investors->count();
+                            $sep   = app()->getLocale() === 'ar' ? '، ' : ', ';
                             $tip   = $contract->investors
                                     ->map(fn($i) => ($i->name ?? ('#'.$i->id)).' '.number_format($i->pivot->share_percentage,2).'%')
-                                    ->join('، ');
+                                    ->join($sep);
                         @endphp
                         <tr>
                             <td class="text-muted">

@@ -1,7 +1,7 @@
-{{-- resources/views/customers/import.blade.php --}}
+{{-- resources/views/Investors/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', __('Import Customers from Excel'))
+@section('title', __('Import Investors from Excel'))
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
@@ -13,7 +13,7 @@
         <i class="bi bi-cloud-arrow-up fs-3"></i>
       </div>
       <div>
-        <h1 class="h4 mb-1">{{ __('Import Customers') }}</h1>
+        <h1 class="h4 mb-1">{{ __('Import Investors') }}</h1>
         <p class="text-muted mb-0">
           ارفع ملف Excel/CSV بالمواصفات:
           <code>name, national_id, phone, email, address, nationality, title, id_card_image, contract_image, ...</code>
@@ -21,7 +21,7 @@
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <a href="{{ route('customers.import.template') }}" class="btn btn-outline-secondary btn-sm">
+        <a href="{{ route('investors.import.template') }}" class="btn btn-outline-secondary btn-sm">
           <i class="bi bi-filetype-xlsx me-1"></i> تنزيل تمبليت
         </a>
       </div>
@@ -53,7 +53,7 @@
 
   {{-- Summary KPIs --}}
   @php
-    $summary      = session('summary') ?: session('customers_import.summary') ?: [];
+    $summary      = session('summary') ?: session('investors_import.summary') ?: [];
     $failuresBag  = session('failures') ?? session('failures_simple') ?? [];
     $errorsSimple = session('errors_simple') ?? [];
 
@@ -70,7 +70,7 @@
     $successPct = $rows > 0 ? round(($changed / $rows) * 100, 1) : 0;
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
 
-    $skippedBag   = session('customers_import.skipped_simple') ?? [];
+    $skippedBag   = session('investors_import.skipped_simple') ?? [];
     $skippedCount = is_countable($skippedBag) ? count($skippedBag)
                     : (method_exists($skippedBag, 'count') ? (int)$skippedBag->count() : 0);
 
@@ -142,7 +142,7 @@
   {{-- Upload --}}
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <form action="{{ route('customers.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
+      <form action="{{ route('investors.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
         @csrf
         <div class="col-12">
           <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
@@ -165,8 +165,8 @@
           </button>
 
           @php $hasIssues = ($hasFailures || $skippedCount > 0); @endphp
-          @if ($hasIssues && Route::has('customers.import.failures.fix'))
-            <a class="btn btn-warning" href="{{ route('customers.import.failures.fix') }}">
+          @if ($hasIssues && Route::has('investors.import.failures.fix'))
+            <a class="btn btn-warning" href="{{ route('investors.import.failures.fix') }}">
               <i class="bi bi-wrench-adjustable me-1"></i>
               تنزيل ملف الأخطاء/المتخطّى
               @if($hasFailures)

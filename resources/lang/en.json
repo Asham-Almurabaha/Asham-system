@@ -328,5 +328,17 @@
     "Job Title": "Job Title",
     "View Full Size": "View Full Size",
     "Click to open image in new window": "Click to open image in new window",
-    "Copied": "Copied"
+    "Copied": "Copied",
+    "Monthly Installments Summary": "Monthly Installments Summary",
+    "Excludes statuses:": "Excludes statuses:",
+    "Remaining:": "Remaining:",
+    "Within the Specified Period": "Within the specified period",
+    "Total Contracts — Entire System": "Total Contracts — Entire System",
+    "Not Affected by Filters": "Not Affected by Filters",
+    "Active = All statuses except :ended and :pending": "Active = all statuses except :ended and :pending",
+    "Includes only:": "Includes only:",
+    "Contracts that are not linked to any investor (from the relationship)": "Contracts that are not linked to any investor (from the relationship)",
+    "Includes:": "Includes:",
+    "Contract Actions": "Contract Actions",
+    "YYYY-MM-DD": "YYYY-MM-DD"
 }

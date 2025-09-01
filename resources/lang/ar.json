@@ -361,5 +361,17 @@
     "Job Title": "الوظيفة",
     "View Full Size": "عرض بالحجم الكامل",
     "Click to open image in new window": "انقر لفتح الصورة في نافذة جديدة",
-    "Copied": "تم النسخ"
+    "Copied": "تم النسخ",
+    "Monthly Installments Summary": "ملخص أقساط هذا الشهر",
+    "Excludes statuses:": "يستثني الحالات:",
+    "Remaining:": "المتبقي:",
+    "Within the Specified Period": "ضمن الفترة المحددة",
+    "Total Contracts — Entire System": "إجمالي العقود — كل النظام",
+    "Not Affected by Filters": "غير متأثر بالفلاتر",
+    "Active = All statuses except :ended and :pending": "نشط = جميع الحالات ما عدا :ended و :pending",
+    "Includes only:": "يشمل فقط:",
+    "Contracts that are not linked to any investor (from the relationship)": "العقود التي لا ترتبط بأي مستثمر (من العلاقة)",
+    "Includes:": "يشمل:",
+    "Contract Actions": "إجراءات العقود",
+    "YYYY-MM-DD": "YYYY-MM-DD"
 }

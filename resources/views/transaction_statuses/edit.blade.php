@@ -1,16 +1,16 @@
 @extends('layouts.master')
 
-@section('title', 'تعديل الحالة')
+@section('title', __('Edit'))
 
 @section('content')
 
 <div class="pagetitle">
-    <h1>تعديل الحالة</h1>
+    <h1>{{ __('Edit') }}</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">الإعدادات</li>
-            <li class="breadcrumb-item">حالات العمليات</li>
-            <li class="breadcrumb-item active">تعديل</li>
+            <li class="breadcrumb-item">{{ __('Settings') }}</li>
+            <li class="breadcrumb-item">{{ __('Transaction Statuses') }}</li>
+            <li class="breadcrumb-item active">{{ __('Edit') }}</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->
@@ -33,14 +33,14 @@
                 @method('PUT')
 
                 <div class="mb-3">
-                    <label for="name" class="form-label">اسم الحالة</label>
+                    <label for="name" class="form-label">{{ __('Status Name') }}</label>
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $transactionStatus->name) }}" required autofocus>
                 </div>
 
                 <div class="mb-3">
-                    <label for="transaction_type_id" class="form-label">نوع العملية</label>
+                    <label for="transaction_type_id" class="form-label">{{ __('Transaction Type') }}</label>
                     <select name="transaction_type_id" id="transaction_type_id" class="form-select" required>
-                        <option value="" disabled>اختر نوع العملية</option>
+                        <option value="" disabled>{{ __('Choose') }} {{ __('Transaction Type') }}</option>
                         @foreach ($types as $type)
                         <option value="{{ $type->id }}" {{ (old('transaction_type_id', $transactionStatus->transaction_type_id) == $type->id) ? 'selected' : '' }}>
                             {{ $type->name }}
@@ -49,8 +49,8 @@
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-primary">تحديث</button>
-                <a href="{{ route('transaction_statuses.index') }}" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-primary">{{ __('Update') }}</button>
+                <a href="{{ route('transaction_statuses.index') }}" class="btn btn-secondary">{{ __('Cancel') }}</a>
             </form>
         </div>
     </div>
