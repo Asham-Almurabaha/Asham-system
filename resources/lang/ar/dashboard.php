@@ -68,4 +68,5 @@ return [
     'No sufficient balances to display.' => 'لا توجد أرصدة كافية للعرض.',
     'Account' => 'الحساب',
     'Estimated Balance = Opening Balance + In - Out' => 'الرصيد التقديري = الرصيد الافتتاحي + داخل - خارج',
+    'Net = In - Out' => 'الصافي = داخل - خارج',
 ];
