@@ -1,12 +1,19 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+@php
+    $locale = app()->getLocale();
+    $isRtl = $locale === 'ar';
+@endphp
+<html lang="{{ $locale }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ $companyName }}</title>
-    <!-- Bootstrap RTL CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet" />
-    <!-- يمكن إضافة ملفات CSS أخرى هنا -->
+    @if($isRtl)
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    @else
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    @endif
+    <!-- Additional CSS files -->
     <link rel="shortcut icon" href="{{ asset('storage/logos/' . basename($companyLogo)) }}" type="image/x-icon" />
 
 
@@ -29,7 +36,16 @@
                     <li class="nav-item"><a class="nav-link" href="{{ route('payments.index') }}">@lang('app.Payments')</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ route('settings.index') }}">@lang('app.Settings')</a></li>
                 </ul>
-                <ul class="navbar-nav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @lang('app.Language')
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li><a class="dropdown-item" href="{{ route('lang.switch', 'en') }}">@lang('app.English')</a></li>
+                            <li><a class="dropdown-item" href="{{ route('lang.switch', 'ar') }}">@lang('app.Arabic')</a></li>
+                        </ul>
+                    </li>
                     @auth
                         <li class="nav-item"><a class="nav-link" href="#">{{ auth()->user()->name }}</a></li>
                         <li class="nav-item">

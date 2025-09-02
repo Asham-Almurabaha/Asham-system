@@ -11,6 +11,9 @@ return [
     'Settings' => 'الإعدادات',
     'Login' => 'تسجيل دخول',
     'Logout' => 'تسجيل خروج',
+    'Language' => 'اللغة',
+    'English'  => 'الإنجليزية',
+    'Arabic'   => 'العربية',
 
     'Edit Contract Status' => 'تعديل حالة العقد',
     'Add Contract Status' => 'إضافة حالة عقد',

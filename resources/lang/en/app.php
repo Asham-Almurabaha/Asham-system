@@ -11,6 +11,9 @@ return [
     'Settings' => 'Settings',
     'Login' => 'Login',
     'Logout' => 'Logout',
+    'Language' => 'Language',
+    'English'  => 'English',
+    'Arabic'   => 'Arabic',
 
     'Edit Contract Status' => 'Edit Contract Status',
     'Add Contract Status' => 'Add Contract Status',
