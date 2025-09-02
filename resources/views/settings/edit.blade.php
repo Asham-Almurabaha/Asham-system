@@ -91,10 +91,10 @@
             </div>
 
             <div class="col-12 d-flex gap-2">
-              <button class="btn btn-primary">
+              <button class="btn btn-outline-primary">
                 <i class="bi bi-check2 me-1"></i>@lang('sidebar.Update')
               </button>
-              <a href="{{ route('settings.index') }}" class="btn btn-light">@lang('sidebar.Cancel')</a>
+              <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary">@lang('sidebar.Cancel')</a>
             </div>
           </form>
         </div>

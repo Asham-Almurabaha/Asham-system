@@ -224,7 +224,7 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-outline-primary">
                         <i class="bi bi-save2 me-1"></i> @lang('app.Update')
                     </button>
                     <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
@@ -281,4 +281,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-

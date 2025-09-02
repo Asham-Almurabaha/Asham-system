@@ -42,8 +42,8 @@
                     <textarea name="description" id="description" class="form-control">{{ old('description', $transactionType->description) }}</textarea>
                 </div>
 
-                <button type="submit" class="btn btn-primary">@lang('transaction_types.Update')</button>
-                <a href="{{ route('transaction_types.index') }}" class="btn btn-secondary">@lang('transaction_types.Cancel')</a>
+                <button type="submit" class="btn btn-outline-primary">@lang('transaction_types.Update')</button>
+                <a href="{{ route('transaction_types.index') }}" class="btn btn-outline-secondary">@lang('transaction_types.Cancel')</a>
             </form>
         </div>
     </div>

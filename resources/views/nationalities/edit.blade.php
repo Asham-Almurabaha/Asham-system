@@ -38,7 +38,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary">تحديث</button>
-                    <a href="{{ route('nationalities.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
+                    <a href="{{ route('nationalities.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
                 </form>
             </div>
         </div>

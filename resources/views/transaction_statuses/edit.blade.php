@@ -49,8 +49,8 @@
                     </select>
                 </div>
 
-                <button type="submit" class="btn btn-primary">{{ __('Update') }}</button>
-                <a href="{{ route('transaction_statuses.index') }}" class="btn btn-secondary">{{ __('Cancel') }}</a>
+                <button type="submit" class="btn btn-outline-primary">{{ __('Update') }}</button>
+                <a href="{{ route('transaction_statuses.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
             </form>
         </div>
     </div>

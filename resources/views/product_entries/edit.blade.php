@@ -58,8 +58,8 @@
                     <input type="date" name="entry_date" id="entry_date" class="form-control" value="{{ old('entry_date', $productEntry->entry_date->format('Y-m-d')) }}" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary">{{ __('Update') }}</button>
-                <a href="{{ route('product_entries.index') }}" class="btn btn-secondary">{{ __('Cancel') }}</a>
+                <button type="submit" class="btn btn-outline-primary">{{ __('Update') }}</button>
+                <a href="{{ route('product_entries.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
             </form>
         </div>
     </div>

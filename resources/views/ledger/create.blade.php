@@ -226,11 +226,11 @@
             </div>
 
             <div class="col-12 d-flex gap-2 mt-2">
-                <button class="btn btn-primary" id="btnSave">
+                <button class="btn btn-outline-success" id="btnSave">
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                     حفظ
                 </button>
-                <a href="{{ route('ledger.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
+                <a href="{{ route('ledger.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
 
                 <div class="ms-auto d-flex gap-2">
                     <a href="{{ route('ledger.transfer.create') }}" class="btn btn-outline-primary">تحويل داخلي</a>
@@ -790,4 +790,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-

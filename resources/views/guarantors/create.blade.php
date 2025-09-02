@@ -174,7 +174,7 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-outline-success">
                         <i class="bi bi-check2-circle me-1"></i> {{ __('guarantors.Save') }}
                     </button>
                     <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary">

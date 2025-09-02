@@ -36,8 +36,8 @@
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-success">@lang('app.Save')</button>
-                    <a href="{{ route('contract_statuses.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
+                    <button type="submit" class="btn btn-outline-success">@lang('app.Save')</button>
+                    <a href="{{ route('contract_statuses.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
                 </form>
             </div>
         </div>

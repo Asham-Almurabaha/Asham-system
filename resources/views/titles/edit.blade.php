@@ -38,8 +38,8 @@
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $title->name) }}" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">{{ __('Update') }}</button>
-                    <a href="{{ route('titles.index') }}" class="btn btn-secondary">{{ __('Cancel') }}</a>
+                    <button type="submit" class="btn btn-outline-primary">{{ __('Update') }}</button>
+                    <a href="{{ route('titles.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
                 </form>
             </div>
         </div>
