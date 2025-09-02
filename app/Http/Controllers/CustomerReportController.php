@@ -8,6 +8,54 @@ use Illuminate\Support\Facades\Schema;
 
 class CustomerReportController extends Controller
 {
+    public function active()
+    {
+        $endedStatusNames = ['','',' ',' ',' ','Completed','Early Settlement'];
+        $endedStatusIds = [];
+        if (class_exists(\App\Models\ContractStatus::class)) {
+            $endedStatusIds = \App\Models\ContractStatus::query()
+                ->whereIn('name', $endedStatusNames)
+                ->pluck('id')
+                ->all();
+        }
+
+        $statusIdCol = null;
+        foreach (['contract_status_id','status_id','state_id'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) { $statusIdCol = $col; break; }
+        }
+        $statusNameCol = null;
+        foreach (['status','state','contract_status'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) { $statusNameCol = $col; break; }
+        }
+
+        $rows = Customer::query()
+            ->withCount(['contracts as active_contracts' => function ($c) use ($statusIdCol, $statusNameCol, $endedStatusIds, $endedStatusNames) {
+                if ($statusIdCol && !empty($endedStatusIds)) {
+                    $c->whereNotIn($statusIdCol, $endedStatusIds);
+                } elseif ($statusNameCol) {
+                    $c->whereNotIn($statusNameCol, $endedStatusNames);
+                } elseif (Schema::hasColumn('contracts', 'is_closed')) {
+                    $c->where('is_closed', 0);
+                } elseif (Schema::hasColumn('contracts', 'closed_at')) {
+                    $c->whereNull('closed_at');
+                }
+            }])
+            ->whereHas('contracts', function ($c) use ($statusIdCol, $statusNameCol, $endedStatusIds, $endedStatusNames) {
+                if ($statusIdCol && !empty($endedStatusIds)) {
+                    $c->whereNotIn($statusIdCol, $endedStatusIds);
+                } elseif ($statusNameCol) {
+                    $c->whereNotIn($statusNameCol, $endedStatusNames);
+                } elseif (Schema::hasColumn('contracts', 'is_closed')) {
+                    $c->where('is_closed', 0);
+                } elseif (Schema::hasColumn('contracts', 'closed_at')) {
+                    $c->whereNull('closed_at');
+                }
+            })
+            ->orderBy('name')
+            ->get();
+
+        return view('customers.reports.active', ['rows' => $rows]);
+    }
     public function delinquent()
     {
         $statusId = InstallmentStatus::where('name', 'متأخر')->value('id');

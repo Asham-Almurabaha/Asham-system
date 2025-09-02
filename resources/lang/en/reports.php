@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'Customers With Active Contracts' => 'Customers With Active Contracts',
     'Customers and Contracts Report' => 'Customers and Contracts Report',
     'Delinquent Customers Report' => 'Delinquent Customers Report',
     'Unpaid Customers This Month Report' => 'Unpaid Customers This Month Report',
@@ -32,4 +33,3 @@ return [
     'Contract' => 'Contract',
     'No matching data.' => 'No matching data.',
 ];
-

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'Customers With Active Contracts' => 'العملاء ذوي العقود النشطة',
     'Customers and Contracts Report' => 'تقرير العملاء والعقود',
     'Delinquent Customers Report' => 'تقرير العملاء المتعثرين',
     'Unpaid Customers This Month Report' => 'تقرير العملاء غير المسددين لهذا الشهر',
@@ -32,4 +33,3 @@ return [
     'Contract' => 'العقد',
     'No matching data.' => 'لا توجد بيانات مطابقة.',
 ];
-

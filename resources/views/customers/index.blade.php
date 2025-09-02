@@ -110,22 +110,31 @@
 
     <div class="btn-group">
       <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-bar-chart-line me-1"></i>
         📊 {{ __('Reports') }}
       </button>
       <ul class="dropdown-menu dropdown-menu-end text-end">
         <li>
           <a class="dropdown-item" href="{{ route('reports.customers.delinquent') }}">
-            📄 {{ __('Delinquent Customers') }}
+            <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
+            {{ __('Delinquent Customers') }}
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="{{ route('reports.customers.active') }}">
+            <i class="bi bi-person-check me-2 text-success"></i> {{ __('Customers With Active Contracts') }}
           </a>
         </li>
         <li>
           <a class="dropdown-item" href="{{ route('reports.customers.unpaid') }}">
-            📄 {{ __('Unpaid This Month') }}
+            <i class="bi bi-cash-coin me-2 text-primary"></i>
+            {{ __('Unpaid This Month') }}
           </a>
         </li>
         <li>
           <a class="dropdown-item" href="{{ route('reports.customers.contracts') }}">
-            📄 {{ __('Customers & Contracts Report') }}
+            <i class="bi bi-list-check me-2"></i>
+            {{ __('Customers & Contracts Report') }}
           </a>
         </li>
       </ul>
@@ -272,4 +281,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-

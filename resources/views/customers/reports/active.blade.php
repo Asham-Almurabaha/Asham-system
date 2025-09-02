@@ -1,0 +1,62 @@
+@extends('layouts.print-portrait')
+
+@section('title', __('reports.Customers With Active Contracts'))
+@section('report_title', __('reports.Customers With Active Contracts'))
+
+@php
+  /** @var \Illuminate\Support\Collection|\Illuminate\Pagination\LengthAwarePaginator $rows */
+  $rows  = $rows ?? collect();
+  $count = $rows->count();
+@endphp
+
+@push('styles')
+  <style>
+    thead { display: table-header-group; }
+    tr { page-break-inside: avoid; }
+  </style>
+@endpush
+
+@section('content')
+  <div class="row g-3 kpi mb-4">
+    <div class="col-12 col-md-4">
+      <div class="card">
+        <div class="card-body p-3 text-center">
+          <div class="small-muted">@lang('reports.Number of Customers')</div>
+          <div class="fs-4 fw-bold">{{ number_format($count) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered text-center align-middle">
+      <thead class="table-light">
+        <tr>
+          <th style="width:56px">#</th>
+          <th class="text-start">{{ __('Customer') }}</th>
+          <th>{{ __('Active Contracts') }}</th>
+          <th>{{ __('Phone') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse($rows as $i => $c)
+          <tr>
+            <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
+            <td class="text-start">{{ $c->name }}</td>
+            <td>{{ $c->active_contracts ?? 1 }}</td>
+            <td>{{ $c->phone }}</td>
+          </tr>
+        @empty
+          <tr>
+            <td colspan="4" class="py-5 text-muted">@lang('reports.No data available.')</td>
+          </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+@endsection
+
+@section('actions')
+  <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">← @lang('app.Back')</a>
+@endsection
+

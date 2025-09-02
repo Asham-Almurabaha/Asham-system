@@ -142,6 +142,8 @@ Route::middleware('auth')->group(function () {
         ->name('reports.customers.delinquent');
     Route::get('reports/customers/unpaid', [CustomerReportController::class, 'unpaid'])
         ->name('reports.customers.unpaid');
+    Route::get('reports/customers/active', [CustomerReportController::class, 'active'])
+        ->name('reports.customers.active');
     Route::get('reports/customers/contracts', [CustomerReportController::class, 'contracts'])
         ->name('reports.customers.contracts');
 
