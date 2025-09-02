@@ -34,7 +34,7 @@ class InvestorReportController extends Controller
             });
         }
 
-        return view('investors.statement', [
+        return view('investors.reports.statement', [
             'investor'  => $investor,
             'data'      => $data,
             'statusMap' => $statusMap,
@@ -70,7 +70,7 @@ class InvestorReportController extends Controller
             })
             ->sum('amount');
 
-        return view('investors.deposits', compact(
+        return view('investors.reports.deposits', compact(
             'investor',
             'deposits',
             'depositsCount',
@@ -108,7 +108,7 @@ class InvestorReportController extends Controller
             })
             ->sum('amount');
 
-        return view('investors.withdrawals', compact(
+        return view('investors.reports.withdrawals', compact(
             'investor',
             'withdrawals',
             'withdrawalsCount',
@@ -161,7 +161,7 @@ class InvestorReportController extends Controller
 
         $transactionsTotal = $depositsTotal - $withdrawalsTotal ;
 
-        return view('investors.transactions', compact(
+        return view('investors.reports.transactions', compact(
             'investor',
             'transactions',
             'depositsTotal',
@@ -201,7 +201,7 @@ class InvestorReportController extends Controller
 
         $paginator->setCollection($rows);
 
-        return view('investors.allliquidity', [
+        return view('investors.reports.allliquidity', [
             'rows'          => $paginator,            // الفيو تتوقع rows
             'grandTotal'    => $totalLiquidity,       // إجمالي السيولة
             'totalInitial'  => $totalInitial,         // لو حاب تستخدمه لاحقًا

@@ -108,6 +108,29 @@
       {{-- Template button removed as requested --}}
     </div>
 
+    <div class="btn-group">
+      <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        📊 {{ __('Reports') }}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end text-end">
+        <li>
+          <a class="dropdown-item" href="{{ route('reports.customers.delinquent') }}">
+            📄 {{ __('Delinquent Customers') }}
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="{{ route('reports.customers.unpaid') }}">
+            📄 {{ __('Unpaid This Month') }}
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item" href="{{ route('reports.customers.contracts') }}">
+            📄 {{ __('Customers & Contracts Report') }}
+          </a>
+        </li>
+      </ul>
+    </div>
+
     <span class="ms-auto small text-muted">
       {{ __('Results') }}: <strong>{{ $customers->total() }}</strong>
     </span>

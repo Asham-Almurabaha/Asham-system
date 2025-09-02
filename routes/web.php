@@ -1,40 +1,41 @@
 <?php
 
-use App\Http\Controllers\AjaxAccountController;
-use App\Http\Controllers\AjaxInvestorController;
-use App\Http\Controllers\AjaxProductTypeController;
+use App\Models\User;
+use App\Models\Setting;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ContractController;
-use App\Http\Controllers\ContractImportController;
-use App\Http\Controllers\ContractInstallmentController;
-use App\Http\Controllers\ContractPrintController;
-use App\Http\Controllers\ContractsImportController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\CustomerImportController;
+use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuarantorController;
-use App\Http\Controllers\GuarantorImportController;
-use App\Http\Controllers\InvestorController;
+use App\Http\Controllers\AjaxAccountController;
+use App\Http\Controllers\AjaxInvestorController;
+use App\Http\Controllers\ContractPrintController;
+use App\Http\Controllers\Setting\TitleController;
+use App\Http\Controllers\ContractImportController;
+use App\Http\Controllers\CustomerImportController;
+use App\Http\Controllers\CustomerReportController;
 use App\Http\Controllers\InvestorImportController;
 use App\Http\Controllers\InvestorReportController;
-use App\Http\Controllers\InvestorTransactionController;
-use App\Http\Controllers\LanguageController;
-use App\Http\Controllers\LedgerController;
-use App\Http\Controllers\LedgerEntriesImportController;
+use App\Http\Controllers\AjaxProductTypeController;
 // use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Setting\CategoryController;
-use App\Http\Controllers\Setting\ContractStatusController;
-use App\Http\Controllers\Setting\InstallmentStatusController;
-use App\Http\Controllers\Setting\InstallmentTypeController;
-use App\Http\Controllers\Setting\NationalityController;
+use App\Http\Controllers\ContractsImportController;
+use App\Http\Controllers\GuarantorImportController;
 use App\Http\Controllers\Setting\SettingController;
-use App\Http\Controllers\Setting\TitleController;
-use App\Http\Controllers\Setting\TransactionStatusController;
+use App\Http\Controllers\Setting\CategoryController;
+use App\Http\Controllers\ContractInstallmentController;
+use App\Http\Controllers\InvestorTransactionController;
+use App\Http\Controllers\LedgerEntriesImportController;
+use App\Http\Controllers\Setting\NationalityController;
+use App\Http\Controllers\Setting\ContractStatusController;
+use App\Http\Controllers\Setting\InstallmentTypeController;
 use App\Http\Controllers\Setting\TransactionTypeController;
+use App\Http\Controllers\Setting\InstallmentStatusController;
+use App\Http\Controllers\Setting\TransactionStatusController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
-use App\Models\Setting;
-use App\Models\User;
-use Illuminate\Support\Facades\Route;
 
 // لغة الواجهة
 Route::post('/lang/toggle', [LanguageController::class, 'toggle'])->name('lang.toggle');
@@ -136,6 +137,13 @@ Route::middleware('auth')->group(function () {
         Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
         Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
     });
+
+    Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])
+        ->name('reports.customers.delinquent');
+    Route::get('reports/customers/unpaid', [CustomerReportController::class, 'unpaid'])
+        ->name('reports.customers.unpaid');
+    Route::get('reports/customers/contracts', [CustomerReportController::class, 'contracts'])
+        ->name('reports.customers.contracts');
 
     // AJAX مساعدة
     Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])
