@@ -24,6 +24,7 @@ return array (
   'Field' => 'الحقل',
   'Messages' => 'الرسائل',
   'Values' => 'القيم',
+  'Reason' => 'السبب',
   'Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.' => 'صحّح الصفوف بالأعلى ثم أعد رفع الملف. يُفضّل استخدام زر “تنزيل ملف لتصحيح الصفوف”.',
   'Unsupported file format. Allowed: xlsx, xls, csv' => 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv',
   'File size exceeds 10MB.' => 'حجم الملف يتجاوز 10MB.',

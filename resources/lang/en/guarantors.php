@@ -69,6 +69,8 @@ return [
     'Update' => 'Update',
     'Preview:' => 'Preview:',
     'Preview of the new image:' => 'Preview of the new image:',
+    'Preview' => 'Preview',
+    'Preview of the new image' => 'Preview of the new image',
     'Current image:' => 'Current image:',
     'Uploading a new image will replace the current one.' => 'Uploading a new image will replace the current one.',
 

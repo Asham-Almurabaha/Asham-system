@@ -54,6 +54,8 @@ return [
     'No data for statuses.' => 'No data for statuses.',
     'Total Statuses' => 'Total Statuses',
     'No daily data.' => 'No daily data.',
+    'No data for the chart.' => 'No data for the chart.',
+    'No monthly data.' => 'No monthly data.',
     'Stacked values for each month' => 'Stacked values for each month',
     'Distribution of estimated total balances' => 'Distribution of estimated total balances',
     'Top 7 balances from banks and safes' => 'Top 7 balances from banks and safes',

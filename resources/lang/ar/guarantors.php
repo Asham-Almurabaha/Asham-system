@@ -69,6 +69,8 @@ return [
     'Update' => 'تحديث',
     'Preview:' => 'معاينة:',
     'Preview of the new image:' => 'معاينة الصورة الجديدة:',
+    'Preview' => 'معاينة',
+    'Preview of the new image' => 'معاينة الصورة الجديدة',
     'Current image:' => 'الصورة الحالية:',
     'Uploading a new image will replace the current one.' => 'رفع صورة جديدة سيستبدل الحالية.',
 

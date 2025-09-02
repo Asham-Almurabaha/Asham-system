@@ -54,6 +54,8 @@ return [
     'No data for statuses.' => 'لا توجد بيانات للحالات.',
     'Total Statuses' => 'إجمالي الحالات',
     'No daily data.' => 'لا توجد بيانات يومية.',
+    'No data for the chart.' => 'لا توجد بيانات للمخطط.',
+    'No monthly data.' => 'لا توجد بيانات شهرية.',
     'Stacked values for each month' => 'قيم مكدّسة لكل شهر',
     'Distribution of estimated total balances' => 'توزيع الأرصدة التقديرية الإجمالية',
     'Top 7 balances from banks and safes' => 'أعلى 7 أرصدة من البنوك والخزن',
