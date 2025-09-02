@@ -174,8 +174,8 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check2-circle me-1"></i> {{ __('Save') }}
+                    <button type="submit" class="btn btn-outline-success">
+                        </i> {{ __('Save') }}
                     </button>
                     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
                         {{ __('Cancel') }}

@@ -80,7 +80,7 @@
 
     {{-- Actions --}}
     <div class="col-12 d-flex flex-column gap-2">
-      <button class="btn btn-primary w-100" type="submit">{{ __('Login') }}</button>
+      <button class="btn btn-outline-primary w-100" type="submit">{{ __('Login') }}</button>
 
       <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
         @if (Route::has('password.request'))

@@ -127,7 +127,7 @@
 
     {{-- Actions --}}
     <div class="col-12 d-flex flex-column gap-2">
-      <button class="btn btn-primary w-100" type="submit">{{ __('Register') }}</button>
+      <button class="btn btn-outline-primary w-100" type="submit">{{ __('Register') }}</button>
       <p class="small mb-0 text-center">
         {{ __('Already have an account?') }}
         <a href="{{ route('login') }}">{{ __('Log in') }}</a>

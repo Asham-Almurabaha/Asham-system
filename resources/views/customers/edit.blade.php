@@ -193,8 +193,8 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
+                    <button type="submit" class="btn btn-outline-primary">
+                        {{ __('Update') }}
                     </button>
                     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
                         {{ __('Cancel') }}
