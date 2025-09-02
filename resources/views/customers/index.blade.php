@@ -200,7 +200,6 @@
                         <th>{{ __('Address') }}</th>
                         <th>{{ __('Job Title') }}</th>
                         <th style="min-width:110px;">{{ __('ID Card Image') }}</th>
-                        <th style="width:150px">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -209,7 +208,11 @@
                             <td class="text-muted">
                                 {{ $loop->iteration + ($customers->currentPage() - 1) * $customers->perPage() }}
                             </td>
-                            <td class="text-start">{{ $customer->name }}</td>
+                            <td class="text-start">
+                                <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold">
+                                    {{ $customer->name }}
+                                </a>
+                            </td>
                             <td dir="ltr">{{ $customer->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $customer->phone ?? '—' }}</td>
                             <td class="text-start">{{ $customer->email ?? '—' }}</td>
@@ -222,19 +225,18 @@
                                         <img src="{{ asset('storage/' . $customer->id_card_image) }}"
                                              alt="{{ __('ID Card Image') }}"
                                              width="70" height="48"
-                                             style="object-fit: cover; border-radius: .25rem;">
+                                             class="id-thumb d-block mx-auto"
+                                             loading="lazy">
                                     </a>
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
-                            <td class="text-nowrap">
-                                <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-secondary btn-sm">{{ __('View') }}</a>
-                            </td>
+                            
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="py-5">
+                            <td colspan="9" class="py-5">
                                 <div class="text-muted">
                                     {{ __('No matching results for your search.') }}
                                     <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>

@@ -504,6 +504,14 @@ h6 {
   display: inline-block;
 }
 
+/* ID thumbnail in customers index */
+.id-thumb {
+  object-fit: cover;
+  border-radius: .35rem;
+  border: 1px solid #eaedf1;
+  box-shadow: 0 2px 8px rgba(1, 41, 112, .10);
+}
+
 .header-nav .nav-profile img {
   max-height: 36px;
 }

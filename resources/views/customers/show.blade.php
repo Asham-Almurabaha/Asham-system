@@ -8,6 +8,19 @@
     {{-- Bootstrap Icons (If not added in the layout) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
+    @push('styles')
+      <style>
+        .profile-hero { background: #fff; border: 1px solid #ebeef4; border-radius: 10px; padding: 12px 16px; box-shadow: 0 1px 8px rgba(1,41,112,.06); }
+        .profile-hero .avatar { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #e9ecef; color: #012970; font-weight: 700; font-size: 22px; }
+        .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px; background: #f6f9ff; border: 1px solid #eaedf1; color: #012970; }
+        .kpi-card { background: #fff; border: 1px solid #ebeef4; border-radius: 10px; box-shadow: 0 1px 8px rgba(1,41,112,.06); }
+        .label-col { color: #6b7280; font-weight: 600; }
+        .value-col { font-weight: 600; color: #111827; }
+        .img-thumb { display:block; margin:0 auto; width: 100%; max-width: 320px; max-height: 280px; object-fit: cover; border-radius: 8px; box-shadow: 0 1px 8px rgba(1,41,112,.08); }
+        .table thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
+      </style>
+    @endpush
+
     @php
         /**
          * The values coming from the controller:
@@ -54,11 +67,11 @@
                     {{ mb_strtoupper(mb_substr($customer->name ?? '؟', 0, 1)) }}
                 </div>
                 <div>
-                    <h3 class="mb-0">{{ $customer->name }}</h3>
+                    <h3 class="mb-0 fw-bold fs-2">{{ $customer->name }}</h3>
                     <div class="small text-muted-2 mt-1">
                         <span class="chip me-1"><i class="bi bi-badge-ad"></i> {{ optional($customer->title)->name ?? '—' }}</span>
                         <span class="chip me-1"><i class="bi bi-flag"></i> {{ optional($customer->nationality)->name ?? '—' }}</span>
-                        <span class="chip"><i class="bi bi-hash"></i> ID: {{ $customer->id }}</span>
+                        <span class="chip"><i class="bi bi-hash"></i> {{ __('ID') }}: {{ $customer->id }}</span>
                     </div>
                 </div>
             </div>
@@ -272,6 +285,7 @@
                             @foreach($activeList as $row)
                                 @php
                                     $isObj   = is_object($row);
+                                    $cid     = $isObj ? ($row->id ?? null) : ($row['id'] ?? null);
                                     $cno     = $isObj ? ($row->contract_number ?? '') : ($row['contract_number'] ?? '');
                                     $sdate   = $isObj ? ($row->start_date ?? null)     : ($row['start_date'] ?? null);
                                     $ptype   = $isObj
@@ -289,7 +303,13 @@
                                     $totRemain+= (float)$remain;
                                 @endphp
                                 <tr>
-                                    <td class="fw-semibold">{{ $cno }}</td>
+                                    <td class="fw-semibold">
+                                        @if(!empty($cid))
+                                            <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none">{{ $cno }}</a>
+                                        @else
+                                            {{ $cno }}
+                                        @endif
+                                    </td>
                                     <td>{{ $sdate ? \Carbon\Carbon::parse($sdate)->format('Y-m-d') : '—' }}</td>
                                     <td class="text-truncate" style="max-width:240px">{{ $ptype ?? '—' }}</td>
                                     <td class="text-end">{{ $nf($due) }}</td>
@@ -318,7 +338,7 @@
     {{-- ====== Basic data ====== --}}
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-white fw-bold">{{ __('Basic Data') }}</div>
-        <div class="card-body">
+        <div class="card-body pt-2">
             <div class="row g-3">
 
                 <div class="col-md-6">
@@ -354,7 +374,7 @@
                         <div class="col-5 label-col">{{ __('Phone') }}</div>
                         <div class="col-7 value-col">
                             @if($customer->phone)
-                                <a href="tel:{{ $customer->phone }}">{{ $customer->phone }}</a>
+                                <a href="tel:{{ $customer->phone }}" class="text-decoration-none"><i class="bi bi-telephone me-1"></i>{{ $customer->phone }}</a>
                                 <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $customer->phone }}')" title="{{ __('Copy') }}">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
@@ -367,7 +387,7 @@
                         <div class="col-5 label-col">{{ __('Email') }}</div>
                         <div class="col-7 value-col">
                             @if($customer->email)
-                                <a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a>
+                                <a href="mailto:{{ $customer->email }}" class="text-decoration-none"><i class="bi bi-envelope me-1"></i>{{ $customer->email }}</a>
                             @else
                                 <span class="text-muted">—</span>
                             @endif
@@ -391,7 +411,7 @@
                 <div class="card-body">
                     @if($customer->id_card_image)
                         <a href="{{ asset('storage/'.$customer->id_card_image) }}" target="_blank" title="{{ __('View in full size') }}">
-                            <img class="img-thumb" src="{{ asset('storage/'.$customer->id_card_image) }}" alt="{{ __('ID Card Image') }}">
+                            <img class="img-thumb d-block mx-auto" src="{{ asset('storage/'.$customer->id_card_image) }}" alt="{{ __('ID Card Image') }}" loading="lazy">
                         </a>
                         <div class="small text-muted mt-2">{{ __('Click to open image in new window') }}</div>
                     @else
