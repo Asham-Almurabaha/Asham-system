@@ -79,4 +79,5 @@ return array (
   'Edit' => 'تعديل',
   'Delete' => 'حذف',
   'Back' => 'رجوع',
+  'Logo' => 'الشعار',
 );

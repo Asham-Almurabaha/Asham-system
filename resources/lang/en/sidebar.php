@@ -79,4 +79,5 @@ return [
     'Edit' => 'Edit',
     'Delete' => 'Delete',
     'Back' => 'Back',
+    'Logo' => 'Logo',
 ];

@@ -144,11 +144,25 @@ class CheckTranslations extends Command
                 }
 
                 $added = 0;
+                $groupDir = resource_path("lang/{$locale}");
                 foreach (array_keys($missing[$locale] ?? []) as $key) {
-                    // Only add non-namespaced, non-dotted keys to JSON
-                    if (str_contains($key, '::') || str_contains($key, '.')) {
-                        continue;
+                    // Skip namespaced keys
+                    if (str_contains($key, '::')) { continue; }
+
+                    // Determine if this looks like a real group key (e.g. group.item)
+                    $firstDot = strpos($key, '.');
+                    $looksGrouped = false;
+                    if ($firstDot !== false) {
+                        $group = substr($key, 0, $firstDot);
+                        // If we have a matching group php file for this locale, treat as grouped
+                        if (is_file($groupDir . DIRECTORY_SEPARATOR . $group . '.php')) {
+                            $looksGrouped = true;
+                        }
                     }
+
+                    // For true group keys, don't add to JSON here
+                    if ($looksGrouped) { continue; }
+
                     if (! array_key_exists($key, $data)) {
                         $data[$key] = $key; // placeholder equals key
                         $added++;

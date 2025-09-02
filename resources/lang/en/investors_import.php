@@ -25,4 +25,5 @@ return array (
   'Field' => 'Field',
   'Messages' => 'Messages',
   'Values' => 'Values',
+  'Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.' => 'Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.',
 );

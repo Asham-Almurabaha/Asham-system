@@ -25,4 +25,5 @@ return array (
   'Field' => 'الحقل',
   'Messages' => 'الرسائل',
   'Values' => 'القيم',
+  'Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.' => 'صحح الصفوف أعلاه ثم أعد الرفع. يُفضّل استخدام زر "تحميل ملف تصحيح الصفوف".',
 );
