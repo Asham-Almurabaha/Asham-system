@@ -11,8 +11,8 @@
 {{-- TinyMCE (اختياري) --}}
 {{-- <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js') }}" defer></script> --}}
 
-{{-- Template Main --}}
-{{-- <script src="{{ asset('assets/js/main.js') }}"></script> --}}
+{{-- Template Main: enables sidebar toggle and UI helpers --}}
+<script src="{{ asset('assets/js/main.js') }}"></script>
 
 <script>
   (function () {
