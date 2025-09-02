@@ -1,4 +1,4 @@
-@extends('layouts.master')
+﻿@extends('layouts.master')
 
 @section('title', __('Contracts List'))
 
@@ -99,16 +99,7 @@
 @endphp
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<style>
-    :root { --card-r: 1rem; --soft: 0 6px 18px rgba(0,0,0,.06); --soft2: 0 10px 24px rgba(0,0,0,.08); }
-    .kpi-card{ border:1px solid #eef2f7; border-radius:var(--card-r); box-shadow:var(--soft); transition:.2s; height:100%;}
-    .kpi-card:hover{ box-shadow:var(--soft2); transform: translateY(-2px); }
-    .kpi-icon{ width:52px;height:52px;border-radius:.9rem;display:grid;place-items:center;background:#f4f6fb; }
-    .kpi-value{ font-size:1.85rem; line-height:1; }
-    .subnote{ font-size:.8rem; color:#6b7280; }
-    .bar-8{ height:8px; }
-    .hint { margin-inline-start: .35rem; cursor: help; color:#6b7280; }
-</style>
+
 
 {{-- ====== ملخص أقساط هذا الشهر (ستايل مماثل لصفحة المستثمر) ====== --}}
 @php
@@ -495,3 +486,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

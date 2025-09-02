@@ -1,4 +1,4 @@
-@php
+﻿@php
   $logo    = $setting->logo ?? null;
   $name    = $setting->name ?? config('app.name', 'اسم الشركة');
   $homeUrl = url('/');
@@ -6,12 +6,19 @@
   $currentLocaleBadge = strtoupper($locale); // AR أو EN
 @endphp
 
+@php
+  // Ensure brand name respects locale (prefer Arabic when 'ar')
+  $name = app()->getLocale() === 'ar'
+            ? ($setting->name_ar ?? $name ?? config('app.name'))
+            : ($setting->name ?? $setting->name_ar ?? $name ?? config('app.name'));
+@endphp
+
 <div class="d-flex align-items-center justify-content-between w-100 pe-3">
   <a href="{{ $homeUrl }}" class="logo d-flex align-items-center text-decoration-none" aria-label="{{ __('Home') }}">
     @if ($logo)
-      <img src="{{ asset('storage/'.$logo) }}" alt="Logo" style="height: 40px;">
+      <img src="{{ asset('storage/'.$logo) }}" alt="Logo" class="logo-img-40">
     @else
-      <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" style="height: 40px;">
+      <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="logo-img-40">
     @endif
     <span class="d-none d-lg-block ms-2 fw-semibold">{{ $name }}</span>
   </a>
@@ -94,3 +101,4 @@
 
   </ul>
 </nav>
+

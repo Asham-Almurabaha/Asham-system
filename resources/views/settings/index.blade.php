@@ -1,4 +1,4 @@
-@extends('layouts.master')
+﻿@extends('layouts.master')
 @section('title', __('sidebar.Settings'))
 
 @section('content')
@@ -154,7 +154,7 @@
         <h6 class="mb-3">@lang('sidebar.Brand Preview')</h6>
         <div class="border rounded p-3 d-flex align-items-center gap-3">
           @if(!empty($logoUrl))
-            <img src="{{ $logoUrl }}" alt="@lang('setting.Logo')" style="height:40px" class="rounded border bg-white p-1">
+            <img src="{{ $logoUrl }}" alt="@lang('setting.Logo')" class="logo-img-40" class="rounded border bg-white p-1">
           @else
             <div class="rounded border bg-light d-flex align-items-center justify-content-center" style="height:40px;width:40px;">
               <i class="bi bi-image text-muted"></i>
@@ -171,3 +171,4 @@
   @endif
 </div>
 @endsection
+

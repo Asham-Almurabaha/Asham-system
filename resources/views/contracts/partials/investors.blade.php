@@ -1,4 +1,4 @@
-{{-- البطاقة: المستثمرون --}}
+﻿{{-- البطاقة: المستثمرون --}}
 <div class="card shadow-sm mb-4">
     @php
         $sumPct = $contract->investors->sum(fn($i) => (float)$i->pivot->share_percentage);
@@ -107,11 +107,7 @@
 </div>
 
 {{-- شكل ويدجت السيولة --}}
-<style>
-  .liq-box { background:#f8f9fa; border:1px solid #e9ecef; border-radius:.5rem; }
-  .liq-box .progress { background-color:#e9ecef; height:6px; }
-  .liq-box .progress-bar { transition: width .35s ease; }
-</style>
+
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -538,3 +534,4 @@
     updateOutsideRemaining();
   });
 </script>
+

@@ -1,4 +1,4 @@
-@extends('layouts.master')
+﻿@extends('layouts.master')
 
 @section('title', __('guarantors.Edit Guarantor'))
 
@@ -207,7 +207,7 @@
 @endsection
 
 @push('styles')
-<style>.card{border-radius:1rem}</style>
+
 @endpush
 
 @push('scripts')
@@ -240,3 +240,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+

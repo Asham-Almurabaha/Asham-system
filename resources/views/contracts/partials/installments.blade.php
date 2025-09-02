@@ -1,17 +1,11 @@
-@php
+﻿@php
     // مجموع نسب المستثمرين
     $investorsTotalPct = $contract->investors->sum(fn($i) => (float)$i->pivot->share_percentage);
 @endphp
 
 @if($investorsTotalPct == 100)
 
-<style>
-.tooltip.wide-tooltip .tooltip-inner {
-    max-width: 400px;
-    white-space: pre-wrap;
-    text-align: right;
-}
-</style>
+
 
 @php
     $totalContractDue  = $contract->installments->sum('due_amount');
@@ -456,3 +450,4 @@
 </script>
 
 @endif
+

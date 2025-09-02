@@ -1,26 +1,12 @@
-{{-- resources/views/investors/deposits.blade.php --}}
+﻿{{-- resources/views/investors/deposits.blade.php --}}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <title>جرد الإيداعات — {{ $investor->name }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-  <style>
-    body { font-family: Tahoma, Arial, sans-serif; background:#fff; margin:0; padding:0; }
-    @page { size: A4 landscape; margin: 0; }
-    .page   { width:297mm; min-height:201mm; margin:auto; padding:14mm; background:#fff; position:relative; box-sizing:border-box; }
-    .content{ position:relative; z-index:1; }
-    .small-muted{ font-size:.85rem; color:#6b7280; }
-    .kpi .card{ border:1px solid #eef2f7; }
-    .badge-status{ font-size:.75rem; }
-    @media print {
-      .no-print{ display:none !important; }
-      .page{ margin:0; padding:12mm; box-shadow:none !important; }
-      a { color:inherit; text-decoration:none; }
-      .table-responsive { overflow: visible !important; }
-    }
-  </style>
+  
 </head>
 <body>
 @php
@@ -145,3 +131,4 @@
 
 </body>
 </html>
+

@@ -1,4 +1,4 @@
-{{-- resources/views/guarantors/import.blade.php --}}
+﻿{{-- resources/views/guarantors/import.blade.php --}}
 @extends('layouts.master')
 
 @section('title', __('guarantors.Import Guarantors from Excel'))
@@ -313,13 +313,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-<style>
-  .kpi-icon{ width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:1.25rem; }
-  .border-dashed{ border-style: dashed !important; }
-  .dz{ position: relative; transition: .2s ease-in-out; background: linear-gradient(180deg,#fff, #fbfbfc); }
-  .dz.dragover{ background:#f0f7ff; border-color:#0d6efd !important; box-shadow:0 0 0 0.25rem rgba(13,110,253,.15); }
-  .sticky-top{ top:0; z-index: 1; }
-</style>
+
 @endpush
 
 @push('scripts')
@@ -379,3 +373,4 @@
 })();
 </script>
 @endpush
+

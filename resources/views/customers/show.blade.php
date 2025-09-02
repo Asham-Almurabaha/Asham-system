@@ -1,4 +1,4 @@
-@extends('layouts.master')
+﻿@extends('layouts.master')
 
 @section('title', __('View Customer Data'))
 
@@ -44,37 +44,7 @@
         $nf = fn($n,$d=2) => is_null($n) ? '—' : number_format((float)$n, $d);
     @endphp
 
-    <style>
-        :root{
-            --card-r: 1rem;
-            --soft: 0 8px 20px rgba(0,0,0,.06);
-            --soft-2: 0 10px 26px rgba(0,0,0,.08);
-        }
-        .profile-hero{
-            border:1px solid #eef2f7; border-radius: var(--card-r);
-            background: linear-gradient(135deg,#f7fbff 0%,#ffffff 70%);
-            padding: 1.25rem 1rem; box-shadow: var(--soft);
-        }
-        .avatar{
-            width:64px; height:64px; border-radius:50%;
-            display:grid; place-items:center;
-            background:#e8f0fe; color:#1e40af; font-weight:800; font-size:1.25rem;
-        }
-        .kpi-card{
-            border:1px solid #eef2f7; border-radius: var(--card-r);
-            box-shadow: var(--soft); transition:.2s; height:100%;
-        }
-        .kpi-card:hover{ box-shadow: var(--soft-2); transform: translateY(-2px); }
-        .kpi-icon{
-            width:48px;height:48px;border-radius:.85rem;display:grid;place-items:center;background:#f4f6fb;
-        }
-        .chip{ background:#f1f4f9; color:#3c4a5d; border-radius:999px; padding:.35rem .6rem; font-weight:600; }
-        .label-col{ color:#6b7280; font-weight:600; }
-        .value-col{ font-weight:600; }
-        .text-pos{ color:#16a34a !important; }
-        .text-muted-2{ color:#6b7280 !important; }
-        .img-thumb{ max-width: 160px; max-height: 120px; object-fit: cover; border-radius:.5rem; border:1px solid #eef2f7; }
-    </style>
+    
 
     {{-- ====== HERO ====== --}}
     <div class="profile-hero mb-3">
@@ -476,3 +446,4 @@ setTimeout(() => {
 }, 5000);
 </script>
 @endpush
+

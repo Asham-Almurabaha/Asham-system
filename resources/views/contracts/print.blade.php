@@ -1,6 +1,6 @@
-{{-- resources/views/contracts/print.blade.php --}}
+﻿{{-- resources/views/contracts/print.blade.php --}}
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <title>طباعة عقد رقم {{ $contract->contract_number }}</title>
@@ -14,62 +14,7 @@
   {{-- Bootstrap 5 --}}
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 
-  <style>
-    body {
-      font-family:"Tahoma", Arial, sans-serif;
-      background:#fff;
-      margin:0;
-      padding:0;
-    }
-
-    /* تعريف حجم الورقة A4 للطباعة */
-    @page {
-      size: A4;
-      margin: 0;
-    }
-
-    .page {
-      width: 210mm;
-      min-height: 297mm;
-      margin: auto;
-      padding: 15mm;
-      background: #fff;
-      position: relative;
-      box-sizing: border-box;
-    }
-
-    .watermark {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.07;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .watermark img {
-      max-width: 70%;
-      max-height: 70%;
-      transform: rotate(-15deg);
-    }
-
-    .content { position: relative; z-index: 1; }
-    .line { margin: 4px 0; }
-    .clauses ol { padding-start: 1.5rem; }
-    .clauses li { margin: 6px 0; }
-    .signatures .col { border-top: 1px dashed #bbb; padding-top: 8px; }
-
-    @media print {
-      .no-print { display: none !important; }
-      body { margin: 0; }
-      .page {
-        box-shadow: none !important;
-        margin: 0;
-        padding: 12mm;
-      }
-    }
-  </style>
+  
 </head>
 <body>
 @php
@@ -209,3 +154,4 @@
 </div>
 </body>
 </html>
+

@@ -101,5 +101,7 @@
   });
 </script>
 
+<script src="{{ asset('assets/js/sidebar-toggle.js') }}"></script>
+<script src="{{ asset('assets/js/custom.js') }}"></script>
 @yield('js')
 @stack('scripts')

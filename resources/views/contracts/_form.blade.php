@@ -1,4 +1,4 @@
-<div class="row g-3">
+﻿<div class="row g-3">
   {{-- العميل + الكفيل --}}
   <div class="col-md-6">
     <label for="customer_id" class="form-label">العميل <span class="text-danger">*</span></label>
@@ -307,11 +307,7 @@
 </div>
 
 @push('styles')
-<style>
-  .liq-box { background:#f8f9fa; border-color:#e9ecef !important; }
-  .liq-box .progress { background-color:#e9ecef; }
-  .liq-box .progress-bar { transition: width .35s ease; }
-</style>
+
 @endpush
 
 @push('scripts')
@@ -900,3 +896,4 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 </script>
 @endpush
+
