@@ -1,4 +1,6 @@
 {
+    "Edit Investor": "تعديل بيانات المستثمر",
+    "View Investor Data": "عرض بيانات المستثمر",
     "Investors List": "قائمة المستثمرين",
     "Add New Investor": "إضافة مستثمر جديد",
     "Import Excel": "استيراد Excel",
@@ -48,4 +50,3 @@
     "Preview after upload:": "معاينة الصورة الجديدة:",
     "You can change the image or delete the current one.": "يمكنك تغيير الصورة أو حذف الحالية."
 }
-

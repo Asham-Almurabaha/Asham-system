@@ -75,4 +75,8 @@ return [
     'Operating' => 'Operating',
     'Cars' => 'Cars',
     'Motocycles' => 'Motocycles',
+    'View' => 'View',
+    'Edit' => 'Edit',
+    'Delete' => 'Delete',
+    'Back' => 'Back',
 ];

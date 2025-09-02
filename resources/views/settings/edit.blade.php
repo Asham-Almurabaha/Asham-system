@@ -1,5 +1,5 @@
 @extends('layouts.master')
-@section('title', __('Edit Settings'))
+@section('title', __('sidebar.Edit Settings'))
 
 @section('content')
 <div class="container py-3">
@@ -62,7 +62,7 @@
                   <label class="form-check-label" for="remove_logo">@lang('sidebar.Delete current logo')</label>
                 </div>
                 <div class="mt-2">
-                  <img src="{{ $setting->logo_url }}" alt="Logo" class="img-fluid rounded border" style="max-height:64px">
+                  <img src="{{ $setting->logo_url }}" alt="@lang('setting.Logo')" class="img-fluid rounded border" style="max-height:64px">
                 </div>
               @endif
             </div>
@@ -85,7 +85,7 @@
                   <label class="form-check-label" for="remove_favicon">@lang('sidebar.Delete current icon')</label>
                 </div>
                 <div class="mt-2">
-                  <img src="{{ $setting->favicon_url }}" alt="Favicon" class="img-fluid rounded border" style="max-height:48px">
+                  <img src="{{ $setting->favicon_url }}" alt="@lang('setting.Icon')" class="img-fluid rounded border" style="max-height:48px">
                 </div>
               @endif
             </div>

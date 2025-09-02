@@ -1,5 +1,5 @@
 @extends('layouts.master')
-@section('title', __('Settings'))
+@section('title', __('sidebar.Settings'))
 
 @section('content')
 <div class="container py-3">
@@ -115,7 +115,7 @@
                 <div class="text-muted small mb-2">@lang('sidebar.Logo')</div>
                 @if(!empty($logoUrl))
                   <div class="ratio ratio-1x1 border rounded bg-light d-flex align-items-center justify-content-center" style="width:96px;">
-                    <img src="{{ $logoUrl }}" alt="Logo" class="img-fluid p-1">
+                    <img src="{{ $logoUrl }}" alt="@lang('setting.Logo')" class="img-fluid p-1">
                   </div>
                 @else
                   <div class="text-muted fst-italic">@lang('sidebar.Not uploaded')</div>
@@ -124,10 +124,10 @@
 
               {{-- Favicon --}}
               <div class="text-center">
-                <div class="text-muted small mb-2">Favicon</div>
+                <div class="text-muted small mb-2">@lang('setting.Icon')</div>
                 @if(!empty($faviconUrl))
                   <div class="ratio ratio-1x1 border rounded bg-light d-flex align-items-center justify-content-center" style="width:64px;">
-                    <img src="{{ $faviconUrl }}" alt="Favicon" class="img-fluid p-1">
+                    <img src="{{ $faviconUrl }}" alt="@lang('setting.Icon')" class="img-fluid p-1">
                   </div>
                 @else
                   <div class="text-muted fst-italic">@lang('sidebar.Not uploaded')</div>
@@ -154,7 +154,7 @@
         <h6 class="mb-3">@lang('sidebar.Brand Preview')</h6>
         <div class="border rounded p-3 d-flex align-items-center gap-3">
           @if(!empty($logoUrl))
-            <img src="{{ $logoUrl }}" alt="Logo" style="height:40px" class="rounded border bg-white p-1">
+            <img src="{{ $logoUrl }}" alt="@lang('setting.Logo')" style="height:40px" class="rounded border bg-white p-1">
           @else
             <div class="rounded border bg-light d-flex align-items-center justify-content-center" style="height:40px;width:40px;">
               <i class="bi bi-image text-muted"></i>

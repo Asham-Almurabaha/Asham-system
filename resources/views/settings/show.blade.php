@@ -1,5 +1,5 @@
 @extends('layouts.master')
-@section('title', __('View Settings'))
+@section('title', __('sidebar.General Settings'))
 
 @section('content')
 <div class="container py-3">
@@ -17,7 +17,7 @@
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div class="d-flex align-items-center gap-3">
       @if(!empty($setting->logo_url))
-        <img src="{{ $setting->logo_url }}" alt="Logo" class="rounded border bg-white p-1" style="height:48px">
+        <img src="{{ $setting->logo_url }}" alt="@lang('setting.Logo')" class="rounded border bg-white p-1" style="height:48px">
       @else
         <div class="rounded border bg-light d-flex align-items-center justify-content-center" style="height:48px;width:48px;">
           <i class="bi bi-image text-muted fs-5"></i>
@@ -125,7 +125,7 @@
           {{-- Favicon Preview --}}
           <div>
             <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted">Favicon</span>
+              <span class="text-muted">@lang('setting.Icon')</span>
               @if(!empty($setting->favicon_url))
                 <a href="{{ $setting->favicon_url }}" target="_blank" class="small">@lang('sidebar.Open Original')</a>
               @endif
@@ -133,7 +133,7 @@
             @if(!empty($setting->favicon_url))
               <div class="d-flex align-items-center gap-3">
                 <div class="border rounded bg-light d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
-                  <img src="{{ $setting->favicon_url }}" alt="Favicon" class="img-fluid p-1" style="max-height:32px">
+                  <img src="{{ $setting->favicon_url }}" alt="@lang('setting.Icon')" class="img-fluid p-1" style="max-height:32px">
                 </div>
                 <div class="text-muted small">@lang('sidebar.Default preview for icon size')</div>
               </div>
@@ -150,7 +150,7 @@
             <div class="text-muted small mb-2">@lang('sidebar.Inline Preview')</div>
             <div class="border rounded p-3 d-flex align-items-center gap-3">
               @if(!empty($setting->logo_url))
-                <img src="{{ $setting->logo_url }}" alt="Logo" style="height:32px" class="rounded border bg-white p-1">
+                <img src="{{ $setting->logo_url }}" alt="@lang('setting.Logo')" style="height:32px" class="rounded border bg-white p-1">
               @else
                 <div class="rounded border bg-light d-flex align-items-center justify-content-center" style="height:32px;width:32px;">
                   <i class="bi bi-image text-muted"></i>

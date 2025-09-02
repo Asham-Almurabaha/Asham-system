@@ -75,4 +75,8 @@ return array (
   'Operating' => 'العمليات',
   'Cars' => 'السيارات',
   'Motocycles' => 'الدراجات النارية',
+  'View' => 'عرض',
+  'Edit' => 'تعديل',
+  'Delete' => 'حذف',
+  'Back' => 'رجوع',
 );
