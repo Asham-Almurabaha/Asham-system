@@ -10,7 +10,7 @@ class CustomerReportController extends Controller
 {
     public function active()
     {
-        $endedStatusNames = ['','',' ',' ',' ','Completed','Early Settlement'];
+        $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
         $endedStatusIds = [];
         if (class_exists(\App\Models\ContractStatus::class)) {
             $endedStatusIds = \App\Models\ContractStatus::query()
