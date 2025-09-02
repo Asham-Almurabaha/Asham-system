@@ -30,7 +30,7 @@
                 <div class="row g-3">
                     {{-- الاسم --}}
                     <div class="col-12">
-                        <label for="name" class="form-label">الاسم <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ __('investors.Name') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="name"
@@ -41,13 +41,13 @@
                             autofocus
                             maxlength="190"
                             autocomplete="name"
-                            placeholder="اكتب الاسم الثلاثي">
+                            placeholder="{{ __('investors.Write the full name') }}">
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- رقم الهوية --}}
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">رقم الهوية الوطنية</label>
+                        <label for="national_id" class="form-label">{{ __('investors.National ID') }}</label>
                         <input
                             type="text"
                             name="national_id"
@@ -57,14 +57,14 @@
                             inputmode="numeric"
                             dir="ltr"
                             maxlength="20"
-                            placeholder="مثال: 1234567890">
-                        <div class="form-text">يمكن إدخال أرقام فقط.</div>
+                            placeholder="{{ __('investors.Example: 1234567890') }}">
+                        <div class="form-text">{{ __('investors.Only numbers can be entered.') }}</div>
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- الهاتف --}}
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">الهاتف</label>
+                        <label for="phone" class="form-label">{{ __('investors.Phone') }}</label>
                         <input
                             type="text"
                             name="phone"
@@ -75,14 +75,14 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
-                            placeholder="+9665XXXXXXXX">
-                        <div class="form-text">يُفضّل إدخال المفتاح الدولي.</div>
+                            placeholder="{{ __('investors.+9665XXXXXXXX') }}">
+                        <div class="form-text">{{ __('investors.It is preferable to enter the international code.') }}</div>
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- البريد --}}
                     <div class="col-md-6">
-                        <label for="email" class="form-label">البريد الإلكتروني</label>
+                        <label for="email" class="form-label">{{ __('investors.Email') }}</label>
                         <input
                             type="email"
                             name="email"
@@ -97,7 +97,7 @@
 
                     {{-- الجنسية --}}
                     <div class="col-md-6">
-                        <label for="nationality_id" class="form-label">الجنسية</label>
+                        <label for="nationality_id" class="form-label">{{ __('investors.Nationality') }}</label>
                         <select
                             name="nationality_id"
                             id="nationality_id"
@@ -114,7 +114,7 @@
 
                     {{-- الوظيفة --}}
                     <div class="col-md-6">
-                        <label for="title_id" class="form-label">الوظيفة</label>
+                        <label for="title_id" class="form-label">{{ __('investors.Job Title') }}</label>
                         <select
                             name="title_id"
                             id="title_id"
@@ -131,26 +131,26 @@
 
                     {{-- العنوان --}}
                     <div class="col-12">
-                        <label for="address" class="form-label">العنوان</label>
+                        <label for="address" class="form-label">{{ __('investors.Address') }}</label>
                         <textarea
                             name="address"
                             id="address"
                             rows="3"
                             class="form-control @error('address') is-invalid @enderror"
-                            placeholder="اكتب العنوان بالتفصيل">{{ old('address') }}</textarea>
+                            placeholder="{{ __('investors.Write the address in detail') }}">{{ old('address') }}</textarea>
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- صورة الهوية + معاينة --}}
                     <div class="col-md-6">
-                        <label for="id_card_image" class="form-label">صورة الهوية</label>
+                        <label for="id_card_image" class="form-label">{{ __('investors.ID Card Image') }}</label>
                         <input
                             type="file"
                             name="id_card_image"
                             id="id_card_image"
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp — suitable size less than 2MB.') }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
@@ -161,14 +161,14 @@
 
                     {{-- صورة العقد + معاينة --}}
                     <div class="col-md-6">
-                        <label for="contract_image" class="form-label">صورة العقد</label>
+                        <label for="contract_image" class="form-label">{{ __('investors.Contract Image') }}</label>
                         <input
                             type="file"
                             name="contract_image"
                             id="contract_image"
                             class="form-control @error('contract_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp — suitable size less than 2MB.') }}</div>
                         @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="contract-preview-wrap">
@@ -179,7 +179,7 @@
 
                     {{-- نسبة حصة المكتب --}}
                     <div class="col-md-6">
-                        <label for="office_share_percentage" class="form-label">نسبة حصة المكتب (%)</label>
+                        <label for="office_share_percentage" class="form-label">{{ __('investors.Office Share %') }} (%)</label>
                         <input
                             type="number"
                             name="office_share_percentage"
@@ -187,18 +187,18 @@
                             class="form-control @error('office_share_percentage') is-invalid @enderror"
                             value="{{ old('office_share_percentage', '0') }}"
                             min="0" max="100" step="0.01" inputmode="decimal" dir="ltr"
-                            placeholder="مثال: 12.50">
-                        <div class="form-text">القيمة بين 0 و 100.</div>
+                            placeholder="{{ __('investors.Example: 12.50') }}">
+                        <div class="form-text">{{ __('investors.The value is between 0 and 100.') }}</div>
                         @error('office_share_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check2-circle me-1"></i> حفظ
+                        <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
                     </button>
                     <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
-                        إلغاء
+                        @lang('app.Cancel')
                     </a>
                 </div>
             </form>

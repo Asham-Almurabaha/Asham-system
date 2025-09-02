@@ -179,8 +179,17 @@
                     <h3 class="mb-1">{{ __('dashboard.Dashboard') }}</h3>
                     <div class="text-muted small">
                         {{ __('dashboard.Data Range') }}:
+                        {{--
                         {{ request('from') ? e(request('from')) : '—' }} —
                         {{ request('to') ? e(request('to')) : '—' }}
+                        --}}
+                        @if(!request()->filled('from') && !request()->filled('to'))
+                            {{ __('dashboard.All') }}
+                        @else
+                            {{ request('from') ? e(request('from')) : __('dashboard.From').': -' }}
+                            →
+                            {{ request('to') ? e(request('to')) : __('dashboard.To').': -' }}
+                        @endif
                     </div>
                 </div>
             </div>
@@ -749,9 +758,10 @@ document.addEventListener('DOMContentLoaded', function(){
     (function(){
         const el = document.getElementById('acctDistChart');
         if (!el) return;
-        const labels = @json(($distribution['labels'] ?? ($distribution['labels'] ?? ['بنوك','خزن'])));
+        let labels = @json(($distribution['labels'] ?? []));
+        if (!labels.length) { labels = ['{{ __('dashboard.Banks') }}','{{ __('dashboard.Safes') }}']; }
         const data   = @json(($distribution['data']   ?? ($distribution['data']   ?? [0,0])));
-        if (!data.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد بيانات توزيع.</div>'; return; }
+        if (!data.length) { el.parentElement.innerHTML = '<div class="text-muted">{{ __('dashboard.No distribution data.') }}</div>'; return; }
         new Chart(el, {
             type: 'doughnut',
             data: { labels, datasets:[{ data, borderWidth:1 }] },
@@ -765,10 +775,10 @@ document.addEventListener('DOMContentLoaded', function(){
         if (!el) return;
         const labels = @json($topBalLabels ?? []);
         const data   = @json($topBalData ?? []);
-        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">لا توجد أرصدة كافية للعرض.</div>'; return; }
+        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">{{ __('dashboard.No sufficient balances to display.') }}</div>'; return; }
         new Chart(el, {
             type: 'bar',
-            data: { labels, datasets: [{ label:'رصيد تقديري', data, borderWidth:1 }] },
+            data: { labels, datasets: [{ label:'{{ __('dashboard.Estimated Balance') }}', data, borderWidth:1 }] },
             options: {
                 indexAxis: 'y',
                 responsive:true,

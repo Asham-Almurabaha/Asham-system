@@ -35,4 +35,17 @@
     "New Investors This Month": "New Investors This Month",
     "This Week": "This Week",
     "Type investor name...": "Type investor name..."
+    ,
+    "Write the full name": "Write the full name",
+    "Example: 1234567890": "Example: 1234567890",
+    "+9665XXXXXXXX": "+9665XXXXXXXX",
+    "Only numbers can be entered.": "Only numbers can be entered.",
+    "It is preferable to enter the international code.": "It is preferable to enter the international code.",
+    "Write the address in detail": "Write the address in detail",
+    "Allowed extensions: jpg/png/webp — suitable size less than 2MB.": "Allowed extensions: jpg/png/webp — suitable size less than 2MB.",
+    "Example: 12.50": "Example: 12.50",
+    "The value is between 0 and 100.": "The value is between 0 and 100.",
+    "Current image:": "Current image:",
+    "Preview after upload:": "Preview after upload:",
+    "You can change the image or delete the current one.": "You can change the image or delete the current one."
 }

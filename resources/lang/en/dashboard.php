@@ -64,4 +64,9 @@ return [
     'Total Stock Available' => 'Total Stock Available',
     'Banks' => 'Banks',
     'Safes' => 'Safes',
+    'No distribution data.' => 'No distribution data.',
+    'No sufficient balances to display.' => 'No sufficient balances to display.',
+    'Account' => 'Account',
+    'Estimated Balance = Opening Balance + In - Out' => 'Estimated Balance = Opening Balance + In - Out',
+    'Net = In - Out' => 'Net = In - Out',
 ];

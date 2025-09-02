@@ -1,7 +1,7 @@
 {{-- resources/views/Investors/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', __('Import Investors from Excel'))
+@section('title', __('investors_import.Import Investors from Excel'))
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
@@ -13,16 +13,16 @@
         <i class="bi bi-cloud-arrow-up fs-3"></i>
       </div>
       <div>
-        <h1 class="h4 mb-1">{{ __('Import Investors') }}</h1>
+        <h1 class="h4 mb-1">@lang('investors_import.Import Investors')</h1>
         <p class="text-muted mb-0">
-          ارفع ملف Excel/CSV بالمواصفات:
+          @lang('investors_import.Upload an Excel/CSV file with specs:')
           <code>name, national_id, phone, email, address, nationality, title, id_card_image, contract_image, ...</code>
           — الصف الأول عناوين.
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
         <a href="{{ route('investors.import.template') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-filetype-xlsx me-1"></i> تنزيل تمبليت
+          <i class="bi bi-filetype-xlsx me-1"></i> @lang('investors_import.Download template')
         </a>
       </div>
     </div>
@@ -33,7 +33,7 @@
     <div class="alert alert-danger border-0 shadow-sm">
       <i class="bi bi-x-octagon me-2 fs-5"></i>
       <div class="d-inline-block">
-        <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
+        <div class="fw-semibold mb-1">@lang('investors_import.Operation failed:')</div>
         <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
       </div>
     </div>
@@ -84,7 +84,7 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-table"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">إجمالي الصفوف</div>
+              <div class="text-muted small">@lang('investors_import.Total Rows')</div>
               <div class="fs-4 fw-bold">{{ number_format($rows) }}</div>
             </div>
           </div>
@@ -95,9 +95,9 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-success-subtle text-success"><i class="bi bi-check2"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">المحفوظ فعليًا</div>
+              <div class="text-muted small">@lang('investors_import.Saved')</div>
               <div class="fs-4 fw-bold">{{ number_format($changed) }}</div>
-              <div class="text-success small">نسبة النجاح: {{ $successPct }}%</div>
+              <div class="text-success small">@lang('investors_import.Success Rate'): {{ $successPct }}%</div>
             </div>
           </div>
         </div>
@@ -107,9 +107,9 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-secondary-subtle text-secondary"><i class="bi bi-arrow-repeat"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">بدون تغيير</div>
+              <div class="text-muted small">@lang('investors_import.Unchanged')</div>
               <div class="fs-4 fw-bold">{{ number_format($unchanged) }}</div>
-              <div class="text-muted small">سجلات مطابقة 1:1</div>
+              <div class="text-muted small">@lang('investors_import.Records matched 1:1')</div>
             </div>
           </div>
         </div>
@@ -147,11 +147,11 @@
         <div class="col-12">
           <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
             <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
-            <div class="mb-2 fw-semibold">اسحب الملف إلى هنا أو اضغط للاختيار</div>
-            <div class="text-muted small mb-3">ملف Excel/CSV فقط — سيتم التحقق قبل الحفظ</div>
+            <div class="mb-2 fw-semibold">@lang('investors_import.Drag file here or click to choose')</div>
+            <div class="text-muted small mb-3">@lang('investors_import.Excel/CSV only — validation before save')</div>
             <input id="fileInput" type="file" name="file" class="position-absolute w-100 h-100 top-0 start-0 opacity-0" accept=".xlsx,.xls,.csv" required>
             <div class="small">
-              <span class="text-secondary">الملف المختار:</span>
+              <span class="text-secondary">@lang('investors_import.Selected file:')</span>
               <span id="fileName" class="fw-semibold">—</span>
               <span id="fileMeta" class="text-muted"></span>
             </div>
@@ -161,7 +161,7 @@
 
         <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
           <button id="submitBtn" class="btn btn-primary" disabled>
-            <i class="bi bi-upload me-1"></i> استيراد الآن
+            <i class="bi bi-upload me-1"></i> @lang('investors_import.Import Now')
           </button>
 
           @php $hasIssues = ($hasFailures || $skippedCount > 0); @endphp
@@ -187,10 +187,10 @@
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
         <i class="bi bi-list-check me-2"></i>
-        <span>أخطاء التحقق</span>
+        <span>@lang('investors_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
         <button class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
-          إظهار/إخفاء
+          @lang('investors_import.Show/Hide')
         </button>
       </div>
       <div id="failuresTable" class="collapse show">
@@ -199,10 +199,10 @@
             <table class="table table-sm table-striped table-hover align-middle mb-0">
               <thead class="table-light sticky-top">
                 <tr>
-                  <th style="width:110px">رقم الصف</th>
-                  <th style="width:220px">الحقل</th>
-                  <th>الرسائل</th>
-                  <th style="min-width:260px">القيم</th>
+                  <th style="width:110px">@lang('investors_import.Row Number')</th>
+                  <th style="width:220px">@lang('investors_import.Field')</th>
+                  <th>@lang('investors_import.Messages')</th>
+                  <th style="min-width:260px">@lang('investors_import.Values')</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,7 +248,7 @@
         <span>الصفوف المتخطّاة</span>
         <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
         <button class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
-          إظهار/إخفاء
+          @lang('investors_import.Show/Hide')
         </button>
       </div>
       <div id="skippedTable" class="collapse show">
@@ -257,9 +257,9 @@
             <table class="table table-sm table-striped table-hover align-middle mb-0">
               <thead class="table-light sticky-top">
                 <tr>
-                  <th style="width:110px">رقم الصف</th>
+                  <th style="width:110px">@lang('investors_import.Row Number')</th>
                   <th style="width:260px">السبب</th>
-                  <th style="min-width:260px">القيم</th>
+                  <th style="min-width:260px">@lang('investors_import.Values')</th>
                 </tr>
               </thead>
               <tbody>
@@ -282,7 +282,7 @@
               </tbody>
             </table>
           </div>
-          <div class="p-3 text-muted small">راجع القيم والسبب ثم صحّح الصفوف وأعد الرفع.</div>
+          <div class="p-3 text-muted small">@lang('investors_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')</div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 {{-- resources/views/contracts/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', 'استيراد العقود من Excel')
+@section('title', __('contracts_import.Import Contracts from Excel'))
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
@@ -13,24 +13,24 @@
         <i class="bi bi-cloud-arrow-up fs-3"></i>
       </div>
       <div>
-        <h1 class="h4 mb-1">استيراد العقود</h1>
+        <h1 class="h4 mb-1">@lang('contracts_import.Import Contracts')</h1>
         <p class="text-muted mb-0">
-          ارفع ملف Excel/CSV بالمواصفات (يُقبل ID أو الاسم):
+          @lang('contracts_import.Upload an Excel/CSV file with specs:') @lang('contracts_import.Fields accept ID or name.')
           <code>customer_id/customer_name, guarantor_id/guarantor_name, product_type_id/product_type_name, products_count, purchase_price, sale_price, contract_value, investor_profit, total_value, discount_amount, installment_type_id/installment_type_name, installment_value, installments_count, start_date, first_installment_date, contract_number</code>
           — الصف الأول عناوين.
           <br>
           المستثمرون:
           <ol class="mb-1">
-            <li>عمود واحد: <code>investors</code> بصيغة <code>id:pct|id:pct</code>.</li>
+            <li>@lang('contracts_import.Investors field as id:pct list')</li>
             <li>أعمدة منفصلة حتى 6: <code>investorN_id / investorN_name + investorN_pct</code> (N=1..6).</li>
           </ol>
-          الأقساط (اختياري حتى 18): <code>installmentN_value</code> و <code>installmentN_date</code> (N=1..18).
+          @lang('contracts_import.Installments sequence up to 18')
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
         @if (Route::has('contracts.import.template'))
           <a href="{{ route('contracts.import.template') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-filetype-xlsx me-1"></i> تنزيل تمبليت
+            <i class="bi bi-filetype-xlsx me-1"></i> @lang('contracts_import.Download template')
           </a>
         @endif
       </div>
@@ -43,7 +43,7 @@
       <div class="d-flex align-items-start">
         <i class="bi bi-x-octagon me-2 fs-5"></i>
         <div>
-          <div class="fw-semibold mb-1">تعذّر تنفيذ العملية:</div>
+          <div class="fw-semibold mb-1">@lang('contracts_import.Operation failed:')</div>
           <ul class="mb-0">@foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach</ul>
         </div>
       </div>
@@ -106,7 +106,7 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-table"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">إجمالي الصفوف</div>
+              <div class="text-muted small">@lang('contracts_import.Total Rows')</div>
               <div class="fs-4 fw-bold">{{ number_format($rows) }}</div>
             </div>
           </div>
@@ -118,9 +118,9 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-success-subtle text-success"><i class="bi bi-check2"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">المحفوظ فعليًا</div>
+              <div class="text-muted small">@lang('contracts_import.Saved')</div>
               <div class="fs-4 fw-bold">{{ number_format($changed) }}</div>
-              <div class="text-success small">نسبة النجاح: {{ $successPct }}%</div>
+              <div class="text-success small">@lang('contracts_import.Success Rate'): {{ $successPct }}%</div>
             </div>
           </div>
         </div>
@@ -131,9 +131,9 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-secondary-subtle text-secondary"><i class="bi bi-arrow-repeat"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">بدون تغيير</div>
+              <div class="text-muted small">@lang('contracts_import.Unchanged')</div>
               <div class="fs-4 fw-bold">{{ number_format($unchanged) }}</div>
-              <div class="text-muted small">سجلات مطابقة 1:1</div>
+              <div class="text-muted small">@lang('contracts_import.Records matched 1:1')</div>
             </div>
           </div>
         </div>
@@ -144,7 +144,7 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-warning-subtle text-warning"><i class="bi bi-exclamation-triangle"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">متخطّى</div>
+              <div class="text-muted small">@lang('contracts_import.Skipped')</div>
               <div class="fs-4 fw-bold">{{ number_format($skipped) }}</div>
               <div class="text-warning small">النسبة: {{ $skipPct }}%</div>
             </div>
@@ -163,7 +163,7 @@
       <div class="d-flex align-items-start">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i>
         <div>
-          <div class="fw-semibold mb-1">أخطاء أثناء القراءة/الحفظ:</div>
+          <div class="fw-semibold mb-1">@lang('contracts_import.Errors during read/save:')</div>
           <ul class="mb-0">@foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach</ul>
         </div>
       </div>
@@ -179,11 +179,11 @@
         <div class="col-12">
           <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
             <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
-            <div class="mb-2 fw-semibold">اسحب الملف إلى هنا أو اضغط للاختيار</div>
-            <div class="text-muted small mb-3">Excel/CSV — سيتم التحقق قبل الحفظ</div>
+            <div class="mb-2 fw-semibold">@lang('contracts_import.Drag file here or click to choose')</div>
+            <div class="text-muted small mb-3">@lang('contracts_import.Excel/CSV only — validation before save')</div>
             <input id="fileInput" type="file" name="file" class="position-absolute w-100 h-100 top-0 start-0 opacity-0" accept=".xlsx,.xls,.csv" required>
             <div class="small">
-              <span class="text-secondary">الملف المختار:</span>
+              <span class="text-secondary">@lang('contracts_import.Selected file:')</span>
               <span id="fileName" class="fw-semibold">—</span>
               <span id="fileMeta" class="text-muted"></span>
             </div>
@@ -193,7 +193,7 @@
 
         <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
           <button id="submitBtn" class="btn btn-primary" disabled>
-            <i class="bi bi-upload me-1"></i> استيراد الآن
+            <i class="bi bi-upload me-1"></i> @lang('contracts_import.Import Now')
           </button>
 
           @if ($hasFailures && Route::has('contracts.import.failures.fix'))
@@ -211,10 +211,10 @@
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
         <i class="bi bi-list-check me-2"></i>
-        <span>أخطاء التحقق</span>
+        <span>@lang('contracts_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
         <button class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
-          إظهار/إخفاء
+          @lang('contracts_import.Show/Hide')
         </button>
       </div>
 
@@ -224,10 +224,10 @@
             <table class="table table-sm table-striped table-hover align-middle mb-0">
               <thead class="table-light sticky-top">
                 <tr>
-                  <th style="width:110px">رقم الصف</th>
-                  <th style="width:220px">الحقل</th>
-                  <th>الرسائل</th>
-                  <th style="min-width:260px">القيم</th>
+                  <th style="width:110px">@lang('contracts_import.Row Number')</th>
+                  <th style="width:220px">@lang('contracts_import.Field')</th>
+                  <th>@lang('contracts_import.Messages')</th>
+                  <th style="min-width:260px">@lang('contracts_import.Values')</th>
                 </tr>
               </thead>
               <tbody>

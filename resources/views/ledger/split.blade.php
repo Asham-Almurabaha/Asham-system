@@ -38,7 +38,7 @@
             <div class="row">
                 {{-- الفئة + المستثمر --}}
                 <div class="col-md-4">
-                    <label class="form-label" for="party_category">الفئة</label>
+                    <label class="form-label" for="party_category">@lang('ledger.Category')</label>
                     <select name="party_category" id="party_category" class="form-select" required>
                         <option value="investors" @selected($oldCat==='investors')>المستثمرون</option>
                         <option value="office"    @selected($oldCat==='office')>المكتب</option>
@@ -46,7 +46,7 @@
                 </div>
 
                 <div class="col-md-4" id="investorWrap">
-                    <label class="form-label" for="investor_id">المستثمر</label>
+                    <label class="form-label" for="investor_id">@lang('ledger.Investor')</label>
                     <select name="investor_id" id="investor_id" class="form-select">
                         <option value="" disabled {{ old('investor_id') ? '' : 'selected' }}>اختر المستثمر</option>
                         @foreach ($investors as $investor)
@@ -66,7 +66,7 @@
 
                 {{-- الحالة: قائمتان منفصلتان + حقل مخفي (ونخفي التحويل) --}}
                 <div class="col-md-4">
-                    <label class="form-label">الحالة</label>
+                    <label class="form-label">@lang('ledger.Status')</label>
 
                     <select id="status_investors" class="form-select mb-2" {{ $oldCat==='investors' ? '' : 'hidden' }}
                             data-goods-ids='@json($goodsStatusIds)'>
@@ -98,7 +98,7 @@
 
             {{-- إجمالي المبلغ + تاريخ --}}
             <div class="col-md-3 mt-0">
-                <label class="form-label" for="amount">إجمالي المبلغ</label>
+                <label class="form-label" for="amount">@lang('ledger.Total Amount')</label>
                 <input
                     type="number" step="any" min="0" name="amount" id="amount"
                     class="form-control" value="{{ old('amount', 0) }}" required
@@ -107,7 +107,7 @@
             </div>
 
             <div class="col-md-3 mt-0">
-                <label class="form-label" for="transaction_date">تاريخ العملية</label>
+                <label class="form-label" for="transaction_date">@lang('ledger.Transaction Date')</label>
                 <input type="date" name="transaction_date" id="transaction_date" class="form-control js-date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
                 @error('transaction_date') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
@@ -120,7 +120,7 @@
                             <h6 class="mb-3">جزء البنك</h6>
 
                             <div>
-                                <label class="form-label" for="bank_account_id">الحساب البنكي</label>
+                                <label class="form-label" for="bank_account_id">@lang('ledger.Bank Account')</label>
                                 <select name="bank_account_id" id="bank_account_id" class="form-select" disabled>
                                     <option value="" disabled {{ old('bank_account_id') ? '' : 'selected' }}>اختر الحساب البنكي</option>
                                     @foreach ($banks as $bank)
@@ -136,7 +136,7 @@
                             </div>
 
                             <div class="mb-2">
-                                <label class="form-label" for="bank_share">المبلغ (بنك)</label>
+                                <label class="form-label" for="bank_share">@lang('ledger.Amount (Bank)')</label>
                                 <input
                                     type="number" step="any" min="0" name="bank_share" id="bank_share"
                                     class="form-control" value="{{ old('bank_share', 0) }}"
@@ -151,7 +151,7 @@
                             <h6 class="mb-3">جزء الخزنة</h6>
 
                             <div>
-                                <label class="form-label" for="safe_id">الخزنة</label>
+                                <label class="form-label" for="safe_id">@lang('ledger.Safe')</label>
                                 <select name="safe_id" id="safe_id" class="form-select" disabled>
                                     <option value="" disabled {{ old('safe_id') ? '' : 'selected' }}>اختر الخزنة</option>
                                     @foreach ($safes as $safe)
@@ -167,7 +167,7 @@
                             </div>
 
                             <div class="mb-2">
-                                <label class="form-label" for="safe_share">المبلغ (خزنة)</label>
+                                <label class="form-label" for="safe_share">@lang('ledger.Amount (Safe)')</label>
                                 <input
                                     type="number" step="any" min="0" name="safe_share" id="safe_share"
                                     class="form-control" value="{{ old('safe_share', 0) }}"
@@ -200,7 +200,7 @@
                                 @endphp
                                 <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
                                     <div class="col-md-8">
-                                        <label class="form-label small mb-1">نوع البضاعة</label>
+                                        <label class="form-label small mb-1">@lang('ledger.Product Type')</label>
                                         <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
                                             <option value="">— اختر —</option>
                                             @foreach($products as $p)
@@ -223,7 +223,7 @@
                         @else
                             <div class="row g-2 product-row align-items-end">
                                 <div class="col-md-8">
-                                    <label class="form-label small mb-1">نوع البضاعة</label>
+                                    <label class="form-label small mb-1">@lang('ledger.Product Type')</label>
                                     <select name="products[0][product_type_id]" class="form-select js-product-select">
                                         <option value="">— اختر —</option>
                                         @foreach($products as $p)
@@ -252,7 +252,7 @@
 
             {{-- ملاحظات --}}
             <div class="col-12">
-                <label class="form-label" for="notes">ملاحظات</label>
+                <label class="form-label" for="notes">@lang('ledger.Notes')</label>
                 <textarea name="notes" id="notes" rows="3" class="form-control" maxlength="1000">{{ old('notes') }}</textarea>
             </div>
 
@@ -261,7 +261,7 @@
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                     حفظ
                 </button>
-                <a href="{{ route('ledger.index') }}" class="btn btn-secondary">إلغاء</a>
+                <a href="{{ route('ledger.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
 
                 <div class="ms-auto d-flex gap-2">
                     <a href="{{ route('ledger.create') }}" class="btn btn-outline-success">إضافة قيد</a>
@@ -276,7 +276,7 @@
 <template id="product_row_tpl">
     <div class="row g-2 product-row align-items-end mt-2">
         <div class="col-md-8">
-            <label class="form-label small mb-1">نوع البضاعة</label>
+            <label class="form-label small mb-1">@lang('ledger.Product Type')</label>
             <select class="form-select js-product-select">
                 <option value="">— اختر —</option>
                 @foreach($products as $p)

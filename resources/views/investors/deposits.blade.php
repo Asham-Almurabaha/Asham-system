@@ -136,8 +136,8 @@
     </div>
 
     <div class="no-print text-end mt-3">
-      <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary">↩ رجوع</a>
-      <button class="btn btn-primary" onclick="window.print()">🖨 طباعة</button>
+      <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨 @lang('app.Print')</button>
     </div>
 
   </div>

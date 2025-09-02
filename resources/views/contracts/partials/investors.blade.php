@@ -96,10 +96,10 @@
 
         <div class="modal-footer">
           <button type="submit" class="btn btn-success" disabled>
-            <span class="save-text">💾 حفظ</span>
+            <span class="save-text">💾 @lang('app.Save')</span>
             <span class="spinner-border spinner-border-sm align-middle ms-2 d-none" role="status" aria-hidden="true"></span>
           </button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@lang('app.Cancel')</button>
         </div>
       </form>
     </div>

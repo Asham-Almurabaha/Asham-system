@@ -234,8 +234,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-success">💾 حفظ</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-success">💾 @lang('app.Save')</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@lang('app.Cancel')</button>
                 </div>
             </form>
         </div>
@@ -286,8 +286,8 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-warning">💾 حفظ</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">💾 @lang('app.Save')</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@lang('app.Cancel')</button>
                 </div>
             </form>
         </div>

@@ -37,8 +37,8 @@
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $installmentStatus->name) }}" required autofocus>
                 </div>
 
-                <button type="submit" class="btn btn-primary">تحديث</button>
-                <a href="{{ route('installment_statuses.index') }}" class="btn btn-secondary">إلغاء</a>
+                <button type="submit" class="btn btn-primary">@lang('app.Update')</button>
+                <a href="{{ route('installment_statuses.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
             </form>
         </div>
     </div>

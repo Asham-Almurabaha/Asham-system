@@ -16,26 +16,26 @@
 {{-- أزرار الإجراء --}}
 <div class="d-flex flex-wrap gap-2 mb-3">
     {{-- <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-primary">✏️ تعديل</a> --}}
-    <a href="{{ route('contracts.index') }}" class="btn btn-secondary">↩ رجوع للقائمة</a>
+    <a href="{{ route('contracts.index') }}" class="btn btn-secondary">↩ @lang('app.Back')</a>
     @php
         $paidTotal = $contract->installments->sum('payment_amount'); 
     @endphp
 
     @if($paidTotal == 0)
         <a href="{{ route('contracts.print', $contract->id) }}" target="_blank" class="btn btn-primary">
-            🖨 طباعة العقد
+            🖨 @lang('app.Print')
         </a>
     @endif
 
     @if($paidTotal <= $contract->total_value - $contract->discount_amount)
         <a href="{{ route('contracts.paid', $contract->id) }}" target="_blank" class="btn btn-success">
-    💰      طباعة سجل السداد
+    💰      @lang('app.Print')
         </a>
     @endif
 
     @if($paidTotal >= $contract->total_value - $contract->discount_amount )
         <a href="{{ route('contracts.closure', $contract->id) }}" target="_blank" class="btn btn-success">
-            ✅ طباعة مخالصة
+            ✅ @lang('app.Print')
         </a>
     @endif
     {{-- <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="ms-auto" 

@@ -34,7 +34,7 @@
 
             {{-- من (مصدر) --}}
             <div class="col-md-5">
-                <label class="form-label" for="from_picker">الحساب المصدر</label>
+                <label class="form-label" for="from_picker">@lang('ledger.From Account')</label>
                 <select id="from_picker" class="form-select" required>
                     <option value="" disabled {{ $oldFrom ? '' : 'selected' }}>اختر الحساب المصدر</option>
                     <optgroup label="الحسابات البنكية">
@@ -68,7 +68,7 @@
 
             {{-- إلى (وجهة) --}}
             <div class="col-md-5">
-                <label class="form-label" for="to_picker">الحساب الوجهة</label>
+                <label class="form-label" for="to_picker">@lang('ledger.To Account')</label>
                 <select id="to_picker" class="form-select" required>
                     <option value="" disabled {{ $oldTo ? '' : 'selected' }}>اختر الحساب الوجهة</option>
                     <optgroup label="الحسابات البنكية">
@@ -91,7 +91,7 @@
 
             {{-- المبلغ + التاريخ --}}
             <div class="col-md-6">
-                <label class="form-label" for="amount">المبلغ</label>
+                <label class="form-label" for="amount">@lang('ledger.Amount')</label>
                 <input
                     type="number" step="0.01" min="0"
                     name="amount" id="amount"
@@ -102,14 +102,14 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label" for="transaction_date">تاريخ العملية</label>
+                <label class="form-label" for="transaction_date">@lang('ledger.Transaction Date')</label>
                 <input type="date" name="transaction_date" id="transaction_date" class="form-control js-date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
                 @error('transaction_date') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
             {{-- ملاحظات --}}
             <div class="col-12">
-                <label class="form-label" for="notes">ملاحظات</label>
+                <label class="form-label" for="notes">@lang('ledger.Notes')</label>
                 <textarea name="notes" id="notes" rows="3" class="form-control" maxlength="1000">{{ old('notes') }}</textarea>
             </div>
 
@@ -118,7 +118,7 @@
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                     تنفيذ التحويل
                 </button>
-                <a href="{{ route('ledger.index') }}" class="btn btn-secondary">إلغاء</a>
+                <a href="{{ route('ledger.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
 
                 <div class="ms-auto d-flex gap-2">
                     <a href="{{ route('ledger.create') }}" class="btn btn-outline-success">إضافة قيد</a>

@@ -185,8 +185,8 @@
 
     {{-- Buttons --}}
     <div class="no-print d-flex justify-content-end gap-2">
-      <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ رجوع</a>
-      <button onclick="window.print()" class="btn btn-primary">🖨 طباعة</button>
+      <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+      <button onclick="window.print()" class="btn btn-primary">🖨 @lang('app.Print')</button>
     </div>
   </div>
 </div>

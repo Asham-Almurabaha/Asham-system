@@ -180,9 +180,9 @@
 
     {{-- Actions --}}
     <div class="no-print d-flex justify-content-end gap-2 mt-3">
-      <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">↩ رجوع</a>
+      <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
       <a href="{{ url()->current() }}" class="btn btn-outline-secondary">↺ تحديث</a>
-      <button class="btn btn-primary" onclick="window.print()">🖨 طباعة</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 @lang('app.Print')</button>
     </div>
 
   </div>
