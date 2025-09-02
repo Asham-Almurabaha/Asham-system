@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     @include('layouts.head')
@@ -16,9 +16,9 @@
               <div class="d-flex justify-content-between align-items-center w-100 py-3">
                 <a href="{{ url('/') }}" class="logo d-flex align-items-center w-auto text-decoration-none">
                   @if (!empty($setting) && !empty($setting->logo))
-                    <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo" class="logo-img-40">
+                    <img src="{{ asset('storage/' . $setting->logo) }}" alt="Logo" style="height: 40px;">
                   @else
-                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="logo-img-40">
+                    <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" style="height: 40px;">
                   @endif
                   <span class="d-none d-lg-block ms-2 fw-semibold">
                     {{ $setting->name ?? config('app.name', 'لوحة التحكم') }}
@@ -134,4 +134,3 @@
   @stack('scripts')
 </body>
 </html>
-

@@ -71,8 +71,6 @@
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
-<link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet">
-<link href="{{ asset('assets/css/util.css') }}" rel="stylesheet">
 
 {{-- مناطق تخصيص إضافية للصفحات --}}
 @yield('css')
