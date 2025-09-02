@@ -7,8 +7,8 @@
     <h1 class="h3 mb-1">تحويل داخلي (المكتب)</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('ledger.index') }}">دفتر القيود</a></li>
-            <li class="breadcrumb-item active">تحويل داخلي</li>
+            <li class="breadcrumb-item"><a href="{{ route('ledger.index') }}">@lang('sidebar.Ledger')</a></li>
+            <li class="breadcrumb-item active">{{ __('Internal Transfer') }}</li>
         </ol>
     </nav>
 </div>

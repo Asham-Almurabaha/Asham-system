@@ -7,8 +7,8 @@
     <h1>إضافة عقد جديد</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('contracts.index') }}">العقود</a></li>
-            <li class="breadcrumb-item active">إضافة</li>
+            <li class="breadcrumb-item"><a href="{{ route('contracts.index') }}">{{ __('Contracts') }}</a></li>
+            <li class="breadcrumb-item active">{{ __('Add') }}</li>
         </ol>
     </nav>
 </div>

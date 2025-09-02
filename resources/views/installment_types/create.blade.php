@@ -8,9 +8,9 @@
     <h1>إضافة نوع قسط جديد</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">Setting</li>
-            <li class="breadcrumb-item">Installment Types</li>
-            <li class="breadcrumb-item active">Create</li>
+            <li class="breadcrumb-item">{{ __('Settings') }}</li>
+            <li class="breadcrumb-item">{{ __('Installment Types') }}</li>
+            <li class="breadcrumb-item active">{{ __('Create') }}</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->

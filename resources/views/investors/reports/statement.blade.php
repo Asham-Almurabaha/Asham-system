@@ -101,7 +101,7 @@
       </div>
       <div class="text-end">
         <h6 class="mb-0 fw-bold">@lang('app.Withdrawals Summary')</h6>
-        <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
+        <div class="small-muted">@lang('app.Date'): {{ now()->format('d-m-Y') }}</div>
       </div>
     </div>
 
@@ -110,30 +110,30 @@
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
           <div class="small-muted">{{ __('Contracts') }} ({{ $contractsTotal }})</div>
-          <div class="fs-6">سارية: <strong>{{ $contractsActive }}</strong> — منتهية: <strong>{{ $contractsEnded }}</strong></div>
+          <div class="fs-6">@lang('app.Active'): <strong>{{ $contractsActive }}</strong> — @lang('app.Ended'): <strong>{{ $contractsEnded }}</strong></div>
         </div></div>
       </div>
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">رأس المال الابتدائي</div>
+          <div class="small-muted">@lang('reports.Initial Capital')</div>
           <div class="fs-6 fw-bold">{{ number_format($initialCapital,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">السيولة الحالية</div>
+          <div class="small-muted">@lang('reports.Current Liquidity')</div>
           <div class="fs-6 fw-bold">{{ number_format($liquidity,2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
       <div class="col-6 col-md-3">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">المتبقي على العملاء</div>
+          <div class="small-muted">{{ __('Remaining on Customers') }}</div>
           <div class="fs-6 fw-bold">{{ number_format(max(0,$totalRemainingOnCust),2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
       <div class="col-12 col-md-6">
         <div class="card"><div class="card-body p-3">
-          <div class="small-muted">الرصيد المتوقع بعد انتهاء الأقساط</div>
+          <div class="small-muted">@lang('reports.Expected Balance After Installments')</div>
           <div class="fs-5 fw-bold">{{ number_format(max(0,$total),2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
@@ -173,14 +173,14 @@
         <thead class="table-light">
           <tr>
             <th style="width:56px">#</th>
-            <th class="text-start">العقد</th>
-            <th>الحالة</th>
-            <th class="text-start">العميل</th>
-            <th>نسبة المشاركة %</th>
-            <th>رأس المال</th>
-            <th>الربح الصافي</th>
-            <th>المحصل للمستثمر</th>
-            <th>المتبقي على العملاء</th>
+            <th class="text-start">@lang('app.Contract')</th>
+            <th>@lang('app.Status')</th>
+            <th class="text-start">{{ __('Customer') }}</th>
+            <th>@lang('reports.Share %')</th>
+            <th>@lang('reports.Capital')</th>
+            <th>@lang('reports.Net Profit')</th>
+            <th>{{ __('Paid to Investor from Customer') }}</th>
+            <th>{{ __('Remaining on Customers') }}</th>
           </tr>
         </thead>
         <tbody>

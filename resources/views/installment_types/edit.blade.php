@@ -8,9 +8,9 @@
     <h1>تعديل نوع القسط</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">Setting</li>
-            <li class="breadcrumb-item">Installment Types</li>
-            <li class="breadcrumb-item active">Edit</li>
+            <li class="breadcrumb-item">{{ __('Settings') }}</li>
+            <li class="breadcrumb-item">{{ __('Installment Types') }}</li>
+            <li class="breadcrumb-item active">{{ __('Edit') }}</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->

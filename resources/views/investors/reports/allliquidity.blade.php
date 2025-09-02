@@ -3,7 +3,7 @@
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
-  <title>تقرير سيولة المستثمرين الحالية</title>
+  <title>@lang('reports.Current Investors Liquidity Report')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   {{-- Favicon (اختياري) --}}
@@ -93,13 +93,13 @@
         <div>
           <h5 class="mb-0 fw-bold">{{ $brandName }}</h5>
           <div class="small-muted">
-            يعتمد على دفتر القيود: <strong>داخل − خارج</strong> لكل مستثمر.
+            @lang('reports.Based on ledger: in minus out per investor.')
           </div>
         </div>
       </div>
       <div class="text-end">
-        <h6 class="mb-0 fw-bold">تقرير سيولة المستثمرين الحالية</h6>
-        <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
+        <h6 class="mb-0 fw-bold">@lang('reports.Current Investors Liquidity Report')</h6>
+        <div class="small-muted">@lang('app.Date'): {{ now()->format('d-m-Y') }}</div>
       </div>
     </div>
 
@@ -107,11 +107,11 @@
     <div class="toolbar soft p-3 mb-3 no-print">
       <form method="GET" class="row g-2 align-items-end">
         <div class="col-12 col-md-6">
-          <label class="form-label mb-1 small">بحث بالاسم</label>
-          <input type="text" name="q" class="form-control" value="{{ e($q) }}" placeholder="اكتب اسم المستثمر...">
+          <label class="form-label mb-1 small">@lang('reports.Search by name')</label>
+          <input type="text" name="q" class="form-control" value="{{ e($q) }}" placeholder="@lang('investors.Type investor name...')">
         </div>
         <div class="col-6 col-md-2">
-          <label class="form-label mb-1 small">لكل صفحة</label>
+          <label class="form-label mb-1 small">@lang('reports.Per Page')</label>
           <select name="per_page" class="form-select">
             @foreach([10,25,50,100] as $n)
               <option value="{{ $n }}" @selected($perPage==$n)>{{ $n }}</option>
@@ -119,8 +119,8 @@
           </select>
         </div>
         <div class="col-6 col-md-4 d-flex gap-2">
-          <button class="btn btn-primary flex-fill"><i class="bi bi-search"></i> بحث</button>
-          <a href="{{ url()->current() }}" class="btn btn-outline-secondary flex-fill">مسح</a>
+          <button class="btn btn-primary flex-fill"><i class="bi bi-search"></i> {{ __('Search') }}</button>
+          <a href="{{ url()->current() }}" class="btn btn-outline-secondary flex-fill">{{ __('Clear') }}</a>
         </div>
       </form>
     </div>
@@ -129,13 +129,13 @@
     <div class="row g-3 kpi mb-4">
       <div class="col-12 col-md-3">
         <div class="card"><div class="card-body text-center">
-          <div class="small-muted">عدد المستثمرين (الكل)</div>
+          <div class="small-muted">@lang('reports.Total Investors (All)')</div>
           <div class="fs-5 fw-bold">{{ number_format($countAll) }}</div>
         </div></div>
       </div>
       <div class="col-12 col-md-3">
         <div class="card"><div class="card-body text-center">
-          <div class="small-muted">إجمالي السيولة (الكل)</div>
+          <div class="small-muted">@lang('reports.Total Liquidity (All)')</div>
           <div class="fs-5 fw-bold {{ ($grandTotal??0)>=0 ? 'text-success' : 'text-danger' }}">
             {{ number_format((float)($grandTotal ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span>
           </div>
@@ -143,13 +143,13 @@
       </div>
       <div class="col-12 col-md-3">
         <div class="card"><div class="card-body text-center">
-          <div class="small-muted">متوسط السيولة/مستثمر</div>
+          <div class="small-muted">@lang('reports.Average Liquidity per Investor')</div>
           <div class="fs-5 fw-bold">{{ number_format($avgLiquidity, 2) }} <span class="small-muted">{{ $cs }}</span></div>
         </div></div>
       </div>
       <div class="col-12 col-md-3">
         <div class="card"><div class="card-body text-center">
-          <div class="small-muted">صفحة: موجب/صفر/سالب</div>
+          <div class="small-muted">@lang('reports.Page breakdown: positive/zero/negative')</div>
           <div class="fs-5 fw-bold">
             {{ $posCount }} / {{ $zeroCount }} / {{ $negCount }}
           </div>
@@ -163,11 +163,11 @@
         <thead class="table-light">
           <tr>
             <th style="width:56px">#</th>
-            <th class="text-start">المستثمر</th>
-            <th>العقود (نشِط/إجمالي)</th>
-            <th>رأس المال المبدئي</th>
-            <th>السيولة الحالية</th>
-            <th class="no-print" style="width:120px">إجراءات</th>
+            <th class="text-start">@lang('app.Investor')</th>
+            <th>@lang('reports.Contracts (Active/Total)')</th>
+            <th>@lang('reports.Initial Capital')</th>
+            <th>@lang('reports.Current Liquidity')</th>
+            <th class="no-print" style="width:120px">{{ __('Actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -198,13 +198,13 @@
               </td>
               <td class="no-print">
                 @if(Route::has('investors.show'))
-                  <a href="{{ route('investors.show', $r->id) }}" class="btn btn-sm btn-outline-primary">تفاصيل</a>
+                  <a href="{{ route('investors.show', $r->id) }}" class="btn btn-sm btn-outline-primary">@lang('pages.Details')</a>
                 @endif
               </td>
             </tr>
           @empty
             <tr>
-              <td colspan="6" class="py-5 text-muted">لا توجد بيانات مطابقة.</td>
+              <td colspan="6" class="py-5 text-muted">@lang('reports.No matching data.')</td>
             </tr>
           @endforelse
         </tbody>
@@ -226,7 +226,7 @@
     {{-- الأزرار (لا تُطبع) --}}
     <div class="no-print d-flex justify-content-end gap-2 mt-3">
       <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
-      <a href="{{ url()->current() }}" class="btn btn-outline-secondary">↺ تحديث</a>
+      <a href="{{ url()->current() }}" class="btn btn-outline-secondary">↺ @lang('app.Refresh')</a>
       <button class="btn btn-primary" onclick="window.print()">🖨 @lang('app.Print')</button>
     </div>
 

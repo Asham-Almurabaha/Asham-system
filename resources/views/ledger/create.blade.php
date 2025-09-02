@@ -7,8 +7,8 @@
     <h1 class="h3 mb-1">إضافة قيد</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('ledger.index') }}">دفتر القيود</a></li>
-            <li class="breadcrumb-item active">إضافة قيد</li>
+            <li class="breadcrumb-item"><a href="{{ route('ledger.index') }}">@lang('sidebar.Ledger')</a></li>
+            <li class="breadcrumb-item active">{{ __('Add') }}</li>
         </ol>
     </nav>
 </div>

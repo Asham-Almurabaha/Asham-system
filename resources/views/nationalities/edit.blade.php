@@ -8,9 +8,9 @@
         <h1>تعديل الجنسية</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">Setting</li>
-                <li class="breadcrumb-item">Nationality</li>
-                <li class="breadcrumb-item active">Edit</li>
+                <li class="breadcrumb-item">{{ __('Settings') }}</li>
+                <li class="breadcrumb-item">{{ __('Nationalities') }}</li>
+                <li class="breadcrumb-item active">{{ __('Edit') }}</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->

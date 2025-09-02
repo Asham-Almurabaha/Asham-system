@@ -7,8 +7,8 @@
     <h1 class="h3 mb-1">دفتر القيود</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">الحسابات</li>
-            <li class="breadcrumb-item active">دفتر القيود</li>
+            <li class="breadcrumb-item">@lang('sidebar.Accounts')</li>
+            <li class="breadcrumb-item active">@lang('sidebar.Ledger')</li>
         </ol>
     </nav>
 </div>

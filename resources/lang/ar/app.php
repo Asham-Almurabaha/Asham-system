@@ -42,4 +42,8 @@ return [
     'Capital (active contracts)' => 'رأس المال (العقود السارية)',
     'Net profit (active contracts)' => 'الربح الصافي (العقود السارية)',
     'No active contracts linked to this investor.' => 'لا توجد عقود سارية مرتبطة بهذا المستثمر.',
+    'Contract' => 'العقد',
+    'Active' => 'سارية',
+    'Ended' => 'منتهية',
+    'Refresh' => 'تحديث',
 ];

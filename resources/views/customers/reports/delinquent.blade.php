@@ -3,7 +3,7 @@
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
-  <title>تقرير العملاء المتعثرين</title>
+  <title>@lang('reports.Delinquent Customers Report')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   {{-- Favicon (اختياري) --}}
@@ -80,8 +80,8 @@
         <h5 class="mb-0 fw-bold">{{ $brandName }}</h5>
       </div>
       <div class="text-end">
-        <h6 class="mb-0 fw-bold">تقرير العملاء المتعثرين</h6>
-        <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
+        <h6 class="mb-0 fw-bold">@lang('reports.Delinquent Customers Report')</h6>
+        <div class="small-muted">@lang('app.Date'): {{ now()->format('d-m-Y') }}</div>
       </div>
     </div>
 
@@ -91,8 +91,8 @@
         <thead class="table-light">
           <tr>
             <th style="width:56px">#</th>
-            <th class="text-start">العميل</th>
-            <th>الجوال</th>
+            <th class="text-start">{{ __('Customer') }}</th>
+            <th>{{ __('Phone') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -104,7 +104,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="3" class="py-5 text-muted">لا توجد بيانات.</td>
+              <td colspan="3" class="py-5 text-muted">@lang('reports.No data available.')</td>
             </tr>
           @endforelse
         </tbody>

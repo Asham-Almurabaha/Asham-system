@@ -7,8 +7,8 @@
     <h1>إضافة عملية مستثمر</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('investor-transactions.index') }}">عمليات المستثمرين</a></li>
-            <li class="breadcrumb-item active">إضافة عملية</li>
+            <li class="breadcrumb-item"><a href="{{ route('investor-transactions.index') }}">{{ __('Investor Transactions') }}</a></li>
+            <li class="breadcrumb-item active">{{ __('Add') }}</li>
         </ol>
     </nav>
 </div>

@@ -7,8 +7,8 @@
     <h1>📄 عرض العقد</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('contracts.index') }}">العقود</a></li>
-            <li class="breadcrumb-item active">عرض العقد</li>
+            <li class="breadcrumb-item"><a href="{{ route('contracts.index') }}">{{ __('Contracts') }}</a></li>
+            <li class="breadcrumb-item active">{{ __('Show') }}</li>
         </ol>
     </nav>
 </div>

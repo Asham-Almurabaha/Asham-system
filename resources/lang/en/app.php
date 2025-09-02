@@ -42,4 +42,8 @@ return [
     'Capital (active contracts)' => 'Capital (active contracts)',
     'Net profit (active contracts)' => 'Net profit (active contracts)',
     'No active contracts linked to this investor.' => 'No active contracts linked to this investor.',
+    'Contract' => 'Contract',
+    'Active' => 'Active',
+    'Ended' => 'Ended',
+    'Refresh' => 'Refresh',
 ];

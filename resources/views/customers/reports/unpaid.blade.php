@@ -3,7 +3,7 @@
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
-  <title>تقرير العملاء غير المسددين لهذا الشهر</title>
+  <title>@lang('reports.Unpaid Customers This Month Report')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   {{-- Favicon (اختياري) --}}
@@ -84,8 +84,8 @@
         <h5 class="mb-0 fw-bold">{{ $brandName }}</h5>
       </div>
       <div class="text-end">
-        <h6 class="mb-0 fw-bold">تقرير العملاء غير المسددين لهذا الشهر</h6>
-        <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
+        <h6 class="mb-0 fw-bold">@lang('reports.Unpaid Customers This Month Report')</h6>
+        <div class="small-muted">@lang('app.Date'): {{ now()->format('d-m-Y') }}</div>
       </div>
     </div>
 
@@ -94,7 +94,7 @@
       <div class="col-12 col-md-4">
         <div class="card">
           <div class="card-body p-3 text-center">
-            <div class="small-muted">عدد العملاء</div>
+            <div class="small-muted">@lang('reports.Number of Customers')</div>
             <div class="fs-4 fw-bold">{{ number_format($count) }}</div>
           </div>
         </div>
@@ -108,8 +108,8 @@
         <thead class="table-light">
           <tr>
             <th style="width:56px">#</th>
-            <th class="text-start">العميل</th>
-            <th>الجوال</th>
+            <th class="text-start">{{ __('Customer') }}</th>
+            <th>{{ __('Phone') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -121,7 +121,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="3" class="py-5 text-muted">لا توجد بيانات.</td>
+              <td colspan="3" class="py-5 text-muted">@lang('reports.No data available.')</td>
             </tr>
           @endforelse
         </tbody>
@@ -131,7 +131,7 @@
     {{-- الأزرار (لا تُطبع) --}}
     <div class="no-print d-flex justify-content-end gap-2 mt-3">
       <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
-      <a href="{{ url()->current() }}" class="btn btn-outline-secondary">↺ تحديث</a>
+      <a href="{{ url()->current() }}" class="btn btn-outline-secondary">↺ @lang('app.Refresh')</a>
       <button class="btn btn-primary" onclick="window.print()">🖨 @lang('app.Print')</button>
     </div>
   </div>

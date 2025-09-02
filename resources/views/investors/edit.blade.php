@@ -9,8 +9,8 @@
         <h1 class="h3 mb-1">تعديل بيانات المستثمر</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">المستثمرون</li>
-                <li class="breadcrumb-item active">تعديل</li>
+                <li class="breadcrumb-item">{{ __('Investors') }}</li>
+                <li class="breadcrumb-item active">{{ __('Edit') }}</li>
             </ol>
         </nav>
     </div>

@@ -3,7 +3,7 @@
 <html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
-  <title>جرد الإيداعات — {{ $investor->name }}</title>
+  <title>@lang('reports.Deposits Summary') — {{ $investor->name }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   {{-- Favicon --}}
@@ -85,19 +85,19 @@
         <div>
           <h5 class="mb-0 fw-bold">{{ $brandName }}</h5>
           <div class="small-muted">
-            المستثمر: <strong>{{ $investor->name }}</strong>
+            @lang('app.Investor'): <strong>{{ $investor->name }}</strong>
             @if($from || $to)
-              — الفترة:
+              — @lang('app.Period'):
               <strong>{{ $from ? Carbon::parse($from)->format('d-m-Y') : '—' }}</strong>
-              إلى
+              @lang('app.to')
               <strong>{{ $to ? Carbon::parse($to)->format('d-m-Y') : '—' }}</strong>
             @endif
           </div>
         </div>
       </div>
       <div class="text-end">
-        <h6 class="mb-0 fw-bold">جرد الإيداعات</h6>
-        <div class="small-muted">التاريخ: {{ now()->format('d-m-Y') }}</div>
+        <h6 class="mb-0 fw-bold">@lang('reports.Deposits Summary')</h6>
+        <div class="small-muted">@lang('app.Date'): {{ now()->format('d-m-Y') }}</div>
       </div>
     </div>
 
@@ -105,13 +105,13 @@
     <div class="row g-3 kpi mb-4">
       <div class="col-6 col-md-6">
         <div class="card"><div class="card-body text-center">
-          <div class="small-muted">عدد الإيداعات</div>
+          <div class="small-muted">@lang('reports.Number of Deposits')</div>
           <div class="fs-5 fw-bold">{{ number_format($depositsCount) }}</div>
         </div></div>
       </div>
       <div class="col-6 col-md-6">
         <div class="card"><div class="card-body text-center">
-          <div class="small-muted">إجمالي الإيداعات</div>
+          <div class="small-muted">@lang('reports.Total Deposits')</div>
           <div class="fs-5 fw-bold text-success">
             {{ number_format($depositsTotal, 2) }} <span class="small-muted">{{ $cs }}</span>
           </div>
@@ -125,11 +125,11 @@
         <thead class="table-light">
           <tr>
             <th style="width:56px">#</th>
-            <th>التاريخ</th>
-            <th>المبلغ</th>
-            <th>النوع</th>
-            <th>الحالة</th>
-            <th>الملاحظات</th>
+            <th>@lang('app.Date')</th>
+            <th>@lang('app.Amount')</th>
+            <th>@lang('app.Type')</th>
+            <th>@lang('app.Status')</th>
+            <th>@lang('app.Notes')</th>
           </tr>
         </thead>
         <tbody>
@@ -150,7 +150,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="6" class="py-5 text-muted">لا توجد إيداعات مسجلة لهذا المستثمر ضمن النطاق الحالي.</td>
+              <td colspan="6" class="py-5 text-muted">@lang('reports.No deposits recorded for this investor in the current range.')</td>
             </tr>
           @endforelse
         </tbody>

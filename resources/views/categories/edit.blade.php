@@ -8,8 +8,8 @@
     <h1>تعديل المجال</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">Setting</li>
-            <li class="breadcrumb-item active">Categories</li>
+            <li class="breadcrumb-item">{{ __('Settings') }}</li>
+            <li class="breadcrumb-item active">{{ __('Categories') }}</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->
