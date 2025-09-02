@@ -498,6 +498,12 @@ h6 {
   color: #012970;
 }
 
+/* Ensure visible, well-spaced caret for user dropdown */
+.header-nav .nav-profile.dropdown-toggle::after {
+  margin-left: 0.5rem !important; /* space on the left of caret (LTR) */
+  display: inline-block;
+}
+
 .header-nav .nav-profile img {
   max-height: 36px;
 }
