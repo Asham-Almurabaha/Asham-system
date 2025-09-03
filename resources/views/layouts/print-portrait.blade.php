@@ -66,6 +66,10 @@
   $reportDate = $reportDate ?? now()->format('d-m-Y');
 @endphp
 <body>
+  @php
+    $baseName  = $setting?->name ?? ($brandName ?? config('app.name',''));
+    $brandName = app()->getLocale()==='ar' ? ($setting?->name_ar ?? $baseName) : ($setting?->name_en ?? $baseName);
+  @endphp
   <div class="page shadow-sm">
     {{-- Watermark (يمكن إلغاؤها بعمل section فارغ) --}}
     @hasSection('watermark')
