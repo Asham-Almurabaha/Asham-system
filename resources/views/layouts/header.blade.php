@@ -13,7 +13,7 @@
     @else
       <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" style="height: 40px;">
     @endif
-    <span class="d-none d-lg-block ms-2 fw-semibold">{{ $name }}</span>
+    <span class="d-none d-lg-block ms-2 fw-semibold">{{ $locale === 'ar' ? ($setting->name_ar ?? $name) : ($setting->name_en ?? $name) }}</span>
   </a>
 
   <button class="btn p-0 border-0 bg-transparent" type="button" aria-label="{{ __('Toggle sidebar') }}">

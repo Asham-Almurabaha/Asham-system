@@ -20,8 +20,13 @@
                   @else
                     <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" style="height: 40px;">
                   @endif
+                  @php
+                    $isAr = app()->getLocale() === 'ar';
+                    $brandBase = $setting->name ?? config('app.name', '');
+                    $brandName = $isAr ? ($setting->name_ar ?? $brandBase) : ($setting->name_en ?? $brandBase);
+                  @endphp
                   <span class="d-none d-lg-block ms-2 fw-semibold">
-                    {{ $setting->name ?? config('app.name', 'لوحة التحكم') }}
+                    {{ $brandName }}
                   </span>
                 </a>
 
@@ -98,7 +103,7 @@
 
               {{-- فوتر صغير --}}
               <div class="text-muted small mt-2">
-                &copy; {{ date('Y') }} {{ $setting->name ?? config('app.name', 'لوحة التحكم') }}
+                &copy; {{ date('Y') }} {{  $brandName }} 
               </div>
 
             </div>

@@ -387,7 +387,7 @@
                         <div class="col-5 label-col">{{ __('Email') }}</div>
                         <div class="col-7 value-col">
                             @if($customer->email)
-                                <a href="mailto:{{ $customer->email }}" class="text-decoration-none"><i class="bi bi-envelope me-1"></i>{{ $customer->email }}</a>
+                                <a href="mailto:{{ $customer->email }}" class="text-decoration-none text-dark"><i class="bi bi-envelope me-1"></i>{{ $customer->email }}</a>
                             @else
                                 <span class="text-muted">—</span>
                             @endif
