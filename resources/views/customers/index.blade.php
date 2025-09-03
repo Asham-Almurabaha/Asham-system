@@ -208,7 +208,7 @@
                                 {{ $loop->iteration + ($customers->currentPage() - 1) * $customers->perPage() }}
                             </td>
                             <td class="text-start">
-                                <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold">
+                                <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold text-dark hover-primary">
                                     {{ $customer->name }}
                                 </a>
                             </td>
@@ -293,6 +293,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-
-
 

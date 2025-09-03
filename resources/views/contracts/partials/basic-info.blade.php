@@ -8,7 +8,7 @@
             {{-- رقم العقد --}}
             <div class="col-md-4">
                 <div class="fw-semibold text-muted mb-1">رقم العقد</div>
-                <div class="fw-bold text-primary" style="font-size: 1.1rem;">
+                <div class="fw-bold text-dark hover-primary" style="font-size: 1.1rem;">
                     {{ $contract->contract_number ?? '—' }}
                 </div>
             </div>

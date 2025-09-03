@@ -67,7 +67,7 @@
                     {{ mb_strtoupper(mb_substr($customer->name ?? '؟', 0, 1)) }}
                 </div>
                 <div>
-                    <h3 class="mb-0 fw-bold fs-2">{{ $customer->name }}</h3>
+                    <h3 class="mb-0 fw-bold fs-2 text-dark hover-primary">{{ $customer->name }}</h3>
                     <div class="small text-muted-2 mt-1">
                         <span class="chip me-1"><i class="bi bi-badge-ad"></i> {{ optional($customer->title)->name ?? '—' }}</span>
                         <span class="chip me-1"><i class="bi bi-flag"></i> {{ optional($customer->nationality)->name ?? '—' }}</span>
@@ -305,7 +305,7 @@
                                 <tr>
                                     <td class="fw-semibold">
                                         @if(!empty($cid))
-                                            <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none">{{ $cno }}</a>
+                                            <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none text-dark hover-primary fw-bold">{{ $cno }}</a>
                                         @else
                                             {{ $cno }}
                                         @endif
@@ -374,7 +374,7 @@
                         <div class="col-5 label-col">{{ __('Phone') }}</div>
                         <div class="col-7 value-col">
                             @if($customer->phone)
-                                <a href="tel:{{ $customer->phone }}" class="text-decoration-none"><i class="bi bi-telephone me-1"></i>{{ $customer->phone }}</a>
+                                <a href="tel:{{ $customer->phone }}" class="text-decoration-none text-dark"><i class="bi bi-telephone me-1"></i>{{ $customer->phone }}</a>
                                 <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $customer->phone }}')" title="{{ __('Copy') }}">
                                     <i class="bi bi-clipboard"></i>
                                 </button>

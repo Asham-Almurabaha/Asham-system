@@ -558,3 +558,7 @@
 .bar-8{ height:8px; }
 .mini{ font-size:.9rem; }
 .invisible{ visibility: hidden !important; }
+
+/* Utility: hover turns text/link blue */
+.hover-primary { color:#212529; transition: color .15s ease-in-out; }
+.hover-primary:hover { color:#0d6efd !important; }
