@@ -16,7 +16,7 @@
         .kpi-card { background: #fff; border: 1px solid #ebeef4; border-radius: 10px; box-shadow: 0 1px 8px rgba(1,41,112,.06); }
         .label-col { color: #6b7280; font-weight: 600; }
         .value-col { font-weight: 600; color: #111827; }
-        .img-thumb { display:block; margin:0 auto; width: 100%; max-width: 320px; max-height: 280px; object-fit: cover; border-radius: 8px; box-shadow: 0 1px 8px rgba(1,41,112,.08); }
+        .img-thumb { display:block; margin: .75rem auto 0; width: 100%; max-width: 320px; max-height: 280px; object-fit: cover; border-radius: 8px; box-shadow: 0 1px 8px rgba(1,41,112,.08); }
         .table thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
       </style>
     @endpush
@@ -261,7 +261,7 @@
         $totDue = 0.0; $totPaid = 0.0; $totRemain = 0.0;
     @endphp
 
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card shadow-sm mb-3 kpi-card">
         <div class="card-header bg-white fw-bold d-flex align-items-center justify-content-between">
             <span><i class="bi bi-card-checklist me-1"></i>{{ __('Active Contracts') }}</span>
             <span class="badge text-bg-light">{{ __('Count') }}: {{ number_format($activeList->count()) }}</span>
@@ -336,7 +336,7 @@
     {{-- ====== End of active contracts table ====== --}}
 
     {{-- ====== Basic data ====== --}}
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card shadow-sm mb-3 kpi-card">
         <div class="card-header bg-white fw-bold">{{ __('Basic Data') }}</div>
         <div class="card-body pt-2">
             <div class="row g-3">
@@ -406,7 +406,7 @@
     {{-- ====== ID card image & notes ====== --}}
     <div class="row g-3">
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card shadow-sm h-100 kpi-card">
                 <div class="card-header bg-white fw-bold">{{ __('ID Card Image') }}</div>
                 <div class="card-body">
                     @if($customer->id_card_image)
@@ -421,7 +421,7 @@
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card shadow-sm h-100 kpi-card">
                 <div class="card-header bg-white fw-bold">{{ __('Notes') }}</div>
                 <div class="card-body">
                     <div class="text-wrap" style="white-space: pre-line;">

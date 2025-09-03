@@ -92,7 +92,7 @@
 </div>
 
 {{-- ====== Toolbar ====== --}}
-<div class="card shadow-sm mb-3">
+<div class="card shadow-sm mb-3 ">
   <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
 
     <div class="btn-group" role="group" aria-label="Actions">
@@ -110,7 +110,7 @@
 
     <div class="btn-group">
       <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-bar-chart-line me-1"></i>
+        
         📊 {{ __('Reports') }}
       </button>
       <ul class="dropdown-menu dropdown-menu-end text-end">
@@ -185,7 +185,7 @@
 </div>
 
 {{-- ====== Table ====== --}}
-<div class="card shadow-sm">
+<div class="card shadow-sm mb-3 ">
     <div class="card-body p-0">
         <div>
             <table class="table table-hover align-middle text-center mb-0">
@@ -214,7 +214,7 @@
                             </td>
                             <td dir="ltr">{{ $customer->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $customer->phone ?? '—' }}</td>
-                            </td>
+
                                 @php
                                     $endedStatusNames = ['مغلق','منتهي','سداد مبكر','مقفلة','مغلقة','Completed','Early Settlement'];
                                     $statusIdCol = null; $statusNameCol = null;
@@ -293,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-
 
 
 

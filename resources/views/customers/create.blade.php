@@ -22,7 +22,7 @@
         </div>
     @endif
 
-    <div class="card border-0 shadow-sm">
+    <div class="card shadow-sm kpi-card">
         <div class="card-body p-4">
             <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
@@ -225,4 +225,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-

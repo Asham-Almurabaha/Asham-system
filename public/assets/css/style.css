@@ -512,6 +512,21 @@ h6 {
   box-shadow: 0 2px 8px rgba(1, 41, 112, .10);
 }
 
+/* KPI-like card frame to unify card borders */
+.kpi-card,
+.card.card-kpi,
+.card.kpi-card {
+  background: #fff;
+  border: 1px solid #ebeef4;
+  border-radius: 10px;
+  box-shadow: 0 1px 8px rgba(1,41,112,.06);
+}
+
+/* Flatten effects for the table card specifically */
+.table-card-flat {
+  box-shadow: none !important;
+}
+
 .header-nav .nav-profile img {
   max-height: 36px;
 }
