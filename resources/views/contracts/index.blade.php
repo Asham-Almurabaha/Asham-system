@@ -22,8 +22,6 @@
     // ✅ التقسيم الصارم للحالات
     $namesEnded   = ['منتهي','سداد مبكر']; // المنتهي = منتهي أو سداد مبكر
     $namesPending = ['معلق'];               // المعلّق = معلق فقط
-    // "بدون مستثمر" متريك مستقل من العلاقة
-    // النشط = كل ما عداهما
 
     $endedNamesTx   = implode('، ', $namesEnded);
     $pendingNamesTx = implode('، ', $namesPending);
@@ -96,6 +94,59 @@
     $pendingPct = $pct($contractsPendingAll);
     $noInvPct   = $pct($contractsNoInvestorAll);
     $endedPct   = $pct($contractsEndedAll);
+
+    // ===== دالة أيقونات الحالات (Dropdown + جدول) =====
+    $normalize = fn($arr) => array_map(fn($s) => mb_strtolower(trim((string)$s), 'UTF-8'), $arr);
+    $statusIcon = function ($name) use ($normalize) {
+        $n = mb_strtolower(trim((string)$name), 'UTF-8');
+
+        $groups = [
+            'active'            => ['نشط','active','open','ساري','جاري','effective'],
+            'pending'           => ['معلق','pending','قيد الانتظار','قيد الإنتظار','on hold','paused','موقوف مؤقتاً','موقوف'],
+            'ended'             => ['منتهي','انتهى','مغلق','closed','ended','complete','completed','تم الانتهاء'],
+            'canceled'          => ['ملغي','مرفوض','canceled','cancelled','rejected','void','باطل'],
+            'late'              => ['متأخر','متاخر','late','overdue','delinquent'],
+            'review'            => ['قيد المراجعة','under review','review','verification','مراجعة'],
+            'draft'             => ['مسودة','draft'],
+            'early_settlement'  => ['سداد مبكر','early settlement','paid off','مقفلة بالسداد'],
+            'rescheduled'       => ['معاد جدولته','rescheduled','جدولة','إعادة جدولة'],
+            'suspended'         => ['موقوف','suspended','حظر'],
+            'renewed'           => ['مجدد','renewed','تم التجديد'],
+            'in_progress'       => ['قيد التنفيذ','in progress','processing','جار العمل','جاري التنفيذ'],
+            'archived'          => ['مؤرشف','archived'],
+            'deferred'          => ['مؤجل','deferred','تأجيل'],
+            'apologized'        => ['معتذر','apologized','اعتذار'],
+            'collection'        => ['تحصيل','collection','under collection'],
+            'dispute'           => ['نزاع','dispute','متنازع'],
+            'partial'           => ['مدفوع جزئياً','partial','partial paid','جزئي'],
+        ];
+
+        foreach ($groups as $key => $values) {
+            if (in_array($n, $normalize($values), true)) {
+                switch ($key) {
+                    case 'active':           return ['bi-check2-circle',        'text-success'];
+                    case 'pending':          return ['bi-hourglass-split',      'text-warning'];
+                    case 'ended':            return ['bi-flag-fill',            'text-secondary'];
+                    case 'canceled':         return ['bi-slash-circle',         'text-danger'];
+                    case 'late':             return ['bi-exclamation-triangle', 'text-danger'];
+                    case 'review':           return ['bi-eye',                  'text-info'];
+                    case 'draft':            return ['bi-file-earmark',         'text-muted'];
+                    case 'early_settlement': return ['bi-cash-coin',            'text-success'];
+                    case 'rescheduled':      return ['bi-arrow-repeat',         'text-primary'];
+                    case 'suspended':        return ['bi-pause-circle',         'text-warning'];
+                    case 'renewed':          return ['bi-arrow-clockwise',      'text-primary'];
+                    case 'in_progress':      return ['bi-gear-wide-connected',  'text-primary'];
+                    case 'archived':         return ['bi-archive',              'text-muted'];
+                    case 'deferred':         return ['bi-calendar-minus',       'text-warning'];
+                    case 'apologized':       return ['bi-emoji-neutral',        'text-muted'];
+                    case 'collection':       return ['bi-piggy-bank',           'text-info'];
+                    case 'dispute':          return ['bi-exclamation-octagon',  'text-danger'];
+                    case 'partial':          return ['bi-pie-chart',            'text-info'];
+                }
+            }
+        }
+        return ['bi-circle', 'text-primary']; // افتراضي
+    };
 @endphp
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -324,33 +375,40 @@
             <i class="bi bi-upload"></i> {{ __('Import Excel') }}
         </a>
       @endrole
-
     </div>
 
-    <div class="btn-group">
-      <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+    {{-- زر التقارير: يفتح لتحت + أيقونات حسب الحالة --}}
+    <div class="dropdown">
+      <button type="button"
+              class="btn btn-outline-dark dropdown-toggle"
+              data-bs-toggle="dropdown"
+              data-bs-display="static"   {{-- يثبت الاتجاه: لتحت دائماً --}}
+              aria-expanded="false">
         📊 {{ __('Reports') }}
       </button>
-      <ul class="dropdown-menu dropdown-menu-end text-end">
-        @foreach(($contractStatuses) as $status)
+
+      <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
+        @foreach($contractStatuses as $status)
           @php
             $name = (string)($status->name ?? '-');
-            $icon = 'bi-check-circle';
-            $cls  = 'text-success';
-            $n    = mb_strtolower($name);
-            if (in_array($n, ['pending','قيد الانتظار','معلق'])) { $icon='bi-hourglass-split'; $cls='text-warning'; }
-            if (in_array($n, ['closed','ended','مغلق','منتهي','انتهى'])) { $icon='bi-x-circle'; $cls='text-danger'; }
+            [$ic, $cls] = $statusIcon($name);
           @endphp
           <li>
-            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.status', $status->id) }}">
-              <i class="bi {{ $icon }} {{ $cls }}"></i> <span>{{ $name }}</span>
+            <a class="dropdown-item d-flex align-items-center gap-2"
+               href="{{ route('reports.contracts.status', $status->id) }}">
+              <i class="bi {{ $ic }} {{ $cls }}"></i>
+              <span>{{ $name }}</span>
             </a>
           </li>
         @endforeach
+
         <li><hr class="dropdown-divider"></li>
+
         <li>
-          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.without_investor') }}">
-            <i class="bi bi-slash-circle text-muted"></i> <span>{{ __('Without Investor') }}</span>
+          <a class="dropdown-item d-flex align-items-center gap-2"
+             href="{{ route('reports.contracts.without_investor') }}">
+            <i class="bi bi-person-slash text-muted"></i>
+            <span>{{ __('Without Investor') }}</span>
           </a>
         </li>
       </ul>
@@ -440,12 +498,16 @@
                     @forelse($contracts as $contract)
                         @php
                             $statusName = $contract->contractStatus->name ?? '-';
+                            // لون الشارة كما كان
                             $badge = match($statusName) {
                                 'نشط' => 'secondary',
                                 'معلق' => 'warning',
                                 'بدون مستثمر' => 'danger',
                                 default => 'success'
                             };
+                            // أيقونة الحالة + لونها
+                            [$ic, $icCls] = $statusIcon($statusName);
+
                             $count = $contract->investors->count();
                             $sep   = app()->getLocale() === 'ar' ? '، ' : ', ';
                             $tip   = $contract->investors
@@ -459,7 +521,11 @@
                             <td class="text-center">{{ $contract->customer->name ?? '-' }}</td>
                             <td class="text-center">{{ $contract->guarantor->name ?? '-' }}</td>
                             <td>{{ $contract->productType->name ?? '-' }}</td>
-                            <td><span class="badge bg-{{ $badge }}">{{ $statusName }}</span></td>
+                            <td>
+                                <span class="badge bg-{{ $badge }} d-inline-flex align-items-center gap-1">
+                                    {{ $statusName }}
+                                </span>
+                            </td>
                             <td>{{ number_format($contract->total_value, 0) }}</td>
                             <td>{{ number_format($contract->investor_profit, 0) }}</td>
                             <td class="text-center">
