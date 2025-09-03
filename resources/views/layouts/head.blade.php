@@ -60,6 +60,10 @@
 {{-- Vendor CSS --}}
 <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
 
+{{-- Project utilities and custom styles (placed before template CSS to avoid overriding Bootstrap defaults) --}}
+<link href="{{ asset('assets/css/util.css') }}" rel="stylesheet">
+<link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet">
+
 {{-- Template Main CSS --}}
 @if ($isRtl)
   <link href="{{ asset('assets/css/style.rtl.css') }}" rel="stylesheet">
@@ -68,10 +72,6 @@
   <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
   <link href="{{ asset('assets/css/framework.css') }}" rel="stylesheet">
 @endif
-
-{{-- Project custom utilities and overrides --}}
-<link href="{{ asset('assets/css/util.css') }}" rel="stylesheet">
-<link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
