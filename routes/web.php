@@ -172,6 +172,12 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/investors/Allliquidity', [InvestorReportController::class, 'allliquidity'])
         ->name('reports.investors.Allliquidity');
 
+    // Contracts printable reports
+    Route::get('reports/contracts/status/{status}', [\App\Http\Controllers\ContractReportController::class, 'status'])
+        ->name('reports.contracts.status');
+    Route::get('reports/contracts/without-investor', [\App\Http\Controllers\ContractReportController::class, 'withoutInvestor'])
+        ->name('reports.contracts.without_investor');
+
     Route::get('/ajax/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
         ->name('ajax.investors.liquidity');
 

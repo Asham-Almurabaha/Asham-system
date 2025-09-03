@@ -327,6 +327,35 @@
 
     </div>
 
+    <div class="btn-group">
+      <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        📊 {{ __('Reports') }}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end text-end">
+        @foreach(($contractStatuses ?? []) as $status)
+          @php
+            $name = (string)($status->name ?? '-');
+            $icon = 'bi-check-circle';
+            $cls  = 'text-success';
+            $n    = mb_strtolower($name);
+            if (in_array($n, ['pending','قيد الانتظار','معلق'])) { $icon='bi-hourglass-split'; $cls='text-warning'; }
+            if (in_array($n, ['closed','ended','مغلق','منتهي','انتهى'])) { $icon='bi-x-circle'; $cls='text-danger'; }
+          @endphp
+          <li>
+            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.status', $status->id) }}">
+              <i class="bi {{ $icon }} {{ $cls }}"></i> <span>{{ $name }}</span>
+            </a>
+          </li>
+        @endforeach
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.without_investor') }}">
+            <i class="bi bi-slash-circle text-muted"></i> <span>{{ __('Without Investor') }}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
     <span class="ms-auto small text-muted">
       {{ __('Results') }}: <strong>{{ $contracts->total() }}</strong>
     </span>
@@ -486,4 +515,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-
