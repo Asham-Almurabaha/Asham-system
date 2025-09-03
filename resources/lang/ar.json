@@ -422,5 +422,9 @@
     "Yesterday": "أمس",
     "You are logged in!": "You are logged in!",
     "Your email address is unverified.": "بريدك الإلكتروني غير مُحقق منه.",
-    "YYYY-MM-DD": "YYYY-MM-DD"
+    "YYYY-MM-DD": "YYYY-MM-DD",
+    "Number of Active Contracts": "عدد العقود النشطة",
+    "Total Remaining on Customer": "إجمالي المتبقي على العميل",
+    "Unpaid Amount This Month": "قيمة الأقساط غير المسددة هذا الشهر",
+    "Unpaid Installments This Month":"عدد الأقساط غير المسددة هذا الشهر"
 }

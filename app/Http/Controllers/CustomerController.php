@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Models\ContractInstallment;
 use App\Models\Nationality;
 use App\Models\Title;
 use App\Services\CustomerDetailsService;

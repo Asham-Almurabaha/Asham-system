@@ -187,7 +187,7 @@
 {{-- ====== Table ====== --}}
 <div class="card shadow-sm">
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <div>
             <table class="table table-hover align-middle text-center mb-0">
                 <thead class="table-light position-sticky top-0" style="z-index: 1;">
                     <tr>
@@ -195,11 +195,10 @@
                         <th>{{ __('Name') }}</th>
                         <th>{{ __('National ID') }}</th>
                         <th>{{ __('Phone') }}</th>
-                        <th>{{ __('Email') }}</th>
-                        <th>{{ __('Nationality') }}</th>
-                        <th>{{ __('Address') }}</th>
-                        <th>{{ __('Job Title') }}</th>
-                        <th style="min-width:110px;">{{ __('ID Card Image') }}</th>
+                        <th>{{ __('Number of Active Contracts') }}</th>
+                        <th>{{ __('Total Remaining on Customer') }}</th>
+                        <th>{{ __('Unpaid Installments This Month') }}</th>
+                        <th>{{ __('Unpaid Amount This Month') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -215,28 +214,39 @@
                             </td>
                             <td dir="ltr">{{ $customer->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $customer->phone ?? '—' }}</td>
-                            <td class="text-start">{{ $customer->email ?? '—' }}</td>
-                            <td>{{ optional($customer->nationality)->name ?? '—' }}</td>
-                            <td class="text-start">{{ $customer->address ?? '—' }}</td>
-                            <td>{{ optional($customer->title)->name ?? '—' }}</td>
-                            <td>
-                                @if($customer->id_card_image)
-                                    <a href="{{ asset('storage/' . $customer->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('View in full size') }}">
-                                        <img src="{{ asset('storage/' . $customer->id_card_image) }}"
-                                             alt="{{ __('ID Card Image') }}"
-                                             width="70" height="48"
-                                             class="id-thumb d-block mx-auto"
-                                             loading="lazy">
-                                    </a>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
                             </td>
-                            
+                                @php
+                                    $endedStatusNames = ['مغلق','منتهي','سداد مبكر','مقفلة','مغلقة','Completed','Early Settlement'];
+                                    $statusIdCol = null; $statusNameCol = null;
+                                    foreach (['contract_status_id','status_id','state_id'] as $col) { if (Schema::hasColumn('contracts',$col)) { $statusIdCol = $col; break; } }
+                                    foreach (['status','state','contract_status'] as $col) { if (Schema::hasColumn('contracts',$col)) { $statusNameCol = $col; break; } }
+                                    $activeQ = $customer->contracts();
+                                    if ($statusIdCol) {
+                                        $endedIds = class_exists(\App\Models\ContractStatus::class) ? \App\Models\ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all() : [];
+                                        if (!empty($endedIds)) { $activeQ->whereNotIn($statusIdCol, $endedIds); }
+                                    } elseif ($statusNameCol) {
+                                        $activeQ->whereNotIn($statusNameCol, $endedStatusNames);
+                                    } elseif (Schema::hasColumn('contracts','is_closed')) {
+                                        $activeQ->where('is_closed',0);
+                                    } elseif (Schema::hasColumn('contracts','closed_at')) {
+                                        $activeQ->whereNull('closed_at');
+                                    }
+                                    $activeIds = $activeQ->pluck('id');
+                                    $activeCount = $activeIds->count();
+                                    $remainingSum = $activeCount ? \App\Models\ContractInstallment::whereIn('contract_id',$activeIds)->whereNull('payment_date')->sum('due_amount') : 0;
+                                    $startMonth = \Carbon\Carbon::now()->startOfMonth();
+                                    $endMonth = \Carbon\Carbon::now()->endOfMonth();
+                                    $unpaidAmountThisMonth = $activeCount ? \App\Models\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->sum('due_amount') : 0;
+                                    $unpaidCountThisMonth = $activeCount ? \App\Models\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->count() : 0;
+                                @endphp
+                            <td class="text-center">{{ $activeCount }}</td>
+                            <td class="text-center">{{ number_format((float)$remainingSum, 2) }}</td>
+                            <td class="text-center">{{ $unpaidCountThisMonth }}</td>
+                            <td class="text-center">{{ number_format((float)$unpaidAmountThisMonth, 2) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="py-5">
+                            <td colspan="8" class="py-5">
                                 <div class="text-muted">
                                     {{ __('No matching results for your search.') }}
                                     <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>
@@ -283,3 +293,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+
+
+
+
