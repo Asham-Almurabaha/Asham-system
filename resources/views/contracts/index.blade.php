@@ -332,7 +332,7 @@
         📊 {{ __('Reports') }}
       </button>
       <ul class="dropdown-menu dropdown-menu-end text-end">
-        @foreach(($contractStatuses ?? []) as $status)
+        @foreach(($contractStatuses) as $status)
           @php
             $name = (string)($status->name ?? '-');
             $icon = 'bi-check-circle';
