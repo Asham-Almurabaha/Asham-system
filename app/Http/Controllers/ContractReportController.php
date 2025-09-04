@@ -276,4 +276,3 @@ class ContractReportController extends Controller
         ]);
     }
 }
-

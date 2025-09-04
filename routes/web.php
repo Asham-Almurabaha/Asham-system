@@ -175,6 +175,7 @@ Route::middleware('auth')->group(function () {
         ->name('reports.investors.Allliquidity');
 
     Route::get('reports/contracts/status/{status}', [ContractReportController::class, 'status'])->name('reports.contracts.status');
+    // Paid installments report entry (select contract → open print)
     Route::get('reports/contracts/without-investor', [ContractReportController::class, 'withoutInvestor'])->name('reports.contracts.without_investor');
     Route::get('/contracts/{contract}/print',   [ContractReportController::class, 'show'])->name('contracts.print');
     Route::get('/contracts/{contract}/closure', [ContractReportController::class, 'closure'])->name('contracts.closure');

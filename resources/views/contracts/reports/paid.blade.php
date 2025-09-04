@@ -1,34 +1,17 @@
-﻿{{-- resources/views/contracts/paid.blade.php --}}
-<!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
-<head>
-  <meta charset="utf-8">
-  <title>سجل سداد الأقساط لعقد رقم {{ $contract->contract_number }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+@extends('layouts.print-landscape')
 
-  @if(!empty($setting?->favicon))
-    <link rel="icon" href="{{ asset('storage/'.$setting->favicon) }}">
-  @endif
+@section('title', 'تقرير سدادات العقد #' . ($contract->contract_number ?? $contract->id))
+@section('report_title', 'تقرير سدادات العقد #' . ($contract->contract_number ?? $contract->id))
 
-  {{-- Bootstrap 5 RTL --}}
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-
-  
-</head>
-<body>
 @php
   use Carbon\Carbon;
 
-  $logoUrl   = $logoUrl   ?? (!empty($setting?->logo) ? asset('storage/'.$setting->logo) : asset('assets/img/logo.png'));
-  $brandName = $brandName ?? ($setting?->name_ar ?? $setting?->name ?? config('app.name','اسم المنشأة'));
-
-  // مُساعد: يعمل مع كائنات/مصفوفات
   $get = function($item, $key, $default = null) {
       return data_get($item, $key, $default);
   };
 
   $fmtDate = function($date) {
-      if (!$date) return '—';
+      if (!$date) return '-';
       try {
           if ($date instanceof \DateTimeInterface) return $date->format('Y-m-d');
           return Carbon::parse($date)->format('Y-m-d');
@@ -39,132 +22,106 @@
 
   $fmtNum = fn($n) => number_format((float)$n, 2);
 
-  // لو جت أقساط بالخطأ بدون paid_amount>0، تأكد من تصفيتها هنا أيضاً
+  // Filter only rows with paid amount > 0
   $rows = collect($paidInstallments ?? [])->filter(function ($i) use ($get) {
       return (float)$get($i, 'paid_amount', 0) > 0;
   })->values();
 @endphp
 
-<div class="page shadow-sm">
-  <div class="watermark"><img src="{{ $logoUrl }}" alt="Logo"></div>
+@push('styles')
+  <style>
+    .stat .label { font-size:.9rem; color:#6c757d; }
+    .stat .value { font-weight:bold; font-size:1.1rem; }
+  </style>
+@endpush
 
-  <div class="content">
-    {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-      <div class="d-flex align-items-center gap-2">
-        <img src="{{ $logoUrl }}" alt="Logo" style="height:48px">
-        <h5 class="mb-0 fw-bold">{{ $brandName }}</h5>
-      </div>
-      <h5 class="mb-0 fw-bold">سداد أقساط عقد رقم: {{ $contract->contract_number }}</h5>
-    </div>
-
-    {{-- Title --}}
-    <div class="text-center fw-bold fs-4 mb-3">سجل سداد الأقساط</div>
-
-    {{-- Parties --}}
-    <div class="mb-3">
-      <div class="line"><strong>العميل:</strong> {{ $contract->customer->name ?? '—' }}</div>
-      <div class="line"><strong>الجوال:</strong> {{ $contract->customer->phone ?? '—' }}</div>
-      <div class="line"><strong>الهوية/الإقامة:</strong> {{ $contract->customer->national_id ?? '—' }}</div>
-    </div>
-
-    {{-- Summary stats --}}
-    <div class="row g-2 mb-3">
-      <div class="col-6 col-md-4">
-        <div class="stat">
-          <div class="label">إجمالي قيمة العقد</div>
-          <div class="value">{{ $fmtNum($contractTotal) }} {{ $currency }}</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4">
-        <div class="stat">
-          <div class="label">إجمالي المدفوع</div>
-          <div class="value">{{ $fmtNum($totalPaid) }} {{ $currency }}</div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4">
-        <div class="stat">
-          <div class="label">المتبقي</div>
-          <div class="value">{{ $fmtNum($remaining) }} {{ $currency }}</div>
-        </div>
-      </div>
-
-      @isset($countPaidFully)
-      <div class="col-6 col-md-4">
-        <div class="stat">
-          <div class="label">عدد الأقساط المدفوعة كليًا</div>
-          <div class="value">{{ $countPaidFully }}</div>
-        </div>
-      </div>
-      @endisset
-
-      @isset($countRemaining)
-      <div class="col-6 col-md-4">
-        <div class="stat">
-          <div class="label">عدد الأقساط المتبقية</div>
-          <div class="value">{{ $countRemaining }}</div>
-        </div>
-      </div>
-      @endisset
-    </div>
-
-    {{-- Table --}}
-    <div class="table-responsive mb-3">
-      <table class="table table-bordered align-middle">
-        <thead class="table-light">
-          <tr>
-            <th class="text-center" style="width:60px;">#</th>
-            <th>تاريخ الاستحقاق</th>
-            <th>المبلغ المستحق ({{ $currency }})</th>
-            <th>تاريخ السداد</th>
-            <th>المبلغ المدفوع ({{ $currency }})</th>
-            <th>المتبقي على القسط ({{ $currency }})</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse ($rows as $idx => $ins)
-            @php
-              $amount = (float) $get($ins, 'amount', 0);        // من الكنترولر: due_amount -> amount
-              $paid   = (float) $get($ins, 'paid_amount', 0);    // من الكنترولر: payment_amount -> paid_amount
-              $still  = max(0.0, $amount - $paid);
-            @endphp
-            <tr>
-              <td class="text-center">{{ $idx + 1 }}</td>
-              <td>{{ $fmtDate($get($ins, 'due_date')) }}</td>   {{-- من الكنترولر: due_date --}}
-              <td class="text-end">{{ $fmtNum($amount) }}</td>
-              <td>{{ $fmtDate($get($ins, 'paid_at')) }}</td>    {{-- من الكنترولر: payment_date -> paid_at --}}
-              <td class="text-end">{{ $fmtNum($paid) }}</td>
-              <td class="text-end">{{ $fmtNum($still) }}</td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="7" class="text-center text-muted">لا توجد أقساط مسددة بعد.</td>
-            </tr>
-          @endforelse
-        </tbody>
-
-        @if($rows->isNotEmpty())
-        <tfoot>
-          <tr>
-            <th colspan="2" class="text-end">إجمالي قيمة العقد:</th>
-            <th class="text-end">{{ $fmtNum($contractTotal) }}</th>
-            <th class="text-end">إجمالي المدفوع:</th>
-            <th class="text-end">{{ $fmtNum($totalPaid) }}</th>
-            <th class="text-end">{{ $fmtNum($remaining) }}</th>
-            <th></th>
-          </tr>
-        </tfoot>
-        @endif
-      </table>
-    </div>
-
-    {{-- Buttons --}}
-    <div class="no-print d-flex justify-content-end gap-2">
-      <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
-      <button onclick="window.print()" class="btn btn-primary">🖨 @lang('app.Print')</button>
-    </div>
+@section('content')
+  {{-- Parties --}}
+  <div class="mb-3">
+    <div class="line"><strong>{{ __('Customer') }}:</strong> {{ $contract->customer->name ?? '-' }}</div>
+    <div class="line"><strong>{{ __('Phone') }}:</strong> {{ $contract->customer->phone ?? '-' }}</div>
+    <div class="line"><strong>{{ __('National ID') }}:</strong> {{ $contract->customer->national_id ?? '-' }}</div>
   </div>
-</div>
-</body>
-</html>
+
+  {{-- Summary stats --}}
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-4">
+      <div class="card"><div class="card-body p-2 stat">
+        <div class="label">إجمالي قيمة العقد</div>
+        <div class="value">{{ $fmtNum($contractTotal) }} {{ $currency }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="card"><div class="card-body p-2 stat">
+        <div class="label">إجمالي المسدد</div>
+        <div class="value">{{ $fmtNum($totalPaid) }} {{ $currency }}</div>
+      </div></div>
+    </div>
+    <div class="col-6 col-md-4">
+      <div class="card"><div class="card-body p-2 stat">
+        <div class="label">المتبقي</div>
+        <div class="value">{{ $fmtNum($remaining) }} {{ $currency }}</div>
+      </div></div>
+    </div>
+
+    @isset($countPaidFully)
+    <div class="col-6 col-md-4">
+      <div class="card"><div class="card-body p-2 stat">
+        <div class="label">عدد الأقساط المسددة بالكامل</div>
+        <div class="value">{{ $countPaidFully }}</div>
+      </div></div>
+    </div>
+    @endisset
+
+    @isset($countRemaining)
+    <div class="col-6 col-md-4">
+      <div class="card"><div class="card-body p-2 stat">
+        <div class="label">عدد الأقساط المتبقية</div>
+        <div class="value">{{ $countRemaining }}</div>
+      </div></div>
+    </div>
+    @endisset
+  </div>
+
+  {{-- Table --}}
+  <div class="table-responsive mb-3">
+    <table class="table table-striped table-bordered align-middle text-center">
+      <thead class="table-light">
+        <tr>
+          <th style="width:56px">#</th>
+          <th>تاريخ الاستحقاق</th>
+          <th>قيمة القسط ({{ $currency }})</th>
+          <th>تاريخ السداد</th>
+          <th>المسدد ({{ $currency }})</th>
+          <th>المتبقي على القسط ({{ $currency }})</th>
+        </tr>
+      </thead>
+      <tbody>
+        @forelse ($rows as $idx => $ins)
+          @php
+            $amount = (float) $get($ins, 'amount', 0);
+            $paid   = (float) $get($ins, 'paid_amount', 0);
+            $still  = max(0.0, $amount - $paid);
+          @endphp
+          <tr>
+            <td>{{ $idx + 1 }}</td>
+            <td>{{ $fmtDate($get($ins, 'due_date')) }}</td>
+            <td class="text-end">{{ $fmtNum($amount) }}</td>
+            <td>{{ $fmtDate($get($ins, 'paid_at')) }}</td>
+            <td class="text-end">{{ $fmtNum($paid) }}</td>
+            <td class="text-end">{{ $fmtNum($still) }}</td>
+          </tr>
+        @empty
+          <tr>
+            <td colspan="6" class="py-5 text-muted">@lang('reports.No data available.')</td>
+          </tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+@endsection
+
+@section('actions')
+  <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+@endsection
 
