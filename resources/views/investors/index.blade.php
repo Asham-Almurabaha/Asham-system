@@ -166,7 +166,7 @@
 {{-- ====== الجدول ====== --}}
 <div class="card shadow-sm">
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <div>
             <table class="table table-hover align-middle text-center mb-0">
                 <thead class="table-light position-sticky top-0" style="z-index: 1;">
                     <tr>
@@ -181,14 +181,18 @@
                         <th style="min-width:110px;">{{ __('ID Card Image') }}</th>
                         <th style="min-width:110px;">{{ __('Contract Image') }}</th>
                         <th style="width:140px">{{ __('Office Share %') }}</th>
-                        <th style="width:190px">{{ __('Actions') }}</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($investors as $investor)
                         <tr>
                             <td class="text-muted">{{ $loop->iteration + ($investors->currentPage() - 1) * $investors->perPage() }}</td>
-                            <td class="text-start">{{ $investor->name }}</td>
+                            <td class="text-start">
+                                <a href="{{ route('investors.show', $investor) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                                    {{ $investor->name }}
+                                </a>
+                            </td>
                             <td dir="ltr">{{ $investor->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $investor->phone ?? '—' }}</td>
                             <td class="text-start">{{ $investor->email ?? '—' }}</td>
@@ -210,13 +214,11 @@
                                 @else <span class="text-muted">—</span> @endif
                             </td>
                             <td>{{ is_numeric($investor->office_share_percentage) ? number_format($investor->office_share_percentage, 2) : '—' }}</td>
-                            <td class="text-nowrap">
-                                <a href="{{ route('investors.show', $investor) }}" class="btn btn-outline-secondary btn-sm">{{ __('View') }}</a>
-                            </td>
+
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="12" class="py-5">
+                            <td colspan="11" class="py-5">
                                 <div class="text-muted">{{ __('No matching results.') }} <a href="{{ route('investors.index') }}" class="ms-1">{{ __('Show All') }}</a></div>
                                 <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ {{ __('Add First Investor') }}</a></div>
                             </td>
@@ -256,4 +258,3 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
-
