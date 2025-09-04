@@ -32,4 +32,5 @@ return [
     'Net Profit' => 'Net Profit',
     'Contract' => 'Contract',
     'No matching data.' => 'No matching data.',
+    'Investor Statement' => 'Investor Statement',
 ];

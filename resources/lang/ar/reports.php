@@ -32,4 +32,5 @@ return [
     'Net Profit' => 'الربح الصافي',
     'Contract' => 'العقد',
     'No matching data.' => 'لا توجد بيانات مطابقة.',
+    'Total Value' => 'إجمالي قيمة العقود',
 ];

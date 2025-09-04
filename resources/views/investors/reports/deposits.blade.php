@@ -1,19 +1,19 @@
 @extends('layouts.print-landscape')
 
-@section('title', __('app.Withdrawals Summary'))
-@section('report_title', __('app.Withdrawals Summary'))
+@section('title', __('reports.Deposits Summary'))
+@section('report_title', __('reports.Deposits Summary'))
 
 @php
   use Illuminate\Support\Carbon;
 
   $cs = $currencySymbol ?? ($data['currencySymbol'] ?? 'ر.س');
 
-  $wCollection = $withdrawals instanceof \Illuminate\Pagination\LengthAwarePaginator
-    ? collect($withdrawals->items())
-    : collect($withdrawals ?? []);
+  $dCollection = $deposits instanceof \Illuminate\Pagination\LengthAwarePaginator
+    ? collect($deposits->items())
+    : collect($deposits ?? []);
 
-  $withdrawalsCount = isset($withdrawalsCount) ? (int)$withdrawalsCount : (int)$wCollection->count();
-  $withdrawalsTotal = isset($withdrawalsTotal) ? (float)$withdrawalsTotal : (float)$wCollection->sum('amount');
+  $depositsCount = isset($depositsCount) ? (int)$depositsCount : (int)$dCollection->count();
+  $depositsTotal = isset($depositsTotal) ? (float)$depositsTotal : (float)$dCollection->sum('amount');
 
   $from = request('from');
   $to   = request('to');
@@ -39,16 +39,16 @@
 
   <div class="row g-3 kpi mb-4">
     <div class="col-6 col-md-6">
-      <div class="card"><div class="card-body p-3 text-center">
-        <div class="small-muted">@lang('app.Number of Withdrawals')</div>
-        <div class="fs-5 fw-bold">{{ number_format($withdrawalsCount) }}</div>
+      <div class="card"><div class="card-body text-center">
+        <div class="small-muted">@lang('reports.Number of Deposits')</div>
+        <div class="fs-5 fw-bold">{{ number_format($depositsCount) }}</div>
       </div></div>
     </div>
     <div class="col-6 col-md-6">
-      <div class="card"><div class="card-body p-3 text-center">
-        <div class="small-muted">@lang('app.Total Withdrawals')</div>
-        <div class="fs-5 fw-bold text-danger">
-          {{ number_format($withdrawalsTotal, 2) }} <span class="small-muted">{{ $cs }}</span>
+      <div class="card"><div class="card-body text-center">
+        <div class="small-muted">@lang('reports.Total Deposits')</div>
+        <div class="fs-5 fw-bold text-success">
+          {{ number_format($depositsTotal, 2) }} <span class="small-muted">{{ $cs }}</span>
         </div>
       </div></div>
     </div>
@@ -63,40 +63,37 @@
           <th>@lang('app.Amount')</th>
           <th>@lang('app.Type')</th>
           <th>@lang('app.Status')</th>
-          <th class="text-start">@lang('app.Notes')</th>
+          <th>@lang('app.Notes')</th>
         </tr>
       </thead>
       <tbody>
-        @forelse($withdrawals as $i => $w)
+        @forelse($deposits as $i => $d)
           @php
-            $statusName = optional($w->status)->name ?? optional($w->transactionStatus)->name ?? '—';
-            $typeName   = optional($w->type)->name   ?? optional($w->transactionType)->name   ?? '—';
+            $statusName = optional($d->status)->name ?? optional($d->transactionStatus)->name ?? '—';
+            $typeName   = optional($d->type)->name   ?? optional($d->transactionType)->name   ?? '—';
           @endphp
           <tr>
             <td>{{ $i + 1 }}</td>
-            <td>{{ Carbon::parse($w->entry_date)->format('d-m-Y') }}</td>
-            <td class="text-danger fw-semibold">
-              {{ number_format($w->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
+            <td>{{ Carbon::parse($d->entry_date)->format('d-m-Y') }}</td>
+            <td class="text-success fw-semibold">
+              {{ number_format($d->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
             </td>
             <td>{{ $typeName }}</td>
             <td>{{ $statusName }}</td>
-            <td class="text-start">{{ $w->notes ?? '—' }}</td>
+            <td class="text-start">{{ $d->notes ?? '—' }}</td>
           </tr>
         @empty
           <tr>
-            <td colspan="6" class="py-5 text-muted">
-              @lang('app.No withdrawals found for this investor in the current range.')
-            </td>
+            <td colspan="6" class="py-5 text-muted">@lang('reports.No deposits recorded for this investor in the current range.')</td>
           </tr>
         @endforelse
       </tbody>
-
-      @if($withdrawals instanceof \Illuminate\Pagination\LengthAwarePaginator)
+      @if($deposits instanceof \Illuminate\Pagination\LengthAwarePaginator)
         <tfoot>
           <tr>
             <th colspan="6" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
-                {{ $withdrawals->withQueryString()->links('pagination::bootstrap-5') }}
+                {{ $deposits->withQueryString()->links('pagination::bootstrap-5') }}
               </div>
             </th>
           </tr>

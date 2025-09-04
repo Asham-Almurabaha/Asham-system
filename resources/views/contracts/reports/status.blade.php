@@ -5,6 +5,8 @@
 
 @php
   $rows = $rows ?? collect();
+  $count = is_iterable($rows) ? (method_exists($rows, 'count') ? $rows->count() : collect($rows)->count()) : 0;
+  $totalValue = is_iterable($rows) ? collect($rows)->sum(fn($c)=>(float)($c->total_value ?? 0)) : 0;
 @endphp
 
 @push('styles')
@@ -15,6 +17,21 @@
 @endpush
 
 @section('content')
+  <div class="row g-3 kpi mb-4">
+    <div class="col-12 col-md-4">
+      <div class="card"><div class="card-body p-3 text-center">
+        <div class="small-muted">@lang('app.Contracts')</div>
+        <div class="fs-4 fw-bold">{{ number_format($count) }}</div>
+      </div></div>
+    </div>
+    <div class="col-12 col-md-4">
+      <div class="card"><div class="card-body p-3 text-center">
+        <div class="small-muted">@lang('reports.Total Value')</div>
+        <div class="fs-4 fw-bold">{{ number_format($totalValue, 2) }}</div>
+      </div></div>
+    </div>
+  </div>
+
   <div class="table-responsive">
     <table class="table table-striped table-bordered text-center align-middle">
       <thead class="table-light">
@@ -48,4 +65,3 @@
 @section('actions')
   <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
 @endsection
-
