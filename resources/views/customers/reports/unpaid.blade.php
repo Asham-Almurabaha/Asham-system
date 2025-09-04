@@ -1,5 +1,5 @@
 {{-- resources/views/reports/unpaid_customers.blade.php --}}
-@extends('layouts.print-portrait')
+@extends('layouts.print-landscape')
 
 @section('title', __('reports.Unpaid Customers This Month Report'))
 @section('report_title', __('reports.Unpaid Customers This Month Report'))
@@ -41,18 +41,24 @@
           <th style="width:56px">#</th>
           <th class="text-start">{{ __('Customer') }}</th>
           <th>{{ __('Phone') }}</th>
+          <th>{{ __('reports.Unpaid Installments This Month Count') }}</th>
+          <th>{{ __('reports.Unpaid Installments This Month Total') }}</th>
         </tr>
       </thead>
       <tbody>
         @forelse($rows as $i => $c)
           <tr>
             <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
-            <td class="text-start">{{ $c->name }}</td>
+            <td class="text-start">
+              <a href="{{ route('customers.show', $c) }}" class="text-decoration-none fw-bold text-dark hover-primary">{{ $c->name }}</a>
+            </td>
             <td>{{ $c->phone }}</td>
+            <td>{{ (int)($c->unpaid_month_count ?? 0) }}</td>
+            <td>{{ number_format((float)($c->unpaid_month_total ?? 0), 2) }}</td>
           </tr>
         @empty
           <tr>
-            <td colspan="3" class="py-5 text-muted">@lang('reports.No data available.')</td>
+            <td colspan="5" class="py-5 text-muted">@lang('reports.No data available.')</td>
           </tr>
         @endforelse
       </tbody>

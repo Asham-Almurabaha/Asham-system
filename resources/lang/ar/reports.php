@@ -33,4 +33,9 @@ return [
     'Contract' => 'العقد',
     'No matching data.' => 'لا توجد بيانات مطابقة.',
     'Total Value' => 'إجمالي قيمة العقود',
+    'Total Remaining in Active Contracts' => 'اجمالي المتبقي من العقود النشطة',
+    'Delinquent Contracts Count' => 'عدد العقود المتعثرة',
+    'Total Remaining in Delinquent Contracts' => 'اجمالي المتبقي في العقود المتعثرة',
+    'Unpaid Installments This Month Count' => 'عدد الأقساط المستحقة هذا الشهر وغير المسددة',
+    'Unpaid Installments This Month Total' => 'إجمالي الأقساط غير المسددة هذا الشهر',
 ];

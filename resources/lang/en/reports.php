@@ -33,4 +33,9 @@ return [
     'Contract' => 'Contract',
     'No matching data.' => 'No matching data.',
     'Investor Statement' => 'Investor Statement',
+    'Total Remaining in Active Contracts' => 'Total Remaining in Active Contracts',
+    'Delinquent Contracts Count' => 'Delinquent Contracts Count',
+    'Total Remaining in Delinquent Contracts' => 'Total Remaining in Delinquent Contracts',
+    'Unpaid Installments This Month Count' => 'Unpaid installments due this month (count)',
+    'Unpaid Installments This Month Total' => 'Unpaid installments due this month (total)',
 ];
