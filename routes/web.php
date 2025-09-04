@@ -1,41 +1,43 @@
 <?php
 
-use App\Models\User;
-use App\Models\Setting;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LedgerController;
-use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\ContractController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\InvestorController;
-use App\Http\Controllers\LanguageController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\GuarantorController;
 use App\Http\Controllers\AjaxAccountController;
 use App\Http\Controllers\AjaxInvestorController;
-use App\Http\Controllers\ContractPrintController;
-use App\Http\Controllers\Setting\TitleController;
+use App\Http\Controllers\AjaxProductTypeController;
+use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractImportController;
+use App\Http\Controllers\ContractInstallmentController;
+use App\Http\Controllers\ContractPrintController;
+use App\Http\Controllers\ContractReportController;
+use App\Http\Controllers\ContractsImportController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerImportController;
 use App\Http\Controllers\CustomerReportController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GuarantorController;
+use App\Http\Controllers\GuarantorImportController;
+use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\InvestorImportController;
 use App\Http\Controllers\InvestorReportController;
-use App\Http\Controllers\AjaxProductTypeController;
-// use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ContractsImportController;
-use App\Http\Controllers\GuarantorImportController;
-use App\Http\Controllers\Setting\SettingController;
-use App\Http\Controllers\Setting\CategoryController;
-use App\Http\Controllers\ContractInstallmentController;
 use App\Http\Controllers\InvestorTransactionController;
+use App\Http\Controllers\LanguageController;
+// use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\LedgerEntriesImportController;
-use App\Http\Controllers\Setting\NationalityController;
+use App\Http\Controllers\Setting\CategoryController;
 use App\Http\Controllers\Setting\ContractStatusController;
-use App\Http\Controllers\Setting\InstallmentTypeController;
-use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Http\Controllers\Setting\InstallmentStatusController;
+use App\Http\Controllers\Setting\InstallmentTypeController;
+use App\Http\Controllers\Setting\NationalityController;
+use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\Setting\TitleController;
 use App\Http\Controllers\Setting\TransactionStatusController;
+use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
+use App\Models\Setting;
+use App\Models\User;
+use Illuminate\Support\Facades\Route;
+
 
 // لغة الواجهة
 Route::post('/lang/toggle', [LanguageController::class, 'toggle'])->name('lang.toggle');
@@ -172,20 +174,14 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/investors/Allliquidity', [InvestorReportController::class, 'allliquidity'])
         ->name('reports.investors.Allliquidity');
 
-    // Contracts printable reports
-    Route::get('reports/contracts/status/{status}', [\App\Http\Controllers\ContractReportController::class, 'status'])
-        ->name('reports.contracts.status');
-    Route::get('reports/contracts/without-investor', [\App\Http\Controllers\ContractReportController::class, 'withoutInvestor'])
-        ->name('reports.contracts.without_investor');
-
+    Route::get('reports/contracts/status/{status}', [ContractReportController::class, 'status'])->name('reports.contracts.status');
+    Route::get('reports/contracts/without-investor', [ContractReportController::class, 'withoutInvestor'])->name('reports.contracts.without_investor');
+    Route::get('/contracts/{contract}/print',   [ContractReportController::class, 'show'])->name('contracts.print');
+    Route::get('/contracts/{contract}/closure', [ContractReportController::class, 'closure'])->name('contracts.closure');
+    Route::get('/contracts/{contract}/paid', [ContractReportController::class, 'paidInstallments'])->name('contracts.paid');
+        
     Route::get('/ajax/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
         ->name('ajax.investors.liquidity');
-
-    // طباعة/إقفال العقد
-    Route::get('/contracts/{contract}/print',   [ContractPrintController::class, 'show'])->name('contracts.print');
-    Route::get('/contracts/{contract}/closure', [ContractPrintController::class, 'closure'])->name('contracts.closure');
-    Route::get('/contracts/{contract}/paid', [ContractPrintController::class, 'paidInstallments'])->name('contracts.paid');
-
     // سجلات التدقيق
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 
