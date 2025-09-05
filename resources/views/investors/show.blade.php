@@ -71,7 +71,7 @@
                     {{ mb_strtoupper(mb_substr($investor->name ?? '؟', 0, 1)) }}
                 </div>
                 <div>
-                    <h3 class="mb-1">{{ $investor->name }}</h3>
+                    <h3 class="mb-0 fw-bold fs-2 text-dark hover-primary">{{ $investor->name }}</h3>
                     <div class="small text-muted-2 mt-1 d-flex flex-wrap gap-1">
                         <span class="chip"><i class="bi bi-badge-ad me-1"></i>{{ optional($investor->title)->name ?? '—' }}</span>
                         <span class="chip"><i class="bi bi-flag me-1"></i>{{ optional($investor->nationality)->name ?? '—' }}</span>
@@ -318,10 +318,11 @@
     </div>
 
     {{-- ====== تفاصيل المستثمر (مع الصور داخل التفاصيل) ====== --}}
-    <div class="card border-0 shadow-soft mb-4">
+    <div class="card shadow-sm mb-3 kpi-card">
         <div class="card-header bg-white fw-bold">بيانات أساسية</div>
-        <div class="card-body">
+        <div class="card-body pt-2">
             <div class="row g-3">
+
                 <div class="col-md-6">
                     <div class="row"><div class="col-5 label-col">الاسم</div><div class="col-7 value-col">{{ $investor->name }}</div></div>
                     <div class="row mt-2">
@@ -341,7 +342,7 @@
                         <div class="col-5 label-col">الهاتف</div>
                         <div class="col-7 value-col">
                             @if($investor->phone)
-                                <a href="tel:{{ $investor->phone }}" dir="ltr">{{ $investor->phone }}</a>
+                                <a href="tel:{{ $investor->phone }}" class="text-decoration-none text-dark"><i class="bi bi-telephone me-1"></i>{{ $investor->phone }}</a>
                                 <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $investor->phone }}')" title="نسخ"><i class="bi bi-clipboard"></i></button>
                             @else <span class="text-muted">—</span> @endif
                         </div>
@@ -349,7 +350,7 @@
                     <div class="row mt-2">
                         <div class="col-5 label-col">البريد الإلكتروني</div>
                         <div class="col-7 value-col">
-                            @if($investor->email) <a href="mailto:{{ $investor->email }}">{{ $investor->email }}</a>
+                            @if($investor->email) <a href="mailto:{{ $investor->email }}" class="text-decoration-none text-dark"><i class="bi bi-envelope me-1"></i>{{ $investor->email }}</a>
                             @else <span class="text-muted">—</span> @endif
                         </div>
                     </div>
@@ -396,58 +397,58 @@
 
     {{-- ====== جدول تفصيلي للعقود النشطة ====== --}}
     @if(!empty($contractBreakdown))
-    <div class="card border-0 shadow-soft">
-        <div class="card-header bg-white fw-bold">تفصيل العقود النشطة</div>
-        <div class="card-body table-responsive p-0">
-            <table class="table table-hover text-center mb-0">
-                <thead class="table-light position-sticky top-0" style="z-index:1;">
-                    <tr>
-                        <th style="width:60px">#</th>
-                        <th>رقم/مُعرّف العقد</th>
-                        <th>العميل</th>
-                        <th>النسبة %</th>
-                        <th>رأس المال</th>
-                        <th>ربح المستثمر (إجمالي)</th>
-                        <th>نصيب المكتب</th>
-                        <th>الربح الصافي</th>
-                        <th title="نصيب المستثمر من مدفوعات العميل تناسبياً">المدفوع</th>
-                        <th>المتبقي على العملاء</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($contractBreakdown as $i => $r)
+        <div class="card border-0 shadow-soft">
+            <div class="card-header bg-white fw-bold">تفصيل العقود النشطة</div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-hover text-center mb-0">
+                    <thead class="table-light position-sticky top-0" style="z-index:1;">
                         <tr>
-                            <td class="text-muted">{{ $i+1 }}</td>
-                            <td>#{{ $r['contract_id'] }}</td>
-                            <td class="text-start">{{ $r['customer'] }}</td>
-                            <td dir="ltr">{{ number_format($r['share_pct'],2) }}</td>
-                            <td dir="ltr">{{ number_format($r['share_value'],2) }}</td>
-                            <td dir="ltr">{{ number_format($r['profit_gross'],2) }}</td>
-                            <td class="text-neg" dir="ltr">{{ number_format($r['office_cut'],2) }}</td>
-                            <td dir="ltr">{{ number_format($r['profit_net'],2) }}</td>
-                            <td dir="ltr">{{ number_format($r['paid_to_investor_from_customer'] ?? 0,2) }}</td>
-                            <td class="fw-semibold {{ ($r['remaining_on_customers'] ?? 0) >= 0 ? 'text-pos' : 'text-neg' }}" dir="ltr">
-                                {{ number_format($r['remaining_on_customers'] ?? 0,2) }}
-                            </td>
+                            <th style="width:60px">#</th>
+                            <th>رقم/مُعرّف العقد</th>
+                            <th>العميل</th>
+                            <th>النسبة %</th>
+                            <th>رأس المال</th>
+                            <th>ربح المستثمر (إجمالي)</th>
+                            <th>نصيب المكتب</th>
+                            <th>الربح الصافي</th>
+                            <th title="نصيب المستثمر من مدفوعات العميل تناسبياً">المدفوع</th>
+                            <th>المتبقي على العملاء</th>
                         </tr>
-                    @endforeach
-                </tbody>
-                <tfoot class="table-light">
-                    <tr>
-                        <th colspan="4" class="text-end">الإجماليات:</th>
-                        <th dir="ltr">{{ number_format($totalCapitalShare,2) }}</th>
-                        <th dir="ltr">{{ number_format($totalProfitGross,2) }}</th>
-                        <th class="text-neg" dir="ltr">{{ number_format($totalOfficeCut,2) }}</th>
-                        <th dir="ltr">{{ number_format($totalProfitNet,2) }}</th>
-                        <th dir="ltr">{{ number_format($totalPaidPortionToInvestor,2) }}</th>
-                        <th class="fw-bold {{ $totalRemainingOnCustomers >= 0 ? 'text-pos' : 'text-neg' }}" dir="ltr">
-                            {{ number_format($totalRemainingOnCustomers,2) }}
-                        </th>
-                    </tr>
-                </tfoot>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach($contractBreakdown as $i => $r)
+                            <tr>
+                                <td class="text-muted">{{ $i+1 }}</td>
+                                <td>#{{ $r['contract_id'] }}</td>
+                                <td class="text-start">{{ $r['customer'] }}</td>
+                                <td dir="ltr">{{ number_format($r['share_pct'],2) }}</td>
+                                <td dir="ltr">{{ number_format($r['share_value'],2) }}</td>
+                                <td dir="ltr">{{ number_format($r['profit_gross'],2) }}</td>
+                                <td class="text-neg" dir="ltr">{{ number_format($r['office_cut'],2) }}</td>
+                                <td dir="ltr">{{ number_format($r['profit_net'],2) }}</td>
+                                <td dir="ltr">{{ number_format($r['paid_to_investor_from_customer'] ?? 0,2) }}</td>
+                                <td class="fw-semibold {{ ($r['remaining_on_customers'] ?? 0) >= 0 ? 'text-pos' : 'text-neg' }}" dir="ltr">
+                                    {{ number_format($r['remaining_on_customers'] ?? 0,2) }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4" class="text-end">الإجماليات:</th>
+                            <th dir="ltr">{{ number_format($totalCapitalShare,2) }}</th>
+                            <th dir="ltr">{{ number_format($totalProfitGross,2) }}</th>
+                            <th class="text-neg" dir="ltr">{{ number_format($totalOfficeCut,2) }}</th>
+                            <th dir="ltr">{{ number_format($totalProfitNet,2) }}</th>
+                            <th dir="ltr">{{ number_format($totalPaidPortionToInvestor,2) }}</th>
+                            <th class="fw-bold {{ $totalRemainingOnCustomers >= 0 ? 'text-pos' : 'text-neg' }}" dir="ltr">
+                                {{ number_format($totalRemainingOnCustomers,2) }}
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
         </div>
-    </div>
     @endif
 
 </div>

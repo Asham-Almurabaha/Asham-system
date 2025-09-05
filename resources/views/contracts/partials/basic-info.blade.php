@@ -15,12 +15,28 @@
 
             <div class="col-md-4">
                 <div class="fw-semibold text-muted mb-1">العميل</div>
-                <div>{{ $contract->customer->name ?? '—' }}</div>
+                <div>
+                  @if($contract->customer)
+                    <a href="{{ route('customers.show', $contract->customer->id) }}" class="text-reset text-decoration-none">
+                      {{ $contract->customer->name }}
+                    </a>
+                  @else
+                    —
+                  @endif
+                </div>
             </div>
 
             <div class="col-md-4">
                 <div class="fw-semibold text-muted mb-1">الكفيل</div>
-                <div>{{ $contract->guarantor->name ?? '—' }}</div>
+                <div>
+                  @if($contract->guarantor)
+                    <a href="{{ route('guarantors.show', $contract->guarantor->id) }}" class="text-reset text-decoration-none">
+                      {{ $contract->guarantor->name }}
+                    </a>
+                  @else
+                    —
+                  @endif
+                </div>
             </div>
 
             <div class="col-md-4">

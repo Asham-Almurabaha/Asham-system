@@ -8,19 +8,6 @@
     {{-- Bootstrap Icons (If not added in the layout) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-    @push('styles')
-      <style>
-        .profile-hero { background: #fff; border: 1px solid #ebeef4; border-radius: 10px; padding: 12px 16px; box-shadow: 0 1px 8px rgba(1,41,112,.06); }
-        .profile-hero .avatar { width: 56px; height: 56px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: #e9ecef; color: #012970; font-weight: 700; font-size: 22px; }
-        .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 999px; background: #f6f9ff; border: 1px solid #eaedf1; color: #012970; }
-        .kpi-card { background: #fff; border: 1px solid #ebeef4; border-radius: 10px; box-shadow: 0 1px 8px rgba(1,41,112,.06); }
-        .label-col { color: #6b7280; font-weight: 600; }
-        .value-col { font-weight: 600; color: #111827; }
-        .img-thumb { display:block; margin: .75rem auto 0; width: 100%; max-width: 320px; max-height: 280px; object-fit: cover; border-radius: 8px; box-shadow: 0 1px 8px rgba(1,41,112,.08); }
-        .table thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
-      </style>
-    @endpush
-
     @php
         /**
          * The values coming from the controller:
@@ -67,7 +54,9 @@
                     {{ mb_strtoupper(mb_substr($customer->name ?? '؟', 0, 1)) }}
                 </div>
                 <div>
-                    <h3 class="mb-0 fw-bold fs-2 text-dark hover-primary">{{ $customer->name }}</h3>
+                    <h3 class="mb-0 fw-bold fs-2 text-dark hover-primary">
+                        {{ $customer->name }}
+                    </h3>
                     <div class="small text-muted-2 mt-1">
                         <span class="chip me-1"><i class="bi bi-badge-ad"></i> {{ optional($customer->title)->name ?? '—' }}</span>
                         <span class="chip me-1"><i class="bi bi-flag"></i> {{ optional($customer->nationality)->name ?? '—' }}</span>
@@ -466,4 +455,3 @@ setTimeout(() => {
 }, 5000);
 </script>
 @endpush
-

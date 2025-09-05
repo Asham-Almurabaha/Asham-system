@@ -11,7 +11,11 @@
         <tbody>
             @foreach($contract->investors as $inv)
                 <tr>
-                    <td>{{ $inv->name }}</td>
+                    <td>
+                      <a href="{{ route('investors.show', $inv->id) }}" class="text-reset text-decoration-none">
+                        {{ $inv->name }}
+                      </a>
+                    </td>
                     <td>{{ number_format($inv->pivot->share_percentage, 2) }}</td>
                     <td>{{ number_format($inv->pivot->share_value, 2) }}</td>
                 </tr>
