@@ -9,17 +9,15 @@
         <h1 class="h3 mb-1">تعديل بيانات المستثمر</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">{{ __('Investors') }}</li>
-                <li class="breadcrumb-item active">{{ __('Edit') }}</li>
+                <li class="breadcrumb-item">@lang('investors.Investors')</li>
+                <li class="breadcrumb-item active">@lang('investors.Edit Investor')</li>
             </ol>
         </nav>
     </div>
 
     {{-- تنبيهات التحقق العامة --}}
     @if ($errors->any())
-        <div class="alert alert-danger shadow-sm">
-            يوجد بعض الأخطاء، فضلاً راجع الحقول المظلّلة بالأسفل.
-        </div>
+        <div class="alert alert-danger shadow-sm">{{ __("There are validation errors. Please check the fields.") }}</div>
     @endif
 
     <div class="card border-0 shadow-sm">
@@ -91,7 +89,7 @@
                             value="{{ old('email', $investor->email) }}"
                             maxlength="190"
                             autocomplete="email"
-                            placeholder="name@email.com">
+                            placeholder="{{ __('name@email.com') }}">
                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -281,3 +279,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+
+
+

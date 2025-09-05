@@ -75,7 +75,7 @@
                     <div class="small text-muted-2 mt-1 d-flex flex-wrap gap-1">
                         <span class="chip"><i class="bi bi-badge-ad me-1"></i>{{ optional($investor->title)->name ?? '—' }}</span>
                         <span class="chip"><i class="bi bi-flag me-1"></i>{{ optional($investor->nationality)->name ?? '—' }}</span>
-                        <span class="chip"><i class="bi bi-hash me-1"></i>ID: {{ $investor->id }}</span>
+                        <span class="chip"><i class="bi bi-hash me-1"></i>{{ __('ID:') }} {{ $investor->id }}</span>
                     </div>
                 </div>
             </div>
@@ -128,8 +128,8 @@
     <div class="card shadow-soft mb-4">
         <div class="card-header bg-white d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
-                <div class="section-title">ملخص أقساط هذا الشهر <span class="text-muted">({{ $monthLabel }})</span></div>
-                <span class="stat-sub"><i class="bi bi-filter"></i> يستثني الحالات: {{ $excludedStatusesTx }}</span>
+                <div class="section-title">@lang('Monthly Installments Summary') <span class="text-muted">({{ $monthLabel }})</span></div>
+                <span class="stat-sub"><i class="bi bi-filter"></i> @lang('Excludes statuses:') {{ $excludedStatusesTx }}</span>
             </div>
             {{-- اختيار سريع للشهر/السنة (يحافظ على الـquerystring) --}}
             <form action="{{ route('investors.show', $investor) }}" method="GET" class="d-flex align-items-center gap-2">
@@ -154,9 +154,9 @@
                         <div class="d-flex align-items-center gap-3">
                             <div class="kpi-icon"><i class="bi bi-journal-check fs-4 text-primary"></i></div>
                             <div>
-                                <div class="stat-sub">عدد الأقساط المستحقة</div>
+                                <div class="stat-sub">@lang('Number of Due Installments')</div>
                                 <div class="fs-2 fw-bold">{{ number_format($dueCount) }}</div>
-                                <div class="stat-sub">هذا الشهر</div>
+                                <div class="stat-sub">@lang('Count')</div>
                             </div>
                         </div>
                     </div>
@@ -167,7 +167,7 @@
                             <div class="d-flex align-items-center gap-3">
                                 <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
                                 <div>
-                                    <div class="stat-sub">إجمالي المستحق</div>
+                                    <div class="stat-sub">@lang('Unpaid Amount This Month')</div>
                                     <div class="fs-2 fw-bold">{{ number_format($dueSum, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span></div>
                                 </div>
                             </div>
@@ -180,8 +180,8 @@
                             <div class="progress-bar" style="width: {{ $paidPct2 }}%"></div>
                         </div>
                         <div class="d-flex justify-content-between stat-sub mt-1">
-                            <span>النسبة: {{ number_format($paidPct2,1) }}%</span>
-                            <span>المتبقي: {{ number_format($remainSum,2) }}</span>
+                            <span>@lang('Paid Percentage'): {{ number_format($paidPct2,1) }}%</span>
+                            <span>@lang('Remaining:') {{ number_format($remainSum,2) }}</span>
                         </div>
                     </div>
                 </div>
@@ -190,7 +190,7 @@
                         <div class="d-flex align-items-center gap-3">
                             <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
                             <div>
-                                <div class="stat-sub">المتبقي للدفع</div>
+                                <div class="stat-sub">@lang('Remaining to Pay')</div>
                                 <div class="fs-2 fw-bold">{{ number_format($remainSum, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span></div>
                                 <div class="stat-sub">ضمن الفترة المحددة</div>
                             </div>

@@ -1,12 +1,12 @@
 ﻿@extends('layouts.master')
 
-@section('title', 'إضافة مستثمر جديد')
+@section('title', 'اضافة مستثمر')
 
 @section('content')
 <div class="container py-3" dir="rtl">
 
     <div class="pagetitle">
-        <h1 class="h3 mb-1">إضافة مستثمر جديد</h1>
+        <h1 class="h3 mb-1">{{ __('Add Investor') }}</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">@lang('investors.Investors')</li>
@@ -15,11 +15,8 @@
         </nav>
     </div>
 
-    {{-- تنبيهات التحقق العامة --}}
     @if ($errors->any())
-        <div class="alert alert-danger shadow-sm">
-            يوجد بعض الأخطاء، فضلاً راجع الحقول المظلّلة بالأسفل.
-        </div>
+        <div class="alert alert-danger shadow-sm">{{ __("There are validation errors. Please check the fields.") }}</div>
     @endif
 
     <div class="card border-0 shadow-sm">
@@ -28,7 +25,6 @@
                 @csrf
 
                 <div class="row g-3">
-                    {{-- الاسم --}}
                     <div class="col-12">
                         <label for="name" class="form-label">{{ __('investors.Name') }} <span class="text-danger">*</span></label>
                         <input
@@ -45,7 +41,6 @@
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- رقم الهوية --}}
                     <div class="col-md-6">
                         <label for="national_id" class="form-label">{{ __('investors.National ID') }}</label>
                         <input
@@ -62,7 +57,6 @@
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- الهاتف --}}
                     <div class="col-md-6">
                         <label for="phone" class="form-label">{{ __('investors.Phone') }}</label>
                         <input
@@ -80,7 +74,6 @@
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- البريد --}}
                     <div class="col-md-6">
                         <label for="email" class="form-label">{{ __('investors.Email') }}</label>
                         <input
@@ -91,18 +84,17 @@
                             value="{{ old('email') }}"
                             maxlength="190"
                             autocomplete="email"
-                            placeholder="name@email.com">
+                            placeholder="{{ __('name@email.com') }}">
                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- الجنسية --}}
                     <div class="col-md-6">
                         <label for="nationality_id" class="form-label">{{ __('investors.Nationality') }}</label>
                         <select
                             name="nationality_id"
                             id="nationality_id"
                             class="form-select @error('nationality_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">-- ط§ط®طھط± --</option>
                             @foreach (($nationalities ?? []) as $Nationality)
                                 @if(is_object($Nationality))
                                     <option value="{{ $Nationality->id }}" @selected(old('nationality_id') == $Nationality->id)>{{ $Nationality->name }}</option>
@@ -112,14 +104,13 @@
                         @error('nationality_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- الوظيفة --}}
                     <div class="col-md-6">
                         <label for="title_id" class="form-label">{{ __('investors.Job Title') }}</label>
                         <select
                             name="title_id"
                             id="title_id"
                             class="form-select @error('title_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">-- ط§ط®طھط± --</option>
                             @foreach (($titles ?? []) as $title)
                                 @if(is_object($title))
                                     <option value="{{ $title->id }}" @selected(old('title_id') == $title->id)>{{ $title->name }}</option>
@@ -129,7 +120,6 @@
                         @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- العنوان --}}
                     <div class="col-12">
                         <label for="address" class="form-label">{{ __('investors.Address') }}</label>
                         <textarea
@@ -141,7 +131,6 @@
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- صورة الهوية + معاينة --}}
                     <div class="col-md-6">
                         <label for="id_card_image" class="form-label">{{ __('investors.ID Card Image') }}</label>
                         <input
@@ -150,16 +139,15 @@
                             id="id_card_image"
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp — suitable size less than 2MB.') }}</div>
+                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
-                            <small class="text-muted d-block mb-1">معاينة:</small>
-                            <img id="id-preview" src="#" alt="معاينة صورة الهوية" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                            <small class="text-muted d-block mb-1">ظ…ط¹ط§ظٹظ†ط©:</small>
+                            <img id="id-preview" src="#" alt="ظ…ط¹ط§ظٹظ†ط© طµظˆط±ط© ط§ظ„ظ‡ظˆظٹط©" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
 
-                    {{-- صورة العقد + معاينة --}}
                     <div class="col-md-6">
                         <label for="contract_image" class="form-label">{{ __('investors.Contract Image') }}</label>
                         <input
@@ -168,16 +156,15 @@
                             id="contract_image"
                             class="form-control @error('contract_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp — suitable size less than 2MB.') }}</div>
+                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
                         @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="contract-preview-wrap">
-                            <small class="text-muted d-block mb-1">معاينة:</small>
-                            <img id="contract-preview" src="#" alt="معاينة صورة العقد" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                            <small class="text-muted d-block mb-1">ظ…ط¹ط§ظٹظ†ط©:</small>
+                            <img id="contract-preview" src="#" alt="ظ…ط¹ط§ظٹظ†ط© طµظˆط±ط© ط§ظ„ط¹ظ‚ط¯" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
 
-                    {{-- نسبة حصة المكتب --}}
                     <div class="col-md-6">
                         <label for="office_share_percentage" class="form-label">{{ __('investors.Office Share %') }} (%)</label>
                         <input
@@ -215,7 +202,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // معاينة صورة (هوية/عقد)
     function bindPreview(inputId, wrapId, imgId){
         const input = document.getElementById(inputId);
         const wrap  = document.getElementById(wrapId);
@@ -231,7 +217,6 @@ document.addEventListener('DOMContentLoaded', function () {
     bindPreview('id_card_image','id-preview-wrap','id-preview');
     bindPreview('contract_image','contract-preview-wrap','contract-preview');
 
-    // ضبط النسبة بين 0 و 100
     const pct = document.getElementById('office_share_percentage');
     pct?.addEventListener('change', () => {
         let v = parseFloat(pct.value || '0');
@@ -240,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
         pct.value = v.toFixed(2);
     });
 
-    // إخفاء التنبيهات
     setTimeout(() => {
         document.querySelectorAll('.alert').forEach(el => {
             el.style.transition = 'opacity .4s ease';
@@ -251,3 +235,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+
+
+
