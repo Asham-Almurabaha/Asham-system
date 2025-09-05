@@ -174,13 +174,9 @@
                         <th>{{ __('Name') }}</th>
                         <th>{{ __('National ID') }}</th>
                         <th>{{ __('Phone') }}</th>
-                        <th>{{ __('Email') }}</th>
-                        <th>{{ __('Nationality') }}</th>
-                        <th>{{ __('Address') }}</th>
-                        <th>{{ __('Job Title') }}</th>
-                        <th style="min-width:110px;">{{ __('ID Card Image') }}</th>
-                        <th style="min-width:110px;">{{ __('Contract Image') }}</th>
-                        <th style="width:140px">{{ __('Office Share %') }}</th>
+                        <th>{{ __('Current Liquidity') }}</th>
+                        <th>{{ __('Active Contracts') }}</th>
+                        <th>{{ __('Remaining In Active') }}</th>
                         
                     </tr>
                 </thead>
@@ -195,30 +191,14 @@
                             </td>
                             <td dir="ltr">{{ $investor->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $investor->phone ?? '—' }}</td>
-                            <td class="text-start">{{ $investor->email ?? '—' }}</td>
-                            <td>{{ optional($investor->nationality)->name ?? '—' }}</td>
-                            <td class="text-start">{{ $investor->address ?? '—' }}</td>
-                            <td>{{ optional($investor->title)->name ?? '—' }}</td>
-                            <td>
-                                @if($investor->id_card_image)
-                                    <a href="{{ asset('storage/' . $investor->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('View ID Card Image') }}">
-                                        <img src="{{ asset('storage/' . $investor->id_card_image) }}" width="70" height="48" style="object-fit:cover; border-radius:.25rem;">
-                                    </a>
-                                @else <span class="text-muted">—</span> @endif
-                            </td>
-                            <td>
-                                @if($investor->contract_image)
-                                    <a href="{{ asset('storage/' . $investor->contract_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('View Contract Image') }}">
-                                        <img src="{{ asset('storage/' . $investor->contract_image) }}" width="70" height="48" style="object-fit:cover; border-radius:.25rem;">
-                                    </a>
-                                @else <span class="text-muted">—</span> @endif
-                            </td>
-                            <td>{{ is_numeric($investor->office_share_percentage) ? number_format($investor->office_share_percentage, 2) : '—' }}</td>
+                            <td>{{ number_format((float)($liquidityByInvestor[$investor->id] ?? 0), 2) }}</td>
+                            <td>{{ number_format((int)($activeCountByInvestor[$investor->id] ?? 0)) }}</td>
+                            <td>{{ number_format((float)($remainingByInvestor[$investor->id] ?? 0), 2) }}</td>
 
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="py-5">
+                            <td colspan="7" class="py-5">
                                 <div class="text-muted">{{ __('No matching results.') }} <a href="{{ route('investors.index') }}" class="ms-1">{{ __('Show All') }}</a></div>
                                 <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ {{ __('Add First Investor') }}</a></div>
                             </td>

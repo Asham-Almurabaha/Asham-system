@@ -1,6 +1,11 @@
 <?php
 
 return array (
+  'Investors' => 'المستثمرون',
+  'Add Investor' => 'إضافة مستثمر',
+  'Available Liquidity' => 'السيولة المتاحة',
+  'Active Contracts' => 'العقود النشطة',
+  'Total Remaining' => 'إجمالي المتبقي',
   'Edit Investor' => 'تعديل بيانات المستثمر',
   'View Investor Data' => 'عرض بيانات المستثمر',
   'Investors List' => 'قائمة المستثمرين',

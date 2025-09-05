@@ -11,6 +11,8 @@ use App\Services\InvestorDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use App\Models\LedgerEntry;
 use Illuminate\Contracts\Validation\Rule;
 
 
@@ -83,12 +85,86 @@ class InvestorController extends Controller
         $newInvestorsThisMonthAll = Investor::whereBetween('created_at',[now()->startOfMonth(), now()])->count();
         $newInvestorsThisWeekAll  = Investor::whereBetween('created_at',[now()->startOfWeek(),  now()])->count();
 
+        // Per-page aggregates for table columns
+        $ids = $investors->pluck('id')->all();
+        $liquidityByInvestor = collect();
+        $activeCountByInvestor = collect();
+        $remainingByInvestor = collect();
+
+        if (!empty($ids)) {
+            // Liquidity: sum(in) - sum(out) for non-office entries
+            $liquidityByInvestor = LedgerEntry::query()
+                ->whereIn('investor_id', $ids)
+                ->where('is_office', false)
+                ->groupBy('investor_id')
+                ->selectRaw("investor_id, COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END),0) - COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END),0) AS bal")
+                ->pluck('bal', 'investor_id');
+
+            // Active contracts per investor + remaining amount
+            $endedStatusIds = ContractStatus::whereIn('name', ['مكتمل','منتهي','سداد مبكر','إلغاء','Closed','Completed','Early Settlement','Inactive'])
+                ->pluck('id')->all();
+
+            $rows = DB::table('contract_investor as ci')
+                ->join('contracts as c', 'c.id', '=', 'ci.contract_id')
+                ->whereIn('ci.investor_id', $ids)
+                ->when(!empty($endedStatusIds), function($q) use ($endedStatusIds) {
+                    $q->whereNotIn('c.contract_status_id', $endedStatusIds);
+                })
+                ->select('ci.investor_id','ci.contract_id','ci.share_percentage','ci.share_value','c.contract_value','c.investor_profit')
+                ->get();
+
+            // Count active contracts per investor
+            $activeCountByInvestor = $rows->groupBy('investor_id')->map(function($g){
+                return $g->pluck('contract_id')->unique()->count();
+            });
+
+            $contractIds = $rows->pluck('contract_id')->unique()->values();
+
+            // Paid-in per (investor,contract)
+            $paid = LedgerEntry::query()
+                ->whereIn('investor_id', $ids)
+                ->whereIn('contract_id', $contractIds)
+                ->where('direction', 'in')
+                ->groupBy('investor_id','contract_id')
+                ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
+                ->get()
+                ->groupBy('investor_id')
+                ->map(function($g){
+                    return $g->pluck('paid_in','contract_id');
+                });
+
+            $pctOfficeByInvestor = $investors->pluck('office_share_percentage','id');
+
+            foreach ($rows as $r) {
+                $invId = (int)$r->investor_id;
+                $sharePct = (float) ($r->share_percentage ?? 0);
+                $shareVal = (float) ($r->share_value ?? 0);
+                if ($shareVal <= 0 && isset($r->contract_value)) {
+                    $shareVal = round(((float)$r->contract_value) * $sharePct / 100, 2);
+                }
+                $profitGross = isset($r->investor_profit)
+                    ? round(((float)$r->investor_profit) * $sharePct / 100, 2)
+                    : 0.0;
+                $pctOffice = (float) ($pctOfficeByInvestor[$invId] ?? 0);
+                $officeCut = round($profitGross * $pctOffice / 100, 2);
+                $profitNet = $profitGross - $officeCut;
+                $investorDue = $shareVal + $profitNet;
+
+                $paidIn = (float) (($paid[$invId][$r->contract_id] ?? 0.0));
+                $remaining = round($investorDue - $paidIn, 2);
+                $remainingByInvestor[$invId] = ($remainingByInvestor[$invId] ?? 0.0) + $remaining;
+            }
+        }
+
         return view('investors.index', compact(
             'investors',
             'investorsTotalAll',
             'activeInvestorsTotalAll',
             'newInvestorsThisMonthAll',
             'newInvestorsThisWeekAll',
+            'liquidityByInvestor',
+            'activeCountByInvestor',
+            'remainingByInvestor',
         ));
     }
 

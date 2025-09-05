@@ -1,13 +1,16 @@
 <?php
 
 return array (
+  'Investors' => 'Investors',
   'Investors List' => 'Investors List',
   'Add New Investor' => 'Add New Investor',
   'Edit Investor' => 'Edit Investor',
   'View Investor Data' => 'View Investor Data',
   'Import Excel' => 'Import Excel',
+  'Add Investor' => 'Add Investor',
   'Export Failures' => 'Export Failures',
   'Reports' => 'Reports',
+  'Total Investors ? All System' => 'Total Investors — All System',
   'Investors Liquidity Report' => 'Investors Liquidity Report',
   'Results' => 'Results',
   'Filter' => 'Filter',
@@ -16,6 +19,9 @@ return array (
   'Name' => 'Name',
   'National ID' => 'National ID',
   'Phone' => 'Phone',
+  'Available Liquidity' => 'Available Liquidity',
+  'Active Contracts' => 'Active Contracts',
+  'Total Remaining' => 'Total Remaining',
   'Email' => 'Email',
   'Nationality' => 'Nationality',
   'Address' => 'Address',
