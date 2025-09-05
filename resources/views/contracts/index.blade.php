@@ -266,7 +266,7 @@
                 <div class="flex-grow-1">
                     <div class="subnote">{{ __('Total Contracts — Entire System') }}</div>
                     <div class="kpi-value fw-bold">{{ number_format($contractsTotalAll) }}</div>
-                    <div class="subnote">{{ __('Not Affected by Filters') }}</div>
+                    <div class="subnote">{{ __('Not affected by filters') }}</div>
                 </div>
             </div>
         </div>
