@@ -1,11 +1,11 @@
 @extends('layouts.master')
 
-@section('title', 'تعديل المجال')
+@section('title', __('Edit Category'))
 
 @section('content')
 
 <div class="pagetitle">
-    <h1>تعديل المجال</h1>
+    <h1>{{ __('Edit Category') }}</h1>
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item">{{ __('Settings') }}</li>
@@ -32,12 +32,12 @@
                 @method('PUT')
 
                 <div class="mb-3">
-                    <label for="name" class="form-label">اسم المجال</label>
+                    <label for="name" class="form-label">{{ __('Name') }}</label>
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $category->name) }}" required autofocus>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">حالات العمليات المرتبطة</label>
+                    <label class="form-label">{{ __('Related Transaction Statuses') }}</label>
                     <select name="transaction_statuses[]" class="form-select" multiple>
                         @foreach($transactionStatuses as $status)
                             <option value="{{ $status->id }}" {{ in_array($status->id, $selectedStatuses) ? 'selected' : '' }}>
@@ -45,11 +45,11 @@
                             </option>
                         @endforeach
                     </select>
-                    <small class="form-text text-muted">يمكن اختيار أكثر من حالة بالضغط على Ctrl أو Cmd.</small>
+                    <small class="form-text text-muted">{{ __('Hold Ctrl or Cmd to select multiple.') }}</small>
                 </div>
 
-                <button type="submit" class="btn btn-primary">تحديث</button>
-                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
+                <button type="submit" class="btn btn-primary">{{ __('Update') }}</button>
+                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
             </form>
         </div>
     </div>

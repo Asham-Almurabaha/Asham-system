@@ -1,16 +1,16 @@
-﻿@extends('layouts.master')
+@extends('layouts.master')
 
-@section('title', 'تعديل بيانات المستثمر')
+@section('title', __('Edit Investor'))
 
 @section('content')
 <div class="container py-3" dir="rtl">
 
     <div class="pagetitle">
-        <h1 class="h3 mb-1">تعديل بيانات المستثمر</h1>
+        <h1 class="h3 mb-1">{{ __("Edit Investor") }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">@lang('investors.Investors')</li>
-                <li class="breadcrumb-item active">@lang('investors.Edit Investor')</li>
+                <li class="breadcrumb-item">{{ __('Investors') }}</li>
+                <li class="breadcrumb-item active">{{ __('Edit Investor') }}</li>
             </ol>
         </nav>
     </div>
@@ -95,12 +95,12 @@
 
                     {{-- الجنسية --}}
                     <div class="col-md-6">
-                        <label for="nationality_id" class="form-label">الجنسية</label>
+                        <label for="nationality_id" class="form-label">{{ __("Nationality") }}</label>
                         <select
                             name="nationality_id"
                             id="nationality_id"
                             class="form-select @error('nationality_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">{{ __("-- Choose --") }}</option>
                             @foreach (($nationalities ?? []) as $row)
                                 @php
                                     $nid   = is_object($row) ? $row->id   : (is_array($row) ? ($row['id'] ?? null)   : null);
@@ -116,12 +116,12 @@
 
                     {{-- الوظيفة --}}
                     <div class="col-md-6">
-                        <label for="title_id" class="form-label">الوظيفة</label>
+                        <label for="title_id" class="form-label">{{ __("Title") }}</label>
                         <select
                             name="title_id"
                             id="title_id"
                             class="form-select @error('title_id') is-invalid @enderror">
-                            <option value="">-- اختر --</option>
+                            <option value="">{{ __("-- Choose --") }}</option>
                             @foreach (($titles ?? []) as $row)
                                 @php
                                     $tid   = is_object($row) ? $row->id   : (is_array($row) ? ($row['id'] ?? null)   : null);
@@ -153,7 +153,7 @@
 
                         @if(!empty($investor->id_card_image))
                             <div class="mb-2">
-                                <small class="text-muted d-block mb-1">{{ __('investors.Current image:') }}</small>
+                                <small class="text-muted d-block mb-1">{{ __('Current Image:') }}</small>
                                 <a href="{{ asset('storage/'.$investor->id_card_image) }}" target="_blank">
                                     <img src="{{ asset('storage/'.$investor->id_card_image) }}" alt="صورة الهوية" class="rounded border" style="max-height: 140px; object-fit: cover;">
                                 </a>
@@ -167,7 +167,7 @@
                             id="id_card_image"
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        <div class="form-text">{{ __("Allowed extensions: jpg/png/webp — size suitable less than 2MB.") }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror>
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
@@ -182,7 +182,7 @@
 
                         @if(!empty($investor->contract_image))
                             <div class="mb-2">
-                                <small class="text-muted d-block mb-1">{{ __('investors.Current image:') }}</small>
+                                <small class="text-muted d-block mb-1">{{ __('Current Image:') }}</small>
                                 <a href="{{ asset('storage/'.$investor->contract_image) }}" target="_blank">
                                     <img src="{{ asset('storage/'.$investor->contract_image) }}" alt="صورة العقد" class="rounded border" style="max-height: 140px; object-fit: cover;">
                                 </a>
@@ -196,7 +196,7 @@
                             id="contract_image"
                             class="form-control @error('contract_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.</div>
+                        <div class="form-text">{{ __("Allowed extensions: jpg/png/webp — size suitable less than 2MB.") }}</div>
                         @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="contract-preview-wrap">
@@ -207,7 +207,7 @@
 
                     {{-- نسبة حصة المكتب --}}
                     <div class="col-md-6">
-                        <label for="office_share_percentage" class="form-label">نسبة حصة المكتب (%)</label>
+                        <label for="office_share_percentage" class="form-label">{{ __("Office Share %") }}</label>
                         <input
                             type="number"
                             name="office_share_percentage"
@@ -215,18 +215,18 @@
                             class="form-control @error('office_share_percentage') is-invalid @enderror"
                             value="{{ old('office_share_percentage', number_format((float)$investor->office_share_percentage, 2, '.', '')) }}"
                             min="0" max="100" step="0.01" inputmode="decimal" dir="ltr"
-                            placeholder="مثال: 12.50">
-                        <div class="form-text">القيمة بين 0 و 100.</div>
+                            placeholder="{{ __("Example: 12.50") }}">
+                        <div class="form-text">{{ __("Value between 0 and 100.") }}</div>
                         @error('office_share_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-outline-primary">
-                        <i class="bi bi-save2 me-1"></i> @lang('app.Update')
+                        <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
                     </button>
                     <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
-                        @lang('app.Cancel')
+                        {{ __('Cancel') }}
                     </a>
                 </div>
             </form>

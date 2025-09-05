@@ -362,6 +362,29 @@
     "Yes": "نعم",
     "Yesterday": "أمس",
     "You are logged in!": "You are logged in!",
-    "YYYY-MM-DD": "YYYY-MM-DD"
+    "YYYY-MM-DD": "YYYY-MM-DD",
+    "Images": "الصور",
+    "Customer Contract Image": "صورة عقد العميل",
+    "Guarantor Contract Image": "صورة عقد الكفيل",
+    "No contract images uploaded.": "لا توجد صور عقد مرفوعة.",
+    "Contract Details": "تفاصيل العقد",
+    "Print Contract": "طباعة العقد",
+    "Paid Report": "تقرير المدفوع",
+    "Closure Report": "تقرير المخالصة",
+    "Sale Price": "سعر البيع للمستثمر",
+    "Installment Type": "نوع القسط",
+    "Installment Value": "قيمة القسط",
+    "Installments Count": "عدد الأقساط",
+    "First Installment Date": "تاريخ أول قسط",
+    "Contract Number": "رقم العقد",
+    "Edit Investor": "تعديل مستثمر",
+    "Investors Liquidity Report": "تقرير سيولات المستثمرين",
+    "Current Liquidity": "السيولة الحالية",
+    "Remaining In Active": "المتبقي في النشطة",
+    
+    "Current Image:": "الصورة الحالية:",
+    "Preview after upload:": "معاينة بعد الرفع:",
+    "Only numbers can be entered.": "يمكن إدخال أرقام فقط.",
+    "+9665XXXXXXXX": "+9665XXXXXXXX",
+    "Example: 12.50": "مثال: 12.50"
 }
-

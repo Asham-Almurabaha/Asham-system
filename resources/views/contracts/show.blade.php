@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'عرض العقد')
+@section('title', __('Contract Details'))
 
 @section('content')
 <div class="pagetitle">
@@ -25,22 +25,19 @@
     <!-- طباعة العقد -->
     @if($paidTotal == 0)
         <a href="{{ route('contracts.print', $contract->id) }}" class="btn btn-primary">
-            <i class="bi bi-printer me-1"></i> طباعة العقد
-        </a>
+            <i class="bi bi-printer me-1"></i> {{ __('Print Contract') }}</a>
     @endif
 
     <!-- طباعة السدادات -->
     @if($paidTotal <= $contract->total_value - $contract->discount_amount)
         <a href="{{ route('contracts.paid', $contract->id) }}" class="btn btn-outline-success">
-            <i class="bi bi-receipt me-1"></i> طباعة السدادات
-        </a>
+            <i class="bi bi-receipt me-1"></i> {{ __('Paid Report') }}</a>
     @endif
 
     <!-- طباعة المخالصة -->
     @if($paidTotal >= $contract->total_value - $contract->discount_amount )
         <a href="{{ route('contracts.closure', $contract->id) }}" class="btn btn-outline-primary">
-            <i class="bi bi-file-earmark-check me-1"></i> طباعة المخالصة
-        </a>
+            <i class="bi bi-file-earmark-check me-1"></i> {{ __('Closure Report') }}</a>
     @endif
     {{--
     <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="ms-auto"

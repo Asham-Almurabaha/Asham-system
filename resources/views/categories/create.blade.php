@@ -1,11 +1,11 @@
 @extends('layouts.master')
 
-@section('title', 'إضافة مجال جديد')
+@section('title', __('Add New Category'))
 
 @section('content')
 
 <div class="pagetitle">
-    <h1>إضافة مجال جديد</h1>
+    <h1>{{ __('Add New Category') }}</h1>
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item">{{ __('Settings') }}</li>
@@ -31,12 +31,12 @@
                 @csrf
 
                 <div class="mb-3">
-                    <label for="name" class="form-label">اسم المجال</label>
+                    <label for="name" class="form-label">{{ __('Name') }}</label>
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">حالات العمليات المرتبطة</label>
+                    <label class="form-label">{{ __('Related Transaction Statuses') }}</label>
                     <select name="transaction_statuses[]" class="form-select" multiple>
                         @foreach($transactionStatuses as $status)
                             <option value="{{ $status->id }}" {{ (collect(old('transaction_statuses'))->contains($status->id)) ? 'selected' : '' }}>
@@ -44,11 +44,11 @@
                             </option>
                         @endforeach
                     </select>
-                    <small class="form-text text-muted">يمكن اختيار أكثر من حالة بالضغط على Ctrl أو Cmd.</small>
+                    <small class="form-text text-muted">{{ __('Hold Ctrl or Cmd to select multiple.') }}</small>
                 </div>
 
-                <button type="submit" class="btn btn-outline-success">@lang('app.Save')</button>
-                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
+                <button type="submit" class="btn btn-outline-success">{{ __('Save') }}</button>
+                <a href="{{ route('categories.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
             </form>
         </div>
     </div>
