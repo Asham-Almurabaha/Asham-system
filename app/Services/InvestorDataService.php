@@ -123,8 +123,10 @@ class InvestorDataService
             $totalRemainingOnCustomers  += $remainingOnCustomers;
 
             $contractBreakdown[] = [
-                'contract_id'   => (int) $c->id,
-                'customer'      => $c->customer->name ?? '-',
+                'contract_id'     => (int) $c->id,
+                'contract_number' => $c->contract_number ?? null,
+                'customer_id'     => optional($c->customer)->id,
+                'customer'        => $c->customer->name ?? '-',
                 'share_pct'     => $sharePct,
                 'share_value'   => $shareVal,
                 'profit_gross'  => $profitGross,

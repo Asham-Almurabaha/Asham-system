@@ -341,8 +341,29 @@
                         @foreach($contractBreakdown as $i => $r)
                             <tr>
                                 <td class="text-muted">{{ $i+1 }}</td>
-                                <td>#{{ $r['contract_id'] }}</td>
-                                <td class="text-start">{{ $r['customer'] }}</td>
+                                <td>
+                                    @php
+                                        $cid = $r['contract_id'] ?? null;
+                                        $cno = $r['contract_number'] ?? null;
+                                    @endphp
+                                    @if(!empty($cid))
+                                        <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none text-dark hover-primary fw-bold">
+                                            {{ $cno ?: ('#'.$cid) }}
+                                        </a>
+                                    @else
+                                        {{ $cno ?: '?' }}
+                                    @endif
+                                </td>
+                                <td class="text-start">
+                                    @php $custId = $r['customer_id'] ?? null; @endphp
+                                    @if(!empty($custId))
+                                        <a href="{{ route('customers.show', $custId) }}" class="text-decoration-none text-dark hover-primary">
+                                            {{ $r['customer'] ?? '?' }}
+                                        </a>
+                                    @else
+                                        {{ $r['customer'] ?? '?' }}
+                                    @endif
+                                </td>
                                 <td dir="ltr">{{ number_format($r['share_pct'],2) }}</td>
                                 <td dir="ltr">{{ number_format($r['share_value'],2) }}</td>
                                 <td dir="ltr">{{ number_format($r['profit_gross'],2) }}</td>
@@ -494,4 +515,3 @@ setTimeout(() => {
 }, 5000);
 </script>
 @endpush
-
