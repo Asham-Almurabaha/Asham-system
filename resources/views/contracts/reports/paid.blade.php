@@ -122,6 +122,6 @@
 @endsection
 
 @section('actions')
-  <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+  <a href="{{ route('contracts.show' , $contract) }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
 @endsection
 

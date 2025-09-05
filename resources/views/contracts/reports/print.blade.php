@@ -1,89 +1,64 @@
-﻿{{-- resources/views/contracts/print.blade.php --}}
-<!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
-<head>
-  <meta charset="utf-8">
-  <title>طباعة عقد رقم {{ $contract->contract_number }}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+@extends('layouts.print-portrait')
 
-  {{-- Favicon --}}
-  @if(!empty($setting?->favicon))
-    <link rel="icon" href="{{ asset('storage/'.$setting->favicon) }}">
-  @endif
+@section('title', 'عقد رقم ' . ($contract->contract_number ?? $contract->id))
+@section('report_title', 'تفاصيل عقد')
 
-  {{-- Bootstrap 5 --}}
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-
-  
-</head>
-<body>
 @php
-  $logoUrl   = $logoUrl   ?? (!empty($setting?->logo) ? asset('storage/'.$setting->logo) : asset('assets/img/logo.png'));
-  $brandName = $brandName ?? ($setting?->name_ar ?? $setting?->name ?? config('app.name','اسم المنشأة'));
-  $ownerName = $ownerName ?? ($setting?->owner_name ?? "اسم البائع");
+  $ownerName = $ownerName ?? ($setting?->owner_name ?? 'المالك');
 
+  // اليوم والتواريخ (مع احتياطي)
   $weekdayMap = ['Saturday'=>'السبت','Sunday'=>'الأحد','Monday'=>'الاثنين','Tuesday'=>'الثلاثاء','Wednesday'=>'الأربعاء','Thursday'=>'الخميس','Friday'=>'الجمعة'];
   $weekdayAr  = $weekdayAr ?? ($contract->start_date ? ($weekdayMap[$contract->start_date->format('l')] ?? '') : '');
 
   $gregDate              = optional($contract->start_date)->format('Y/m/d');
   $firstInstallmentGreg  = optional($contract->first_installment_date)->format('Y/m/d');
-  $hijriDate             = $hijriDate             ?? '—';
-  $firstInstallmentHijri = $firstInstallmentHijri ?? ($contract->first_installment_date ? $hijriDate : '—');
+  $hijriDate             = $hijriDate             ?? '-';
+  $firstInstallmentHijri = $firstInstallmentHijri ?? ($contract->first_installment_date ? $hijriDate : '-');
 @endphp
 
-<div class="page shadow-sm">
-  {{-- Watermark --}}
-  <div class="watermark"><img src="{{ $logoUrl }}" alt="Logo"></div>
+@section('header_right')
+  <h6 class="mb-0 fw-bold">رقم العقد</h6>
+  <div class="small-muted"># {{ $contract->contract_number }}</div>
+@endsection
 
-  <div class="content">
-    {{-- Header --}}
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-      <div class="d-flex align-items-center gap-2">
-        <img src="{{ $logoUrl }}" alt="Logo" style="height:48px">
-        <h5 class="mb-0 fw-bold">{{ $brandName }}</h5>
-      </div>
-      <h5 class="mb-0 fw-bold">عقد رقم: {{ $contract->contract_number }}</h5>
+@section('content')
+<div class="text-center fw-bold fs-4 mb-3">عقد بيع أقساط</div>
+  {{-- Dates --}}
+  <div class="mb-3">
+    <div class="line"><strong>اليوم:</strong> {{ $weekdayAr ?: '-' }}</div>
+    <div class="line">
+      <strong>التاريخ:</strong>
+      ميلادي {{ $gregDate ?: '-' }}
+      <span class="text-muted"> - هجري {{ $hijriDate ?: '-' }}</span>
     </div>
+  </div>
 
-    {{-- Document Title --}}
-    <div class="text-center fw-bold fs-4 mb-3">عقد بيع أقساط</div>
-
-    {{-- Dates --}}
-    <div class="mb-3">
-      <div class="line"><strong>إنه في يوم:</strong> {{ $weekdayAr ?: '—' }}</div>
-      <div class="line">
-        <strong>التاريخ:</strong>
-        ميلادي {{ $gregDate ?: '—' }}
-        <span class="text-muted">— هجري {{ $hijriDate }}</span>
-      </div>
+  {{-- Parties --}}
+  <div class="mb-3">
+    <div class="line"><strong>أطراف العقد:</strong></div>
+    <div class="line"><strong>البائع:</strong> {{$ownerName}}</div>
+    <div class="line">
+      <strong>العميل:</strong>
+      @if($contract->customer)
+        {{ $contract->customer->name ?? '-' }}
+        <span class="text-muted"> - هوية/إقامة: {{ $contract->customer->national_id ?? '-' }}</span>
+        <span class="text-muted"> - جوال: {{ $contract->customer->phone ?? '-' }}</span>
+      @else
+        -
+      @endif
     </div>
+  </div>
 
-    {{-- Parties --}}
-    <div class="mb-3">
-      <div class="line"><strong>تم الاتفاق بين كلا من:</strong></div>
-      <div class="line"><strong>البائع: </strong>{{$ownerName}}</div>
-      <div class="line">
-        <strong>العميل:</strong>
-        @if($contract->customer)
-          {{ $contract->customer->name ?? '—' }}
-          <span class="text-muted">— هوية/إقامة: {{ $contract->customer->national_id ?? '—' }}</span>
-          <span class="text-muted">— جوال: {{ $contract->customer->phone ?? '—' }}</span>
-        @else
-          —
-        @endif
-      </div>
-    </div>
-
-    {{-- Clauses --}}
-    <div class="mb-3 clauses">
-      <h4 class="text-center fw-bold mb-3">بنود العقد</h4>
-      <ol>
+  {{-- Clauses --}}
+  <div class="mb-3 clauses">
+    <h4 class="text-center fw-bold mb-3">بنود العقد</h4>
+    <ol>
         <li>
           سُلِّف العميل مبلغًا وقدره (<strong>{{ number_format($contract->total_value, 2) }}</strong> ريال)،
           على أن يكون السداد على دفعات {{ optional($contract->installmentType)->name ?? '—' }}
           قيمة كل دفعة (<strong>{{ number_format($contract->installment_value, 2) }}</strong> ريال)
           ابتداءً من تاريخ <strong>{{ $firstInstallmentGreg ?: ($gregDate ?: '—') }}</strong>
-          <span class="text-muted">/ هجري {{ $firstInstallmentHijri }}</span>
+          <span class="text-muted">- هجري {{ $firstInstallmentHijri }}</span>
           بعدد (<strong>{{ number_format($contract->installments_count) }}</strong>) دفعة.
         </li>
         <li>في حال عدم السداد يتحمّل العميل أتعاب المحامي المشار إليها في البند السابع.</li>
@@ -97,10 +72,10 @@
           للمحاماة أو مكتب تحصيل الديون في حالة عدم الالتزام بالبنود الموضحة أعلاه.
         </li>
       </ol>
-    </div>
+  </div>
 
-    {{-- Guarantor --}}
-    @if($contract->guarantor)
+  {{-- Guarantor --}}
+  @if($contract->guarantor)
     <div class="mb-3">
       <h5 class="text-center fw-bold mb-3">إقرار بالكفالة الحضورية والغرامية</h5>
       <div class="line">
@@ -124,34 +99,28 @@
     </div>
     @endif
 
-    {{-- Signatures --}}
-    <div class="mb-3">
-      <div class="row text-center signatures">
-        <div class="col">
-          <div><strong>طرف أول</strong><br>{{$ownerName}}</div>
-          <div class="mt-4">التوقيع: ____________________</div>
-        </div>
-        <div class="col">
-          <div><strong>العميل</strong><br>{{ $contract->customer->name ?? '—' }}</div>
-          <div class="mt-4">التوقيع: ____________________</div>
-        </div>
-         @if($contract->guarantor)
-          <div class="col">
-            <div><strong>الكفيل</strong><br>{{ $contract->guarantor->name ?? '—' }}</div>
-            <div class="mt-4">التوقيع: ____________________</div>
-          </div>
-        @endif
-        </div>
+  {{-- Signatures --}}
+  <div class="mb-3">
+    <div class="row text-center signatures">
+      <div class="col">
+        <div><strong>البائع</strong><br>{{$ownerName}}</div>
+        <div class="mt-4">التوقيع: ____________________</div>
       </div>
-    </div>
-
-    {{-- Buttons --}}
-    <div class="no-print d-flex justify-content-end gap-2">
-      <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
-      <button onclick="window.print()" class="btn btn-primary">🖨 @lang('app.Print')</button>
+      <div class="col">
+        <div><strong>العميل</strong><br>{{ $contract->customer->name ?? '-' }}</div>
+        <div class="mt-4">التوقيع: ____________________</div>
+      </div>
+      @if($contract->guarantor)
+      <div class="col">
+        <div><strong>الكفيل</strong><br>{{ $contract->guarantor->name ?? '-' }}</div>
+        <div class="mt-4">التوقيع: ____________________</div>
+      </div>
+      @endif
     </div>
   </div>
-</div>
-</body>
-</html>
+@endsection
+
+@section('actions')
+  <a href="{{ route('contracts.show' , $contract) }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+@endsection
 
