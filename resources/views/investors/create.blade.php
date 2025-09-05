@@ -9,8 +9,8 @@
         <h1 class="h3 mb-1">إضافة مستثمر جديد</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">{{ __('Investors') }}</li>
-                <li class="breadcrumb-item active">{{ __('Add') }}</li>
+                <li class="breadcrumb-item">@lang('investors.Investors')</li>
+                <li class="breadcrumb-item active">@lang('investors.Add Investor')</li>
             </ol>
         </nav>
     </div>
