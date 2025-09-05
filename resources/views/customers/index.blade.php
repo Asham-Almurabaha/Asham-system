@@ -1,4 +1,4 @@
-﻿{{-- resources/views/customers/index.blade.php --}}
+{{-- resources/views/customers/index.blade.php --}}
 @extends('layouts.master')
 
 @section('title', __('Customers List'))

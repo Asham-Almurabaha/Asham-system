@@ -1,4 +1,4 @@
-﻿@extends('layouts.master')
+@extends('layouts.master')
 
 @section('title', __('Edit Customer'))
 
@@ -76,7 +76,7 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
-                            placeholder="+9665XXXXXXXX">
+                            placeholder="{{ __("+9665XXXXXXXX") }}">
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -91,7 +91,7 @@
                             value="{{ old('email', $customer->email) }}"
                             maxlength="190"
                             autocomplete="email"
-                            placeholder="name@email.com">
+                            placeholder="{{ __("name@email.com") }}">
                         @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 

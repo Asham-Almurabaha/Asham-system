@@ -1,4 +1,4 @@
-﻿@extends('layouts.master')
+@extends('layouts.master')
 
 @section('title', __('Add New Customer'))
 
@@ -75,7 +75,7 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
-                            placeholder="+9665XXXXXXXX">
+                            placeholder="{{ __("+9665XXXXXXXX") }}">
                         <div class="form-text">{{ __('Prefer to enter the international code.') }}</div>
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -151,7 +151,7 @@
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*"
                             aria-describedby="idCardHelp">
-                        <div id="idCardHelp" class="form-text">{{ __('Allowed extensions: jpg/png/webp — Size less than 2MB.') }}</div>
+                        <div id="idCardHelp" class="form-text">{{ __('Allowed extensions: jpg/png/webp — size suitable less than 2MB.') }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
