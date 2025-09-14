@@ -44,4 +44,5 @@ Route::get('/contracts/{contract}/paid', [ContractReportController::class, 'paid
 // تصدير أمثلة العقود
 Route::get('contracts/export/basic', [ContractsExportController::class, 'basic'])->name('contracts.export.basic');
 Route::get('contracts/export/investors', [ContractsExportController::class, 'investors'])->name('contracts.export.investors');
+Route::get('contracts/export/payments', [ContractsExportController::class, 'payments'])->name('contracts.export.payments');
 

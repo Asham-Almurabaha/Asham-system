@@ -21,6 +21,11 @@
           الصف الأول عناوين.
         </p>
       </div>
+      <div class="ms-auto d-none d-md-block">
+        <a href="{{ route('contracts.export.payments') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-download me-1"></i> تصدير حالة الأقساط
+        </a>
+      </div>
     </div>
   </div>
 

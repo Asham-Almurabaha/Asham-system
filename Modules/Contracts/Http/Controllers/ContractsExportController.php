@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Contracts\Exports\ContractsBasicExport;
 use Modules\Contracts\Exports\ContractsInvestorsExport;
+use Modules\Contracts\Exports\ContractsPaymentsExport;
 
 class ContractsExportController extends Controller
 {
@@ -17,5 +18,10 @@ class ContractsExportController extends Controller
     public function investors()
     {
         return Excel::download(new ContractsInvestorsExport(), 'contracts_investors_mismatch.xlsx');
+    }
+
+    public function payments()
+    {
+        return Excel::download(new ContractsPaymentsExport(), 'contracts_installments_status.xlsx');
     }
 }
