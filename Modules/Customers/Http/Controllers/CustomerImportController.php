@@ -16,7 +16,7 @@ class CustomerImportController extends Controller
     public function create()
     {
         // ما نمسحش السيشن هنا علشان نعرض نتائج آخر استيراد بعد الـ redirect.
-        return view('customers.import');
+        return view('customers::import');
     }
 
     public function store(Request $request)

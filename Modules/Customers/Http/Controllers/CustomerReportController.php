@@ -80,7 +80,7 @@ class CustomerReportController extends Controller
                 return $customer;
             });
 
-        return view('customers.reports.active', ['rows' => $rows]);
+        return view('customers::reports.active', ['rows' => $rows]);
     }
     public function delinquent()
     {
@@ -89,7 +89,7 @@ class CustomerReportController extends Controller
             ->whereHas('contracts.installments', fn($q) => $q->where('installment_status_id', $statusId))
             ->orderBy('name')
             ->get();
-        return view('customers.reports.delinquent', ['rows' => $rows]);
+        return view('customers::reports.delinquent', ['rows' => $rows]);
     }
 
     public function unpaid()
@@ -121,7 +121,7 @@ class CustomerReportController extends Controller
                 $customer->unpaid_month_total = round($total, 2);
                 return $customer;
             });
-        return view('customers.reports.unpaid', ['rows' => $rows]);
+        return view('customers::reports.unpaid', ['rows' => $rows]);
     }
 
     public function contracts()
@@ -211,6 +211,6 @@ class CustomerReportController extends Controller
             return $customer;
         });
 
-        return view('customers.reports.contracts', ['rows' => $rows]);
+        return view('customers::reports.contracts', ['rows' => $rows]);
     }
 }

@@ -87,7 +87,7 @@ class CustomerController extends Controller
             ? Title::select('id','name')->orderBy('name')->get()
             : collect();
 
-        return view('customers.index', compact(
+        return view('customers::index', compact(
             'customers',
             'customersTotalAll',
             'activeCustomersTotalAll',
@@ -103,7 +103,7 @@ class CustomerController extends Controller
     {
         $titles = Title::all();
         $nationalities = Nationality::all();
-        return view('customers.create', compact('titles', 'nationalities'));
+        return view('customers::create', compact('titles', 'nationalities'));
     }
 
     // حفظ عميل جديد
@@ -179,7 +179,7 @@ class CustomerController extends Controller
         };
 
         // تمرير البيانات للواجهة
-        return view('customers.show', [
+        return view('customers::show', [
             'customer'          => $customer,
             'details'           => $details, // الكائن الكامل لو حاب تتعامل معه مباشرة
 
@@ -211,7 +211,7 @@ class CustomerController extends Controller
     {
         $titles = Title::all();
         $nationalities = Nationality::all();
-        return view('customers.edit', compact('customer', 'titles', 'nationalities'));
+        return view('customers::edit', compact('customer', 'titles', 'nationalities'));
     }
 
     // تحديث بيانات عميل

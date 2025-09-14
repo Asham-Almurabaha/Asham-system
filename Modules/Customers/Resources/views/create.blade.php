@@ -168,7 +168,7 @@
                             id="notes"
                             rows="3"
                             class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="{{ __('Any additional information about the customer') }}">{{ old('notes') }}</textarea>
+                            placeholder="{{ __('customers::messages.Any additional information about the customer') }}">{{ old('notes') }}</textarea>
                         @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>

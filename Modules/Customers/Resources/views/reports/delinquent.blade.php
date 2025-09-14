@@ -1,4 +1,4 @@
-{{-- resources/views/reports/delinquent_customers.blade.php --}}
+{{-- Modules/Customers/Resources/views/reports/delinquent.blade.php --}}
 @extends('layouts.print-landscape')
 
 @section('title', __('reports.Delinquent Customers Report'))

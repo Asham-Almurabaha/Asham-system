@@ -31,6 +31,8 @@ return array (
   'New Customers This Month' => 'New Customers This Month',
   'This Week' => 'This Week',
   'Type customer name...' => 'Type customer name...',
+  'Any additional information about the customer' => 'Any additional information about the customer',
+  'All contracts associated with the customer' => 'All contracts associated with the customer',
   1234567890 => '1234567890',
   '+9665XXXXXXXX' => '+9665XXXXXXXX',
 );

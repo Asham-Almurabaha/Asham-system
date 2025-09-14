@@ -1,4 +1,4 @@
-{{-- resources/views/reports/unpaid_customers.blade.php --}}
+{{-- Modules/Customers/Resources/views/reports/unpaid.blade.php --}}
 @extends('layouts.print-landscape')
 
 @section('title', __('reports.Unpaid Customers This Month Report'))

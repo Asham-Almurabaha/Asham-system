@@ -1,4 +1,4 @@
-{{-- resources/views/customers/index.blade.php --}}
+{{-- Modules/Customers/Resources/views/index.blade.php --}}
 @extends('layouts.master')
 
 @section('title', __('Customers List'))
@@ -161,7 +161,7 @@
                  name="customer_q"
                  value="{{ request('customer_q') }}"
                  class="form-control form-control-sm auto-submit-input"
-                 placeholder="{{ __('Type customer name...') }}">
+                 placeholder="{{ __('customers::messages.Type customer name...') }}">
         </div>
 
         {{-- Additional filters (optional) --}}

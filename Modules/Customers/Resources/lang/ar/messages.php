@@ -31,6 +31,8 @@ return array (
   'New Customers This Month' => 'عملاء جدد هذا الشهر',
   'This Week' => 'هذا الأسبوع',
   'Type customer name...' => 'اكتب اسم العميل...',
+  'Any additional information about the customer' => 'أي معلومات إضافية عن العميل',
+  'All contracts associated with the customer' => 'كل العقود المرتبطة بالعميل',
   1234567890 => '1234567890',
   '+9665XXXXXXXX' => '+9665XXXXXXXX',
 );

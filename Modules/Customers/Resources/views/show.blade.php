@@ -91,7 +91,7 @@
                     <div class="fw-bold text-muted">{{ __('Total Contracts') }}</div>
                 </div>
                 <div class="fs-2 fw-bold">{{ number_format($contractsCount) }}</div>
-                <div class="small text-muted">{{ __('All contracts associated with the customer') }}</div>
+                <div class="small text-muted">{{ __('customers::messages.All contracts associated with the customer') }}</div>
             </div>
         </div>
         <div class="col-6 col-lg-3">
