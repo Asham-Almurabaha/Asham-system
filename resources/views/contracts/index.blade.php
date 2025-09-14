@@ -377,6 +377,36 @@
       @endrole
     </div>
 
+    {{-- زر التصدير --}}
+    <div class="dropdown">
+      <button type="button"
+              class="btn btn-outline-secondary dropdown-toggle"
+              data-bs-toggle="dropdown"
+              aria-expanded="false">
+        <i class="bi bi-download"></i> تصدير
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.export.basic') }}">
+            <i class="bi bi-filetype-xlsx"></i>
+            <span>تصدير البيانات الأساسية (المثال)</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.export.investors') }}">
+            <i class="bi bi-filetype-xlsx"></i>
+            <span>تصدير المستثمرين (النسب غير المكتملة)</span>
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.export.payments') }}">
+            <i class="bi bi-filetype-xlsx"></i>
+            <span>تصدير الأقساط (المبلغ المتبقي)</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
     {{-- زر التقارير: يفتح لتحت + أيقونات حسب الحالة --}}
     <div class="dropdown">
       <button type="button"

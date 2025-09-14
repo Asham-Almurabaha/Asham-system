@@ -19,6 +19,11 @@
           — الصف الأول عناوين.
         </p>
       </div>
+      <div class="ms-auto d-none d-md-block">
+        <a href="{{ route('contracts.export.basic') }}" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-download me-1"></i> تصدير البيانات الأساسية كمثال
+        </a>
+      </div>
     </div>
   </div>
 
