@@ -371,49 +371,41 @@
         <i class="bi bi-plus-lg"></i> {{ __('Add New Contract') }}
       </a>
       @role('admin')
-        <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
+        <div class="btn-group">
+          <button type="button"
+                  class="btn btn-outline-primary dropdown-toggle"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false">
             <i class="bi bi-upload"></i> {{ __('Import Excel') }}
-        </a>
-        <a href="{{ route('contracts.import.basic.form') }}" class="btn btn-outline-primary">
-            <i class="bi bi-upload"></i> {{ __('Import Basic Excel') }}
-        </a>
-        <a href="{{ route('contracts.import.investors.form') }}" class="btn btn-outline-primary">
-            <i class="bi bi-upload"></i> {{ __('Import Investors Excel') }}
-        </a>
-        <a href="{{ route('contracts.import.payments.form') }}" class="btn btn-outline-primary">
-            <i class="bi bi-upload"></i> {{ __('Import Payments Excel') }}
-        </a>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.form') }}">
+                <i class="bi bi-upload"></i>
+                <span>{{ __('Import Excel') }}</span>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.basic.form') }}">
+                <i class="bi bi-upload"></i>
+                <span>{{ __('Import Basic Excel') }}</span>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.investors.form') }}">
+                <i class="bi bi-upload"></i>
+                <span>{{ __('Import Investors Excel') }}</span>
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.payments.form') }}">
+                <i class="bi bi-upload"></i>
+                <span>{{ __('Import Payments Excel') }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
       @endrole
-    </div>
-
-    {{-- زر التصدير --}}
-    <div class="dropdown">
-      <button type="button"
-              class="btn btn-outline-secondary dropdown-toggle"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
-        <i class="bi bi-download"></i> تصدير
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
-        <li>
-          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.export.basic') }}">
-            <i class="bi bi-filetype-xlsx"></i>
-            <span>تصدير البيانات الأساسية (المثال)</span>
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.export.investors') }}">
-            <i class="bi bi-filetype-xlsx"></i>
-            <span>تصدير المستثمرين (النسب غير المكتملة)</span>
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.export.payments') }}">
-            <i class="bi bi-filetype-xlsx"></i>
-            <span>تصدير الأقساط (المبلغ المتبقي)</span>
-          </a>
-        </li>
-      </ul>
     </div>
 
     {{-- زر التقارير: يفتح لتحت + أيقونات حسب الحالة --}}
