@@ -45,7 +45,7 @@ class ContractReportController extends Controller
             ->get();
 
         $title = __('Contracts Report').' - '.($statusName ?: __('Status'));
-        return view('contracts.reports.status', compact('rows','title','statusName'));
+        return view('contracts::reports.status', compact('rows','title','statusName'));
     }
 
     public function withoutInvestor()
@@ -57,7 +57,7 @@ class ContractReportController extends Controller
             ->get();
 
         $title = __('Contracts Report').' - '.__('Without Investor');
-        return view('contracts.reports.status', compact('rows','title'));
+        return view('contracts::reports.status', compact('rows','title'));
     }
 
      public function show(Contract $contract)
@@ -112,7 +112,7 @@ class ContractReportController extends Controller
             $firstInstallmentHijri = Hijri::Date('Y/m/d', $contract->first_installment_date->format('Y-m-d'));
         }
 
-        return view('contracts.reports.print', [
+        return view('contracts::reports.print', [
             'contract'              => $contract,
             'logoUrl'               => $logoUrl,
             'brandName'             => $brandName,
@@ -171,7 +171,7 @@ class ContractReportController extends Controller
             $hijriDate = '—';
         }
 
-        return view('contracts.reports.closure', [
+        return view('contracts::reports.closure', [
             'contract'      => $contract,
             'setting'       => $setting,
             'logoUrl'       => $logoUrl,
@@ -254,7 +254,7 @@ class ContractReportController extends Controller
             ];
         });
 
-        return view('contracts.reports.paid', [
+        return view('contracts::reports.paid', [
             'contract'              => $contract,
             'setting'               => $setting,
             'logoUrl'               => $logoUrl,

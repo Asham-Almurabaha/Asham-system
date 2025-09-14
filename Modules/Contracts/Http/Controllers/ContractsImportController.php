@@ -34,7 +34,7 @@ class ContractsImportController extends Controller
             ]);
         }
 
-        return view('contracts.import');
+        return view('contracts::import');
     }
 
     /**
@@ -52,7 +52,7 @@ class ContractsImportController extends Controller
             ]);
         }
 
-        return view('contracts.import_basic');
+        return view('contracts::import_basic');
     }
 
     /**
@@ -70,7 +70,7 @@ class ContractsImportController extends Controller
             ]);
         }
 
-        return view('contracts.import_investors');
+        return view('contracts::import_investors');
     }
 
     public function createPayments(Request $request)
@@ -85,7 +85,7 @@ class ContractsImportController extends Controller
             ]);
         }
 
-        return view('contracts.import_payments');
+        return view('contracts::import_payments');
     }
 
     /**

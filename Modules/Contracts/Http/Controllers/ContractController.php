@@ -116,7 +116,7 @@ class ContractController extends Controller
         $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
     }
 
-    return view('contracts.index', compact(
+    return view('contracts::index', compact(
         'contracts',
         'contractStatuses',
         'investors',
@@ -127,7 +127,7 @@ class ContractController extends Controller
 
     public function create()
     {
-        return view('contracts.create', [
+        return view('contracts::create', [
             'contract'         => new Contract(),
             'customers'        => Customer::all(),
             'guarantors'       => Guarantor::all(),
@@ -435,7 +435,7 @@ class ContractController extends Controller
         });
 
         $contract->load('investors');
-        $html = view('contracts.partials.investors_table', compact('contract'))->render();
+        $html = view('contracts::partials.investors_table', compact('contract'))->render();
 
         return response()->json([
             'success' => true,
@@ -581,7 +581,7 @@ class ContractController extends Controller
 
 
         
-        return view('contracts.show', compact('contract', 'investors','banks','safes'));
+        return view('contracts::show', compact('contract', 'investors','banks','safes'));
     }
 
     private function validateContract(Request $request, bool $isUpdate = false): array

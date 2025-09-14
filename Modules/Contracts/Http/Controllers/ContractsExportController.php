@@ -12,7 +12,7 @@ class ContractsExportController extends Controller
 {
     public function create()
     {
-        return view('contracts.export');
+        return view('contracts::export');
     }
 
     public function basic()
