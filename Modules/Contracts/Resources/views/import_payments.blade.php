@@ -174,3 +174,15 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const input = document.getElementById('fileInput');
+    const button = document.getElementById('submitBtn');
+    input.addEventListener('change', () => {
+        button.disabled = input.files.length === 0;
+    });
+})();
+</script>
+@endpush
