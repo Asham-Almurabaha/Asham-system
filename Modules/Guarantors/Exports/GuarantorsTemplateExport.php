@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exports;
+namespace Modules\Guarantors\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;

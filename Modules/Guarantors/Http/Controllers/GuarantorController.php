@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Guarantors\Http\Controllers;
 
-use App\Models\Guarantor;
+use App\Http\Controllers\Controller;
+use Modules\Guarantors\Entities\Guarantor;
 use App\Models\Nationality;
 use App\Models\Title;
 use Illuminate\Http\Request;

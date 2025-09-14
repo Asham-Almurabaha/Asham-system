@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Imports;
+namespace Modules\Guarantors\Imports;
 
-use App\Models\Guarantor;
+use Modules\Guarantors\Entities\Guarantor;
 use App\Models\Nationality;
 use App\Models\Title;
 use Illuminate\Support\Str;

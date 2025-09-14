@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Guarantors\Http\Controllers;
 
-use App\Exports\GuarantorsFailuresFixExport;
-use App\Exports\GuarantorsSkippedExport;
-use App\Exports\GuarantorsTemplateExport;
-use App\Imports\GuarantorsImport;
+use App\Http\Controllers\Controller;
+use Modules\Guarantors\Exports\GuarantorsFailuresFixExport;
+use Modules\Guarantors\Exports\GuarantorsSkippedExport;
+use Modules\Guarantors\Exports\GuarantorsTemplateExport;
+use Modules\Guarantors\Imports\GuarantorsImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
@@ -127,9 +128,9 @@ class GuarantorImportController extends Controller
         if ($failures instanceof Collection) $failures = $failures->all();
         if ($skipped  instanceof Collection) $skipped  = $skipped->all();
 
-        if (class_exists(\App\Exports\GuarantorsIssuesExport::class)) {
+        if (class_exists(\Modules\Guarantors\Exports\GuarantorsIssuesExport::class)) {
             return Excel::download(
-                new \App\Exports\GuarantorsIssuesExport(
+                new \Modules\Guarantors\Exports\GuarantorsIssuesExport(
                     is_array($failures) ? $failures : (array)$failures,
                     is_array($skipped)  ? $skipped  : (array)$skipped
                 ),

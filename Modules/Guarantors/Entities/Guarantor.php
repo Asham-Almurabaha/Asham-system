@@ -1,9 +1,12 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Guarantors\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Nationality;
+use App\Models\Title;
+use Modules\Contracts\Entities\Contract;
 
 class Guarantor extends Model
 {

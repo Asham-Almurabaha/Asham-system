@@ -6,7 +6,7 @@ use App\DTOs\InvestorShare;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
 use Modules\Customers\Entities\Customer;
-use App\Models\Guarantor;
+use Modules\Guarantors\Entities\Guarantor;
 use App\Models\InstallmentStatus;
 use App\Models\InstallmentType;
 use App\Models\Investor;

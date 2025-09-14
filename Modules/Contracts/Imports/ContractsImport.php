@@ -6,7 +6,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
 use Modules\Customers\Entities\Customer;
-use App\Models\Guarantor;
+use Modules\Guarantors\Entities\Guarantor;
 use App\Models\InstallmentStatus;
 use App\Models\InstallmentType;
 use App\Models\Investor;

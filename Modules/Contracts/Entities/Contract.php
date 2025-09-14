@@ -3,7 +3,7 @@
 namespace Modules\Contracts\Entities;
 
 use Modules\Customers\Entities\Customer;
-use App\Models\Guarantor;
+use Modules\Guarantors\Entities\Guarantor;
 use App\Models\InstallmentType;
 use App\Models\Investor;
 use App\Models\InvestorTransaction;

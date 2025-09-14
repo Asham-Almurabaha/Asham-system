@@ -5,8 +5,6 @@ use App\Http\Controllers\AjaxInvestorController;
 use App\Http\Controllers\AjaxProductTypeController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\GuarantorController;
-use App\Http\Controllers\GuarantorImportController;
 use App\Http\Controllers\InvestorController;
 use App\Http\Controllers\InvestorImportController;
 use App\Http\Controllers\InvestorReportController;
@@ -67,14 +65,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('categories', CategoryController::class);
     });
 
-    // استيراد الضامنين
-    Route::prefix('guarantors/import')->name('guarantors.')->group(function () {
-        Route::get('/',               [GuarantorImportController::class, 'create'])->name('import.form');
-        Route::post('/',              [GuarantorImportController::class, 'store'])->name('import');
-        Route::get('/template',       [GuarantorImportController::class, 'template'])->name('import.template');
-        Route::get('/failures/fix',   [GuarantorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-    });
-
     // استيراد المستثمرين
     Route::prefix('investors/import')->name('investors.')->group(function () {
         Route::get('/',               [InvestorImportController::class, 'create'])->name('import.form');
@@ -92,7 +82,6 @@ Route::middleware('auth')->group(function () {
     });
 
     // CRUDات رئيسية
-    Route::resource('guarantors', GuarantorController::class);
     Route::resource('investors', InvestorController::class);
     require base_path('Modules/Contracts/Routes/web.php');
     Route::resource('investor-transactions', InvestorTransactionController::class);
