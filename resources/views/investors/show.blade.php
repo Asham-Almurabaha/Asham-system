@@ -364,7 +364,7 @@
                                         {{ $r['customer'] ?? '?' }}
                                     @endif
                                 </td>
-                                <td dir="ltr">{{ number_format($r['share_pct'],2) }}</td>
+                                <td dir="ltr">{{ number_format($r['share_percentage'] ?? 0,2) }}</td>
                                 <td dir="ltr">{{ number_format($r['share_value'],2) }}</td>
                                 <td dir="ltr">{{ number_format($r['profit_gross'],2) }}</td>
                                 <td class="text-neg" dir="ltr">{{ number_format($r['office_cut'],2) }}</td>
