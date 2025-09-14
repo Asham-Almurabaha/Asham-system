@@ -50,14 +50,14 @@
 </div>
 
 {{-- معلومات أساسية عن العقد --}}
-@include('contracts.partials.basic-info', ['contract' => $contract])
+@include('contracts::partials.basic-info', ['contract' => $contract])
 
 {{-- المستثمرون --}}
-@include('contracts.partials.investors', ['contract' => $contract])
+@include('contracts::partials.investors', ['contract' => $contract])
 
 {{-- الأقساط --}}
-@include('contracts.partials.installments', ['contract' => $contract])
+@include('contracts::partials.installments', ['contract' => $contract])
 
 {{-- الصور --}}
-@include('contracts.partials.images', ['contract' => $contract])
+@include('contracts::partials.images', ['contract' => $contract])
 @endsection

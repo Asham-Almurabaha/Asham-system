@@ -29,7 +29,7 @@
         @endif
 
         <div id="contract-investors-list">
-            @include('contracts.partials.investors_table', ['contract' => $contract])
+            @include('contracts::partials.investors_table', ['contract' => $contract])
         </div>
     </div>
 </div>
