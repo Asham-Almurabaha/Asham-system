@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Contracts\Http\Controllers;
 
-use App\Models\Contract;
+use Alkoumi\LaravelHijriDate\Hijri;
+use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Carbon\Carbon;
-use Alkoumi\LaravelHijriDate\Hijri;
-use App\Models\ContractStatus;
 use Illuminate\Support\Facades\Schema;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractStatus;
 
 class ContractReportController extends Controller
 {

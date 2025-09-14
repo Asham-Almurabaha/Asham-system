@@ -222,7 +222,7 @@
                                     foreach (['status','state','contract_status'] as $col) { if (Schema::hasColumn('contracts',$col)) { $statusNameCol = $col; break; } }
                                     $activeQ = $customer->contracts();
                                     if ($statusIdCol) {
-                                        $endedIds = class_exists(\App\Models\ContractStatus::class) ? \App\Models\ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all() : [];
+                                        $endedIds = class_exists(\Modules\Contracts\Entities\ContractStatus::class) ? \Modules\Contracts\Entities\ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all() : [];
                                         if (!empty($endedIds)) { $activeQ->whereNotIn($statusIdCol, $endedIds); }
                                     } elseif ($statusNameCol) {
                                         $activeQ->whereNotIn($statusNameCol, $endedStatusNames);
@@ -233,11 +233,11 @@
                                     }
                                     $activeIds = $activeQ->pluck('id');
                                     $activeCount = $activeIds->count();
-                                    $remainingSum = $activeCount ? \App\Models\ContractInstallment::whereIn('contract_id',$activeIds)->whereNull('payment_date')->sum('due_amount') : 0;
+                                      $remainingSum = $activeCount ? \Modules\Contracts\Entities\ContractInstallment::whereIn('contract_id',$activeIds)->whereNull('payment_date')->sum('due_amount') : 0;
                                     $startMonth = \Carbon\Carbon::now()->startOfMonth();
                                     $endMonth = \Carbon\Carbon::now()->endOfMonth();
-                                    $unpaidAmountThisMonth = $activeCount ? \App\Models\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->sum('due_amount') : 0;
-                                    $unpaidCountThisMonth = $activeCount ? \App\Models\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->count() : 0;
+                                      $unpaidAmountThisMonth = $activeCount ? \Modules\Contracts\Entities\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->sum('due_amount') : 0;
+                                      $unpaidCountThisMonth = $activeCount ? \Modules\Contracts\Entities\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->count() : 0;
                                 @endphp
                             <td class="text-center">{{ $activeCount }}</td>
                             <td class="text-center">{{ number_format((float)$remainingSum, 2) }}</td>

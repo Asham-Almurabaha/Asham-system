@@ -4,12 +4,6 @@ use App\Http\Controllers\AjaxAccountController;
 use App\Http\Controllers\AjaxInvestorController;
 use App\Http\Controllers\AjaxProductTypeController;
 use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\ContractController;
-use App\Http\Controllers\ContractImportController;
-use App\Http\Controllers\ContractInstallmentController;
-use App\Http\Controllers\ContractPrintController;
-use App\Http\Controllers\ContractReportController;
-use App\Http\Controllers\ContractsImportController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerImportController;
 use App\Http\Controllers\CustomerReportController;
@@ -100,14 +94,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/failures/fix',   [InvestorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
     });
 
-    // استيراد العقود
-    Route::prefix('contracts/import')->name('contracts.')->group(function () {
-        Route::get('/',               [ContractsImportController::class, 'create'])->name('import.form');
-        Route::post('/',              [ContractsImportController::class, 'store'])->name('import');
-        Route::get('/template',       [ContractsImportController::class, 'template'])->name('import.template');
-        Route::get('/failures/fix',   [ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-    });
-
     // استيراد القيود
     Route::prefix('ledger/import')->name('ledger.')->group(function () {
         Route::get('/',               [LedgerEntriesImportController::class, 'create'])->name('import.form');
@@ -120,7 +106,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class);
     Route::resource('guarantors', GuarantorController::class);
     Route::resource('investors', InvestorController::class);
-    Route::resource('contracts', ContractController::class);
+    require base_path('Modules/Contracts/Routes/web.php');
     Route::resource('investor-transactions', InvestorTransactionController::class);
 
     // القيود
@@ -134,11 +120,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/split',           [LedgerController::class, 'splitStore'])->name('split.store');
     });
 
-    // الأقساط
-    Route::prefix('installments')->name('installments.')->group(function () {
-        Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
-        Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
-    });
 
     Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])
         ->name('reports.customers.delinquent');
@@ -174,11 +155,6 @@ Route::middleware('auth')->group(function () {
     Route::get('reports/investors/Allliquidity', [InvestorReportController::class, 'allliquidity'])
         ->name('reports.investors.Allliquidity');
 
-    Route::get('reports/contracts/status/{status}', [ContractReportController::class, 'status'])->name('reports.contracts.status');
-    Route::get('reports/contracts/without-investor', [ContractReportController::class, 'withoutInvestor'])->name('reports.contracts.without_investor');
-    Route::get('/contracts/{contract}/print',   [ContractReportController::class, 'show'])->name('contracts.print');
-    Route::get('/contracts/{contract}/closure', [ContractReportController::class, 'closure'])->name('contracts.closure');
-    Route::get('/contracts/{contract}/paid', [ContractReportController::class, 'paidInstallments'])->name('contracts.paid');
         
     Route::get('/ajax/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
         ->name('ajax.investors.liquidity');
@@ -190,11 +166,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/ajax/accounts/availability-bulk', [AjaxAccountController::class, 'availabilityBulk'])->name('ajax.accounts.availability.bulk');
 
     // مستثمرين العقد
-    Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');
-
-    // أعذار/تأجيل الأقساط Ajax
-    Route::post('/installments/defer/{id}',  [ContractInstallmentController::class, 'deferAjax']);
-    Route::post('/installments/excuse/{id}', [ContractInstallmentController::class, 'excuseAjax']);
+    // أعذار/تأجيل الأقساط Ajax أصبحت ضمن وحدة العقود
 
     // // البروفايل
     // Route::get('/profile',   [ProfileController::class, 'edit'])->name('profile.edit');

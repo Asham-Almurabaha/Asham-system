@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Contracts\Http\Controllers;
 
-use App\Models\Contract;
-use App\Models\ContractInstallment;
-use App\Models\ContractStatus;
+use App\Http\Controllers\Controller;
 use App\Models\InstallmentStatus;
 use App\Models\InvestorTransaction;
 use App\Models\LedgerEntry;
@@ -15,6 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Contracts\Entities\ContractStatus;
 
 class ContractInstallmentController extends Controller
 {

@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Contracts\Entities;
 
+use App\Models\InstallmentStatus;
+use App\Models\InvestorTransaction;
+use App\Models\OfficeTransaction;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,10 +26,11 @@ class ContractInstallment extends Model
         'installment_status_id',
         'notes',
     ];
-        protected $casts  = [
+
+    protected $casts  = [
         'due_date' => 'date',
         'payment_date' => 'date',
-        ];
+    ];
 
     // علاقة العقد
     public function contract()
@@ -46,12 +50,8 @@ class ContractInstallment extends Model
         return $this->belongsTo(InstallmentStatus::class);
     }
 
-    
-
     public function officeTransactions()
     {
         return $this->hasMany(OfficeTransaction::class, 'installment_id');
     }
-
-
 }

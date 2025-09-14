@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Customer;
-use App\Models\Contract;
-use App\Models\ContractInstallment;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractInstallment;
 use Illuminate\Support\Carbon;
 
 class CustomerDetailsService

@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Imports;
+namespace Modules\Contracts\Imports;
 
-use App\Models\Contract;
-use App\Models\ContractInstallment;
-use App\Models\ContractStatus;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Contracts\Entities\ContractStatus;
 use App\Models\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentStatus;

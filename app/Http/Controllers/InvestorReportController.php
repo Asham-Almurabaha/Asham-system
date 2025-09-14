@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contract;
+use Modules\Contracts\Entities\Contract;
 use App\Models\Investor;
 use App\Models\LedgerEntry;
 use App\Services\InvestorDataService;

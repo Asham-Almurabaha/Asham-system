@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Contracts\Http\Controllers;
 
 use App\DTOs\InvestorShare;
-use App\Http\Requests\StoreContractInvestorsRequest;
+use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
-use App\Models\Contract;
-use App\Models\ContractInstallment;
-use App\Models\ContractStatus;
 use App\Models\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentStatus;
@@ -20,6 +17,10 @@ use App\Models\Safe;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
 use App\Services\InstallmentsMonthlyService;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Contracts\Entities\ContractStatus;
+use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

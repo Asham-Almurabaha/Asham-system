@@ -27,7 +27,7 @@
     $pendingNamesTx = implode('، ', $namesPending);
 
     // إجماليات على مستوى النظام (غير متأثرة بالفلاتر)
-    $contractsTotalAll = $contractsTotalAll ?? (\App\Models\Contract::query()->count());
+    $contractsTotalAll = $contractsTotalAll ?? (\Modules\Contracts\Entities\Contract::query()->count());
 
     // كشف أعمدة الحالة المحتملة
     $statusIdCol = null;
@@ -41,14 +41,14 @@
 
     // محاولة جلب IDs للحالات من جدول ContractStatus (إن وجد)
     $endedIds = $pendingIds = [];
-    if (class_exists(\App\Models\ContractStatus::class)) {
-        $endedIds   = \App\Models\ContractStatus::whereIn('name', $namesEnded)->pluck('id')->all();
-        $pendingIds = \App\Models\ContractStatus::whereIn('name', $namesPending)->pluck('id')->all();
+    if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
+        $endedIds   = \Modules\Contracts\Entities\ContractStatus::whereIn('name', $namesEnded)->pluck('id')->all();
+        $pendingIds = \Modules\Contracts\Entities\ContractStatus::whereIn('name', $namesPending)->pluck('id')->all();
     }
 
     // ===== منتهي =====
     $contractsEndedAll = $contractsEndedAll ?? (function() use ($statusIdCol,$statusTextCol,$namesEnded,$endedIds){
-        $q = \App\Models\Contract::query();
+        $q = \Modules\Contracts\Entities\Contract::query();
         if ($statusIdCol) {
             return !empty($endedIds) ? $q->whereIn($statusIdCol, $endedIds)->count() : 0;
         } elseif ($statusTextCol) {
@@ -59,7 +59,7 @@
 
     // ===== معلّق =====
     $contractsPendingAll = $contractsPendingAll ?? (function() use ($statusIdCol,$statusTextCol,$namesPending,$pendingIds){
-        $q = \App\Models\Contract::query();
+        $q = \Modules\Contracts\Entities\Contract::query();
         if ($statusIdCol && !empty($pendingIds)) {
             return $q->whereIn($statusIdCol, $pendingIds)->count();
         } elseif ($statusTextCol) {
@@ -69,11 +69,11 @@
     })();
 
     // ===== بدون مستثمر =====
-    $contractsNoInvestorAll = $contractsNoInvestorAll ?? (\App\Models\Contract::query()->doesntHave('investors')->count());
+    $contractsNoInvestorAll = $contractsNoInvestorAll ?? (\Modules\Contracts\Entities\Contract::query()->doesntHave('investors')->count());
 
     // ===== نشط = كل ما عدا (منتهي + معلّق) =====
     $contractsActiveAll = $activeContractsTotalAll ?? (function() use ($statusIdCol,$statusTextCol,$namesEnded,$namesPending,$endedIds,$pendingIds){
-        $q = \App\Models\Contract::query();
+        $q = \Modules\Contracts\Entities\Contract::query();
         if ($statusIdCol) {
             $excludeIds = array_merge($endedIds, $pendingIds);
             if (!empty($excludeIds)) {

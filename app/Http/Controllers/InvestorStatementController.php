@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Investor;
-use App\Models\Contract;
+use Modules\Contracts\Entities\Contract;
 use App\Services\InvestorDataService;
 
 class InvestorStatementController extends Controller

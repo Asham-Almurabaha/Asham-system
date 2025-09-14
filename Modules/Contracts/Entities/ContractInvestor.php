@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Contracts\Entities;
 
+use App\Models\Investor;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

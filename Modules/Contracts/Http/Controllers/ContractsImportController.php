@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Contracts\Http\Controllers;
 
-use App\Exports\ContractsFailuresFixExport;
-use App\Exports\ContractsTemplateExport;
-use App\Imports\ContractsImport;
+use Modules\Contracts\Exports\ContractsFailuresFixExport;
+use Modules\Contracts\Exports\ContractsTemplateExport;
+use App\Http\Controllers\Controller;
+use Modules\Contracts\Imports\ContractsImport;
+use App\Support\ImportFailureFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;

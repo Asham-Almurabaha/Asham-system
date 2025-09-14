@@ -1,7 +1,14 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Contracts\Entities;
 
+use App\Models\Customer;
+use App\Models\Guarantor;
+use App\Models\InstallmentType;
+use App\Models\Investor;
+use App\Models\InvestorTransaction;
+use App\Models\OfficeTransaction;
+use App\Models\ProductType;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -97,9 +104,9 @@ class Contract extends Model
     }
 
     public function officeTransactions()
-{
-    return $this->hasMany(OfficeTransaction::class, 'contract_id');
-}
+    {
+        return $this->hasMany(OfficeTransaction::class, 'contract_id');
+    }
 
 
 }

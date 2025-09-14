@@ -75,16 +75,16 @@ class InstallmentsMonthlyService
         }
 
         // لو مطلوب ملخص لمستثمر معيّن: اربط بجدول الـpivot الخاص بالعقود/المستثمرين
-        if ($investorId) {
-            $pivotTable = null;
-            try {
-                if (class_exists(\App\Models\Contract::class)) {
-                    // اسم الجدول ديناميكيًا من العلاقة
-                    $pivotTable = (new \App\Models\Contract)->investors()->getTable(); // مثال: contract_investor
-                }
-            } catch (\Throwable $e) {
+            if ($investorId) {
                 $pivotTable = null;
-            }
+                try {
+                    if (class_exists(\Modules\Contracts\Entities\Contract::class)) {
+                        // اسم الجدول ديناميكيًا من العلاقة
+                        $pivotTable = (new \Modules\Contracts\Entities\Contract)->investors()->getTable(); // مثال: contract_investor
+                    }
+                } catch (\Throwable $e) {
+                    $pivotTable = null;
+                }
 
             if ($pivotTable && Schema::hasTable($pivotTable)) {
                 $q->join($pivotTable.' as piv', 'piv.contract_id', '=', 'ci.contract_id')

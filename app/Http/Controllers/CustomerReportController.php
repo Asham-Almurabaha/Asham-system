@@ -12,8 +12,8 @@ class CustomerReportController extends Controller
     {
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
         $endedStatusIds = [];
-        if (class_exists(\App\Models\ContractStatus::class)) {
-            $endedStatusIds = \App\Models\ContractStatus::query()
+        if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
+            $endedStatusIds = \Modules\Contracts\Entities\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
                 ->pluck('id')
                 ->all();
@@ -127,8 +127,8 @@ class CustomerReportController extends Controller
     {
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
         $endedStatusIds = [];
-        if (class_exists(\App\Models\ContractStatus::class)) {
-            $endedStatusIds = \App\Models\ContractStatus::query()
+        if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
+            $endedStatusIds = \Modules\Contracts\Entities\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
                 ->pluck('id')
                 ->all();

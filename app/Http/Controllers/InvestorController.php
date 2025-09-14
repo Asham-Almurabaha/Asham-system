@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ContractStatus;
+use Modules\Contracts\Entities\ContractStatus;
 use App\Models\Investor;
 use App\Models\Nationality;
 use App\Models\Title;

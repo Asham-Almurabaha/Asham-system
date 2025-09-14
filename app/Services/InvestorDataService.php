@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Investor;
-use App\Models\ContractStatus;
 use App\Models\LedgerEntry;
+use Modules\Contracts\Entities\ContractStatus;
 
 class InvestorDataService
 {

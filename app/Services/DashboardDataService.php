@@ -4,9 +4,9 @@ namespace App\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Models\Contract;
-use App\Models\ContractStatus;
 use App\Models\LedgerEntry;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractStatus;
 use App\Models\BankAccount;
 use App\Models\Safe;
 use App\Models\Investor;
