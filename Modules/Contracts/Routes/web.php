@@ -14,6 +14,9 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
     Route::post('/basic', [ContractsImportController::class, 'storeBasic'])->name('import.basic');
     Route::get('/investors', [ContractsImportController::class, 'createInvestors'])->name('import.investors.form');
     Route::post('/investors', [ContractsImportController::class, 'storeInvestors'])->name('import.investors');
+    Route::get('/payments', [ContractsImportController::class, 'createPayments'])->name('import.payments.form');
+    Route::post('/payments', [ContractsImportController::class, 'storePayments'])->name('import.payments');
+
     Route::get('/template', [ContractsImportController::class, 'template'])->name('import.template');
     Route::get('/failures/fix', [ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
 });
