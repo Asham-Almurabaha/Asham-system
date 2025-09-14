@@ -5,6 +5,7 @@ use Modules\Contracts\Http\Controllers\ContractController;
 use Modules\Contracts\Http\Controllers\ContractInstallmentController;
 use Modules\Contracts\Http\Controllers\ContractReportController;
 use Modules\Contracts\Http\Controllers\ContractsImportController;
+use Modules\Contracts\Http\Controllers\ContractsExportController;
 
 // استيراد العقود
 Route::prefix('contracts/import')->name('contracts.')->group(function () {
@@ -39,4 +40,7 @@ Route::get('reports/contracts/without-investor', [ContractReportController::clas
 Route::get('/contracts/{contract}/print', [ContractReportController::class, 'show'])->name('contracts.print');
 Route::get('/contracts/{contract}/closure', [ContractReportController::class, 'closure'])->name('contracts.closure');
 Route::get('/contracts/{contract}/paid', [ContractReportController::class, 'paidInstallments'])->name('contracts.paid');
+
+// تصدير أمثلة العقود
+Route::get('contracts/export/basic', [ContractsExportController::class, 'basic'])->name('contracts.export.basic');
 
