@@ -19,7 +19,7 @@
             @csrf
 
             {{-- نموذج موحّد --}}
-            @include('contracts._form')
+            @include('contracts::_form')
 
             <div class="mt-3">
                 <button type="submit" class="btn btn-outline-success">@lang('app.Save')</button>

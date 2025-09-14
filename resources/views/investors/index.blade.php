@@ -172,8 +172,6 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('Name') }}</th>
-                        <th>{{ __('National ID') }}</th>
-                        <th>{{ __('Phone') }}</th>
                         <th>{{ __('Current Liquidity') }}</th>
                         <th>{{ __('Active Contracts') }}</th>
                         <th>{{ __('Remaining In Active') }}</th>
@@ -189,8 +187,6 @@
                                     {{ $investor->name }}
                                 </a>
                             </td>
-                            <td dir="ltr">{{ $investor->national_id ?? '—' }}</td>
-                            <td dir="ltr">{{ $investor->phone ?? '—' }}</td>
                             <td>{{ number_format((float)($liquidityByInvestor[$investor->id] ?? 0), 2) }}</td>
                             <td>{{ number_format((int)($activeCountByInvestor[$investor->id] ?? 0)) }}</td>
                             <td>{{ number_format((float)($remainingByInvestor[$investor->id] ?? 0), 2) }}</td>
