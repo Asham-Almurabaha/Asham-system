@@ -10,7 +10,6 @@ return array (
   'Add Investor' => 'Add Investor',
   'Export Failures' => 'Export Failures',
   'Reports' => 'Reports',
-  'Total Investors ? All System' => 'Total Investors — All System',
   'Investors Liquidity Report' => 'Investors Liquidity Report',
   'Results' => 'Results',
   'Filter' => 'Filter',

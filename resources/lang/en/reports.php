@@ -32,6 +32,7 @@ return [
     'Net Profit' => 'Net Profit',
     'Contract' => 'Contract',
     'No matching data.' => 'No matching data.',
+    'Total Value' => 'Total Value',
     'Investor Statement' => 'Investor Statement',
     'Total Remaining in Active Contracts' => 'Total Remaining in Active Contracts',
     'Delinquent Contracts Count' => 'Delinquent Contracts Count',

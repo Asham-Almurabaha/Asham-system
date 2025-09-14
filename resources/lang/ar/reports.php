@@ -33,6 +33,7 @@ return [
     'Contract' => 'العقد',
     'No matching data.' => 'لا توجد بيانات مطابقة.',
     'Total Value' => 'إجمالي قيمة العقود',
+    'Investor Statement' => 'كشف حساب المستثمر',
     'Total Remaining in Active Contracts' => 'اجمالي المتبقي من العقود النشطة',
     'Delinquent Contracts Count' => 'عدد العقود المتعثرة',
     'Total Remaining in Delinquent Contracts' => 'اجمالي المتبقي في العقود المتعثرة',
