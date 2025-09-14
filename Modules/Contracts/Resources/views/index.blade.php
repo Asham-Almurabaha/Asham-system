@@ -380,6 +380,9 @@
         <a href="{{ route('contracts.import.investors.form') }}" class="btn btn-outline-primary">
             <i class="bi bi-upload"></i> {{ __('Import Investors Excel') }}
         </a>
+        <a href="{{ route('contracts.import.payments.form') }}" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> {{ __('Import Payments Excel') }}
+        </a>
       @endrole
     </div>
 
