@@ -7,6 +7,7 @@ use Modules\Contracts\Exports\ContractsTemplateExport;
 use App\Http\Controllers\Controller;
 use Modules\Contracts\Imports\ContractsImport;
 use Modules\Contracts\Imports\ContractsBasicImport;
+use Modules\Contracts\Imports\ContractInvestorsImport;
 use App\Support\ImportFailureFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -51,6 +52,24 @@ class ContractsImportController extends Controller
         }
 
         return view('contracts.import_basic');
+    }
+
+    /**
+     * فورم استيراد مستثمري العقود.
+     */
+    public function createInvestors(Request $request)
+    {
+        $keep = session()->has('import_investors_just_done') || $request->boolean('keep', false);
+
+        if (!$keep) {
+            session()->forget([
+                'contracts_investors_import.summary',
+                'contracts_investors_import.failures_simple',
+                'contracts_investors_import.errors_simple',
+            ]);
+        }
+
+        return view('contracts.import_investors');
     }
 
     /**
@@ -246,6 +265,97 @@ class ContractsImportController extends Controller
         } catch (\Throwable $e) {
             report($e);
             return redirect()->route('contracts.import.basic.form')
+                ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * تنفيذ استيراد مستثمري العقود.
+     */
+    public function storeInvestors(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240',
+        ]);
+
+        $import = new ContractInvestorsImport();
+
+        try {
+            Excel::import($import, $request->file('file'));
+
+            $failedValidation = method_exists($import, 'getFailedValidationCount')
+                ? (int) $import->getFailedValidationCount()
+                : 0;
+
+            $failuresRaw   = $import->failures();
+            $failuresCount = is_countable($failuresRaw)
+                ? count($failuresRaw)
+                : (method_exists($failuresRaw, 'count') ? (int)$failuresRaw->count() : 0);
+
+            $failedValidation = max($failedValidation, $failuresCount);
+
+            $rowsTotal   = $import->getRowCount() + $failedValidation;
+            $skippedReal = $import->getSkippedCount() + $failedValidation;
+            $updated     = $import->getUpdatedCount();
+            $summary = [
+                'rows'      => $rowsTotal,
+                'inserted'  => 0,
+                'updated'   => $updated,
+                'unchanged' => 0,
+                'skipped'   => $skippedReal,
+                'changed'   => $updated,
+            ];
+
+            $iter = $failuresRaw instanceof Collection ? $failuresRaw : collect($failuresRaw);
+            $traitSimple = $iter->map(function ($f) {
+                if (is_object($f) && method_exists($f, 'row')) {
+                    $attr = $f->attribute();
+                    return [
+                        'row'       => (int) $f->row(),
+                        'attribute' => is_array($attr) ? implode(',', $attr) : (string) $attr,
+                        'messages'  => implode(' | ', (array) $f->errors()),
+                        'values'    => (array) $f->values(),
+                    ];
+                }
+                if (is_array($f)) {
+                    $attr = $f['attribute'] ?? '';
+                    $errs = $f['errors'] ?? [];
+                    return [
+                        'row'       => (int) ($f['row'] ?? 0),
+                        'attribute' => is_array($attr) ? implode(',', $attr) : (string) $attr,
+                        'messages'  => implode(' | ', (array) $errs),
+                        'values'    => (array)($f['values'] ?? []),
+                    ];
+                }
+                return [
+                    'row'       => 0,
+                    'attribute' => '',
+                    'messages'  => 'Unknown failure format',
+                    'values'    => [],
+                ];
+            })->all();
+
+            $customSimple = (array) $import->getFailuresSimple();
+            $failuresSimple = array_values(array_merge($traitSimple, $customSimple));
+
+            session()->forget([
+                'contracts_investors_import.summary',
+                'contracts_investors_import.failures_simple',
+                'contracts_investors_import.errors_simple',
+            ]);
+            session()->put('contracts_investors_import.summary',        $summary);
+            session()->put('contracts_investors_import.failures_simple', $failuresSimple);
+            session()->put('contracts_investors_import.errors_simple',  (array) $import->getErrorsSimple());
+            session()->save();
+
+            return redirect()->route('contracts.import.investors.form')
+                ->with('success', "تم تحديث مستثمري {$updated} عقد — إجمالي: {$rowsTotal}، متخطى: {$skippedReal}")
+                ->with('summary', $summary)
+                ->with('import_investors_just_done', true);
+
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('contracts.import.investors.form')
                 ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()]);
         }
     }

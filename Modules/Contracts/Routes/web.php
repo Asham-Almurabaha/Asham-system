@@ -12,6 +12,8 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
     Route::post('/', [ContractsImportController::class, 'store'])->name('import');
     Route::get('/basic', [ContractsImportController::class, 'createBasic'])->name('import.basic.form');
     Route::post('/basic', [ContractsImportController::class, 'storeBasic'])->name('import.basic');
+    Route::get('/investors', [ContractsImportController::class, 'createInvestors'])->name('import.investors.form');
+    Route::post('/investors', [ContractsImportController::class, 'storeInvestors'])->name('import.investors');
     Route::get('/template', [ContractsImportController::class, 'template'])->name('import.template');
     Route::get('/failures/fix', [ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
 });
