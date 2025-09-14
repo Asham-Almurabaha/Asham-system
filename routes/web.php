@@ -69,6 +69,8 @@ Route::middleware('auth')->group(function () {
     });
 
     // CRUDات رئيسية
+    require base_path('Modules/Customers/Routes/web.php');
+    require base_path('Modules/Guarantors/Routes/web.php');
     require base_path('Modules/Investors/Routes/web.php');
     require base_path('Modules/Contracts/Routes/web.php');
 

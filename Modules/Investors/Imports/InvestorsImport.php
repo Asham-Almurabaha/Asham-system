@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Imports;
+namespace Modules\Investors\Imports;
 
 use App\Models\Nationality;
 use App\Models\Title;

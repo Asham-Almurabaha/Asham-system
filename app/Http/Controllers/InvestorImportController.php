@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\InvestorsFailuresFixExport;
-use App\Exports\InvestorsSkippedExport;
-use App\Exports\InvestorsTemplateExport;
-use App\Imports\InvestorsImport;
+use Modules\Investors\Exports\InvestorsFailuresFixExport;
+use Modules\Investors\Exports\InvestorsSkippedExport;
+use Modules\Investors\Exports\InvestorsTemplateExport;
+use Modules\Investors\Imports\InvestorsImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
@@ -140,9 +140,9 @@ class InvestorImportController extends Controller
         if ($skipped  instanceof Collection) $skipped  = $skipped->all();
 
         // لو عندك كلاس متعدد الشيتات
-        if (class_exists(\App\Exports\InvestorsIssuesExport::class)) {
+        if (class_exists(\Modules\Investors\Exports\InvestorsIssuesExport::class)) {
             return Excel::download(
-                new \App\Exports\InvestorsIssuesExport(
+                new \Modules\Investors\Exports\InvestorsIssuesExport(
                     is_array($failures) ? $failures : (array)$failures,
                     is_array($skipped)  ? $skipped  : (array)$skipped
                 ),
