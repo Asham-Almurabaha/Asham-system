@@ -1,14 +1,9 @@
 <?php
 
 use App\Http\Controllers\AjaxAccountController;
-use App\Http\Controllers\AjaxInvestorController;
 use App\Http\Controllers\AjaxProductTypeController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\InvestorController;
-use App\Http\Controllers\InvestorImportController;
-use App\Http\Controllers\InvestorReportController;
-use App\Http\Controllers\InvestorTransactionController;
 use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LedgerController;
@@ -65,14 +60,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('categories', CategoryController::class);
     });
 
-    // استيراد المستثمرين
-    Route::prefix('investors/import')->name('investors.')->group(function () {
-        Route::get('/',               [InvestorImportController::class, 'create'])->name('import.form');
-        Route::post('/',              [InvestorImportController::class, 'store'])->name('import');
-        Route::get('/template',       [InvestorImportController::class, 'template'])->name('import.template');
-        Route::get('/failures/fix',   [InvestorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-    });
-
     // استيراد القيود
     Route::prefix('ledger/import')->name('ledger.')->group(function () {
         Route::get('/',               [LedgerEntriesImportController::class, 'create'])->name('import.form');
@@ -82,9 +69,8 @@ Route::middleware('auth')->group(function () {
     });
 
     // CRUDات رئيسية
-    Route::resource('investors', InvestorController::class);
+    require base_path('Modules/Investors/Routes/web.php');
     require base_path('Modules/Contracts/Routes/web.php');
-    Route::resource('investor-transactions', InvestorTransactionController::class);
 
     // القيود
     Route::prefix('ledger')->name('ledger.')->group(function () {
@@ -100,30 +86,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])
         ->name('product-types.available');
 
-    Route::get('/investors/{investor}/cash', [AjaxInvestorController::class, 'liquidity'])
-        ->name('investors.cash');
-
-    Route::get('/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
-        ->name('investors.liquidity');
-
-    Route::get('/investors/{investor}/statement', [InvestorReportController::class, 'statement'])
-        ->name('investors.statement.statement');
-
-    Route::get('investors/{investor}/withdrawals', [InvestorReportController::class, 'withdrawals'])
-        ->name('investors.withdrawals.withdrawals');
-
-    Route::get('investors/{investor}/deposits', [InvestorReportController::class, 'deposits'])
-        ->name('investors.deposits.deposits');
-
-    Route::get('investors/{investor}/transactions', [InvestorReportController::class, 'transactions'])
-        ->name('investors.transactions.transactions');
-
-    Route::get('reports/investors/Allliquidity', [InvestorReportController::class, 'allliquidity'])
-        ->name('reports.investors.Allliquidity');
-
-        
-    Route::get('/ajax/investors/{investor}/liquidity', [AjaxInvestorController::class, 'liquidity'])
-        ->name('ajax.investors.liquidity');
     // سجلات التدقيق
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
 

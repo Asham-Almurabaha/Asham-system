@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\InvestorTransaction;
-use App\Models\Investor;
 use App\Models\TransactionStatus;
+use Modules\Investors\Entities\Investor;
+use Modules\Investors\Entities\InvestorTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 

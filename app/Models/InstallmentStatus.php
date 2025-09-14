@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Investors\Entities\InvestorTransaction;
 
 class InstallmentStatus extends Model
 {

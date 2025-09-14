@@ -159,7 +159,7 @@ class InstallmentsMonthlyService
     /**
      * واجهة مختصرة لبناء ملخص الشهر لمستثمر معيّن.
      *
-     * @param  \App\Models\Investor|int $investorOrId
+     * @param  \Modules\Investors\Entities\Investor|int $investorOrId
      * @param  int|null  $month
      * @param  int|null  $year
      * @param  array     $excludeStatusNames

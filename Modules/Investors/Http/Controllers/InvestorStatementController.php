@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Investors\Http\Controllers;
 
-use App\Models\Investor;
+use App\Http\Controllers\Controller;
 use Modules\Contracts\Entities\Contract;
-use App\Services\InvestorDataService;
+use Modules\Investors\Entities\Investor;
+use Modules\Investors\Services\InvestorDataService;
 
 class InvestorStatementController extends Controller
 {

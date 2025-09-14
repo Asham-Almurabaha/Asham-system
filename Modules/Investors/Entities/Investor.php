@@ -1,10 +1,15 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Investors\Entities;
 
+use App\Models\LedgerEntry;
+use App\Models\Nationality;
+use App\Models\OfficeTransaction;
+use App\Models\Title;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Contracts\Entities\Contract;
 
 class Investor extends Model
 {
@@ -38,8 +43,7 @@ class Investor extends Model
     {
         return $this->belongsToMany(Contract::class, 'contract_investor')
                         ->withPivot(['share_percentage', 'share_value'])
-                  
-                    ->withTimestamps();
+                        ->withTimestamps();
     }
 
     public function transactions()
@@ -48,11 +52,12 @@ class Investor extends Model
     }
 
     public function officeTransactions()
-{
-    return $this->hasMany(OfficeTransaction::class, 'investor_id');
-}
-public function ledgerEntries() {
-    return $this->hasMany(LedgerEntry::class); 
-}
+    {
+        return $this->hasMany(OfficeTransaction::class, 'investor_id');
+    }
 
+    public function ledgerEntries()
+    {
+        return $this->hasMany(LedgerEntry::class);
+    }
 }

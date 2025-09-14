@@ -4,11 +4,11 @@ namespace Modules\Contracts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\InstallmentStatus;
-use App\Models\InvestorTransaction;
 use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
+use Modules\Investors\Entities\InvestorTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;

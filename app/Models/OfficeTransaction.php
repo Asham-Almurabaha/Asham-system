@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Investors\Entities\Investor;
 
 class OfficeTransaction extends Model
 {

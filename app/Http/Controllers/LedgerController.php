@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BankAccount;
-use App\Models\Investor;
 use App\Models\LedgerEntry;
+use Modules\Investors\Entities\Investor;
 // use App\Models\Product; // ❌ لم نعد نستخدمه
 use App\Models\ProductTransaction;
 use App\Models\ProductType;

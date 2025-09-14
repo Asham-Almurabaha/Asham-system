@@ -2,7 +2,7 @@
 
 namespace Modules\Contracts\Entities;
 
-use App\Models\Investor;
+use Modules\Investors\Entities\Investor;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

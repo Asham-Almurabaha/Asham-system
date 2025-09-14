@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Investor;
 use App\Models\LedgerEntry;
+use Modules\Investors\Entities\Investor;
 use Illuminate\Http\Request;
 
 class AjaxInvestorController extends Controller

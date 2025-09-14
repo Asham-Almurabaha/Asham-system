@@ -3,8 +3,8 @@
 namespace Modules\Contracts\Entities;
 
 use App\Models\InstallmentStatus;
-use App\Models\InvestorTransaction;
 use App\Models\OfficeTransaction;
+use Modules\Investors\Entities\InvestorTransaction;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

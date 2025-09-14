@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Investors\Http\Controllers;
 
-use Modules\Contracts\Entities\ContractStatus;
-use App\Models\Investor;
+use App\Http\Controllers\Controller;
+use App\Models\LedgerEntry;
 use App\Models\Nationality;
 use App\Models\Title;
 use App\Services\InstallmentsMonthlyService;
-use App\Services\InvestorDataService;
+use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use App\Models\LedgerEntry;
-use Illuminate\Contracts\Validation\Rule;
-
+use Modules\Contracts\Entities\ContractStatus;
+use Modules\Investors\Entities\Investor;
+use Modules\Investors\Services\InvestorDataService;
 
 class InvestorController extends Controller
 {
@@ -118,57 +118,26 @@ class InvestorController extends Controller
                 return $g->pluck('contract_id')->unique()->count();
             });
 
-            $contractIds = $rows->pluck('contract_id')->unique()->values();
-
-            // Paid-in per (investor,contract)
-            $paid = LedgerEntry::query()
-                ->whereIn('investor_id', $ids)
-                ->whereIn('contract_id', $contractIds)
-                ->where('direction', 'in')
-                ->groupBy('investor_id','contract_id')
-                ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
-                ->get()
-                ->groupBy('investor_id')
-                ->map(function($g){
-                    return $g->pluck('paid_in','contract_id');
-                });
-
-            $pctOfficeByInvestor = $investors->pluck('office_share_percentage','id');
-
-            foreach ($rows as $r) {
-                $invId = (int)$r->investor_id;
-                $sharePct = (float) ($r->share_percentage ?? 0);
-                $shareVal = (float) ($r->share_value ?? 0);
-                if ($shareVal <= 0 && isset($r->contract_value)) {
-                    $shareVal = round(((float)$r->contract_value) * $sharePct / 100, 2);
-                }
-                $profitGross = isset($r->investor_profit)
-                    ? round(((float)$r->investor_profit) * $sharePct / 100, 2)
-                    : 0.0;
-                $pctOffice = (float) ($pctOfficeByInvestor[$invId] ?? 0);
-                $officeCut = round($profitGross * $pctOffice / 100, 2);
-                $profitNet = $profitGross - $officeCut;
-                $investorDue = $shareVal + $profitNet;
-
-                $paidIn = (float) (($paid[$invId][$r->contract_id] ?? 0.0));
-                $remaining = round($investorDue - $paidIn, 2);
-                $remainingByInvestor[$invId] = ($remainingByInvestor[$invId] ?? 0.0) + $remaining;
-            }
+            // Remaining amount per investor
+            $remainingByInvestor = $rows->groupBy('investor_id')->map(function($g){
+                return $g->reduce(function($carry,$item){
+                    $shareVal = (float) ($item->share_value ?? 0);
+                    $sharePct = (float) ($item->share_percentage ?? 0);
+                    if ($shareVal <= 0 && $item->contract_value) {
+                        $shareVal = round(((float)$item->contract_value) * $sharePct / 100, 2);
+                    }
+                    $profitGross = isset($item->investor_profit)
+                        ? round(((float)$item->investor_profit) * $sharePct / 100, 2)
+                        : 0.0;
+                    return $carry + $shareVal + $profitGross;
+                }, 0);
+            });
         }
 
-        return view('investors.index', compact(
-            'investors',
-            'investorsTotalAll',
-            'activeInvestorsTotalAll',
-            'newInvestorsThisMonthAll',
-            'newInvestorsThisWeekAll',
-            'liquidityByInvestor',
-            'activeCountByInvestor',
-            'remainingByInvestor',
-        ));
+        $nationalities = Nationality::all();
+        $titles = Title::all();
+        return view('investors.index', compact('investors', 'nationalities', 'titles', 'investorsTotalAll', 'activeInvestorsTotalAll', 'newInvestorsThisMonthAll', 'newInvestorsThisWeekAll', 'liquidityByInvestor', 'activeCountByInvestor', 'remainingByInvestor'));
     }
-
-
 
     public function create()
     {
@@ -181,7 +150,7 @@ class InvestorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:investors,name,',
-            'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,',
+            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,',
             'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:investors,phone,',
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
@@ -205,8 +174,8 @@ class InvestorController extends Controller
         return redirect()->route('investors.index')->with('success', 'تم إضافة المستثمر بنجاح');
     }
 
-    public function show(Request $request,Investor $investor,InvestorDataService $service,InstallmentsMonthlyService $installmentsSvc)
-     {
+    public function show(Request $request, Investor $investor, InvestorDataService $service, InstallmentsMonthlyService $installmentsSvc)
+    {
         // بيانات العرض الأساسية (توافق مع نسخ PHP لا تدعم named args)
         try {
             $data = $service->build($investor, currencySymbol: 'ر.س');
@@ -239,7 +208,6 @@ class InvestorController extends Controller
         ] + $data);
     }
 
-
     public function edit(Investor $investor)
     {
         $nationalities = Nationality::all();
@@ -251,7 +219,7 @@ class InvestorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:investors,name,' . $investor->id,
-            'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,'. $investor->id,
+            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,' . $investor->id,
             'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:investors,phone,' . $investor->id,
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',

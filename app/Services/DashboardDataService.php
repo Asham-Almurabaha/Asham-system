@@ -9,7 +9,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractStatus;
 use App\Models\BankAccount;
 use App\Models\Safe;
-use App\Models\Investor;
+use Modules\Investors\Entities\Investor;
 
 class DashboardDataService
 {
