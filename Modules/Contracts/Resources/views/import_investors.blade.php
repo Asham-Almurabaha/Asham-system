@@ -182,3 +182,75 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  const dropzone  = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const fileName  = document.getElementById('fileName');
+  const fileMeta  = document.getElementById('fileMeta');
+  const fileError = document.getElementById('fileError');
+  const submitBtn = document.getElementById('submitBtn');
+
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  const okExt = ['xlsx','xls','csv'];
+
+  function fmtSize(bytes){
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/1024/1024).toFixed(1) + ' MB';
+  }
+
+  function validate(file){
+    fileError.classList.add('d-none');
+    fileError.textContent = '';
+    submitBtn.disabled = true;
+    if (!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!okExt.includes(ext)) {
+      fileError.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv';
+      fileError.classList.remove('d-none');
+      return;
+    }
+    if (file.size > MAX_SIZE) {
+      fileError.textContent = 'حجم الملف يتجاوز 10MB.';
+      fileError.classList.remove('d-none');
+      return;
+    }
+    submitBtn.disabled = false;
+  }
+
+  if (dropzone && fileInput) {
+    ['dragenter','dragover'].forEach(ev =>
+      dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); })
+    );
+    ['dragleave','drop'].forEach(ev =>
+      dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); })
+    );
+
+    dropzone.addEventListener('drop', e => {
+      if (e.dataTransfer?.files?.length) {
+        fileInput.files = e.dataTransfer.files;
+        const f = e.dataTransfer.files[0];
+        fileName.textContent = f.name;
+        fileMeta.textContent = ' (' + fmtSize(f.size) + ')';
+        validate(f);
+      } else {
+        fileInput.value = '';
+        fileName.textContent = '—';
+        fileMeta.textContent = '';
+        validate(null);
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      const f = fileInput.files?.[0];
+      fileName.textContent = f?.name || '—';
+      fileMeta.textContent = f ? ' (' + fmtSize(f.size) + ')' : '';
+      validate(f || null);
+    });
+  }
+})();
+</script>
+@endpush

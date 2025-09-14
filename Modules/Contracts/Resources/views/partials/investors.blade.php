@@ -22,9 +22,9 @@
     <div class="card-body p-0">
         @if($sumPct < 100)
             <div class="p-3 d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInvestorModal">
+                <a  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInvestorModal">
                     ➕ إضافة مستثمر
-                </button>
+                </a>
             </div>
         @endif
 
@@ -99,7 +99,7 @@
             <span class="save-text">💾 @lang('app.Save')</span>
             <span class="spinner-border spinner-border-sm align-middle ms-2 d-none" role="status" aria-hidden="true"></span>
           </button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@lang('app.Cancel')</button>
+          <a class="btn btn-secondary" data-bs-dismiss="modal">@lang('app.Cancel')</a>
         </div>
       </form>
     </div>
