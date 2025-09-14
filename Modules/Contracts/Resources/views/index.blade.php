@@ -374,6 +374,9 @@
         <a href="{{ route('contracts.import.form') }}" class="btn btn-outline-primary">
             <i class="bi bi-upload"></i> {{ __('Import Excel') }}
         </a>
+        <a href="{{ route('contracts.import.basic.form') }}" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> {{ __('Import Basic Excel') }}
+        </a>
       @endrole
     </div>
 
