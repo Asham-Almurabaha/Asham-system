@@ -24,12 +24,19 @@ class ContractsPaymentsExport implements FromCollection, WithHeadings, ShouldAut
                 ? (int) ceil($remainingAmount / $installmentValue)
                 : 0;
 
-            $rows->push([
-                'contract_number'        => $contract->contract_number,
-                'remaining_amount'       => $remainingAmount,
-                'installment_value'      => $installmentValue,
-                'remaining_installments' => $remainingInstallments,
-            ]);
+            $row = [
+                $contract->contract_number,
+                $remainingAmount,
+                $installmentValue,
+            ];
+
+            for ($n = 1; $n <= 18; $n++) {
+                $installment = $contract->installments->firstWhere('installment_number', $n);
+                $row[] = $installment?->payment_amount ?? '';
+                $row[] = $installment?->payment_date?->toDateString() ?? '';
+            }
+
+            $rows->push($row);
         }
 
         return $rows;
@@ -37,12 +44,18 @@ class ContractsPaymentsExport implements FromCollection, WithHeadings, ShouldAut
 
     public function headings(): array
     {
-        return [
+        $base = [
             'contract_number',
             'remaining_amount',
             'installment_value',
-            'remaining_installments',
         ];
+
+        for ($n = 1; $n <= 18; $n++) {
+            $base[] = "payment{$n}_amount";
+            $base[] = "payment{$n}_date";
+        }
+
+        return $base;
     }
 }
 

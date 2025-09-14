@@ -25,15 +25,19 @@ class ContractsInvestorsExport implements FromCollection, WithHeadings, ShouldAu
                 continue;
             }
 
-            foreach ($contract->investors as $investor) {
-                $rows->push([
-                    'contract_number'       => $contract->contract_number,
-                    'investor_id'           => $investor->id,
-                    'investor_name'         => $investor->name,
-                    'share_percentage'      => $investor->pivot->share_percentage,
-                    'total_share_percentage'=> $total,
-                ]);
+            $row = [
+                'contract_number'        => $contract->contract_number,
+                'total_share_percentage' => $total,
+            ];
+
+            for ($i = 1; $i <= 6; $i++) {
+                $investor = $contract->investors[$i - 1] ?? null;
+                $row["investor{$i}_id"]   = $investor->id ?? '';
+                $row["investor{$i}_name"] = $investor->name ?? '';
+                $row["investor{$i}_pct"]  = $investor->pivot->share_percentage ?? '';
             }
+
+            $rows->push($row);
         }
 
         return $rows;
@@ -41,12 +45,17 @@ class ContractsInvestorsExport implements FromCollection, WithHeadings, ShouldAu
 
     public function headings(): array
     {
-        return [
+        $base = [
             'contract_number',
-            'investor_id',
-            'investor_name',
-            'share_percentage',
             'total_share_percentage',
         ];
+
+        for ($i = 1; $i <= 6; $i++) {
+            $base[] = "investor{$i}_id";
+            $base[] = "investor{$i}_name";
+            $base[] = "investor{$i}_pct";
+        }
+
+        return $base;
     }
 }
