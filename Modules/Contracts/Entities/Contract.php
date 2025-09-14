@@ -2,7 +2,7 @@
 
 namespace Modules\Contracts\Entities;
 
-use App\Models\Customer;
+use Modules\Customers\Entities\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentType;
 use App\Models\Investor;

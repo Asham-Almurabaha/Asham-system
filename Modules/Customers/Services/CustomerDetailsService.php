@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Services;
+namespace Modules\Customers\Services;
 
-use App\Models\Customer;
+use Modules\Customers\Entities\Customer;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Illuminate\Support\Carbon;

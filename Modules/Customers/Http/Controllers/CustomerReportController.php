@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Customers\Http\Controllers;
 
-use App\Models\Customer;
+use App\Http\Controllers\Controller;
+use Modules\Customers\Entities\Customer;
 use App\Models\InstallmentStatus;
 use Illuminate\Support\Facades\Schema;
 

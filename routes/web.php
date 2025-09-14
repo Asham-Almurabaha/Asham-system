@@ -4,9 +4,6 @@ use App\Http\Controllers\AjaxAccountController;
 use App\Http\Controllers\AjaxInvestorController;
 use App\Http\Controllers\AjaxProductTypeController;
 use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\CustomerImportController;
-use App\Http\Controllers\CustomerReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuarantorController;
 use App\Http\Controllers\GuarantorImportController;
@@ -70,14 +67,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('categories', CategoryController::class);
     });
 
-    // استيراد العملاء
-    Route::prefix('customers/import')->name('customers.')->group(function () {
-        Route::get('/',               [CustomerImportController::class, 'create'])->name('import.form');
-        Route::post('/',              [CustomerImportController::class, 'store'])->name('import');
-        Route::get('/template',       [CustomerImportController::class, 'template'])->name('import.template');
-        Route::get('/failures/fix',   [CustomerImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-    });
-
     // استيراد الضامنين
     Route::prefix('guarantors/import')->name('guarantors.')->group(function () {
         Route::get('/',               [GuarantorImportController::class, 'create'])->name('import.form');
@@ -103,7 +92,6 @@ Route::middleware('auth')->group(function () {
     });
 
     // CRUDات رئيسية
-    Route::resource('customers', CustomerController::class);
     Route::resource('guarantors', GuarantorController::class);
     Route::resource('investors', InvestorController::class);
     require base_path('Modules/Contracts/Routes/web.php');
@@ -119,17 +107,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/split/create',     [LedgerController::class, 'splitCreate'])->name('split.create');
         Route::post('/split',           [LedgerController::class, 'splitStore'])->name('split.store');
     });
-
-
-    Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])
-        ->name('reports.customers.delinquent');
-    Route::get('reports/customers/unpaid', [CustomerReportController::class, 'unpaid'])
-        ->name('reports.customers.unpaid');
-    Route::get('reports/customers/active', [CustomerReportController::class, 'active'])
-        ->name('reports.customers.active');
-    Route::get('reports/customers/contracts', [CustomerReportController::class, 'contracts'])
-        ->name('reports.customers.contracts');
-
     // AJAX مساعدة
     Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])
         ->name('product-types.available');

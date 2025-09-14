@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Customers\Http\Controllers;
 
-use App\Exports\CustomersFailuresFixExport;
-use App\Exports\CustomersSkippedExport;
-use App\Exports\CustomersTemplateExport;
-use App\Imports\CustomersImport;
+use App\Http\Controllers\Controller;
+use Modules\Customers\Exports\CustomersFailuresFixExport;
+use Modules\Customers\Exports\CustomersSkippedExport;
+use Modules\Customers\Exports\CustomersTemplateExport;
+use Modules\Customers\Imports\CustomersImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
@@ -133,10 +134,10 @@ class CustomerImportController extends Controller
         if ($failures instanceof Collection) $failures = $failures->all();
         if ($skipped  instanceof Collection) $skipped  = $skipped->all();
 
-        if (class_exists(\App\Exports\CustomersIssuesExport::class)) {
+        if (class_exists(\Modules\Customers\Exports\CustomersIssuesExport::class)) {
             // ملف بشيتين: Failures + Skipped
             return Excel::download(
-                new \App\Exports\CustomersIssuesExport(
+                new \Modules\Customers\Exports\CustomersIssuesExport(
                     is_array($failures) ? $failures : (array)$failures,
                     is_array($skipped)  ? $skipped  : (array)$skipped
                 ),

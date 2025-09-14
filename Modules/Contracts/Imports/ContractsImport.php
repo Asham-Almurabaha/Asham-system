@@ -5,7 +5,7 @@ namespace Modules\Contracts\Imports;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
-use App\Models\Customer;
+use Modules\Customers\Entities\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentStatus;
 use App\Models\InstallmentType;

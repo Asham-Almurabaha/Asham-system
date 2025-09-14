@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Customers\Http\Controllers;
 
-use App\Models\Customer;
+use App\Http\Controllers\Controller;
+use Modules\Customers\Entities\Customer;
 use Modules\Contracts\Entities\ContractInstallment;
 use App\Models\Nationality;
 use App\Models\Title;
-use App\Services\CustomerDetailsService;
+use Modules\Customers\Services\CustomerDetailsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;

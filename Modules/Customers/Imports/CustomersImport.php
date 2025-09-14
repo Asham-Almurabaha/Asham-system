@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Imports;
+namespace Modules\Customers\Imports;
 
-use App\Models\Customer;
+use Modules\Customers\Entities\Customer;
 use App\Models\Nationality;
 use App\Models\Title;
 use Illuminate\Support\Str;

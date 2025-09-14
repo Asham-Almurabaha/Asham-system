@@ -5,7 +5,7 @@ namespace Modules\Contracts\Http\Controllers;
 use App\DTOs\InvestorShare;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
-use App\Models\Customer;
+use Modules\Customers\Entities\Customer;
 use App\Models\Guarantor;
 use App\Models\InstallmentStatus;
 use App\Models\InstallmentType;
