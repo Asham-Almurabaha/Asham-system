@@ -42,93 +42,91 @@ class ContractController extends Controller
     private const DIR_CONTRACT_GUARANTORS  = 'contracts/guarantors';
 
     public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
-{
-    $pivotTable = (new Contract)->investors()->getTable();
+    {
+        // تحدّث حالات العقود قبل تنفيذ الاستعلام لضمان دقّة الفلاتر والنتائج.
+        $this->refreshContractsStatuses();
 
-    // الاستعلام الأساسي للعقود
-    $contractsQuery = Contract::query()
-        ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors']);
+        $pivotTable = (new Contract)->investors()->getTable();
 
-    // فلترة حسب العميل
-    if ($request->filled('customer')) {
-        $name = trim($request->customer);
-        $contractsQuery->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$name}%"));
-    }
+        // الاستعلام الأساسي للعقود
+        $contractsQuery = Contract::query()
+            ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors']);
 
-    // فلترة حسب المستثمر
-    if ($request->filled('investor_id')) {
-        $investorId = $request->investor_id;
-        if ($investorId === '_none') {
-            $contractsQuery->doesntHave('investors');
-        } else {
-            $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.id', $investorId)
+        // فلترة حسب العميل
+        if ($request->filled('customer')) {
+            $name = trim($request->customer);
+            $contractsQuery->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$name}%"));
+        }
+
+        // فلترة حسب المستثمر
+        if ($request->filled('investor_id')) {
+            $investorId = $request->investor_id;
+            if ($investorId === '_none') {
+                $contractsQuery->doesntHave('investors');
+            } else {
+                $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.id', $investorId)
+                    ->where($pivotTable . '.share_percentage', '<=', 100));
+            }
+        } elseif ($request->filled('investor')) {
+            $name = trim($request->investor);
+            $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.name', 'like', "%{$name}%")
                 ->where($pivotTable . '.share_percentage', '<=', 100));
         }
-    } elseif ($request->filled('investor')) {
-        $name = trim($request->investor);
-        $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.name', 'like', "%{$name}%")
-            ->where($pivotTable . '.share_percentage', '<=', 100));
-    }
 
-    // فلترة حسب رقم العقد
-    if ($request->filled('contract_number')) {
-        $number = trim($request->contract_number);
-        $contractsQuery->where('contract_number', 'like', "%{$number}%");
-    }
+        // فلترة حسب رقم العقد
+        if ($request->filled('contract_number')) {
+            $number = trim($request->contract_number);
+            $contractsQuery->where('contract_number', 'like', "%{$number}%");
+        }
 
-    // فلترة حسب حالة العقد
-    if ($request->filled('status')) {
-        $contractsQuery->where('contract_status_id', $request->status);
-    }
+        // فلترة حسب حالة العقد
+        if ($request->filled('status')) {
+            $contractsQuery->where('contract_status_id', $request->status);
+        }
 
-    // فلترة حسب التواريخ
-    if ($request->filled('from')) {
-        $contractsQuery->whereDate('start_date', '>=', $request->from);
-    }
-    if ($request->filled('to')) {
-        $contractsQuery->whereDate('start_date', '<=', $request->to);
-    }
+        // فلترة حسب التواريخ
+        if ($request->filled('from')) {
+            $contractsQuery->whereDate('start_date', '>=', $request->from);
+        }
+        if ($request->filled('to')) {
+            $contractsQuery->whereDate('start_date', '<=', $request->to);
+        }
 
-    $contracts = $contractsQuery->latest()->paginate(10);
+        $contracts = $contractsQuery->latest()->paginate(10);
 
-    // ===== تحديث حالات الأقساط لكل عقد باستخدام نفس لوجيك show() =====
-    foreach ($contracts as $contract) {
-        $this->updateInstallmentsStatuses($contract);
-    }
+        $investors = Investor::orderBy('name')->get(['id', 'name']);
+        $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
 
-    $investors = Investor::orderBy('name')->get(['id', 'name']);
-    $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
+        // ===== ملخص الأقساط =====
+        $m = $request->integer('m') ?: null;
+        $y = $request->integer('y') ?: null;
+        $exclude = ['مؤجل','معتذر'];
+        $investorIdForMonthly = ($request->filled('investor_id') && $request->investor_id !== '_none')
+            ? (int)$request->investor_id
+            : null;
 
-    // ===== ملخص الأقساط =====
-    $m = $request->integer('m') ?: null;
-    $y = $request->integer('y') ?: null;
-    $exclude = ['مؤجل','معتذر'];
-    $investorIdForMonthly = ($request->filled('investor_id') && $request->investor_id !== '_none')
-        ? (int)$request->investor_id
-        : null;
-
-    try {
-        if ($investorIdForMonthly) {
-            if (method_exists($installmentsSvc, 'buildForInvestor')) {
-                $investorModel = Investor::find($investorIdForMonthly);
-                $installmentsMonthly = $installmentsSvc->buildForInvestor($investorModel ?: $investorIdForMonthly, $m, $y, $exclude);
+        try {
+            if ($investorIdForMonthly) {
+                if (method_exists($installmentsSvc, 'buildForInvestor')) {
+                    $investorModel = Investor::find($investorIdForMonthly);
+                    $installmentsMonthly = $installmentsSvc->buildForInvestor($investorModel ?: $investorIdForMonthly, $m, $y, $exclude);
+                } else {
+                    $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude, $investorIdForMonthly);
+                }
             } else {
-                $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude, $investorIdForMonthly);
+                $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
             }
-        } else {
+        } catch (\ArgumentCountError $e) {
             $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
         }
-    } catch (\ArgumentCountError $e) {
-        $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
-    }
 
-    return view('contracts::index', compact(
-        'contracts',
-        'contractStatuses',
-        'investors',
-        'installmentsMonthly'
-    ));
-}
+        return view('contracts::index', compact(
+            'contracts',
+            'contractStatuses',
+            'investors',
+            'installmentsMonthly'
+        ));
+    }
 
 
     public function create()
@@ -809,6 +807,21 @@ class ContractController extends Controller
         }
     }
 
+    private function refreshContractsStatuses(): void
+    {
+        $excludedNames = ['منتهي', 'سداد مبكر', 'مطلوب'];
+        $excludedIds   = ContractStatus::whereIn('name', $excludedNames)->pluck('id')->filter()->all();
+
+        Contract::query()
+            ->when(!empty($excludedIds), fn ($q) => $q->whereNotIn('contract_status_id', $excludedIds))
+            ->with(['investors', 'installments.installmentStatus', 'contractStatus'])
+            ->chunkById(100, function ($contracts) {
+                foreach ($contracts as $contract) {
+                    $this->updateInstallmentsStatuses($contract);
+                }
+            });
+    }
+
     private function updateInstallmentsStatuses(Contract $contract): void
     {
         // ✅ اشتغل بس لما مجموع نسب المستثمرين = 100%
@@ -827,9 +840,18 @@ class ContractController extends Controller
             return;
         }
 
-        $today            = now();
-        $statuses         = InstallmentStatus::pluck('id', 'name');
-        $contractStatuses = ContractStatus::pluck('id', 'name');
+        $today = now();
+
+        static $statuses = null;
+        static $contractStatuses = null;
+
+        if ($statuses === null) {
+            $statuses = InstallmentStatus::pluck('id', 'name')->all();
+        }
+
+        if ($contractStatuses === null) {
+            $contractStatuses = ContractStatus::pluck('id', 'name')->all();
+        }
 
         $lateCount     = 0;
         $maatherCount  = 0;
