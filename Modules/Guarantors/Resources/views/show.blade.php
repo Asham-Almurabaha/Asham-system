@@ -195,12 +195,12 @@
     {{-- ====== صورة الهوية & الملاحظات ====== --}}
     <div class="row g-3">
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card shadow-sm h-100 kpi-card">
                 <div class="card-header bg-white fw-bold">{{ __('guarantors::messages.ID Card Image') }}</div>
                 <div class="card-body">
                     @if($guarantor->id_card_image)
                         <a href="{{ asset('storage/'.$guarantor->id_card_image) }}" target="_blank" title="{{ __('guarantors::messages.View full size image') }}">
-                            <img class="img-thumb" src="{{ asset('storage/'.$guarantor->id_card_image) }}" alt="{{ __('guarantors::messages.ID Card Image') }}">
+                            <img class="img-thumb d-block mx-auto" src="{{ asset('storage/'.$guarantor->id_card_image) }}" alt="{{ __('guarantors::messages.ID Card Image') }}">
                         </a>
                         <div class="small text-muted mt-2">{{ __('guarantors::messages.Click to open the image in a new window') }}</div>
                     @else
@@ -210,7 +210,7 @@
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card shadow-sm h-100 kpi-card">
                 <div class="card-header bg-white fw-bold">{{ __('guarantors::messages.Notes') }}</div>
                 <div class="card-body">
                     <div class="text-wrap" style="white-space: pre-line;">
