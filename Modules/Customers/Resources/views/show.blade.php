@@ -44,8 +44,6 @@
         $nf = fn($n,$d=2) => is_null($n) ? '—' : number_format((float)$n, $d);
     @endphp
 
-    
-
     {{-- ====== HERO ====== --}}
     <div class="profile-hero mb-3">
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">

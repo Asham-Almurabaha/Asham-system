@@ -88,7 +88,7 @@
     </div>
 
     {{-- ====== KPIs ====== --}}
-    <div class="row g-3 mb-2">
+    <div class="row g-3 mb-3">
         <div class="col-12 col-md-4">
             <div class="kpi-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2">
@@ -125,9 +125,9 @@
     </div>
 
     {{-- ====== تفاصيل الكفيل ====== --}}
-    <div class="card border-0 shadow-sm mb-3">
+    <div class="card shadow-sm mb-3 kpi-card">
         <div class="card-header bg-white fw-bold">{{ __('guarantors::messages.Basic Information') }}</div>
-        <div class="card-body">
+        <div class="card-body pt-2">
             <div class="row g-3">
 
                 <div class="col-md-6">
@@ -163,7 +163,7 @@
                         <div class="col-5 label-col">{{ __('guarantors::messages.Phone') }}</div>
                         <div class="col-7 value-col">
                             @if($guarantor->phone)
-                                <a href="tel:{{ $guarantor->phone }}">{{ $guarantor->phone }}</a>
+                                <a href="tel:{{ $guarantor->phone }}" class="text-decoration-none text-dark"><i class="bi bi-telephone me-1"></i>{{ $guarantor->phone }}</a>
                                 <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->phone }}')" title="{{ __('guarantors::messages.Copy') }}">
                                     <i class="bi bi-clipboard"></i>
                                 </button>
@@ -176,7 +176,7 @@
                         <div class="col-5 label-col">{{ __('guarantors::messages.Email') }}</div>
                         <div class="col-7 value-col">
                             @if($guarantor->email)
-                                <a href="mailto:{{ $guarantor->email }}">{{ $guarantor->email }}</a>
+                                <a href="mailto:{{ $guarantor->email }}" class="text-decoration-none text-dark"><i class="bi bi-envelope me-1"></i>{{ $guarantor->email }}</a>
                             @else
                                 <span class="text-muted">—</span>
                             @endif
