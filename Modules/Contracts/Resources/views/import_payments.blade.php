@@ -147,6 +147,60 @@
       <div class="card-body">
         <h5 class="card-title mb-3">أخطاء التحقق ({{ $failuresCount }})</h5>
         <div class="table-responsive">
+          @php
+            $normalizeFailureValue = function ($value, string $separator = ' | ') {
+                if ($value instanceof \Illuminate\Support\Collection) {
+                    $value = $value->all();
+                }
+
+                if (is_array($value)) {
+                    $stringified = array_map(function ($item) {
+                        if ($item instanceof \Illuminate\Support\Collection) {
+                            $item = $item->all();
+                        }
+
+                        if (is_array($item)) {
+                            $encoded = json_encode($item, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            return $encoded === false ? '' : $encoded;
+                        }
+
+                        if ($item instanceof \Stringable || (is_object($item) && method_exists($item, '__toString'))) {
+                            return (string) $item;
+                        }
+
+                        if (is_scalar($item)) {
+                            return (string) $item;
+                        }
+
+                        if ($item === null) {
+                            return '';
+                        }
+
+                        $encoded = json_encode($item, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                        return $encoded === false ? '' : $encoded;
+                    }, $value);
+
+                    return implode($separator, $stringified);
+                }
+
+                if ($value instanceof \Stringable || (is_object($value) && method_exists($value, '__toString'))) {
+                    return (string) $value;
+                }
+
+                if (is_scalar($value)) {
+                    return (string) $value;
+                }
+
+                if ($value === null) {
+                    return '';
+                }
+
+                $encoded = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                return $encoded === false ? '' : $encoded;
+            };
+          @endphp
           <table class="table table-sm table-bordered mb-0">
             <thead class="table-light">
               <tr>
@@ -158,11 +212,48 @@
             </thead>
             <tbody>
               @foreach ($failuresBag as $f)
+                @php
+                  $rowRaw = is_array($f)
+                      ? ($f['row'] ?? null)
+                      : (method_exists($f, 'row')
+                          ? $f->row()
+                          : ($f->row ?? null));
+
+                  $attributeRaw = is_array($f)
+                      ? ($f['attribute'] ?? null)
+                      : (method_exists($f, 'attribute')
+                          ? $f->attribute()
+                          : ($f->attribute ?? null));
+
+                  $messagesRaw = null;
+                  if (is_array($f)) {
+                      $messagesRaw = $f['messages'] ?? ($f['errors'] ?? null);
+                  } else {
+                      if (method_exists($f, 'errors')) {
+                          $messagesRaw = $f->errors();
+                      } elseif (method_exists($f, 'messages')) {
+                          $messagesRaw = $f->messages();
+                      } else {
+                          $messagesRaw = $f->messages ?? ($f->errors ?? null);
+                      }
+                  }
+
+                  $valuesRaw = is_array($f)
+                      ? ($f['values'] ?? null)
+                      : (method_exists($f, 'values')
+                          ? $f->values()
+                          : ($f->values ?? null));
+
+                  $rowValue = $normalizeFailureValue($rowRaw, ', ');
+                  $attributeValue = $normalizeFailureValue($attributeRaw, ', ');
+                  $messagesValue = $normalizeFailureValue($messagesRaw, ' | ');
+                  $valuesValue = $normalizeFailureValue($valuesRaw, ', ');
+                @endphp
                 <tr>
-                  <td>{{ $f['row'] ?? '' }}</td>
-                  <td>{{ $f['attribute'] ?? '' }}</td>
-                  <td>{{ $f['messages'] ?? '' }}</td>
-                  <td>{{ is_array($f['values'] ?? null) ? json_encode($f['values']) : '' }}</td>
+                  <td>{{ $rowValue }}</td>
+                  <td>{{ $attributeValue }}</td>
+                  <td>{{ $messagesValue }}</td>
+                  <td>{{ $valuesValue }}</td>
                 </tr>
               @endforeach
             </tbody>

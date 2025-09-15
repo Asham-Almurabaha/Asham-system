@@ -100,6 +100,11 @@ class InvestorDataService
 
             $paidIn = (float) ($paidToInvestorByContract[$c->id] ?? 0);
 
+            $expectedTotal = $shareVal + $profitNet;
+            $remaining = $expectedTotal - $paidIn;
+            $customerName = $c->customer->name ?? null;
+            $customerId = $c->customer_id ?? ($c->customer->id ?? null);
+
             $totalCapitalShare += $shareVal;
             $totalProfitGross  += $profitGross;
             $totalOfficeCut    += $officeCut;
@@ -109,34 +114,83 @@ class InvestorDataService
             $contractBreakdown[] = [
                 'contract_id'              => $c->id,
                 'contract_number'          => $c->contract_number,
+                'customer_id'              => $customerId,
+                'customer'                 => $customerName,
+                'customer_name'            => $customerName,
                 'share_percentage'         => $sharePct,
+                'share_pct'                => $sharePct,
                 'share_value'              => $shareVal,
                 'profit_gross'             => $profitGross,
                 'office_cut'               => $officeCut,
                 'profit_net'               => $profitNet,
                 'paid_to_investor'         => $paidIn,
+                'paid_to_investor_from_customer' => $paidIn,
+                'remaining_on_customers'   => $remaining,
                 'total_contract_value'     => $c->contract_value,
                 'total_contract_profit'    => $c->investor_profit,
-                'customer_name'            => $c->customer->name ?? null,
                 'contract_status_id'       => $c->contract_status_id,
                 'status_name'              => $c->contractStatus->name ?? null,
             ];
         }
 
+        $totalCapitalShareAll = round($totalCapitalShareAll, 2);
+        $totalProfitGrossAll  = round($totalProfitGrossAll, 2);
+        $totalOfficeCutAll    = round($totalOfficeCutAll, 2);
+        $totalProfitNetAll    = round($totalProfitNetAll, 2);
+
+        $totalCapitalShare    = round($totalCapitalShare, 2);
+        $totalProfitGross     = round($totalProfitGross, 2);
+        $totalOfficeCut       = round($totalOfficeCut, 2);
+        $totalProfitNet       = round($totalProfitNet, 2);
+        $totalPaidPortionToInvestor = round($totalPaidPortionToInvestor, 2);
+        $totalRemainingOnCustomers  = round(($totalCapitalShare + $totalProfitNet) - $totalPaidPortionToInvestor, 2);
+
+        // صافي السيولة الحالية = إجمالي الداخل - إجمالي الخارج (باستثناء قيود المكتب)
+        $liquidityRow = LedgerEntry::query()
+            ->where('investor_id', $investor->id)
+            ->where('is_office', false)
+            ->selectRaw(
+                "COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in, " .
+                "COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out"
+            )
+            ->first();
+
+        $liquidity = 0.0;
+        if ($liquidityRow) {
+            $liquidity = (float) ($liquidityRow->total_in ?? 0) - (float) ($liquidityRow->total_out ?? 0);
+            $liquidity = round($liquidity, 2);
+        }
+
         return [
+            'currencySymbol'            => $currencySymbol,
+            'contractsTotal'            => $contractsTotal,
+            'contractsEnded'            => $contractsEnded,
+            'contractsActive'           => $contractsActive,
+            'liquidity'                 => $liquidity,
+            'initialCapital'            => $totalCapitalShare,
+            'totalCapitalShareAll'      => $totalCapitalShareAll,
+            'totalProfitGrossAll'       => $totalProfitGrossAll,
+            'totalOfficeCutAll'         => $totalOfficeCutAll,
+            'totalProfitNetAll'         => $totalProfitNetAll,
+            'totalCapitalShare'         => $totalCapitalShare,
+            'totalProfitGross'          => $totalProfitGross,
+            'totalOfficeCut'            => $totalOfficeCut,
+            'totalProfitNet'            => $totalProfitNet,
+            'totalPaidPortionToInvestor'=> $totalPaidPortionToInvestor,
+            'totalRemainingOnCustomers' => $totalRemainingOnCustomers,
+            'contractBreakdown'         => $contractBreakdown,
             'totals' => [
-                'capital_share_all' => round($totalCapitalShareAll, 2),
-                'profit_gross_all'  => round($totalProfitGrossAll, 2),
-                'office_cut_all'    => round($totalOfficeCutAll, 2),
-                'profit_net_all'    => round($totalProfitNetAll, 2),
-                'capital_share'     => round($totalCapitalShare, 2),
-                'profit_gross'      => round($totalProfitGross, 2),
-                'office_cut'        => round($totalOfficeCut, 2),
-                'profit_net'        => round($totalProfitNet, 2),
-                'paid_to_investor'  => round($totalPaidPortionToInvestor, 2),
+                'capital_share_all' => $totalCapitalShareAll,
+                'profit_gross_all'  => $totalProfitGrossAll,
+                'office_cut_all'    => $totalOfficeCutAll,
+                'profit_net_all'    => $totalProfitNetAll,
+                'capital_share'     => $totalCapitalShare,
+                'profit_gross'      => $totalProfitGross,
+                'office_cut'        => $totalOfficeCut,
+                'profit_net'        => $totalProfitNet,
+                'paid_to_investor'  => $totalPaidPortionToInvestor,
+                'remaining_on_customers' => $totalRemainingOnCustomers,
             ],
-            'contractBreakdown' => $contractBreakdown,
-            'currencySymbol'    => $currencySymbol,
         ];
     }
 
