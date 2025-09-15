@@ -4,8 +4,6 @@
 @section('report_title', __('reports.Current Investors Liquidity Report'))
 
 @php
-  use Illuminate\Support\Arr;
-
   $cs = $currencySymbol ?? 'ر.س';
 
   $isPaginated = $rows instanceof \Illuminate\Pagination\LengthAwarePaginator;
@@ -21,8 +19,8 @@
   $negCount     = (int) $items->filter(fn($r)=>(float)$r->liquidity < 0)->count();
   $zeroCount    = max(0, $pageCount - $posCount - $negCount);
 
-  $q        = Arr::get($filters ?? [], 'q', '');
-  $perPage  = (int) Arr::get($filters ?? [], 'per_page', 25);
+  $q        = data_get($filters ?? [], 'q', '');
+  $perPage  = (int) data_get($filters ?? [], 'per_page', 25);
 @endphp
 
 @push('styles')
