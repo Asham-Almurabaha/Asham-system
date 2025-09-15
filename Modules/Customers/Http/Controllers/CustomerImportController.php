@@ -3,6 +3,7 @@
 namespace Modules\Customers\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Modules\Customers\Entities\Customer;
 use Modules\Customers\Exports\CustomersFailuresFixExport;
 use Modules\Customers\Exports\CustomersSkippedExport;
 use Modules\Customers\Exports\CustomersTemplateExport;
@@ -48,16 +49,23 @@ class CustomerImportController extends Controller
             $inserted  = $import->getInsertedCount();
             $updated   = $import->getUpdatedCount(); // "تكملة الناقص فقط"
             $unchanged = $import->getUnchangedCount();
+            $pending   = method_exists($import, 'getPendingCount') ? $import->getPendingCount() : 0;
+            $pendingUpdates = method_exists($import, 'getPendingUpdates') ? $import->getPendingUpdates() : [];
+
             $changed   = $inserted + $updated;
 
             $summary = [
                 'rows'       => $rowsTotal,
                 'inserted'   => $inserted,
                 'updated'    => $updated,
+                'pending'    => $pending,
                 'unchanged'  => $unchanged,
                 'skipped'    => $skippedReal,
                 'changed'    => $changed,
             ];
+
+            session()->put('customers_import.summary', $summary);
+            $this->storePendingUpdates(is_array($pendingUpdates) ? $pendingUpdates : []);
 
             // تبسيط الإخفاقات لملف التصحيح
             $iter = $failuresRaw instanceof Collection ? $failuresRaw : collect($failuresRaw);
@@ -95,11 +103,18 @@ class CustomerImportController extends Controller
             // نستخدم flash: تظهر مرة بعد الـ redirect وتختفي مع أول Refresh
             session()->flash('customers_import.failures_simple', $failuresSimple);
             session()->flash('customers_import.skipped_simple',  $skippedSimple);
-            session()->flash('customers_import.summary',         $summary);
+
+            $savedMessage = $inserted > 0
+                ? 'تم حفظ '.$inserted.' عميل جديد.'
+                : 'لا توجد إضافات جديدة.';
+
+            if ($pending > 0) {
+                $savedMessage .= ' توجد '.$pending.' تعديلات بانتظار التأكيد.';
+            }
 
             return redirect()
                 ->route('customers.import.form') // تأكّد من اسم الروت
-                ->with('success', 'تم حفظ فعليًا: '.$changed.' (جديد: '.$inserted.'، تعديل: '.$updated.')')
+                ->with('success', $savedMessage)
                 ->with('summary', $summary)
                 ->with('failures', $failuresRaw)
                 ->with('failures_simple', $failuresSimple)
@@ -159,5 +174,129 @@ class CustomerImportController extends Controller
         }
 
         return Excel::download(new CustomersSkippedExport($skipped), 'customers_skipped.xlsx');
+    }
+
+    public function confirmPending(Request $request, string $token)
+    {
+        $pending = $this->getPendingUpdatesFromSession();
+
+        if (!isset($pending[$token])) {
+            return redirect()->route('customers.import.form')
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+        }
+
+        $entry = $pending[$token];
+        unset($pending[$token]);
+
+        $customerId = $entry['customer_id'] ?? null;
+        $customer   = $customerId ? Customer::find($customerId) : null;
+
+        if (!$customer) {
+            $this->storePendingUpdates($pending);
+            $this->syncPendingSummary($pending, false);
+
+            return redirect()->route('customers.import.form')
+                ->with('info', 'العميل غير موجود، أزيل التعديل من قائمة الانتظار.');
+        }
+
+        $updates = $entry['updates'] ?? [];
+        if (!is_array($updates) || empty($updates)) {
+            $this->storePendingUpdates($pending);
+            $this->syncPendingSummary($pending, false);
+
+            return redirect()->route('customers.import.form')
+                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.');
+        }
+
+        $fillable = array_flip($customer->getFillable());
+        $apply     = [];
+        foreach ($updates as $field => $value) {
+            if (isset($fillable[$field])) {
+                $apply[$field] = $value;
+            }
+        }
+
+        if (empty($apply)) {
+            $this->storePendingUpdates($pending);
+            $this->syncPendingSummary($pending, false);
+
+            return redirect()->route('customers.import.form')
+                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.');
+        }
+
+        $customer->fill($apply);
+
+        $applied = false;
+        if ($customer->isDirty()) {
+            $customer->save();
+            $applied = $customer->wasChanged();
+        }
+
+        $this->storePendingUpdates($pending);
+        $this->syncPendingSummary($pending, $applied);
+
+        if ($applied) {
+            return redirect()->route('customers.import.form')
+                ->with('success', 'تم تأكيد تعديل العميل '.$customer->name.' بنجاح.');
+        }
+
+        return redirect()->route('customers.import.form')
+            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.');
+    }
+
+    public function ignorePending(Request $request, string $token)
+    {
+        $pending = $this->getPendingUpdatesFromSession();
+
+        if (!isset($pending[$token])) {
+            return redirect()->route('customers.import.form')
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+        }
+
+        $entry = $pending[$token];
+        unset($pending[$token]);
+
+        $this->storePendingUpdates($pending);
+        $this->syncPendingSummary($pending, false);
+
+        $name = $entry['customer_name'] ?? 'العميل';
+
+        return redirect()->route('customers.import.form')
+            ->with('info', 'تم تجاهل التعديل للعميل '.$name.'.');
+    }
+
+    private function getPendingUpdatesFromSession(): array
+    {
+        $pending = session('customers_import.pending_updates', []);
+
+        if ($pending instanceof Collection) {
+            return $pending->toArray();
+        }
+
+        return is_array($pending) ? $pending : [];
+    }
+
+    private function storePendingUpdates(array $pending): void
+    {
+        if (empty($pending)) {
+            session()->forget('customers_import.pending_updates');
+            return;
+        }
+
+        session(['customers_import.pending_updates' => $pending]);
+    }
+
+    private function syncPendingSummary(array $pending, bool $appliedUpdate): void
+    {
+        $summary = session('customers_import.summary', []);
+
+        $summary['pending'] = is_countable($pending) ? count($pending) : 0;
+
+        if ($appliedUpdate) {
+            $summary['updated'] = (int) ($summary['updated'] ?? 0) + 1;
+            $summary['changed'] = (int) ($summary['changed'] ?? 0) + 1;
+        }
+
+        session(['customers_import.summary' => $summary]);
     }
 }

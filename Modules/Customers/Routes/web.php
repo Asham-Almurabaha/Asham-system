@@ -11,6 +11,10 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::post('/',              [CustomerImportController::class, 'store'])->name('import');
         Route::get('/template',       [CustomerImportController::class, 'template'])->name('import.template');
         Route::get('/failures/fix',   [CustomerImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+        Route::post('/pending/{token}/confirm', [CustomerImportController::class, 'confirmPending'])
+            ->name('import.pending.confirm');
+        Route::post('/pending/{token}/ignore', [CustomerImportController::class, 'ignorePending'])
+            ->name('import.pending.ignore');
     });
 
     Route::resource('customers', CustomerController::class);
