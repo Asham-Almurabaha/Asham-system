@@ -13,7 +13,7 @@
     </nav>
 </div>
 
-@php
+{{-- @php
     $allTotal    = (int)($investorsTotalAll ?? 0);
     $allActive   = (int)($activeInvestorsTotalAll ?? 0);
     $allInactive = max($allTotal - $allActive, 0);
@@ -23,14 +23,14 @@
 
     $newThisMonthAll = (int)($newInvestorsThisMonthAll ?? 0);
     $newThisWeekAll  = (int)($newInvestorsThisWeekAll  ?? 0);
-@endphp
+@endphp --}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+{{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> --}}
 
 
 
 {{-- ====== كروت عامة ====== --}}
-<div class="row g-4 mb-3" dir="rtl">
+{{-- <div class="row g-4 mb-3" dir="rtl">
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
             <div class="d-flex align-items-center gap-3">
@@ -92,7 +92,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> --}}
 
 {{-- ====== شريط الأدوات + فلاتر ====== --}}
 <div class="card shadow-sm mb-3">

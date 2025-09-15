@@ -201,10 +201,23 @@ class ContractsImport implements ToCollection, WithHeadingRow, WithChunkReading,
         return null;
     }
 
-    private function toDate(?string $v): ?string
+    private function toDate($v): ?string
     {
-        if (!$v) return null;
-        try { return Carbon::parse($v)->format('Y-m-d'); } catch (\Throwable) { return null; }
+        if ($v === null || $v === '') return null;
+
+        if (is_numeric($v) && (float) $v > 10000) {
+            try {
+                $dt = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $v);
+                return Carbon::instance($dt)->format('Y-m-d');
+            } catch (\Throwable) {
+            }
+        }
+
+        try {
+            return Carbon::parse($v)->format('Y-m-d');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function createInstallmentsForContract(Contract $contract, float $totalValue, float $installmentValue, string $base, int $installmentTypeId): void
