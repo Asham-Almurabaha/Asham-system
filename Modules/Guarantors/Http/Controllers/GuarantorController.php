@@ -99,7 +99,7 @@ class GuarantorController extends Controller
         $newGuarantorsThisMonthAll = Guarantor::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
         $newGuarantorsThisWeekAll  = Guarantor::whereBetween('created_at', [now()->startOfWeek(),  now()])->count();
 
-        return view('guarantors.index', compact(
+        return view('guarantors::index', compact(
             'guarantors',
             'guarantorsTotalAll',
             'activeGuarantorsTotalAll',
@@ -112,7 +112,7 @@ class GuarantorController extends Controller
     {
         $nationalities = Nationality::all();
         $titles = Title::all();
-        return view('guarantors.create', compact('nationalities', 'titles'));
+        return view('guarantors::create', compact('nationalities', 'titles'));
     }
 
     public function store(Request $request)
@@ -140,14 +140,14 @@ class GuarantorController extends Controller
 
     public function show(Guarantor $guarantor)
     {
-        return view('guarantors.show', compact('guarantor'));
+        return view('guarantors::show', compact('guarantor'));
     }
 
     public function edit(Guarantor $guarantor)
     {
         $nationalities = Nationality::all();
         $titles = Title::all();
-        return view('guarantors.edit', compact('guarantor', 'nationalities', 'titles'));
+        return view('guarantors::edit', compact('guarantor', 'nationalities', 'titles'));
     }
 
     public function update(Request $request, Guarantor $guarantor)

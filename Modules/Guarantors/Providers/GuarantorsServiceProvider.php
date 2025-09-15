@@ -12,6 +12,7 @@ class GuarantorsServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../Routes/api.php');
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
         $this->loadViewsFrom(__DIR__.'/../Resources/views', 'guarantors');
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang', 'guarantors');
     }
 
     public function register(): void

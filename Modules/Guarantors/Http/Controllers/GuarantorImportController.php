@@ -16,7 +16,7 @@ class GuarantorImportController extends Controller
     public function create()
     {
         // بنسيب السيشن كما هو لعرض نتيجة آخر استيراد بعد الـ redirect
-        return view('guarantors.import');
+        return view('guarantors::import');
     }
 
     public function store(Request $request)
