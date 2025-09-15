@@ -90,7 +90,7 @@
     {{-- ====== KPIs ====== --}}
     <div class="row g-3 mb-2">
         <div class="col-12 col-md-4">
-            <div class="kpi-card p-3">
+            <div class="kpi-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-files fs-5 text-primary"></i></div>
                     <div class="fw-bold text-muted">{{ __('guarantors::messages.Total Guaranteed Contracts') }}</div>
@@ -100,7 +100,7 @@
             </div>
         </div>
         <div class="col-12 col-md-4">
-            <div class="kpi-card p-3">
+            <div class="kpi-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-person-check fs-5 text-success"></i></div>
                     <div class="fw-bold text-muted">{{ __('guarantors::messages.Active Contracts') }}</div>
@@ -113,7 +113,7 @@
             </div>
         </div>
         <div class="col-12 col-md-4">
-            <div class="kpi-card p-3">
+            <div class="kpi-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-clock-history fs-5 text-primary"></i></div>
                     <div class="fw-bold text-muted">{{ __('guarantors::messages.Creation Date / Last Update') }}</div>
