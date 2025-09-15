@@ -6,6 +6,7 @@ use Modules\Contracts\Exports\ContractsFailuresFixExport;
 use Modules\Contracts\Exports\ContractsTemplateExport;
 use Modules\Contracts\Exports\ContractsBasicFailuresFixExport;
 use Modules\Contracts\Exports\ContractsInvestorsFailuresFixExport;
+use Modules\Contracts\Exports\ContractsPaymentsFailuresFixExport;
 use App\Http\Controllers\Controller;
 use Modules\Contracts\Imports\ContractsImport;
 use Modules\Contracts\Imports\ContractsBasicImport;
@@ -566,6 +567,31 @@ class ContractsImportController extends Controller
                 is_array($skipped) ? $skipped : (array)$skipped
             ),
             'contracts_investors_skipped.xlsx'
+        );
+    }
+
+    /**
+     * تنزيل ملف لتصحيح سدادات العقود الفاشلة أو المتخطاة.
+     * يعتمد على البيانات المخزنة في الجلسة بعد عملية استيراد سدادات العقود.
+     */
+    public function exportPaymentsFailuresFix()
+    {
+        $failures = session('contracts_payments_import.failures_simple');
+
+        if ($failures instanceof Collection) {
+            $failures = $failures->all();
+        }
+
+        if (empty($failures) || (is_countable($failures) && count($failures) === 0)) {
+            return redirect()->route('contracts.import.payments.form')
+                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد ملف.');
+        }
+
+        return Excel::download(
+            new ContractsPaymentsFailuresFixExport(
+                is_array($failures) ? $failures : (array) $failures
+            ),
+            'contracts_payments_issues.xlsx'
         );
     }
 }

@@ -60,6 +60,7 @@
     $changed  = (int)($summary['changed']  ?? $inserted);
     $failuresCount = is_array($failuresBag) ? count($failuresBag) : (is_object($failuresBag) && method_exists($failuresBag,'count') ? $failuresBag->count() : 0);
     $hasFailures = $failuresCount > 0;
+    $hasIssues = $hasFailures || $skipped > 0;
   @endphp
 
   @if ($rows || $changed || $skipped)
@@ -137,6 +138,18 @@
           <button id="submitBtn" class="btn btn-primary" disabled>
             <i class="bi bi-upload me-1"></i> ابدأ الاستيراد
           </button>
+          @if ($hasIssues && Route::has('contracts.import.payments.failures.fix'))
+            <a class="btn btn-warning" href="{{ route('contracts.import.payments.failures.fix') }}">
+              <i class="bi bi-wrench-adjustable me-1"></i>
+              تنزيل ملف لتصحيح الصفوف
+              @if ($hasFailures)
+                <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+              @endif
+              @if ($skipped > 0)
+                <span class="badge text-bg-warning ms-1">{{ $skipped }}</span>
+              @endif
+            </a>
+          @endif
         </div>
       </form>
     </div>
