@@ -23,6 +23,8 @@ class ContractInvestorsImport implements ToCollection, WithHeadingRow
     private array $failuresSimple = [];
     /** @var string[] */
     private array $errorsSimple = [];
+    /** @var array<int,array{row:int,values:array,reason:string}> */
+    private array $skippedSimple = [];
 
     public function collection(Collection $rows)
     {
@@ -67,6 +69,12 @@ class ContractInvestorsImport implements ToCollection, WithHeadingRow
             'values' => $values,
             'messages' => $messages,
         ];
+
+        $this->skippedSimple[] = [
+            'row'    => $row,
+            'values' => $values,
+            'reason' => implode(' | ', $messages),
+        ];
     }
 
     public function getRowCount(): int { return $this->rows; }
@@ -74,4 +82,5 @@ class ContractInvestorsImport implements ToCollection, WithHeadingRow
     public function getSkippedCount(): int { return $this->skipped; }
     public function getFailuresSimple(): array { return $this->failuresSimple; }
     public function getErrorsSimple(): array { return $this->errorsSimple; }
+    public function skipped(): array { return $this->skippedSimple; }
 }

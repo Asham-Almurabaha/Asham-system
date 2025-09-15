@@ -51,6 +51,10 @@
     if ($failuresBag instanceof \Illuminate\Support\Collection) {
         $failuresBag = $failuresBag->all();
     }
+    $skippedBag  = session('contracts_investors_import.skipped_simple') ?? [];
+    if ($skippedBag instanceof \Illuminate\Support\Collection) {
+        $skippedBag = $skippedBag->all();
+    }
     $summary      = session('summary') ?: session('contracts_investors_import.summary') ?: [];
     $errorsSimple = session('errors_simple') ?? session('contracts_investors_import.errors_simple') ?? [];
     $rows    = (int)($summary['rows']    ?? 0);
@@ -58,7 +62,9 @@
     $skipped = (int)($summary['skipped'] ?? 0);
     $changed = (int)($summary['changed'] ?? $updated);
     $failuresCount = is_array($failuresBag) ? count($failuresBag) : (is_object($failuresBag) && method_exists($failuresBag,'count') ? $failuresBag->count() : 0);
+    $skippedCount  = is_array($skippedBag) ? count($skippedBag) : (is_object($skippedBag) && method_exists($skippedBag,'count') ? $skippedBag->count() : 0);
     $hasFailures = $failuresCount > 0;
+    $hasIssues   = $hasFailures || $skippedCount > 0;
   @endphp
 
   @if ($rows || $changed || $skipped)
@@ -136,6 +142,11 @@
           <button id="submitBtn" class="btn btn-primary" disabled>
             <i class="bi bi-upload me-1"></i> استيراد الآن
           </button>
+          @if ($hasIssues && Route::has('contracts.import.investors.failures.fix'))
+            <a class="btn btn-warning" href="{{ route('contracts.import.investors.failures.fix') }}">
+              <i class="bi bi-download me-1"></i> تنزيل ملف لتصحيح الصفوف
+            </a>
+          @endif
         </div>
       </form>
     </div>
@@ -170,6 +181,48 @@
                     <td>{{ $f['attribute'] }}</td>
                     <td>{{ is_array($f['messages']) ? implode(', ', $f['messages']) : $f['messages'] }}</td>
                     <td><code>{{ implode(', ', array_map(fn($k,$v)=>"$k=$v", array_keys($f['values']), $f['values'])) }}</code></td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  @if ($skippedCount > 0)
+    <div class="card border-0 shadow-sm mt-4">
+      <div class="card-header d-flex align-items-center bg-white">
+        <i class="bi bi-skip-forward-fill me-2"></i>
+        <span>الصفوف المتخطّاة</span>
+        <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
+        <button class="btn btn-sm btn-outline-secondary ms-auto" data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
+          إظهار/إخفاء
+        </button>
+      </div>
+      <div id="skippedTable" class="collapse show">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+              <thead class="table-light sticky-top">
+                <tr>
+                  <th style="width:110px">رقم الصف</th>
+                  <th style="width:260px">السبب</th>
+                  <th style="min-width:260px">القيم</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ($skippedBag as $r)
+                  @php
+                    $rowNum = (int)($r['row'] ?? 0);
+                    $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
+                    $vals   = $r['values'] ?? [];
+                  @endphp
+                  <tr>
+                    <td class="text-muted">{{ $rowNum }}</td>
+                    <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                    <td class="text-break"><code>{{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}</code></td>
                   </tr>
                 @endforeach
               </tbody>

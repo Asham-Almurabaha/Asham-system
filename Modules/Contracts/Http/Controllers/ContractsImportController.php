@@ -5,6 +5,7 @@ namespace Modules\Contracts\Http\Controllers;
 use Modules\Contracts\Exports\ContractsFailuresFixExport;
 use Modules\Contracts\Exports\ContractsTemplateExport;
 use Modules\Contracts\Exports\ContractsBasicFailuresFixExport;
+use Modules\Contracts\Exports\ContractsInvestorsFailuresFixExport;
 use App\Http\Controllers\Controller;
 use Modules\Contracts\Imports\ContractsImport;
 use Modules\Contracts\Imports\ContractsBasicImport;
@@ -68,6 +69,7 @@ class ContractsImportController extends Controller
                 'contracts_investors_import.summary',
                 'contracts_investors_import.failures_simple',
                 'contracts_investors_import.errors_simple',
+                'contracts_investors_import.skipped_simple',
             ]);
         }
 
@@ -354,15 +356,18 @@ class ContractsImportController extends Controller
 
             $customSimple = (array) $import->getFailuresSimple();
             $failuresSimple = array_values(array_merge($traitSimple, $customSimple));
+            $skippedSimple  = (array) $import->skipped();
 
             session()->forget([
                 'contracts_investors_import.summary',
                 'contracts_investors_import.failures_simple',
                 'contracts_investors_import.errors_simple',
+                'contracts_investors_import.skipped_simple',
             ]);
             session()->put('contracts_investors_import.summary',        $summary);
             session()->put('contracts_investors_import.failures_simple', $failuresSimple);
             session()->put('contracts_investors_import.errors_simple',  (array) $import->getErrorsSimple());
+            session()->put('contracts_investors_import.skipped_simple', $skippedSimple);
             session()->save();
 
             return redirect()->route('contracts.import.investors.form')
@@ -515,5 +520,52 @@ class ContractsImportController extends Controller
         }
 
         return Excel::download(new ContractsFailuresFixExport($failures), 'contracts_to_fix.xlsx');
+    }
+
+    /**
+     * تنزيل ملف لتصحيح أخطاء ومستثمرين العقود المتخطاة.
+     * يعتمد على البيانات المخزّنة في الجلسة بعد استيراد مستثمري العقود.
+     */
+    public function exportInvestorsFailuresFix()
+    {
+        $failures = session('contracts_investors_import.failures_simple', []);
+        $skipped  = session('contracts_investors_import.skipped_simple', []);
+
+        $noFailures = empty($failures) || (is_countable($failures) && count($failures) === 0);
+        $noSkipped  = empty($skipped)  || (is_countable($skipped)  && count($skipped)  === 0);
+
+        if ($noFailures && $noSkipped) {
+            return redirect()->route('contracts.import.investors.form')
+                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد ملف.');
+        }
+
+        if ($failures instanceof Collection) $failures = $failures->all();
+        if ($skipped  instanceof Collection) $skipped  = $skipped->all();
+
+        if (class_exists(\Modules\Contracts\Exports\ContractsInvestorsIssuesExport::class)) {
+            return Excel::download(
+                new \Modules\Contracts\Exports\ContractsInvestorsIssuesExport(
+                    is_array($failures) ? $failures : (array)$failures,
+                    is_array($skipped)  ? $skipped  : (array)$skipped
+                ),
+                'contracts_investors_issues.xlsx'
+            );
+        }
+
+        if (!$noFailures) {
+            return Excel::download(
+                new ContractsInvestorsFailuresFixExport(
+                    is_array($failures) ? $failures : (array)$failures
+                ),
+                'contracts_investors_to_fix.xlsx'
+            );
+        }
+
+        return Excel::download(
+            new \Modules\Contracts\Exports\ContractsInvestorsSkippedExport(
+                is_array($skipped) ? $skipped : (array)$skipped
+            ),
+            'contracts_investors_skipped.xlsx'
+        );
     }
 }
