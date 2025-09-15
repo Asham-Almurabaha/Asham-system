@@ -4,6 +4,7 @@ namespace Modules\Contracts\Imports\Concerns;
 
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractStatus;
+use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Entities\InvestorTransaction;
 use App\Models\LedgerEntry;
@@ -12,9 +13,6 @@ use App\Models\TransactionType;
 
 trait HandlesContractInvestors
 {
-    private const STATUS_NAME_NO_INVESTORS = 'بدون مستثمر';
-    private const STATUS_NAME_PENDING      = 'معلق';
-    private const STATUS_NAME_NEW          = 'جديد';
     private const EPS = 0.0001;
 
     /** عمود واحد بصيغة id:pct|id:pct */
@@ -111,9 +109,9 @@ trait HandlesContractInvestors
 
             $sumRounded = round($sum,2);
             if (abs($sumRounded-100) <= self::EPS) {
-                $id = ContractStatus::where('name', self::STATUS_NAME_NEW)->value('id');
+                $id = ContractStatus::where('name', ContractStatusNames::NEW)->value('id');
             } else {
-                $id = ContractStatus::where('name', self::STATUS_NAME_PENDING)->value('id');
+                $id = ContractStatus::where('name', ContractStatusNames::PENDING)->value('id');
             }
             if ($id) $contract->update(['contract_status_id'=>$id]);
 
@@ -121,7 +119,7 @@ trait HandlesContractInvestors
 
         } else {
             $contract->investors()->detach();
-            $id = ContractStatus::where('name', self::STATUS_NAME_NO_INVESTORS)->value('id');
+            $id = ContractStatus::where('name', ContractStatusNames::NO_INVESTORS)->value('id');
             if ($id) $contract->update(['contract_status_id'=>$id]);
         }
     }

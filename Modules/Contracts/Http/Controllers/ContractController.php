@@ -18,6 +18,7 @@ use App\Services\InstallmentsMonthlyService;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
+use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Entities\InvestorTransaction;
@@ -32,10 +33,6 @@ use Illuminate\Validation\ValidationException;
 class ContractController extends Controller
 {
     private const EPS = 0.0001;
-
-    private const STATUS_NAME_NO_INVESTORS = 'بدون مستثمر';
-    private const STATUS_NAME_PENDING      = 'معلق';
-    private const STATUS_NAME_NEW          = 'جديد';
 
     private const DIR_CONTRACT_MAIN        = 'contracts/contracts';
     private const DIR_CONTRACT_CUSTOMERS   = 'contracts/customers';
@@ -753,20 +750,20 @@ class ContractController extends Controller
         $sumRounded = round($sum, 2);
 
         if (!$hasRealInvestors || $sumRounded <= self::EPS) {
-            if ($id = $this->resolveStatusIdByName(self::STATUS_NAME_NO_INVESTORS)) {
+            if ($id = $this->resolveStatusIdByName(ContractStatusNames::NO_INVESTORS)) {
                 $data['contract_status_id'] = $id;
             }
             return;
         }
 
         if ($sumRounded < (100 - self::EPS)) {
-            if ($id = $this->resolveStatusIdByName(self::STATUS_NAME_PENDING)) {
+            if ($id = $this->resolveStatusIdByName(ContractStatusNames::PENDING)) {
                 $data['contract_status_id'] = $id;
             }
             return;
         }
 
-        if ($id = $this->resolveStatusIdByName(self::STATUS_NAME_NEW)) {
+        if ($id = $this->resolveStatusIdByName(ContractStatusNames::NEW)) {
             $data['contract_status_id'] = $id;
         }
     }
