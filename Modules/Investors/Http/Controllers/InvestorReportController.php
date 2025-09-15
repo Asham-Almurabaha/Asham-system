@@ -59,25 +59,42 @@ class InvestorReportController extends Controller
 
     public function withdrawals(Investor $investor)
     {
-        $rows = LedgerEntry::query()
+        $withdrawals = LedgerEntry::query()
             ->where('investor_id', $investor->id)
             ->where('direction', 'out')
             ->latest('entry_date')
             ->get();
 
-        $total = $rows->sum('amount');
+        $withdrawalsTotal = $withdrawals->sum('amount');
+        $withdrawalsCount = $withdrawals->count();
 
-        return view('investors.reports.withdrawals', compact('investor', 'rows', 'total'));
+        return view(
+            'investors.reports.withdrawals',
+            compact('investor', 'withdrawals', 'withdrawalsTotal', 'withdrawalsCount')
+        );
     }
 
     public function transactions(Investor $investor)
     {
-        $rows = LedgerEntry::query()
+        $transactions = LedgerEntry::query()
             ->where('investor_id', $investor->id)
             ->latest('entry_date')
             ->get();
 
-        return view('investors.reports.transactions', compact('investor', 'rows'));
+        $transactionsCount = $transactions->count();
+        $depositsTotal    = $transactions->where('direction', 'in')->sum('amount');
+        $withdrawalsTotal = $transactions->where('direction', 'out')->sum('amount');
+
+        return view(
+            'investors.reports.transactions',
+            compact(
+                'investor',
+                'transactions',
+                'transactionsCount',
+                'depositsTotal',
+                'withdrawalsTotal'
+            )
+        );
     }
 
     public function allliquidity(Request $request)
