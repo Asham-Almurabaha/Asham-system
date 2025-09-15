@@ -375,8 +375,11 @@
     "Preview after upload:": "معاينة بعد الرفع:",
     "Only numbers can be entered.": "يمكن إدخال أرقام فقط.",
     "+9665XXXXXXXX": "+9665XXXXXXXX",
-    "Example: 12.50": "مثال: 12.50"
-,
+    "Example: 12.50": "مثال: 12.50",
+    "Customers With Active Contracts": "العملاء ذوو العقود النشطة",
+    "ID": "المعرف",
+    "Unpaid This Month": "غير مدفوع هذا الشهر",
+    "1234567890": "1234567890",
     "Audit Logs": "سجل التدقيق",
     "Refresh": "تحديث",
     "Print": "طباعة",
@@ -390,7 +393,6 @@
     "IP Address": "عنوان IP",
     "Performed At": "وقت التنفيذ",
     "No entries found.": "لا توجد إدخالات.",
-    "Example: 192.168...": "مثال: 192.168..."
-,
+    "Example: 192.168...": "مثال: 192.168...",
     "Showing :from to :to of :total results": "عرض :from إلى :to من إجمالي :total"
 }

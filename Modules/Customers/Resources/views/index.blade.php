@@ -168,12 +168,12 @@
         <div class="col-6 col-md-2">
           <label class="form-label mb-1">{{ __('National ID') }}</label>
           <input type="text" name="national_id" value="{{ request('national_id') }}"
-                 class="form-control form-control-sm auto-submit-input" placeholder="1234567890">
+                 class="form-control form-control-sm auto-submit-input" placeholder="{{ __('1234567890') }}">
         </div>
         <div class="col-6 col-md-2">
           <label class="form-label mb-1">{{ __('Phone') }}</label>
           <input type="text" name="phone" value="{{ request('phone') }}"
-                 class="form-control form-control-sm auto-submit-input" placeholder="+9665XXXXXXXX">
+                 class="form-control form-control-sm auto-submit-input" placeholder="{{ __('+9665XXXXXXXX') }}">
         </div>
 
         <div class="col-12 col-md-2">

@@ -226,7 +226,7 @@
                         @foreach($sb as $st)
                             @php
                                 $cnt  = (int)($st['count'] ?? 0);
-                                $name = (string)($st['name'] ?? 'Undefined');
+                                $name = (string)($st['name'] ?? __('Undefined'));
                                 $pct  = $cnt>0 ? round(($cnt / $sb_total) * 100) : 0;
                             @endphp
                             <span class="badge text-bg-light">
