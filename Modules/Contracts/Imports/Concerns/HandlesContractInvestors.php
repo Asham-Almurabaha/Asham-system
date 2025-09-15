@@ -4,13 +4,9 @@ namespace Modules\Contracts\Imports\Concerns;
 
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractStatus;
+use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Support\ContractStatusNames;
-use Modules\Contracts\Support\TransactionDirection;
 use Modules\Investors\Entities\Investor;
-use Modules\Investors\Entities\InvestorTransaction;
-use App\Models\LedgerEntry;
-use App\Models\TransactionStatus;
-use App\Models\TransactionType;
 
 trait HandlesContractInvestors
 {
@@ -116,74 +112,26 @@ trait HandlesContractInvestors
             }
             if ($id) $contract->update(['contract_status_id'=>$id]);
 
-            $this->logInvestorTransactions($contract, $pivot, 'إضافة عقد');
+            $entries = [];
+            foreach ($pivot as $investorId => $row) {
+                $entries[] = [
+                    'investor_id' => (int) $investorId,
+                    'amount'      => (float) ($row['share_value'] ?? 0),
+                ];
+            }
+
+            if (!empty($entries)) {
+                app(InvestorTransactionLogger::class)->log($contract, $entries, 'إضافة عقد', [
+                    'allow_type_fallback' => true,
+                    'fallback_direction'  => 'in',
+                ]);
+            }
 
         } else {
             $contract->investors()->detach();
             $id = ContractStatus::where('name', ContractStatusNames::NO_INVESTORS)->value('id');
             if ($id) $contract->update(['contract_status_id'=>$id]);
         }
-    }
-
-    private function logInvestorTransactions(Contract $contract, array $pivot, string $statusName): void
-    {
-        $status = TransactionStatus::where('name',$statusName)->first(['id','transaction_type_id']);
-        if (!$status) return;
-
-        $typeId = $status->transaction_type_id ?: $this->guessTypeIdByStatusName($statusName);
-        if (!$typeId) return;
-
-        $direction = TransactionDirection::directionFromTypeName(
-            TransactionType::whereKey($typeId)->value('name')
-        ) ?? 'in';
-
-        foreach ($pivot as $investorId => $row) {
-            $amount = (float)($row['share_value'] ?? 0);
-            if ($amount <= 0) continue;
-
-            $trx = InvestorTransaction::create([
-                'investor_id'      => (int)$investorId,
-                'contract_id'      => $contract->id,
-                'status_id'        => $status->id,
-                'amount'           => $amount,
-                'transaction_date' => now(),
-                'notes'            => "عملية {$statusName} للعقد رقم {$contract->contract_number}",
-            ]);
-
-            LedgerEntry::create([
-                'entry_date'             => now()->toDateString(),
-                'investor_id'            => (int)$investorId,
-                'is_office'              => false,
-                'transaction_status_id'  => $status->id,
-                'transaction_type_id'    => $typeId,
-                'bank_account_id'        => null,
-                'safe_id'                => null,
-                'contract_id'            => $contract->id,
-                'installment_id'         => null,
-                'amount'                 => $amount,
-                'direction'              => $direction,
-                'ref'                    => 'IT-'.$trx->id,
-                'notes'                  => "قيد {$statusName} للعقد #{$contract->contract_number} (مستثمر #{$investorId})",
-            ]);
-        }
-    }
-
-    private function guessTypeIdByStatusName(string $statusName): ?int
-    {
-        $typeId = TransactionType::where('name',$statusName)->value('id');
-        if ($typeId) return (int)$typeId;
-
-        $alts = [
-            'إضافة عقد'   => ['استثمار عقد', 'حركة مستثمر', 'عقد جديد'],
-            'توزيع أرباح' => ['أرباح', 'حركة مستثمر'],
-            'سداد أصل'    => ['سداد أصل', 'تحصيل'],
-            'سداد قسط'    => ['تحصيل قسط', 'تحصيل'],
-        ];
-        foreach ($alts[$statusName] ?? [] as $alt) {
-            $typeId = TransactionType::where('name',$alt)->value('id');
-            if ($typeId) return (int)$typeId;
-        }
-        return null;
     }
 
 }

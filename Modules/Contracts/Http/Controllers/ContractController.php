@@ -19,10 +19,9 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
-use Modules\Contracts\Support\TransactionDirection;
+use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
-use Modules\Investors\Entities\InvestorTransaction;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,6 +33,10 @@ use Illuminate\Validation\ValidationException;
 class ContractController extends Controller
 {
     private const EPS = 0.0001;
+
+    public function __construct(private InvestorTransactionLogger $investorTransactionLogger)
+    {
+    }
 
     private const DIR_CONTRACT_MAIN        = 'contracts/contracts';
     private const DIR_CONTRACT_CUSTOMERS   = 'contracts/customers';
@@ -226,7 +229,15 @@ class ContractController extends Controller
                 // ربط المستثمرين + لوج ترانزاكشن
                 $this->syncInvestorsAndRecalcStatus($contract, $investors);
                 if (!empty($investors)) {
-                    $this->logInvestorTransaction($contract, $investors, 'إضافة عقد');
+                    $entries = [];
+                    foreach ($investors as $row) {
+                        $entries[] = [
+                            'investor_id' => (int) ($row['id'] ?? 0),
+                            'amount'      => (float) ($row['share_value'] ?? 0),
+                        ];
+                    }
+
+                    $this->investorTransactionLogger->log($contract, $entries, 'إضافة عقد');
                 }
 
                 // === قيد فرق البيع (مكتب) + تسجيل في product_transactions ===
@@ -416,14 +427,15 @@ class ContractController extends Controller
         DB::transaction(function () use ($contract, $pivotData) {
             $contract->investors()->sync($pivotData, false);
 
-            $this->logInvestorTransaction(
-                $contract->fresh('investors'),
-                collect($pivotData)
-                    ->map(fn($v, $id) => ['id' => (int) $id, 'share_value' => (float) $v['share_value']])
-                    ->values()
-                    ->all(),
-                'إضافة عقد'
-            );
+            $entries = [];
+            foreach ($pivotData as $investorId => $row) {
+                $entries[] = [
+                    'investor_id' => (int) $investorId,
+                    'amount'      => (float) ($row['share_value'] ?? 0),
+                ];
+            }
+
+            $this->investorTransactionLogger->log($contract, $entries, 'إضافة عقد');
 
             $pivotTable = 'contract_investor';
             $dbSum      = (float) $contract->investors()->sum("$pivotTable.share_percentage");
@@ -443,87 +455,6 @@ class ContractController extends Controller
             'success' => true,
             'html'    => $html
         ]);
-    }
-
-    private function logInvestorTransaction(Contract $contract, array $investors, string $statusName = 'إضافة عقد'): void
-    {
-        $status = TransactionStatus::where('name', $statusName)
-            ->first(['id', 'transaction_type_id']);
-
-        if (!$status) {
-            throw new \RuntimeException("الحالة '{$statusName}' غير موجودة.");
-        }
-
-        $typeId = $this->getTransactionTypeIdForStatusName($statusName, $status->transaction_type_id ?? null);
-        if (!$typeId) {
-            throw new \RuntimeException("تعذّر تحديد نوع الحركة للحالة '{$statusName}'.");
-        }
-
-        $direction = $this->directionFromTypeId($typeId);
-        if (!in_array($direction, ['in','out'], true)) {
-            $typeName = TransactionType::whereKey($typeId)->value('name') ?? ('#'.$typeId);
-            throw new \RuntimeException("تعذّر استنتاج الاتجاه من اسم النوع '{$typeName}'. عدّل اسم النوع ليشمل (ايداع/سحب) أو أضف مرادفات في الدالة.");
-        }
-
-        DB::transaction(function () use ($contract, $investors, $status, $typeId, $direction, $statusName) {
-            foreach ($investors as $inv) {
-                $investorId = is_array($inv) ? ($inv['id'] ?? null) : ($inv->id ?? null);
-                $amount     = (float) (is_array($inv) ? ($inv['share_value'] ?? 0) : ($inv->share_value ?? 0));
-                if (!$investorId || $amount <= 0) continue;
-
-                $trx = InvestorTransaction::create([
-                    'investor_id'      => $investorId,
-                    'contract_id'      => $contract->id,
-                    'status_id'        => $status->id,
-                    'amount'           => $amount,
-                    'transaction_date' => now(),
-                    'notes'            => "عملية {$statusName} للعقد رقم {$contract->contract_number}",
-                ]);
-
-                LedgerEntry::create([
-                    'entry_date'             => now()->toDateString(),
-                    'investor_id'            => $investorId,
-                    'is_office'              => false,
-                    'transaction_status_id'  => $status->id,
-                    'transaction_type_id'    => $typeId,
-                    'bank_account_id'        => null,
-                    'safe_id'                => null,
-                    'contract_id'            => $contract->id,
-                    'installment_id'         => null,
-                    'amount'                 => $amount,
-                    'direction'              => $direction,
-                    'ref'                    => 'IT-'.$trx->id,
-                    'notes'                  => "قيد {$statusName} للعقد #{$contract->contract_number} (مستثمر #{$investorId})",
-                ]);
-            }
-        });
-    }
-
-    private function getTransactionTypeIdForStatusName(string $statusName, ?int $statusTypeId = null): ?int
-    {
-        if ($statusTypeId) return (int)$statusTypeId;
-
-        $typeId = TransactionType::where('name', $statusName)->value('id');
-        if ($typeId) return (int)$typeId;
-
-        $map = [
-            'إضافة عقد'   => ['استثمار عقد', 'حركة مستثمر', 'عقد جديد'],
-            'توزيع أرباح' => ['أرباح', 'حركة مستثمر'],
-            'سداد أصل'    => ['سداد أصل', 'تحصيل'],
-            'سداد قسط'    => ['تحصيل قسط', 'تحصيل'],
-        ];
-        foreach (($map[$statusName] ?? []) as $altName) {
-            $typeId = TransactionType::where('name', $altName)->value('id');
-            if ($typeId) return (int)$typeId;
-        }
-
-        return null;
-    }
-
-    private function directionFromTypeId(int $typeId): ?string
-    {
-        $typeName = TransactionType::whereKey($typeId)->value('name');
-        return TransactionDirection::directionFromTypeName($typeName);
     }
 
     public function show(Contract $contract)

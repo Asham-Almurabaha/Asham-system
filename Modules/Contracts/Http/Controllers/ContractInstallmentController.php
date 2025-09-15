@@ -8,7 +8,7 @@ use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
-use Modules\Investors\Entities\InvestorTransaction;
+use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +17,14 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
 use Modules\Contracts\Services\InstallmentStatusService;
+use Modules\Contracts\Services\InvestorTransactionLogger;
 
 class ContractInstallmentController extends Controller
 {
+    public function __construct(private InvestorTransactionLogger $investorTransactionLogger)
+    {
+    }
+
     /**
      * عرض كل الأقساط لعقد معين
      */
@@ -313,8 +318,6 @@ class ContractInstallmentController extends Controller
         ?int $bankAccountId = null,   // ✅ حساب بنكي (اختياري)
         ?int $safeId        = null    // ✅ خزنة (اختياري)
     ){
-        // === (نفس المنطق كما أرسلته) — مضاف فقط تمرير الحساب داخل قيود LedgerEntry ===
-        // --- BEGIN COPY OF YOUR FUNCTION (unchanged logic) ---
         $amount = round((float) $amount, 2);
         if ($amount <= 0) return;
 
@@ -337,18 +340,15 @@ class ContractInstallmentController extends Controller
         $contract = Contract::with('investors')->find($contractId);
         if (!$contract || $contract->investors->isEmpty()) return;
 
-        $statusId = TransactionStatus::where('name', $statusName)->value('id');
-        if (!$statusId) throw new \Exception("🚫 لم يتم العثور على حالة باسم: {$statusName}");
-
         $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
         if (!$officeStatusId) throw new \Exception("🚫 لم يتم العثور على حالة 'ربح المكتب'");
 
         $installment       = ContractInstallment::find($installmentId);
         $installmentNumber = $installment ? $installment->installment_number : null;
-        $now               = $transactionDate ?: now();
-        $entryDate         = $now instanceof \Carbon\Carbon
-            ? $now->toDateString()
-            : \Carbon\Carbon::parse($now)->toDateString();
+        $now               = $transactionDate
+            ? ($transactionDate instanceof Carbon ? $transactionDate->copy() : Carbon::parse($transactionDate))
+            : Carbon::now();
+        $entryDate         = $now->toDateString();
 
         $resolveTypeId = function (string $main, array $alts = []) {
             $id = TransactionType::where('name', $main)->value('id');
@@ -360,7 +360,6 @@ class ContractInstallmentController extends Controller
             return (int) TransactionType::query()->orderBy('id')->value('id');
         };
 
-        $payTypeId    = $resolveTypeId('سداد قسط',   ['تحصيل قسط','تحصيل','وارد','ايداع','إيداع']);
         $officeTypeId = $resolveTypeId('ربح المكتب', ['أرباح','تحصيل','وارد']);
 
         $investorMeta = [];
@@ -410,6 +409,8 @@ class ContractInstallmentController extends Controller
             $allocatedSum = 0.0;
             $ids  = array_keys($weights);
             $last = end($ids);
+
+            $investorEntries = [];
 
             foreach ($weights as $invId => $w) {
                 $alloc = ($invId === $last)
@@ -461,37 +462,30 @@ class ContractInstallmentController extends Controller
                 }
 
                 if ($investorTake > 0) {
-                    $trx = InvestorTransaction::create([
-                        'investor_id'      => $invId,
-                        'contract_id'      => $contract->id,
-                        'installment_id'   => $installmentId,
-                        'status_id'        => $statusId,
-                        'amount'           => $investorTake,
-                        'transaction_date' => $now,
-                        'notes'            => ($installmentNumber
-                            ? "سداد قسط رقم {$installmentNumber} بعد خصم المتبقّي من ربح المكتب"
-                            : "سداد بعد خصم المتبقّي من ربح المكتب")
+                    $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
+                    $investorEntries[] = [
+                        'investor_id'       => $invId,
+                        'amount'            => $investorTake,
+                        'transaction_notes' => ($installmentNumber
+                                ? "سداد قسط رقم {$installmentNumber} بعد خصم المتبقّي من ربح المكتب"
+                                : "سداد بعد خصم المتبقّي من ربح المكتب")
                             . " - العقد رقم {$contract->contract_number}",
-                    ]);
-
-                    if ($payTypeId) {
-                        $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
-                        LedgerEntry::create(array_merge([
-                            'entry_date'            => $entryDate,
-                            'investor_id'           => $invId,
-                            'is_office'             => false,
-                            'transaction_status_id' => $statusId,
-                            'transaction_type_id'   => $payTypeId,
-                            'contract_id'           => $contract->id,
-                            'installment_id'        => $installmentId,
-                            'amount'                => $investorTake,
-                            'ref'                   => 'IT-'.$trx->id,
-                            'notes'                 => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
-                                . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
-                                . $accountNote,
-                        ], $accountCols));
-                    }
+                        'ledger_notes'      => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
+                            . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
+                            . $accountNote,
+                    ];
                 }
+            }
+
+            if (!empty($investorEntries)) {
+                $this->investorTransactionLogger->log($contract, $investorEntries, $statusName, [
+                    'transaction_date'    => $now,
+                    'installment_id'      => $installmentId,
+                    'bank_account_id'     => $bankAccountId,
+                    'safe_id'             => $safeId,
+                    'allow_type_fallback' => true,
+                    'fallback_direction'  => 'in',
+                ]);
             }
             return;
         }
@@ -574,6 +568,8 @@ class ContractInstallmentController extends Controller
         $ids  = array_keys($weights);
         $last = end($ids);
 
+        $investorEntries = [];
+
         foreach ($weights as $invId => $w) {
             $alloc = ($invId === $last)
                 ? round($amount - $allocatedSum, 2)
@@ -584,65 +580,33 @@ class ContractInstallmentController extends Controller
             }
 
             if ($alloc > 0) {
-                $trx = InvestorTransaction::create([
-                    'investor_id'      => $invId,
-                    'contract_id'      => $contract->id,
-                    'installment_id'   => $installmentId,
-                    'status_id'        => $statusId,
-                    'amount'           => $alloc,
-                    'transaction_date' => $now,
-                    'notes'            => ($installmentNumber
+                $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
+                $investorEntries[] = [
+                    'investor_id'       => $invId,
+                    'amount'            => $alloc,
+                    'transaction_notes' => ($installmentNumber
                             ? "سداد قسط رقم {$installmentNumber} بعد سداد كامل ربح المكتب"
                             : "سداد بعد سداد كامل ربح المكتب")
                         . " - العقد رقم {$contract->contract_number}",
-                ]);
-
-                if ($payTypeId) {
-                    $invName = $investorMeta[$invId]['name'] ?? ('#'.$invId);
-                    LedgerEntry::create(array_merge([
-                        'entry_date'            => $entryDate,
-                        'investor_id'           => $invId,
-                        'is_office'             => false,
-                        'transaction_status_id' => $statusId,
-                        'transaction_type_id'   => $payTypeId,
-                        'contract_id'           => $contract->id,
-                        'installment_id'        => $installmentId,
-                        'amount'                => $alloc,
-                        'ref'                   => 'IT-'.$trx->id,
-                        'notes'                 => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
-                            . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
-                            . $accountNote,
-                    ], $accountCols));
-                }
+                    'ledger_notes'      => "قيد سداد قسط للمستثمر {$invName} — عقد #{$contract->contract_number}"
+                        . ($installmentNumber ? " — قسط #{$installmentNumber}" : '')
+                        . $accountNote,
+                ];
 
                 $allocatedSum = round($allocatedSum + $alloc, 2);
             }
         }
-        // --- END COPY ---
-    }
 
-    /**
-     * يرجّع transaction_type_id المناسب لاسم حالة معيّن.
-     * يحاول: نفس الاسم → مرادفات بسيطة → أول نوع موجود.
-     */
-    private function typeIdForStatusName(string $statusName): ?int
-    {
-        // 1) نفس الاسم
-        $id = TransactionType::where('name', $statusName)->value('id');
-        if ($id) return (int) $id;
-
-        // 2) مرادفات بسيطة
-        $syn = [
-            'سداد قسط'   => ['تحصيل قسط','تحصيل','وارد','ايداع','إيداع'],
-            'ربح المكتب' => ['أرباح','تحصيل','وارد'],
-        ];
-        foreach (($syn[$statusName] ?? []) as $alt) {
-            $id = TransactionType::where('name', $alt)->value('id');
-            if ($id) return (int) $id;
+        if (!empty($investorEntries)) {
+            $this->investorTransactionLogger->log($contract, $investorEntries, $statusName, [
+                'transaction_date'    => $now,
+                'installment_id'      => $installmentId,
+                'bank_account_id'     => $bankAccountId,
+                'safe_id'             => $safeId,
+                'allow_type_fallback' => true,
+                'fallback_direction'  => 'in',
+            ]);
         }
-
-        // 3) Fallback
-        return TransactionType::query()->orderBy('id')->value('id');
     }
 
     public function deferAjax($id)
