@@ -159,7 +159,6 @@
                         <th>{{ __('guarantors::messages.Address') }}</th>
                         <th>{{ __('guarantors::messages.Job Title') }}</th>
                         <th style="min-width:110px;">{{ __('guarantors::messages.ID Card Image') }}</th>
-                        <th style="width:150px">{{ __('guarantors::messages.Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,7 +167,11 @@
                             <td class="text-muted">
                                 {{ $loop->iteration + ($guarantors->currentPage() - 1) * $guarantors->perPage() }}
                             </td>
-                            <td class="text-start">{{ $g->name }}</td>
+                            <td class="text-start">
+                                <a href="{{ route('guarantors.show', $g) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                                    {{ $g->name }}
+                                </a>
+                            </td>
                             <td dir="ltr">{{ $g->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $g->phone ?? '—' }}</td>
                             <td class="text-start">{{ $g->email ?? '—' }}</td>
@@ -186,13 +189,10 @@
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
-                            <td class="text-nowrap">
-                                <a href="{{ route('guarantors.show', $g) }}" class="btn btn-outline-secondary btn-sm">{{ __('guarantors::messages.View') }}</a>
-                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="py-5">
+                            <td colspan="9" class="py-5">
                                 <div class="text-muted">
                                     {{ __('guarantors::messages.No matching results for your search.') }}
                                     <a href="{{ route('guarantors.index') }}" class="ms-1">{{ __('guarantors::messages.Show All') }}</a>
