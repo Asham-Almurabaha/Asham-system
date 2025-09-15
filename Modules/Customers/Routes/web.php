@@ -6,8 +6,6 @@ use Modules\Customers\Http\Controllers\CustomerImportController;
 use Modules\Customers\Http\Controllers\CustomerReportController;
 
 Route::middleware(['web', 'auth'])->group(function () {
-    Route::resource('customers', CustomerController::class);
-
     Route::prefix('customers/import')->name('customers.')->group(function () {
         Route::get('/',               [CustomerImportController::class, 'create'])->name('import.form');
         Route::post('/',              [CustomerImportController::class, 'store'])->name('import');
@@ -15,8 +13,14 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/failures/fix',   [CustomerImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
     });
 
-    Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])->name('reports.customers.delinquent');
-    Route::get('reports/customers/unpaid', [CustomerReportController::class, 'unpaid'])->name('reports.customers.unpaid');
-    Route::get('reports/customers/active', [CustomerReportController::class, 'active'])->name('reports.customers.active');
-    Route::get('reports/customers/contracts', [CustomerReportController::class, 'contracts'])->name('reports.customers.contracts');
+    Route::resource('customers', CustomerController::class);
+
+    Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])
+        ->name('reports.customers.delinquent');
+    Route::get('reports/customers/unpaid', [CustomerReportController::class, 'unpaid'])
+        ->name('reports.customers.unpaid');
+    Route::get('reports/customers/active', [CustomerReportController::class, 'active'])
+        ->name('reports.customers.active');
+    Route::get('reports/customers/contracts', [CustomerReportController::class, 'contracts'])
+        ->name('reports.customers.contracts');
 });
