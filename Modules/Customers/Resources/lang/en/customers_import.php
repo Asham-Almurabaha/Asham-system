@@ -19,6 +19,7 @@ return [
     'Changes' => 'Changes',
     'Actions' => 'Actions',
     'Confirm Update' => 'Confirm Update',
+    'Save as new record' => 'Save as new record',
     'Ignore' => 'Ignore',
     'No differences found' => 'No differences found',
     'Validation Errors' => 'Validation Errors',

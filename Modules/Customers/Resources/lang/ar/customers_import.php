@@ -19,6 +19,7 @@ return array (
   'Changes' => 'التعديلات',
   'Actions' => 'الإجراءات',
   'Confirm Update' => 'تأكيد التعديل',
+  'Save as new record' => 'حفظ كسجل جديد',
   'Ignore' => 'تجاهل',
   'No differences found' => 'لا توجد فروقات',
   'Validation Errors' => 'أخطاء التحقق',

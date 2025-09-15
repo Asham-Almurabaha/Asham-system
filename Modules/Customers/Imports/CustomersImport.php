@@ -159,6 +159,7 @@ class CustomersImport implements
                     ],
                     'diff'    => $diff,
                     'updates' => $updates,
+                    'payload' => $payload,
                 ];
             } else {
                 Customer::create($payload);

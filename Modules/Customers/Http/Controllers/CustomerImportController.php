@@ -265,6 +265,69 @@ class CustomerImportController extends Controller
             ->with('info', 'تم تجاهل التعديل للعميل '.$name.'.');
     }
 
+    public function storePendingAsNew(Request $request, string $token)
+    {
+        $pending = $this->getPendingUpdatesFromSession();
+
+        if (!isset($pending[$token])) {
+            return redirect()->route('customers.import.form')
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+        }
+
+        $entry = $pending[$token];
+
+        $payload = $entry['payload'] ?? [];
+        if (!is_array($payload) || empty($payload)) {
+            $payload = $entry['updates'] ?? [];
+
+            $existingId = $entry['customer_id'] ?? null;
+            $existing   = $existingId ? Customer::find($existingId) : null;
+
+            if ($existing) {
+                foreach ($existing->getFillable() as $field) {
+                    if (!array_key_exists($field, $payload)) {
+                        $payload[$field] = $existing->getAttribute($field);
+                    }
+                }
+            }
+        }
+
+        if (!is_array($payload) || empty($payload)) {
+            return redirect()->route('customers.import.form')
+                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.');
+        }
+
+        $customerPrototype = new Customer();
+        $fillableMap       = array_flip($customerPrototype->getFillable());
+        $data              = [];
+
+        foreach ($payload as $field => $value) {
+            if (isset($fillableMap[$field])) {
+                $data[$field] = $value;
+            }
+        }
+
+        $nameValue = $data['name'] ?? null;
+        if ($nameValue === null || trim((string) $nameValue) === '') {
+            return redirect()->route('customers.import.form')
+                ->with('info', 'الاسم مطلوب لإنشاء عميل جديد من هذا التعديل.');
+        }
+
+        try {
+            $newCustomer = Customer::create($data);
+        } catch (\Throwable $e) {
+            return redirect()->route('customers.import.form')
+                ->with('error', 'تعذّر إنشاء عميل جديد: '.$e->getMessage());
+        }
+
+        unset($pending[$token]);
+        $this->storePendingUpdates($pending);
+        $this->syncPendingSummary($pending, false, true);
+
+        return redirect()->route('customers.import.form')
+            ->with('success', 'تم حفظ عميل جديد باسم '.$newCustomer->name.'.');
+    }
+
     private function getPendingUpdatesFromSession(): array
     {
         $pending = session('customers_import.pending_updates', []);
@@ -286,7 +349,7 @@ class CustomerImportController extends Controller
         session(['customers_import.pending_updates' => $pending]);
     }
 
-    private function syncPendingSummary(array $pending, bool $appliedUpdate): void
+    private function syncPendingSummary(array $pending, bool $appliedUpdate, bool $inserted = false): void
     {
         $summary = session('customers_import.summary', []);
 
@@ -295,6 +358,11 @@ class CustomerImportController extends Controller
         if ($appliedUpdate) {
             $summary['updated'] = (int) ($summary['updated'] ?? 0) + 1;
             $summary['changed'] = (int) ($summary['changed'] ?? 0) + 1;
+        }
+
+        if ($inserted) {
+            $summary['inserted'] = (int) ($summary['inserted'] ?? 0) + 1;
+            $summary['changed']  = (int) ($summary['changed'] ?? 0) + 1;
         }
 
         session(['customers_import.summary' => $summary]);

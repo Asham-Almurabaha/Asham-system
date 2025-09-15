@@ -48,6 +48,12 @@
     </div>
   @endif
 
+  @if (session('error'))
+    <div class="alert alert-danger border-0 shadow-sm">
+      <i class="bi bi-exclamation-octagon me-2 fs-5"></i>{{ session('error') }}
+    </div>
+  @endif
+
   @if (session('info'))
     <div class="alert alert-info border-0 shadow-sm">
       <i class="bi bi-info-circle me-2 fs-5"></i>{{ session('info') }}
@@ -263,6 +269,12 @@
                         @csrf
                         <button type="submit" class="btn btn-success btn-sm w-100">
                           <i class="bi bi-check2-circle me-1"></i> @lang('customers::customers_import.Confirm Update')
+                        </button>
+                      </form>
+                      <form method="POST" action="{{ route('customers.import.pending.store-new', $token) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                          <i class="bi bi-plus-circle me-1"></i> @lang('customers::customers_import.Save as new record')
                         </button>
                       </form>
                       <form method="POST" action="{{ route('customers.import.pending.ignore', $token) }}">

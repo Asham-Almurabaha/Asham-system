@@ -15,6 +15,8 @@ Route::middleware(['web', 'auth'])->group(function () {
             ->name('import.pending.confirm');
         Route::post('/pending/{token}/ignore', [CustomerImportController::class, 'ignorePending'])
             ->name('import.pending.ignore');
+        Route::post('/pending/{token}/store-new', [CustomerImportController::class, 'storePendingAsNew'])
+            ->name('import.pending.store-new');
     });
 
     Route::resource('customers', CustomerController::class);
