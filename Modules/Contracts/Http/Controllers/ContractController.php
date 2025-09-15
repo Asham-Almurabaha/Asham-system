@@ -19,6 +19,8 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
+use Modules\Contracts\Support\InvestorShareValidationException;
+use Modules\Contracts\Support\InvestorShareValidator;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
@@ -34,7 +36,10 @@ class ContractController extends Controller
 {
     private const EPS = 0.0001;
 
-    public function __construct(private InvestorTransactionLogger $investorTransactionLogger)
+    public function __construct(
+        private InvestorTransactionLogger $investorTransactionLogger,
+        private InvestorShareValidator $investorShareValidator
+    )
     {
     }
 
@@ -568,32 +573,6 @@ class ContractController extends Controller
         return array_values($clean);
     }
 
-    private function validateAndSumInvestorsPercentages(array $investors): float
-    {
-        if (empty($investors)) return 0.0;
-
-        $sum = 0.0;
-        foreach ($investors as $i => $inv) {
-            $p = isset($inv['share_percentage']) ? (float) $inv['share_percentage'] : 0.0;
-
-            if ($p < 0 || $p > 100) {
-                throw ValidationException::withMessages([
-                    "investors.$i.share_percentage" => 'نسبة المشاركة يجب أن تكون بين 0 و 100.'
-                ]);
-            }
-
-            $sum += $p;
-        }
-
-        if ($sum > 100.0001) {
-            throw ValidationException::withMessages([
-                "investors" => "مجموع نسب المستثمرين لا يجوز أن يتجاوز 100%. المجموع الحالي: {$sum}%"
-            ]);
-        }
-
-        return round($sum, 4);
-    }
-
     private function preparePivotData(array $investors, float $contractValue): array
     {
         $now = now();
@@ -676,7 +655,11 @@ class ContractController extends Controller
 
     private function syncInvestorsAndRecalcStatus(Contract $contract, array $investors): void
     {
-        $sum = $this->validateAndSumInvestorsPercentages($investors);
+        try {
+            $sum = $this->investorShareValidator->validate($investors);
+        } catch (InvestorShareValidationException $e) {
+            throw $this->convertInvestorShareValidationException($e);
+        }
 
         if ($sum > self::EPS && !empty($investors)) {
             $pivot = $this->preparePivotData($investors, $contract->contract_value);
@@ -698,6 +681,27 @@ class ContractController extends Controller
         if (!empty($tmp['contract_status_id']) && $tmp['contract_status_id'] != $contract->contract_status_id) {
             $contract->update(['contract_status_id' => $tmp['contract_status_id']]);
         }
+    }
+
+    private function convertInvestorShareValidationException(InvestorShareValidationException $e): ValidationException
+    {
+        $index = $e->index();
+        $fieldName = $e->field();
+        $field = match ($fieldName) {
+            null, 'share_percentage', '' => 'share_percentage',
+            'pct' => 'share_percentage',
+            default => $fieldName,
+        };
+
+        if ($index !== null) {
+            return ValidationException::withMessages([
+                "investors.$index.$field" => $e->getMessage(),
+            ]);
+        }
+
+        return ValidationException::withMessages([
+            'investors' => $e->getMessage(),
+        ]);
     }
 
     private function refreshContractsStatuses(): void

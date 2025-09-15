@@ -6,6 +6,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractStatus;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Support\ContractStatusNames;
+use Modules\Contracts\Support\InvestorShareValidator;
 use Modules\Investors\Entities\Investor;
 
 trait HandlesContractInvestors
@@ -85,9 +86,8 @@ trait HandlesContractInvestors
 
     private function attachInvestorsAndAutoStatus(Contract $contract, array $investors): void
     {
-        $sum = 0.0;
-        foreach ($investors as $inv) $sum += (float)$inv['pct'];
-        if ($sum > 100.0001) throw new \RuntimeException('مجموع نسب المستثمرين تجاوز 100%.');
+        $validator = new InvestorShareValidator();
+        $sum = $validator->validate($investors);
 
         if ($sum > self::EPS && !empty($investors)) {
             $pivot = [];
