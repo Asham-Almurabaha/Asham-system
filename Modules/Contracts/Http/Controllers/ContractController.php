@@ -49,56 +49,98 @@ class ContractController extends Controller
 
     public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
     {
-        // تحدّث حالات العقود قبل تنفيذ الاستعلام لضمان دقّة الفلاتر والنتائج.
-        $this->refreshContractsStatuses();
+        $perPage     = 10;
+        $currentPage = max((int) $request->get('page', 1), 1);
 
         $pivotTable = (new Contract)->investors()->getTable();
 
         // الاستعلام الأساسي للعقود
-        $contractsQuery = Contract::query()
-            ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors']);
+        $contractsBaseQuery = Contract::query();
 
         // فلترة حسب العميل
         if ($request->filled('customer')) {
             $name = trim($request->customer);
-            $contractsQuery->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$name}%"));
+            $contractsBaseQuery->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$name}%"));
         }
 
         // فلترة حسب المستثمر
         if ($request->filled('investor_id')) {
             $investorId = $request->investor_id;
             if ($investorId === '_none') {
-                $contractsQuery->doesntHave('investors');
+                $contractsBaseQuery->doesntHave('investors');
             } else {
-                $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.id', $investorId)
+                $contractsBaseQuery->whereHas('investors', fn($q) => $q->where('investors.id', $investorId)
                     ->where($pivotTable . '.share_percentage', '<=', 100));
             }
         } elseif ($request->filled('investor')) {
             $name = trim($request->investor);
-            $contractsQuery->whereHas('investors', fn($q) => $q->where('investors.name', 'like', "%{$name}%")
+            $contractsBaseQuery->whereHas('investors', fn($q) => $q->where('investors.name', 'like', "%{$name}%")
                 ->where($pivotTable . '.share_percentage', '<=', 100));
         }
 
         // فلترة حسب رقم العقد
         if ($request->filled('contract_number')) {
             $number = trim($request->contract_number);
-            $contractsQuery->where('contract_number', 'like', "%{$number}%");
+            $contractsBaseQuery->where('contract_number', 'like', "%{$number}%");
         }
 
         // فلترة حسب حالة العقد
         if ($request->filled('status')) {
-            $contractsQuery->where('contract_status_id', $request->status);
+            $contractsBaseQuery->where('contract_status_id', $request->status);
         }
 
         // فلترة حسب التواريخ
         if ($request->filled('from')) {
-            $contractsQuery->whereDate('start_date', '>=', $request->from);
+            $contractsBaseQuery->whereDate('start_date', '>=', $request->from);
         }
         if ($request->filled('to')) {
-            $contractsQuery->whereDate('start_date', '<=', $request->to);
+            $contractsBaseQuery->whereDate('start_date', '<=', $request->to);
         }
 
-        $contracts = $contractsQuery->latest()->paginate(10);
+        $contractsOrderedQuery = (clone $contractsBaseQuery)->latest();
+
+        $updatedIds = [];
+        $maxUpdates = $perPage * 5;
+        $attempts   = 0;
+
+        // نحدّث حالات العقود للصفحة الحالية فقط مع حد أقصى للتكرار
+        // لضمان عدم المرور على كامل السجلّات دفعة واحدة.
+
+        while ($attempts < 5) {
+            $attempts++;
+
+            $pageIds = (clone $contractsOrderedQuery)
+                ->select('contracts.id')
+                ->forPage($currentPage, $perPage)
+                ->pluck('contracts.id')
+                ->map(fn($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            if (empty($pageIds)) {
+                break;
+            }
+
+            $newIds = array_values(array_diff($pageIds, $updatedIds));
+
+            if (empty($newIds)) {
+                break;
+            }
+
+            $this->refreshContractsStatuses($newIds);
+
+            $updatedIds = array_values(array_unique(array_merge($updatedIds, $newIds)));
+
+            if (count($updatedIds) >= $maxUpdates) {
+                break;
+            }
+        }
+
+        $contracts = $contractsOrderedQuery
+            ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors'])
+            ->paginate($perPage);
 
         $investors = Investor::orderBy('name')->get(['id', 'name']);
         $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
@@ -704,19 +746,34 @@ class ContractController extends Controller
         ]);
     }
 
-    private function refreshContractsStatuses(): void
+    private function refreshContractsStatuses(?array $onlyIds = null): void
     {
+        if ($onlyIds !== null) {
+            $onlyIds = array_values(array_filter(array_map('intval', $onlyIds)));
+
+            if (empty($onlyIds)) {
+                return;
+            }
+        }
+
         $excludedNames = ['منتهي', 'سداد مبكر', 'مطلوب'];
         $excludedIds   = ContractStatus::whereIn('name', $excludedNames)->pluck('id')->filter()->all();
 
-        Contract::query()
+        $query = Contract::query()
             ->when(!empty($excludedIds), fn ($q) => $q->whereNotIn('contract_status_id', $excludedIds))
-            ->with(['investors', 'installments.installmentStatus', 'contractStatus'])
-            ->chunkById(100, function ($contracts) {
-                foreach ($contracts as $contract) {
-                    $this->updateInstallmentsStatuses($contract);
-                }
-            });
+            ->when($onlyIds !== null, fn ($q) => $q->whereIn('id', $onlyIds))
+            ->with(['investors', 'installments.installmentStatus', 'contractStatus']);
+
+        if ($onlyIds !== null) {
+            $query->get()->each(fn ($contract) => $this->updateInstallmentsStatuses($contract));
+            return;
+        }
+
+        $query->chunkById(100, function ($contracts) {
+            foreach ($contracts as $contract) {
+                $this->updateInstallmentsStatuses($contract);
+            }
+        });
     }
 
     private function updateInstallmentsStatuses(Contract $contract): void
