@@ -10,7 +10,7 @@
     <nav><ol class="breadcrumb"><li class="breadcrumb-item active">{{ __('Customers') }}</li></ol></nav>
 </div>
 
-@php
+{{-- @php
     $allTotal    = (int)($customersTotalAll ?? 0);
     $allActive   = (int)($activeCustomersTotalAll ?? 0);
     $allInactive = max($allTotal - $allActive, 0);
@@ -20,14 +20,14 @@
 
     $newThisMonthAll = (int)($newCustomersThisMonthAll ?? 0);
     $newThisWeekAll  = (int)($newCustomersThisWeekAll  ?? 0);
-@endphp
+@endphp --}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+{{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> --}}
 
 
 
 {{-- ====== General Cards ====== --}}
-<div class="row g-4 mb-3" dir="rtl">
+{{-- <div class="row g-4 mb-3" dir="rtl">
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
             <div class="d-flex align-items-center gap-3">
@@ -89,7 +89,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> --}}
 
 {{-- ====== Toolbar ====== --}}
 <div class="card shadow-sm mb-3 ">

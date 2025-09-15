@@ -77,6 +77,7 @@ class InvestorReportController extends Controller
     public function transactions(Investor $investor)
     {
         $transactions = LedgerEntry::query()
+            ->with(['status:id,name', 'type:id,name'])
             ->where('investor_id', $investor->id)
             ->latest('entry_date')
             ->get();

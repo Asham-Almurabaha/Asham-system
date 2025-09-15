@@ -10,7 +10,9 @@
 
   $items = $transactions instanceof \Illuminate\Pagination\LengthAwarePaginator
     ? $transactions->items()
-    : (array) $transactions;
+    : ($transactions instanceof \Illuminate\Support\Collection
+        ? $transactions->all()
+        : $transactions);
 
   $countAll        = (int) ($transactionsCount ?? 0);
   $depositsTotal   = (float) ($depositsTotal    ?? 0.0);
