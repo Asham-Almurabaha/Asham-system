@@ -4,5 +4,8 @@
     "description": "",
     "keywords": [],
     "version": "1.0.0",
-    "priority": 0
+    "priority": 0,
+    "providers": [
+        "Modules\\Investors\\Providers\\InvestorsServiceProvider"
+    ]
 }
