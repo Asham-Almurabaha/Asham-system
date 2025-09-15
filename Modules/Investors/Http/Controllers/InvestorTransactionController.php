@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Investors\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\TransactionStatus;
-use Modules\Investors\Entities\Investor;
-use Modules\Investors\Entities\InvestorTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Investors\Entities\Investor;
+use Modules\Investors\Entities\InvestorTransaction;
 
 class InvestorTransactionController extends Controller
 {
@@ -66,7 +67,7 @@ class InvestorTransactionController extends Controller
 
         $investors = Investor::orderBy('name')->get();
 
-        return view('investor_transactions.index', compact(
+        return view('investors::investor_transactions.index', compact(
             'transactions',
             'investors',
             'statuses',
@@ -83,7 +84,7 @@ class InvestorTransactionController extends Controller
         $statuses  = $this->getInvestorStatuses($investorCategoryId);
         $investors = Investor::orderBy('name')->get();
 
-        return view('investor_transactions.create', compact('investors', 'statuses', 'investorCategoryId'));
+        return view('investors::investor_transactions.create', compact('investors', 'statuses', 'investorCategoryId'));
     }
 
     /**

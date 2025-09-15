@@ -1,16 +1,16 @@
 @extends('layouts.master')
 
-@section('title', __('Edit Investor'))
+@section('title', __('investors::investors.Edit Investor'))
 
 @section('content')
 <div class="container py-3" dir="rtl">
 
     <div class="pagetitle">
-        <h1 class="h3 mb-1">{{ __("Edit Investor") }}</h1>
+        <h1 class="h3 mb-1">{{ __('investors::investors.Edit Investor') }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">{{ __('Investors') }}</li>
-                <li class="breadcrumb-item active">{{ __('Edit Investor') }}</li>
+                <li class="breadcrumb-item">{{ __('investors::investors.Investors') }}</li>
+                <li class="breadcrumb-item active">{{ __('investors::investors.Edit Investor') }}</li>
             </ol>
         </nav>
     </div>
@@ -29,7 +29,7 @@
                 <div class="row g-3">
                     {{-- الاسم --}}
                     <div class="col-12">
-                        <label for="name" class="form-label">{{ __('investors.Name') }} <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ __('investors::investors.Name') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="name"
@@ -40,13 +40,13 @@
                             autofocus
                             maxlength="190"
                             autocomplete="name"
-                            placeholder="{{ __('investors.Write the full name') }}">
+                            placeholder="{{ __('investors::investors.Write the full name') }}">
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- رقم الهوية --}}
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">{{ __('investors.National ID') }}</label>
+                        <label for="national_id" class="form-label">{{ __('investors::investors.National ID') }}</label>
                         <input
                             type="text"
                             name="national_id"
@@ -56,14 +56,14 @@
                             inputmode="numeric"
                             dir="ltr"
                             maxlength="20"
-                            placeholder="{{ __('investors.Example: 1234567890') }}">
-                        <div class="form-text">{{ __('investors.Only numbers can be entered.') }}</div>
+                            placeholder="{{ __('investors::investors.Example: 1234567890') }}">
+                        <div class="form-text">{{ __('investors::investors.Only numbers can be entered.') }}</div>
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- الهاتف --}}
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">{{ __('investors.Phone') }}</label>
+                        <label for="phone" class="form-label">{{ __('investors::investors.Phone') }}</label>
                         <input
                             type="text"
                             name="phone"
@@ -74,13 +74,13 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
-                            placeholder="{{ __('investors.+9665XXXXXXXX') }}">
+                            placeholder="{{ __('investors::investors.+9665XXXXXXXX') }}">
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- البريد --}}
                     <div class="col-md-6">
-                        <label for="email" class="form-label">{{ __('investors.Email') }}</label>
+                        <label for="email" class="form-label">{{ __('investors::investors.Email') }}</label>
                         <input
                             type="email"
                             name="email"
@@ -137,7 +137,7 @@
 
                     {{-- العنوان --}}
                     <div class="col-12">
-                        <label for="address" class="form-label">{{ __('investors.Address') }}</label>
+                        <label for="address" class="form-label">{{ __('investors::investors.Address') }}</label>
                         <textarea
                             name="address"
                             id="address"
@@ -171,7 +171,7 @@
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror>
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
-                            <small class="text-muted d-block mb-1">{{ __('investors.Preview after upload:') }}</small>
+                            <small class="text-muted d-block mb-1">{{ __('investors::investors.Preview after upload:') }}</small>
                             <img id="id-preview" src="#" alt="معاينة صورة الهوية" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
@@ -200,7 +200,7 @@
                         @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="contract-preview-wrap">
-                            <small class="text-muted d-block mb-1">{{ __('investors.Preview after upload:') }}</small>
+                            <small class="text-muted d-block mb-1">{{ __('investors::investors.Preview after upload:') }}</small>
                             <img id="contract-preview" src="#" alt="معاينة صورة العقد" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>

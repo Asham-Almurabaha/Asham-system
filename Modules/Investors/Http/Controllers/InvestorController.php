@@ -136,14 +136,14 @@ class InvestorController extends Controller
 
         $nationalities = Nationality::all();
         $titles = Title::all();
-        return view('investors.index', compact('investors', 'nationalities', 'titles', 'investorsTotalAll', 'activeInvestorsTotalAll', 'newInvestorsThisMonthAll', 'newInvestorsThisWeekAll', 'liquidityByInvestor', 'activeCountByInvestor', 'remainingByInvestor'));
+        return view('investors::index', compact('investors', 'nationalities', 'titles', 'investorsTotalAll', 'activeInvestorsTotalAll', 'newInvestorsThisMonthAll', 'newInvestorsThisWeekAll', 'liquidityByInvestor', 'activeCountByInvestor', 'remainingByInvestor'));
     }
 
     public function create()
     {
         $nationalities = Nationality::all();
         $titles = Title::all();
-        return view('investors.create', compact('nationalities', 'titles'));
+        return view('investors::create', compact('nationalities', 'titles'));
     }
 
     public function store(Request $request)
@@ -202,7 +202,7 @@ class InvestorController extends Controller
             $installmentsMonthly = $installmentsSvc->build($m, $y, $excluded);
         }
 
-        return view('investors.show', [
+        return view('investors::show', [
             'investor'            => $investor,
             'installmentsMonthly' => $installmentsMonthly,
         ] + $data);
@@ -212,7 +212,7 @@ class InvestorController extends Controller
     {
         $nationalities = Nationality::all();
         $titles = Title::all();
-        return view('investors.edit', compact('investor', 'nationalities', 'titles'));
+        return view('investors::edit', compact('investor', 'nationalities', 'titles'));
     }
 
     public function update(Request $request, Investor $investor)

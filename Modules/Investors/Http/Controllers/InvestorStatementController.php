@@ -33,7 +33,7 @@ class InvestorStatementController extends Controller
             });
         }
 
-        return view('investors.statement', [
+        return view('investors::statement', [
             'investor'  => $investor,
             'data'      => $data,
             'statusMap' => $statusMap,

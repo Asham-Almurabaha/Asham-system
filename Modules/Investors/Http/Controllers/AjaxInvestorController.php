@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Investors\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\LedgerEntry;
-use Modules\Investors\Entities\Investor;
 use Illuminate\Http\Request;
+use Modules\Investors\Entities\Investor;
 
 class AjaxInvestorController extends Controller
 {

@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AjaxInvestorController;
-use App\Http\Controllers\InvestorImportController;
-use App\Http\Controllers\InvestorTransactionController;
+use Modules\Investors\Http\Controllers\AjaxInvestorController;
+use Modules\Investors\Http\Controllers\InvestorImportController;
+use Modules\Investors\Http\Controllers\InvestorTransactionController;
 use Modules\Investors\Http\Controllers\InvestorController;
 use Modules\Investors\Http\Controllers\InvestorReportController;
 use Modules\Investors\Http\Controllers\InvestorStatementController;

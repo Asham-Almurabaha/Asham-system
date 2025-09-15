@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Investors\Http\Controllers;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Investors\Exports\InvestorsFailuresFixExport;
 use Modules\Investors\Exports\InvestorsSkippedExport;
 use Modules\Investors\Exports\InvestorsTemplateExport;
 use Modules\Investors\Imports\InvestorsImport;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Facades\Excel;
 
 class InvestorImportController extends Controller
 {
@@ -16,7 +17,7 @@ class InvestorImportController extends Controller
     {
         // مهم: ما نمسحش السيشن هنا، لأننا عايزين نعرض نتيجة الاستيراد بعد redirect.
         // البيانات هتختفي لوحدها بعد أول Refresh لأننا هنستخدم flash في store().
-        return view('investors.import');
+        return view('investors::import');
     }
 
     public function store(Request $request)

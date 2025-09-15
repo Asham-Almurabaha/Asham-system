@@ -2,7 +2,7 @@
 
 namespace Modules\Contracts\Http\Controllers;
 
-use App\DTOs\InvestorShare;
+use Modules\Investors\DTOs\InvestorShare;
 use App\Http\Controllers\Controller;
 use App\Models\BankAccount;
 use Modules\Customers\Entities\Customer;

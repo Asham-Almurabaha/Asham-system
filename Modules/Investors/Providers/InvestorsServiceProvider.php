@@ -11,6 +11,7 @@ class InvestorsServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../Routes/web.php');
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
         $this->loadViewsFrom(__DIR__.'/../Resources/views', 'investors');
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang', 'investors');
     }
 
     public function register(): void

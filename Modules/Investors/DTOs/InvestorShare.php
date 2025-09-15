@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs;
+namespace Modules\Investors\DTOs;
 
 /**
  * @psalm-type InvestorShareArray=array{

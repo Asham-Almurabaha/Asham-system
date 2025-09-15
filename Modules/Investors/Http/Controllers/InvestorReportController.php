@@ -37,7 +37,7 @@ class InvestorReportController extends Controller
             });
         }
 
-        return view('investors.reports.statement', [
+        return view('investors::reports.statement', [
             'investor'  => $investor,
             'data'      => $data,
             'statusMap' => $statusMap,
@@ -54,7 +54,7 @@ class InvestorReportController extends Controller
 
         $depositsTotal = $deposits->sum('amount');
 
-        return view('investors.reports.deposits', compact('investor', 'deposits', 'depositsTotal'));
+        return view('investors::reports.deposits', compact('investor', 'deposits', 'depositsTotal'));
     }
 
     public function withdrawals(Investor $investor)
@@ -69,7 +69,7 @@ class InvestorReportController extends Controller
         $withdrawalsCount = $withdrawals->count();
 
         return view(
-            'investors.reports.withdrawals',
+            'investors::reports.withdrawals',
             compact('investor', 'withdrawals', 'withdrawalsTotal', 'withdrawalsCount')
         );
     }
@@ -87,7 +87,7 @@ class InvestorReportController extends Controller
         $withdrawalsTotal = $transactions->where('direction', 'out')->sum('amount');
 
         return view(
-            'investors.reports.transactions',
+            'investors::reports.transactions',
             compact(
                 'investor',
                 'transactions',
@@ -162,7 +162,7 @@ class InvestorReportController extends Controller
 
         $grandTotal = (float) $rows->getCollection()->sum('liquidity');
 
-        return view('investors.reports.allliquidity', [
+        return view('investors::reports.allliquidity', [
             'rows'           => $rows,
             'grandTotal'     => $grandTotal,
             'filters'        => $filters,

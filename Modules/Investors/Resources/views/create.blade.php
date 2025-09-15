@@ -6,11 +6,11 @@
 <div class="container py-3" dir="rtl">
 
     <div class="pagetitle">
-        <h1 class="h3 mb-1">{{ __('Add Investor') }}</h1>
+        <h1 class="h3 mb-1">{{ __('investors::investors.Add Investor') }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item">@lang('investors.Investors')</li>
-                <li class="breadcrumb-item active">@lang('investors.Add Investor')</li>
+                <li class="breadcrumb-item">@lang('investors::investors.Investors')</li>
+                <li class="breadcrumb-item active">@lang('investors::investors.Add Investor')</li>
             </ol>
         </nav>
     </div>
@@ -26,7 +26,7 @@
 
                 <div class="row g-3">
                     <div class="col-12">
-                        <label for="name" class="form-label">{{ __('investors.Name') }} <span class="text-danger">*</span></label>
+                        <label for="name" class="form-label">{{ __('investors::investors.Name') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="name"
@@ -37,12 +37,12 @@
                             autofocus
                             maxlength="190"
                             autocomplete="name"
-                            placeholder="{{ __('investors.Write the full name') }}">
+                            placeholder="{{ __('investors::investors.Write the full name') }}">
                         @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">{{ __('investors.National ID') }}</label>
+                        <label for="national_id" class="form-label">{{ __('investors::investors.National ID') }}</label>
                         <input
                             type="text"
                             name="national_id"
@@ -52,13 +52,13 @@
                             inputmode="numeric"
                             dir="ltr"
                             maxlength="20"
-                            placeholder="{{ __('investors.Example: 1234567890') }}">
-                        <div class="form-text">{{ __('investors.Only numbers can be entered.') }}</div>
+                            placeholder="{{ __('investors::investors.Example: 1234567890') }}">
+                        <div class="form-text">{{ __('investors::investors.Only numbers can be entered.') }}</div>
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">{{ __('investors.Phone') }}</label>
+                        <label for="phone" class="form-label">{{ __('investors::investors.Phone') }}</label>
                         <input
                             type="text"
                             name="phone"
@@ -69,13 +69,13 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
-                            placeholder="{{ __('investors.+9665XXXXXXXX') }}">
-                        <div class="form-text">{{ __('investors.It is preferable to enter the international code.') }}</div>
+                            placeholder="{{ __('investors::investors.+9665XXXXXXXX') }}">
+                        <div class="form-text">{{ __('investors::investors.It is preferable to enter the international code.') }}</div>
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-6">
-                        <label for="email" class="form-label">{{ __('investors.Email') }}</label>
+                        <label for="email" class="form-label">{{ __('investors::investors.Email') }}</label>
                         <input
                             type="email"
                             name="email"
@@ -89,7 +89,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="nationality_id" class="form-label">{{ __('investors.Nationality') }}</label>
+                        <label for="nationality_id" class="form-label">{{ __('investors::investors.Nationality') }}</label>
                         <select
                             name="nationality_id"
                             id="nationality_id"
@@ -105,7 +105,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="title_id" class="form-label">{{ __('investors.Job Title') }}</label>
+                        <label for="title_id" class="form-label">{{ __('investors::investors.Job Title') }}</label>
                         <select
                             name="title_id"
                             id="title_id"
@@ -121,25 +121,25 @@
                     </div>
 
                     <div class="col-12">
-                        <label for="address" class="form-label">{{ __('investors.Address') }}</label>
+                        <label for="address" class="form-label">{{ __('investors::investors.Address') }}</label>
                         <textarea
                             name="address"
                             id="address"
                             rows="3"
                             class="form-control @error('address') is-invalid @enderror"
-                            placeholder="{{ __('investors.Write the address in detail') }}">{{ old('address') }}</textarea>
+                            placeholder="{{ __('investors::investors.Write the address in detail') }}">{{ old('address') }}</textarea>
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-6">
-                        <label for="id_card_image" class="form-label">{{ __('investors.ID Card Image') }}</label>
+                        <label for="id_card_image" class="form-label">{{ __('investors::investors.ID Card Image') }}</label>
                         <input
                             type="file"
                             name="id_card_image"
                             id="id_card_image"
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
+                        <div class="form-text">{{ __('investors::investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
@@ -149,14 +149,14 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="contract_image" class="form-label">{{ __('investors.Contract Image') }}</label>
+                        <label for="contract_image" class="form-label">{{ __('investors::investors.Contract Image') }}</label>
                         <input
                             type="file"
                             name="contract_image"
                             id="contract_image"
                             class="form-control @error('contract_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">{{ __('investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
+                        <div class="form-text">{{ __('investors::investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
                         @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="contract-preview-wrap">
@@ -166,7 +166,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="office_share_percentage" class="form-label">{{ __('investors.Office Share %') }} (%)</label>
+                        <label for="office_share_percentage" class="form-label">{{ __('investors::investors.Office Share %') }} (%)</label>
                         <input
                             type="number"
                             name="office_share_percentage"
@@ -174,8 +174,8 @@
                             class="form-control @error('office_share_percentage') is-invalid @enderror"
                             value="{{ old('office_share_percentage', '0') }}"
                             min="0" max="100" step="0.01" inputmode="decimal" dir="ltr"
-                            placeholder="{{ __('investors.Example: 12.50') }}">
-                        <div class="form-text">{{ __('investors.The value is between 0 and 100.') }}</div>
+                            placeholder="{{ __('investors::investors.Example: 12.50') }}">
+                        <div class="form-text">{{ __('investors::investors.The value is between 0 and 100.') }}</div>
                         @error('office_share_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                 </div>

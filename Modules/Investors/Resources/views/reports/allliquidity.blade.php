@@ -39,7 +39,7 @@
     <form method="GET" class="row g-2 align-items-end">
       <div class="col-12 col-md-6">
         <label class="form-label mb-1 small">@lang('reports.Search by name')</label>
-        <input type="text" name="q" class="form-control" value="{{ e($q) }}" placeholder="@lang('investors.Type investor name...')">
+        <input type="text" name="q" class="form-control" value="{{ e($q) }}" placeholder="@lang('investors::investors.Type investor name...')">
       </div>
       <div class="col-6 col-md-2">
         <label class="form-label mb-1 small">@lang('reports.Per Page')</label>
