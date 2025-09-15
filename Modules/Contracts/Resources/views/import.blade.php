@@ -93,6 +93,7 @@
         $failuresCount = (int) $failuresBag->count();
     }
     $hasFailures = $failuresCount > 0;
+    $hasIssues   = $hasFailures || $skipped > 0;
 
     $successPct = $rows > 0 ? round(($changed / $rows) * 100, 1) : 0;
     $skipPct    = $rows > 0 ? round(($skipped / $rows) * 100, 1) : 0;
@@ -196,9 +197,16 @@
             <i class="bi bi-upload me-1"></i> @lang('contracts::contracts_import.Import Now')
           </button>
 
-          @if ($hasFailures && Route::has('contracts.import.failures.fix'))
+          @if ($hasIssues && Route::has('contracts.import.failures.fix'))
             <a class="btn btn-warning" href="{{ route('contracts.import.failures.fix') }}">
-              <i class="bi bi-wrench-adjustable me-1"></i> تنزيل ملف لتصحيح الصفوف
+              <i class="bi bi-wrench-adjustable me-1"></i>
+              تنزيل ملف لتصحيح الصفوف
+              @if($hasFailures)
+                <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+              @endif
+              @if($skipped > 0)
+                <span class="badge text-bg-warning ms-1">{{ $skipped }}</span>
+              @endif
             </a>
           @endif
         </div>
