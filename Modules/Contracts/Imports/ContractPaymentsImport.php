@@ -80,10 +80,26 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
         ];
     }
 
-    private function toDate(?string $v): ?string
+    private function toDate($v): ?string
     {
-        if (!$v) return null;
-        try { return Carbon::parse($v)->format('Y-m-d'); } catch (\Throwable) { return null; }
+        if ($v === null || $v === '') {
+            return null;
+        }
+
+        if (is_numeric($v) && (float) $v > 10000) {
+            try {
+                $dt = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float) $v);
+                return Carbon::instance($dt)->format('Y-m-d');
+            } catch (\Throwable) {
+                // fall back to generic parsing below
+            }
+        }
+
+        try {
+            return Carbon::parse($v)->format('Y-m-d');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     // ===== Counters =====
