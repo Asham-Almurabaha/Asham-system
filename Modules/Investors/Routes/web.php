@@ -14,6 +14,12 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::post('/',              [InvestorImportController::class, 'store'])->name('import');
         Route::get('/template',       [InvestorImportController::class, 'template'])->name('import.template');
         Route::get('/failures/fix',   [InvestorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+        Route::post('/pending/{token}/confirm', [InvestorImportController::class, 'confirmPending'])
+            ->name('import.pending.confirm');
+        Route::post('/pending/{token}/ignore', [InvestorImportController::class, 'ignorePending'])
+            ->name('import.pending.ignore');
+        Route::post('/pending/{token}/store-new', [InvestorImportController::class, 'storePendingAsNew'])
+            ->name('import.pending.store-new');
     });
 
     Route::resource('investors', InvestorController::class);

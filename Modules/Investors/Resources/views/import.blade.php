@@ -45,6 +45,12 @@
     </div>
   @endif
 
+  @if (session('error'))
+    <div class="alert alert-danger border-0 shadow-sm">
+      <i class="bi bi-exclamation-octagon me-2 fs-5"></i>{{ session('error') }}
+    </div>
+  @endif
+
   @if (session('info'))
     <div class="alert alert-info border-0 shadow-sm">
       <i class="bi bi-info-circle me-2 fs-5"></i>{{ session('info') }}
@@ -63,6 +69,38 @@
     $unchanged = (int)($summary['unchanged'] ?? 0);
     $skipped   = (int)($summary['skipped']   ?? 0);
     $changed   = (int)($summary['changed']   ?? ($inserted + $updated));
+
+    $pendingUpdates = session('investors_import.pending_updates') ?? [];
+    if ($pendingUpdates instanceof \Illuminate\Support\Collection) {
+      $pendingUpdates = $pendingUpdates->toArray();
+    } elseif (is_object($pendingUpdates) && method_exists($pendingUpdates, 'toArray')) {
+      $pendingUpdates = $pendingUpdates->toArray();
+    }
+
+    $pendingCount   = is_countable($pendingUpdates) ? count($pendingUpdates)
+                      : (method_exists($pendingUpdates, 'count') ? (int)$pendingUpdates->count() : 0);
+    $pendingSummary = max((int)($summary['pending'] ?? 0), $pendingCount);
+
+    $fieldLabels = trans('investors::investors_import.fields');
+    if (!is_array($fieldLabels)) $fieldLabels = [];
+
+    $formatPendingValue = function ($value) {
+      if ($value === null) return '—';
+      if (is_string($value)) {
+        $trimmed = trim($value);
+        return $trimmed === '' ? '—' : $trimmed;
+      }
+      if (is_numeric($value)) {
+        return (string)$value;
+      }
+      if (is_array($value)) {
+        return json_encode($value, JSON_UNESCAPED_UNICODE);
+      }
+      if (is_object($value)) {
+        return json_encode($value, JSON_UNESCAPED_UNICODE);
+      }
+      return (string)$value;
+    };
 
     $failuresCount = is_countable($failuresBag) ? count($failuresBag) : (method_exists($failuresBag, 'count') ? (int)$failuresBag->count() : 0);
     $hasFailures   = $failuresCount > 0;
@@ -102,6 +140,20 @@
           </div>
         </div>
       </div>
+      @if ($pendingSummary > 0)
+        <div class="col-12 col-md-3">
+          <div class="card shadow-sm h-100 border-0">
+            <div class="card-body d-flex align-items-center gap-3">
+              <div class="kpi-icon bg-info-subtle text-info"><i class="bi bi-hourglass-split"></i></div>
+              <div class="flex-grow-1">
+                <div class="text-muted small">@lang('investors::investors_import.Pending Review')</div>
+                <div class="fs-4 fw-bold">{{ number_format($pendingSummary) }}</div>
+                <div class="text-info small">@lang('investors::investors_import.Pending updates require confirmation')</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      @endif
       <div class="col-12 col-md-3">
         <div class="card shadow-sm h-100 border-0">
           <div class="card-body d-flex align-items-center gap-3">
@@ -119,14 +171,114 @@
           <div class="card-body d-flex align-items-center gap-3">
             <div class="kpi-icon bg-warning-subtle text-warning"><i class="bi bi-exclamation-triangle"></i></div>
             <div class="flex-grow-1">
-              <div class="text-muted small">متخطّى</div>
+              <div class="text-muted small">@lang('investors::investors_import.Skipped')</div>
               <div class="fs-4 fw-bold">{{ number_format($skipped) }}</div>
-              <div class="text-warning small">النسبة: {{ $skipPct }}%</div>
+              <div class="text-warning small">@lang('investors::investors_import.Rate'): {{ $skipPct }}%</div>
             </div>
             @if ($hasFailures)
-              <span class="badge rounded-pill bg-warning-subtle text-warning border">{{ $failuresCount }} خطأ تحقق</span>
+              <span class="badge rounded-pill bg-warning-subtle text-warning border">{{ $failuresCount }} @lang('investors::investors_import.Validation Errors')</span>
             @endif
           </div>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  @if ($pendingCount > 0)
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header d-flex align-items-center bg-white">
+        <i class="bi bi-hourglass-split me-2"></i>
+        <span>@lang('investors::investors_import.Pending Updates')</span>
+        <span class="badge rounded-pill text-bg-warning ms-2">{{ $pendingCount }}</span>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:110px">@lang('investors::investors_import.Row Number')</th>
+                <th style="width:220px">@lang('investors::investors_import.Investor')</th>
+                <th>@lang('investors::investors_import.Changes')</th>
+                <th style="width:220px">@lang('investors::investors_import.Actions')</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach ($pendingUpdates as $tokenKey => $pendingItem)
+                @php
+                  $token = is_string($tokenKey) ? $tokenKey : ($pendingItem['token'] ?? $tokenKey);
+                @endphp
+                @if (empty($token))
+                  @continue
+                @endif
+                @php
+                  $diff         = $pendingItem['diff'] ?? [];
+                  $identifiers  = $pendingItem['identifiers'] ?? [];
+                  $investorRow  = $pendingItem['row'] ?? '—';
+                  $investorName = $pendingItem['investor_name'] ?? '—';
+                @endphp
+                <tr>
+                  <td class="fw-semibold">{{ $investorRow }}</td>
+                  <td>
+                    <div class="fw-semibold">{{ $investorName }}</div>
+                    <div class="text-muted small">
+                      @if (!empty($identifiers['national_id']))
+                        <span class="d-inline-flex align-items-center me-2">
+                          <i class="bi bi-person-vcard me-1"></i>
+                          {{ $formatPendingValue($identifiers['national_id']) }}
+                        </span>
+                      @endif
+                      @if (!empty($identifiers['phone']))
+                        <span class="d-inline-flex align-items-center">
+                          <i class="bi bi-telephone me-1"></i>
+                          {{ $formatPendingValue($identifiers['phone']) }}
+                        </span>
+                      @endif
+                    </div>
+                  </td>
+                  <td>
+                    @if (!empty($diff))
+                      <div class="d-flex flex-column gap-2">
+                        @foreach ($diff as $field => $change)
+                          <div class="border rounded-3 p-2">
+                            <div class="fw-semibold small text-secondary">{{ $fieldLabels[$field] ?? $field }}</div>
+                            <div class="d-flex align-items-center gap-2">
+                              <span class="badge text-bg-light">{{ $formatPendingValue($change['old'] ?? null) }}</span>
+                              <i class="bi bi-arrow-left-right text-muted"></i>
+                              <span class="badge text-bg-primary">{{ $formatPendingValue($change['new'] ?? null) }}</span>
+                            </div>
+                          </div>
+                        @endforeach
+                      </div>
+                    @else
+                      <span class="text-muted small">@lang('investors::investors_import.No differences found')</span>
+                    @endif
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column flex-lg-row gap-2">
+                      <form method="POST" action="{{ route('investors.import.pending.confirm', $token) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                          <i class="bi bi-check2-circle me-1"></i> @lang('investors::investors_import.Confirm Update')
+                        </button>
+                      </form>
+                      <form method="POST" action="{{ route('investors.import.pending.store-new', $token) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                          <i class="bi bi-plus-circle me-1"></i> @lang('investors::investors_import.Save as new record')
+                        </button>
+                      </form>
+                      <form method="POST" action="{{ route('investors.import.pending.ignore', $token) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                          <i class="bi bi-x-circle me-1"></i> @lang('investors::investors_import.Ignore')
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -164,7 +316,6 @@
             <i class="bi bi-upload me-1"></i> @lang('investors::investors_import.Import Now')
           </button>
 
-          @php $hasIssues = ($hasFailures || $skippedCount > 0); @endphp
           @if ($hasIssues && Route::has('investors.import.failures.fix'))
             <a class="btn btn-warning" href="{{ route('investors.import.failures.fix') }}">
               <i class="bi bi-wrench-adjustable me-1"></i>
@@ -258,7 +409,7 @@
               <thead class="table-light sticky-top">
                 <tr>
                   <th style="width:110px">@lang('investors::investors_import.Row Number')</th>
-                  <th style="width:260px">السبب</th>
+                  <th style="width:260px">@lang('investors::investors_import.Reason')</th>
                   <th style="min-width:260px">@lang('investors::investors_import.Values')</th>
                 </tr>
               </thead>

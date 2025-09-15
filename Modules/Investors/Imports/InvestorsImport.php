@@ -33,13 +33,16 @@ class InvestorsImport implements
 
     protected int $rows      = 0;
     protected int $inserted  = 0;
-    protected int $updated   = 0;   // تغييرات فعلية فقط
+    protected int $updated   = 0;   // تغييرات فعلية فقط (بعد التأكيد)
     protected int $unchanged = 0;   // لم تتغيّر
     protected int $skipped   = 0;   // تخطّي داخل model()
     protected int $failedByValidation = 0; // فشل قبل model()
 
+    protected int $pending   = 0;   // تعديلات بانتظار التأكيد
+
     /** المتخطّي بصيغة مبسطة للتصدير: كل عنصر ['row'=>int,'values'=>array,'reason'=>string] */
     protected array $skippedSimple = [];
+    protected array $pendingUpdates = [];
 
     public function headingRow(): int { return 1; }
 
@@ -127,24 +130,48 @@ class InvestorsImport implements
             'office_share_percentage' => $officeShare,
         ];
 
+        $updates = $payload;
+        foreach ($updates as $k => $v) {
+            if (is_null($v)) unset($updates[$k]);
+        }
+
         try {
             if ($found) {
-                // "تكملة الناقص فقط": ما نعدّلش قيمة موجودة فعلاً
-                foreach ($payload as $k => $v) {
-                    if (is_null($v)) {
-                        unset($payload[$k]);
+                $diff = [];
+                foreach ($updates as $field => $value) {
+                    $current = $found->getAttribute($field);
+                    if ($this->valuesEqual($current, $value)) {
+                        unset($updates[$field]);
+                        continue;
                     }
-                }
-                $original = $found->replicate();
 
-                $found->fill($payload);
-
-                if ($found->isDirty()) {
-                    $found->save();
-                    $this->updated++;
-                } else {
-                    $this->unchanged++; // لا نضيفه للمتخطّى — يُعرض في KPI كـ unchanged
+                    $diff[$field] = [
+                        'old' => $current,
+                        'new' => $value,
+                    ];
                 }
+
+                if (empty($diff)) {
+                    $this->unchanged++;
+                    return null;
+                }
+
+                $token = (string) Str::uuid();
+
+                $this->pending++;
+                $this->pendingUpdates[$token] = [
+                    'token' => $token,
+                    'row'   => $this->rows,
+                    'investor_id'   => $found->id,
+                    'investor_name' => $found->name,
+                    'identifiers'   => [
+                        'national_id' => $found->national_id,
+                        'phone'       => $found->phone,
+                    ],
+                    'diff'    => $diff,
+                    'updates' => $updates,
+                    'payload' => $payload,
+                ];
             } else {
                 Investor::create($payload);
                 $this->inserted++;
@@ -214,6 +241,16 @@ class InvestorsImport implements
     public function getSkippedCount(): int   { return $this->skipped; }
     public function getFailedValidationCount(): int { return $this->failedByValidation; }
 
+    public function getPendingCount(): int
+    {
+        return $this->pending;
+    }
+
+    public function getPendingUpdates(): array
+    {
+        return $this->pendingUpdates;
+    }
+
     /** المتخطّي بصيغته المبسّطة للتصدير (failures + skips داخل model) */
     public function skipped(): array
     {
@@ -270,5 +307,16 @@ class InvestorsImport implements
             return false;
         });
         return $found ? (int)$found->id : null;
+    }
+
+    private function valuesEqual($a, $b): bool
+    {
+        if ($a === null && $b === null) return true;
+        if ($a === null || $b === null) return false;
+
+        if (is_string($a)) $a = trim($a);
+        if (is_string($b)) $b = trim($b);
+
+        return $a == $b;
     }
 }
