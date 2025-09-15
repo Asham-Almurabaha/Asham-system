@@ -4,6 +4,7 @@ namespace Modules\Contracts\Http\Controllers;
 
 use Modules\Contracts\Exports\ContractsFailuresFixExport;
 use Modules\Contracts\Exports\ContractsTemplateExport;
+use Modules\Contracts\Exports\ContractsBasicFailuresFixExport;
 use App\Http\Controllers\Controller;
 use Modules\Contracts\Imports\ContractsImport;
 use Modules\Contracts\Imports\ContractsBasicImport;
@@ -474,6 +475,26 @@ class ContractsImportController extends Controller
     public function template()
     {
         return Excel::download(new ContractsTemplateExport(), 'contracts_template.xlsx');
+    }
+
+    /**
+     * تنزيل ملف لتصحيح صفوف الاستيراد الأساسي الفاشلة أو المتخطاة.
+     * يعتمد على البيانات المخزنة في الجلسة بعد عملية الاستيراد.
+     */
+    public function exportBasicFailuresFix()
+    {
+        $failures = session('contracts_basic_import.failures_simple');
+
+        if ($failures instanceof Collection) {
+            $failures = $failures->all();
+        }
+
+        if (empty($failures) || (is_countable($failures) && count($failures) === 0)) {
+            return redirect()->route('contracts.import.basic.form')
+                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد ملف التصحيح.');
+        }
+
+        return Excel::download(new ContractsBasicFailuresFixExport($failures), 'contracts_basic_issues.xlsx');
     }
 
     /**

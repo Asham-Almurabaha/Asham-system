@@ -20,6 +20,7 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
 
     Route::get('/template', [ContractsImportController::class, 'template'])->name('import.template');
     Route::get('/failures/fix', [ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+    Route::get('/basic/failures/fix', [ContractsImportController::class, 'exportBasicFailuresFix'])->name('import.basic.failures.fix');
 });
 
 // CRUD العقود
