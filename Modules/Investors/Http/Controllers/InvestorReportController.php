@@ -46,15 +46,15 @@ class InvestorReportController extends Controller
 
     public function deposits(Investor $investor)
     {
-        $rows = LedgerEntry::query()
+        $deposits = LedgerEntry::query()
             ->where('investor_id', $investor->id)
             ->where('direction', 'in')
             ->latest('entry_date')
             ->get();
 
-        $total = $rows->sum('amount');
+        $depositsTotal = $deposits->sum('amount');
 
-        return view('investors.reports.deposits', compact('investor', 'rows', 'total'));
+        return view('investors.reports.deposits', compact('investor', 'deposits', 'depositsTotal'));
     }
 
     public function withdrawals(Investor $investor)
