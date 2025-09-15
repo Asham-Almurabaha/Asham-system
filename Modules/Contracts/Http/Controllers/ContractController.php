@@ -19,6 +19,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
+use Modules\Contracts\Support\TransactionDirection;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Entities\InvestorTransaction;
@@ -522,43 +523,7 @@ class ContractController extends Controller
     private function directionFromTypeId(int $typeId): ?string
     {
         $typeName = TransactionType::whereKey($typeId)->value('name');
-        return $this->directionFromTypeName($typeName);
-    }
-
-    private function directionFromTypeName(?string $typeName): ?string
-    {
-        $name = $this->arNormalize($typeName);
-        if ($name === '') return null;
-
-        $exact = [
-            'ايداع' => 'in', 'إيداع' => 'in', 'توريد' => 'in', 'تحصيل' => 'in',
-            'سحب'   => 'out', 'صرف'  => 'out', 'توزيع' => 'out', 'استرداد' => 'out',
-            'deposit' => 'in', 'withdraw' => 'out',
-        ];
-        if (isset($exact[$typeName])) {
-            return $exact[$typeName];
-        }
-
-        if (mb_strpos($name, 'ايداع')!==false || mb_strpos($name, 'توريد')!==false || mb_strpos($name, 'تحصيل')!==false) return 'in';
-        if (mb_strpos($name, 'سحب')  !==false || mb_strpos($name, 'صرف')  !==false || mb_strpos($name, 'توزيع')  !==false || mb_strpos($name, 'استرداد')!==false) return 'out';
-        if (mb_strpos($name, 'deposit')!==false) return 'in';
-        if (mb_strpos($name, 'withdraw')!==false) return 'out';
-
-        return null;
-    }
-
-    private function arNormalize(?string $text): string
-    {
-        if ($text === null) return '';
-        $text = trim($text);
-        $text = mb_strtolower($text, 'UTF-8');
-
-        $map = [
-            'أ' => 'ا', 'إ' => 'ا', 'آ' => 'ا',
-            'ة' => 'ه', 'ى' => 'ي',
-            'ؤ' => 'و', 'ئ' => 'ي',
-        ];
-        return strtr($text, $map);
+        return TransactionDirection::directionFromTypeName($typeName);
     }
 
     public function show(Contract $contract)

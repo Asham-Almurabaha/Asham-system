@@ -5,6 +5,7 @@ namespace Modules\Contracts\Imports\Concerns;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
+use Modules\Contracts\Support\TransactionDirection;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Entities\InvestorTransaction;
 use App\Models\LedgerEntry;
@@ -132,7 +133,7 @@ trait HandlesContractInvestors
         $typeId = $status->transaction_type_id ?: $this->guessTypeIdByStatusName($statusName);
         if (!$typeId) return;
 
-        $direction = $this->directionFromTypeName(
+        $direction = TransactionDirection::directionFromTypeName(
             TransactionType::whereKey($typeId)->value('name')
         ) ?? 'in';
 
@@ -185,19 +186,4 @@ trait HandlesContractInvestors
         return null;
     }
 
-    private function directionFromTypeName(?string $name): ?string
-    {
-        if (!$name) return null;
-        $name = $this->arNormalize($name);
-        if (str_contains($name,'ايداع') || str_contains($name,'توريد') || str_contains($name,'تحصيل') || str_contains($name,'deposit')) return 'in';
-        if (str_contains($name,'سحب')   || str_contains($name,'صرف')   || str_contains($name,'توزيع') || str_contains($name,'استرداد') || str_contains($name,'withdraw')) return 'out';
-        return null;
-    }
-
-    private function arNormalize(string $text): string
-    {
-        $text = mb_strtolower(trim($text),'UTF-8');
-        $map = ['أ'=>'ا','إ'=>'ا','آ'=>'ا','ة'=>'ه','ى'=>'ي','ؤ'=>'و','ئ'=>'ي'];
-        return strtr($text,$map);
-    }
 }
