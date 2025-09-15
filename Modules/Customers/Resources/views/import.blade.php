@@ -267,7 +267,7 @@
                     <div class="d-flex flex-column flex-lg-row gap-2">
                       <form method="POST" action="{{ route('customers.import.pending.confirm', $token) }}">
                         @csrf
-                        <button type="submit" class="btn btn-success btn-sm w-100">
+                        <button type="submit" class="btn btn-outline-success btn-sm w-100">
                           <i class="bi bi-check2-circle me-1"></i> @lang('customers::customers_import.Confirm Update')
                         </button>
                       </form>
