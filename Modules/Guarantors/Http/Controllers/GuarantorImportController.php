@@ -3,6 +3,7 @@
 namespace Modules\Guarantors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Modules\Guarantors\Entities\Guarantor;
 use Modules\Guarantors\Exports\GuarantorsFailuresFixExport;
 use Modules\Guarantors\Exports\GuarantorsSkippedExport;
 use Modules\Guarantors\Exports\GuarantorsTemplateExport;
@@ -43,16 +44,22 @@ class GuarantorImportController extends Controller
             $inserted  = $import->getInsertedCount();
             $updated   = $import->getUpdatedCount(); // تكملة الناقص فقط
             $unchanged = $import->getUnchangedCount();
+            $pending   = method_exists($import, 'getPendingCount') ? $import->getPendingCount() : 0;
+            $pendingUpdates = method_exists($import, 'getPendingUpdates') ? $import->getPendingUpdates() : [];
             $changed   = $inserted + $updated;
 
             $summary = [
                 'rows'       => $rowsTotal,
                 'inserted'   => $inserted,
                 'updated'    => $updated,
+                'pending'    => $pending,
                 'unchanged'  => $unchanged,
                 'skipped'    => $skippedReal,
                 'changed'    => $changed,
             ];
+
+            session()->put('guarantors_import.summary', $summary);
+            $this->storePendingUpdates(is_array($pendingUpdates) ? $pendingUpdates : []);
 
             // تبسيط الإخفاقات
             $iter = $failuresRaw instanceof Collection ? $failuresRaw : collect($failuresRaw);
@@ -89,11 +96,18 @@ class GuarantorImportController extends Controller
             // flash: تظهر مرة بعد الـ redirect وتختفي مع أول Refresh
             session()->flash('guarantors_import.failures_simple', $failuresSimple);
             session()->flash('guarantors_import.skipped_simple',  $skippedSimple);
-            session()->flash('guarantors_import.summary',         $summary);
+
+            $savedMessage = $inserted > 0
+                ? 'تم حفظ '.$inserted.' كفيل جديد.'
+                : 'لا توجد إضافات جديدة.';
+
+            if ($pending > 0) {
+                $savedMessage .= ' توجد '.$pending.' تعديلات بانتظار التأكيد.';
+            }
 
             return redirect()
                 ->route('guarantors.import.form')
-                ->with('success', 'تم حفظ فعليًا: '.$changed.' (جديد: '.$inserted.'، تعديل: '.$updated.')')
+                ->with('success', $savedMessage)
                 ->with('summary', $summary)
                 ->with('failures', $failuresRaw)
                 ->with('failures_simple', $failuresSimple)
@@ -151,5 +165,197 @@ class GuarantorImportController extends Controller
         }
 
         return Excel::download(new GuarantorsSkippedExport($skipped), 'guarantors_skipped.xlsx');
+    }
+
+    public function confirmPending(Request $request, string $token)
+    {
+        $pending = $this->getPendingUpdatesFromSession();
+
+        if (!isset($pending[$token])) {
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+        }
+
+        $entry = $pending[$token];
+        unset($pending[$token]);
+
+        $guarantorId = $entry['guarantor_id'] ?? null;
+        $guarantor   = $guarantorId ? Guarantor::find($guarantorId) : null;
+
+        if (!$guarantor) {
+            $this->storePendingUpdates($pending);
+            $this->syncPendingSummary($pending, false);
+
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'الكفيل غير موجود، أزيل التعديل من قائمة الانتظار.');
+        }
+
+        $updates = $entry['updates'] ?? [];
+        if (!is_array($updates) || empty($updates)) {
+            $this->storePendingUpdates($pending);
+            $this->syncPendingSummary($pending, false);
+
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.');
+        }
+
+        $fillable = array_flip($guarantor->getFillable());
+        $apply     = [];
+        foreach ($updates as $field => $value) {
+            if (isset($fillable[$field])) {
+                $apply[$field] = $value;
+            }
+        }
+
+        if (empty($apply)) {
+            $this->storePendingUpdates($pending);
+            $this->syncPendingSummary($pending, false);
+
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.');
+        }
+
+        $guarantor->fill($apply);
+
+        $applied = false;
+        if ($guarantor->isDirty()) {
+            $guarantor->save();
+            $applied = $guarantor->wasChanged();
+        }
+
+        $this->storePendingUpdates($pending);
+        $this->syncPendingSummary($pending, $applied);
+
+        if ($applied) {
+            return redirect()->route('guarantors.import.form')
+                ->with('success', 'تم تأكيد تعديل الكفيل '.$guarantor->name.' بنجاح.');
+        }
+
+        return redirect()->route('guarantors.import.form')
+            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.');
+    }
+
+    public function ignorePending(Request $request, string $token)
+    {
+        $pending = $this->getPendingUpdatesFromSession();
+
+        if (!isset($pending[$token])) {
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+        }
+
+        $entry = $pending[$token];
+        unset($pending[$token]);
+
+        $this->storePendingUpdates($pending);
+        $this->syncPendingSummary($pending, false);
+
+        $name = $entry['guarantor_name'] ?? 'الكفيل';
+
+        return redirect()->route('guarantors.import.form')
+            ->with('info', 'تم تجاهل التعديل للكفيل '.$name.'.');
+    }
+
+    public function storePendingAsNew(Request $request, string $token)
+    {
+        $pending = $this->getPendingUpdatesFromSession();
+
+        if (!isset($pending[$token])) {
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+        }
+
+        $entry = $pending[$token];
+
+        $payload = $entry['payload'] ?? [];
+        if (!is_array($payload) || empty($payload)) {
+            $payload = $entry['updates'] ?? [];
+
+            $existingId = $entry['guarantor_id'] ?? null;
+            $existing   = $existingId ? Guarantor::find($existingId) : null;
+
+            if ($existing) {
+                foreach ($existing->getFillable() as $field) {
+                    if (!array_key_exists($field, $payload)) {
+                        $payload[$field] = $existing->getAttribute($field);
+                    }
+                }
+            }
+        }
+
+        if (!is_array($payload) || empty($payload)) {
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.');
+        }
+
+        $guarantorPrototype = new Guarantor();
+        $fillableMap        = array_flip($guarantorPrototype->getFillable());
+        $data               = [];
+
+        foreach ($payload as $field => $value) {
+            if (isset($fillableMap[$field])) {
+                $data[$field] = $value;
+            }
+        }
+
+        $nameValue = $data['name'] ?? null;
+        if ($nameValue === null || trim((string) $nameValue) === '') {
+            return redirect()->route('guarantors.import.form')
+                ->with('info', 'الاسم مطلوب لإنشاء كفيل جديد من هذا التعديل.');
+        }
+
+        try {
+            $newGuarantor = Guarantor::create($data);
+        } catch (\Throwable $e) {
+            return redirect()->route('guarantors.import.form')
+                ->with('error', 'تعذّر إنشاء كفيل جديد: '.$e->getMessage());
+        }
+
+        unset($pending[$token]);
+        $this->storePendingUpdates($pending);
+        $this->syncPendingSummary($pending, false, true);
+
+        return redirect()->route('guarantors.import.form')
+            ->with('success', 'تم حفظ كفيل جديد باسم '.$newGuarantor->name.'.');
+    }
+
+    private function getPendingUpdatesFromSession(): array
+    {
+        $pending = session('guarantors_import.pending_updates', []);
+
+        if ($pending instanceof Collection) {
+            return $pending->toArray();
+        }
+
+        return is_array($pending) ? $pending : [];
+    }
+
+    private function storePendingUpdates(array $pending): void
+    {
+        if (empty($pending)) {
+            session()->forget('guarantors_import.pending_updates');
+            return;
+        }
+
+        session(['guarantors_import.pending_updates' => $pending]);
+    }
+
+    private function syncPendingSummary(array $pending, bool $appliedUpdate, bool $inserted = false): void
+    {
+        $summary = session('guarantors_import.summary', []);
+
+        $summary['pending'] = is_countable($pending) ? count($pending) : 0;
+
+        if ($appliedUpdate) {
+            $summary['updated'] = (int) ($summary['updated'] ?? 0) + 1;
+            $summary['changed'] = (int) ($summary['changed'] ?? 0) + 1;
+        }
+
+        if ($inserted) {
+            $summary['inserted'] = (int) ($summary['inserted'] ?? 0) + 1;
+            $summary['changed']  = (int) ($summary['changed'] ?? 0) + 1;
+        }
+
+        session(['guarantors_import.summary' => $summary]);
     }
 }

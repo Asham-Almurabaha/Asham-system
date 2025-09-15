@@ -10,6 +10,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [GuarantorImportController::class, 'store'])->name('import');
         Route::get('/template', [GuarantorImportController::class, 'template'])->name('import.template');
         Route::get('/failures/fix', [GuarantorImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
+        Route::post('/pending/{token}/confirm', [GuarantorImportController::class, 'confirmPending'])
+            ->name('import.pending.confirm');
+        Route::post('/pending/{token}/ignore', [GuarantorImportController::class, 'ignorePending'])
+            ->name('import.pending.ignore');
+        Route::post('/pending/{token}/store-new', [GuarantorImportController::class, 'storePendingAsNew'])
+            ->name('import.pending.store-new');
     });
 
     Route::resource('guarantors', GuarantorController::class);
