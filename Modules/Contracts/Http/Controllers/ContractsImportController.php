@@ -26,16 +26,11 @@ class ContractsImportController extends Controller
      */
     public function create(Request $request)
     {
-        $keep = session()->has('import_just_done') || $request->boolean('keep', false);
-
-        // مسح الحالة لإرجاع الصفحة للوضع الافتراضي بعد أي Refresh عادي
-        if (!$keep) {
-            session()->forget([
-                'contracts_import.summary',
-                'contracts_import.failures_simple',
-                'contracts_import.errors_simple',
-            ]);
-        }
+        $this->resetImportSession('contracts_import', [
+            'summary',
+            'failures_simple',
+            'errors_simple',
+        ], $request);
 
         return view('contracts::import');
     }
@@ -45,15 +40,11 @@ class ContractsImportController extends Controller
      */
     public function createBasic(Request $request)
     {
-        $keep = session()->has('import_basic_just_done') || $request->boolean('keep', false);
-
-        if (!$keep) {
-            session()->forget([
-                'contracts_basic_import.summary',
-                'contracts_basic_import.failures_simple',
-                'contracts_basic_import.errors_simple',
-            ]);
-        }
+        $this->resetImportSession('contracts_basic_import', [
+            'summary',
+            'failures_simple',
+            'errors_simple',
+        ], $request);
 
         return view('contracts::import_basic');
     }
@@ -63,33 +54,49 @@ class ContractsImportController extends Controller
      */
     public function createInvestors(Request $request)
     {
-        $keep = session()->has('import_investors_just_done') || $request->boolean('keep', false);
-
-        if (!$keep) {
-            session()->forget([
-                'contracts_investors_import.summary',
-                'contracts_investors_import.failures_simple',
-                'contracts_investors_import.errors_simple',
-                'contracts_investors_import.skipped_simple',
-            ]);
-        }
+        $this->resetImportSession('contracts_investors_import', [
+            'summary',
+            'failures_simple',
+            'errors_simple',
+            'skipped_simple',
+        ], $request);
 
         return view('contracts::import_investors');
     }
 
     public function createPayments(Request $request)
     {
-        $keep = session()->has('import_payments_just_done') || $request->boolean('keep', false);
-
-        if (!$keep) {
-            session()->forget([
-                'contracts_payments_import.summary',
-                'contracts_payments_import.failures_simple',
-                'contracts_payments_import.errors_simple',
-            ]);
-        }
+        $this->resetImportSession('contracts_payments_import', [
+            'summary',
+            'failures_simple',
+            'errors_simple',
+        ], $request);
 
         return view('contracts::import_payments');
+    }
+
+    private function resetImportSession(string $namespace, array $keys, Request $request): void
+    {
+        $flag = match ($namespace) {
+            'contracts_import' => 'import_just_done',
+            'contracts_basic_import' => 'import_basic_just_done',
+            'contracts_investors_import' => 'import_investors_just_done',
+            'contracts_payments_import' => 'import_payments_just_done',
+            default => null,
+        };
+
+        $keep = ($flag !== null && session()->has($flag)) || $request->boolean('keep', false);
+
+        if ($keep) {
+            return;
+        }
+
+        $namespacedKeys = array_map(
+            fn ($key) => strpos($key, '.') !== false ? $key : "{$namespace}.{$key}",
+            $keys
+        );
+
+        session()->forget($namespacedKeys);
     }
 
     /**
