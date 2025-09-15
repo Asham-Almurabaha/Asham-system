@@ -4,6 +4,8 @@ namespace Modules\Contracts\Imports;
 
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Contracts\Entities\ContractStatus;
+use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Customers\Entities\Customer;
 use Modules\Guarantors\Entities\Guarantor;
 use App\Models\InstallmentStatus;
@@ -24,6 +26,7 @@ class ContractsBasicImport implements ToCollection, WithHeadingRow
     private int $rows = 0;
     private int $inserted = 0;
     private int $skipped = 0;
+    private ?int $noInvestorStatusId = null;
 
     /** @var array<int,array{row:int,attribute?:string|array,values:array,messages:array}> */
     private array $failuresSimple = [];
@@ -70,7 +73,7 @@ class ContractsBasicImport implements ToCollection, WithHeadingRow
                         'contract_number'         => $data['contract_number'] ?? (date('Ymd').rand(10,99)),
                         'customer_id'             => $customerId,
                         'guarantor_id'            => $guarantorId,
-                        'contract_status_id'      => null,
+                        'contract_status_id'      => $this->getNoInvestorStatusId(),
                         'product_type_id'         => $productTypeId,
                         'products_count'          => (int) ($data['products_count'] ?? 0),
                         'purchase_price'          => (float) ($data['purchase_price'] ?? 0),
@@ -253,5 +256,15 @@ class ContractsBasicImport implements ToCollection, WithHeadingRow
             'values' => $values,
             'messages' => $messages,
         ];
+    }
+
+    private function getNoInvestorStatusId(): ?int
+    {
+        if ($this->noInvestorStatusId === null) {
+            $id = ContractStatus::where('name', ContractStatusNames::NO_INVESTORS)->value('id');
+            $this->noInvestorStatusId = $id ? (int) $id : null;
+        }
+
+        return $this->noInvestorStatusId;
     }
 }
