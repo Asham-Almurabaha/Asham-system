@@ -168,7 +168,7 @@
                   <tr>
                     <td>{{ $f['row'] }}</td>
                     <td>{{ $f['attribute'] }}</td>
-                    <td>{{ $f['messages'] }}</td>
+                    <td>{{ is_array($f['messages']) ? implode(', ', $f['messages']) : $f['messages'] }}</td>
                     <td><code>{{ implode(', ', array_map(fn($k,$v)=>"$k=$v", array_keys($f['values']), $f['values'])) }}</code></td>
                   </tr>
                 @endforeach
