@@ -519,6 +519,7 @@
                 <thead class="table-light position-sticky top-0">
                     <tr>
                         <th style="width:60px">#</th>
+                        <th>{{ __('Contract Number') }}</th>
                         <th>{{ __('Customer') }}</th>
                         <th>{{ __('Guarantor') }}</th>
                         <th>{{ __('Product Type') }}</th>
@@ -527,7 +528,6 @@
                         <th>{{ __('Investor Profit') }}</th>
                         <th style="min-width:160px;">{{ __('Investors') }}</th>
                         <th>{{ __('Start Date') }}</th>
-                        <th style="width:190px">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -554,6 +554,11 @@
                             <td class="text-muted">
                                 {{ $loop->iteration + ($contracts->currentPage() - 1) * $contracts->perPage() }}
                             </td>
+                            <td class="text-start">
+                                <a href="{{ route('contracts.show', $contract) }}" class="text-decoration-none text-dark hover-primary fw-bold">
+                                    {{ $contract->contract_number ?? '—' }}
+                                </a>
+                            </td>
                             <td class="text-center">{{ $contract->customer->name ?? '-' }}</td>
                             <td class="text-center">{{ $contract->guarantor->name ?? '-' }}</td>
                             <td>{{ $contract->productType->name ?? '-' }}</td>
@@ -576,9 +581,6 @@
                                 @endif
                             </td>
                             <td>{{ optional($contract->start_date)->format('Y-m-d') }}</td>
-                            <td class="text-nowrap">
-                                <a href="{{ route('contracts.show', $contract) }}" class="btn btn-outline-secondary btn-sm">{{ __('View') }}</a>
-                            </td>
                         </tr>
                     @empty
                         <tr>
