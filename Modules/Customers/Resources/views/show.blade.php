@@ -13,7 +13,7 @@
          * The values coming from the controller:
          * - $contractsSummary: ['total','active','finished','other','pct_active','pct_finished','pct_other']
          * - $statusesBreakdown: [['id'=>?, 'name'=>'...', 'count'=>n, 'total_value_sum'=>.., 'formatted'=>..], ...]
-         * - $installments: App\DTO\CustomerDetails\InstallmentsSummary (object)
+         * - $installments: Modules\Customers\DTOS\InstallmentsSummary (object)
          */
 
         // ====== Quick summary from service data ======

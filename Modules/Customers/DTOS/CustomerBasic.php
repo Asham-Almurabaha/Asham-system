@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\CustomerDetails;
+namespace Modules\Customers\DTOS;
 
 class CustomerBasic
 {

@@ -15,6 +15,7 @@ class CustomerDetailsService
     private function dtoNamespace(): string
     {
         $candidates = [
+            'Modules\\Customers\\DTOS',
             'App\\DTOs\\CustomerDetails',
             'App\\DTO\\CustomerDetails',
         ];
@@ -25,8 +26,8 @@ class CustomerDetailsService
             }
         }
 
-        // افتراضيًا: النسخة بدون s
-        return '\\App\\DTO\\CustomerDetails';
+        // افتراضيًا: مجلد العملاء داخل الـ Modules
+        return '\\Modules\\Customers\\DTOS';
     }
 
     /**
