@@ -4,10 +4,10 @@ namespace Modules\Contracts\Imports\Concerns;
 
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
-use App\Models\InstallmentStatus;
 use App\Models\LedgerEntry;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
+use Modules\Contracts\Services\InstallmentStatusService;
 
 trait HandlesContractPayments
 {
@@ -154,11 +154,6 @@ trait HandlesContractPayments
 
         if ($insts->isEmpty()) return;
 
-        // خريطة حالات الأقساط
-        $st = InstallmentStatus::pluck('id','name');
-        $paidId     = $st['مسدد'] ?? $st['مدفوع'] ?? $st['مدفوع بالكامل'] ?? null;
-        $partialId  = $st['مدفوع جزئياً'] ?? $st['مسدد جزئياً'] ?? null;
-
         foreach ($payments as $p) {
             $left = (float)$p['amount'];
             if ($left <= 0) continue;
@@ -176,17 +171,15 @@ trait HandlesContractPayments
                 $left -= $canPay;
 
                 $update = ['payment_amount' => $paid];
-
-                // تحديث الحالة لو IDs متاحة
-                if ($paidId || $partialId) {
-                    if (abs($paid - $due) <= 0.0001) {
-                        if ($paidId) $update['installment_status_id'] = $paidId;
-                    } elseif ($paid > 0 && $paid < $due) {
-                        if ($partialId) $update['installment_status_id'] = $partialId;
-                    }
+                $payDate = $p['date'] ?? null;
+                if ($payDate) {
+                    $update['payment_date'] = $payDate;
                 }
 
                 $inst->update($update);
+
+                // استخدم نفس منطق تحديث حالة القسط المستخدم في السدادات اليدوية
+                InstallmentStatusService::recalculate($inst);
 
                 if ($left <= 0) break; // خلّصنا سداد واحد
             }

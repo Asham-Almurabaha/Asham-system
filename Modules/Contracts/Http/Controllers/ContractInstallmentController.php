@@ -10,12 +10,12 @@ use App\Models\TransactionStatus;
 use App\Models\TransactionType;
 use Modules\Investors\Entities\InvestorTransaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Contracts\Entities\ContractStatus;
+use Modules\Contracts\Services\InstallmentStatusService;
 
 class ContractInstallmentController extends Controller
 {
@@ -286,70 +286,7 @@ class ContractInstallmentController extends Controller
      */
     public function updateStatus(ContractInstallment $installment)
     {
-        // ✅ لا تعمل إلا لو نسب المستثمرين = 100%
-        $installment->loadMissing('contract.investors', 'installmentStatus');
-
-        $sumPct = 0.0;
-        if ($installment->contract && $installment->contract->investors) {
-            $sumPct = (float) $installment->contract->investors
-                ->sum(fn($i) => (float) ($i->pivot->share_percentage ?? 0));
-        }
-
-        // نقارن على دقتين عشريتين لتفادي مشاكل الكسور
-        if (round($sumPct, 2) !== 100.00) {
-            // لو النسبة مش 100% ما نغيرش الحالة ونخرج
-            return;
-        }
-
-        $paid    = (float) ($installment->payment_amount ?? 0);
-        $total   = (float) ($installment->due_amount ?? 0);
-        $dueDate = Carbon::parse($installment->due_date)->startOfDay();
-        $payDate = $installment->payment_date
-            ? Carbon::parse($installment->payment_date)->startOfDay()
-            : null;
-        $today   = now()->startOfDay();
-
-        $currentStatusName = optional($installment->installmentStatus)->name;
-        $statusName = null;
-
-        // 1) مدفوع بالكامل
-        if ($total > 0 && $paid >= $total) {
-            $effectivePayDate = $payDate ?: $today;
-            $diffDays = $effectivePayDate->diffInDays($dueDate, false); // سالب = قبل الاستحقاق
-
-            if ($diffDays > 7) {
-                $statusName = 'مدفوع مبكر';
-            } elseif ($diffDays < -7) {
-                $statusName = 'مدفوع متأخر';
-            } else {
-                $statusName = 'مدفوع كامل';
-            }
-        }
-        // 2) مدفوع جزئي
-        elseif ($paid > 0 && $paid < $total) {
-            $statusName = 'مدفوع جزئي';
-        }
-        // 3) غير مدفوع
-        else {
-            // لو مؤجل/معتذر ومفيش دفع، بلاش نغير
-            if (in_array($currentStatusName, ['مؤجل', 'معتذر'], true)) {
-                return;
-            }
-
-            if ($today->lt($dueDate)) {
-                $statusName = 'مطلوب';
-            } else {
-                $overdueDays = $dueDate->diffInDays($today);
-                $statusName  = ($overdueDays > 15) ? 'متعثر' : 'متأخر';
-            }
-        }
-
-        if ($statusName) {
-            $statusId = InstallmentStatus::where('name', $statusName)->value('id');
-            if ($statusId) {
-                $installment->update(['installment_status_id' => $statusId]);
-            }
-        }
+        InstallmentStatusService::recalculate($installment);
     }
 
     private function logInvestorInstallmentTransactions(
