@@ -68,7 +68,7 @@
                     {{ mb_strtoupper(mb_substr($guarantor->name ?? '؟', 0, 1)) }}
                 </div>
                 <div>
-                    <h3 class="mb-0">{{ $guarantor->name }}</h3>
+                    <h3 class="mb-0 fw-bold fs-2 text-dark hover-primary">{{ $guarantor->name }}</h3>
                     <div class="small text-muted-2 mt-1">
                         <span class="chip me-1"><i class="bi bi-badge-ad"></i> {{ optional($guarantor->title)->name ?? '—' }}</span>
                         <span class="chip me-1"><i class="bi bi-flag"></i> {{ optional($guarantor->nationality)->name ?? '—' }}</span>

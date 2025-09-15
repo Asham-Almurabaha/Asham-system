@@ -9,7 +9,7 @@
     <nav><ol class="breadcrumb"><li class="breadcrumb-item active">{{ __('guarantors::messages.Guarantors') }}</li></ol></nav>
 </div>
 
-@php
+{{-- @php
     $allTotal    = (int)($guarantorsTotalAll ?? 0);
     $allActive   = (int)($activeGuarantorsTotalAll ?? 0);
     $allInactive = max($allTotal - $allActive, 0);
@@ -19,14 +19,14 @@
 
     $newThisMonthAll = (int)($newGuarantorsThisMonthAll ?? 0);
     $newThisWeekAll  = (int)($newGuarantorsThisWeekAll  ?? 0);
-@endphp
+@endphp --}}
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+{{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> --}}
 
 
 
 {{-- ====== الكروت ====== --}}
-<div class="row g-4 mb-3" dir="rtl">
+{{-- <div class="row g-4 mb-3" dir="rtl">
     <div class="col-12 col-md-3">
         <div class="kpi-card p-3">
             <div class="d-flex align-items-center gap-3">
@@ -81,7 +81,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> --}}
 
 {{-- ====== شريط الأدوات ====== --}}
 <div class="card shadow-sm mb-3">
