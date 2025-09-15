@@ -70,6 +70,12 @@ class ContractController extends Controller
             ->where($pivotTable . '.share_percentage', '<=', 100));
     }
 
+    // فلترة حسب رقم العقد
+    if ($request->filled('contract_number')) {
+        $number = trim($request->contract_number);
+        $contractsQuery->where('contract_number', 'like', "%{$number}%");
+    }
+
     // فلترة حسب حالة العقد
     if ($request->filled('status')) {
         $contractsQuery->where('contract_status_id', $request->status);

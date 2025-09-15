@@ -456,7 +456,7 @@
   </div>
 
   {{-- ✅ أزلنا type وأضفنا investor_id --}}
-  <div class="collapse @if(request()->hasAny(['customer','investor_id','status','from','to'])) show @endif border-top" id="filterBar">
+  <div class="collapse @if(request()->hasAny(['customer','contract_number','investor_id','status','from','to'])) show @endif border-top" id="filterBar">
     <div class="card-body">
       <form action="{{ route('contracts.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
         <div class="col-12 col-md-3">
@@ -475,6 +475,11 @@
               </option>
             @endforeach
           </select>
+        </div>
+
+        <div class="col-12 col-md-2">
+          <label class="form-label mb-1">{{ __('Contract Number') }}</label>
+          <input type="text" name="contract_number" value="{{ request('contract_number') }}" class="form-control form-control-sm" placeholder="{{ __('Contract Number') }}">
         </div>
 
         <div class="col-6 col-md-1">
