@@ -9,6 +9,7 @@ use App\Models\OfficeTransaction;
 use App\Models\TransactionStatus;
 use App\Models\TransactionType;
 use Modules\Investors\Entities\InvestorTransaction;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -70,13 +71,7 @@ class ContractInstallmentController extends Controller
         $bankId = $request->input('bank_account_id');
         $safeId = $request->input('safe_id');
 
-        // منع الجمع بين بنك وخزنة
-        if (!empty($bankId) && !empty($safeId)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يمكن اختيار بنك وخزنة معًا لنفس السداد.',
-            ], 422);
-        }
+        $this->validatePaymentSource($bankId, $safeId);
 
         DB::transaction(function () use ($validated, $bankId, $safeId) {
             $remainingPayment = (float) $validated['payment_amount'];
@@ -166,13 +161,7 @@ class ContractInstallmentController extends Controller
         $bankId = $request->input('bank_account_id');
         $safeId = $request->input('safe_id');
 
-        // منع الجمع بين بنك وخزنة
-        if (!empty($bankId) && !empty($safeId)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يمكن اختيار بنك وخزنة معًا للسداد المبكر.',
-            ], 422);
-        }
+        $this->validatePaymentSource($bankId, $safeId);
 
         try {
             DB::transaction(function () use ($contract, $data, $bankId, $safeId) {
@@ -289,6 +278,32 @@ class ContractInstallmentController extends Controller
         InstallmentStatusService::recalculate($installment);
     }
 
+    private function validatePaymentSource(?int $bankId, ?int $safeId): void
+    {
+        if (empty($bankId) || empty($safeId)) {
+            return;
+        }
+
+        $caller = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2)[1]['function'] ?? null;
+
+        $messages = [
+            'payInstallment'                     => 'لا يمكن اختيار بنك وخزنة معًا لنفس السداد.',
+            'earlySettle'                        => 'لا يمكن اختيار بنك وخزنة معًا للسداد المبكر.',
+            'logInvestorInstallmentTransactions' => 'لا يمكن اختيار بنك وخزنة معًا في نفس العملية.',
+        ];
+
+        $message = $messages[$caller] ?? 'لا يمكن اختيار بنك وخزنة معًا.';
+
+        if ($caller === 'logInvestorInstallmentTransactions') {
+            throw new \InvalidArgumentException($message);
+        }
+
+        throw new HttpResponseException(response()->json([
+            'success' => false,
+            'message' => $message,
+        ], 422));
+    }
+
     private function logInvestorInstallmentTransactions(
         $contractId,
         $installmentId,
@@ -303,9 +318,7 @@ class ContractInstallmentController extends Controller
         $amount = round((float) $amount, 2);
         if ($amount <= 0) return;
 
-        if (!empty($bankAccountId) && !empty($safeId)) {
-            throw new \InvalidArgumentException('لا يمكن اختيار بنك وخزنة معًا في نفس العملية.');
-        }
+        $this->validatePaymentSource($bankAccountId, $safeId);
 
         $accountCols = [
             'bank_account_id' => $bankAccountId ?: null,
