@@ -17,7 +17,9 @@
       || $isRoute('users.*');
 
   // فتح مجموعة الحسابات؟
-  $accountsOpen = $isRoute('ledger.*');
+  $accountsOpen = $isRoute('ledger.*')
+      || $isRoute('accounts.bank-accounts.*')
+      || $isRoute('accounts.safes.*');
 @endphp
 
 <ul class="sidebar-nav" id="sidebar-nav">
@@ -89,6 +91,16 @@
       <li>
         <a class="{{ $active($isRoute(['ledger.split.create', 'ledger.split.store'])) }}" href="{{ route('ledger.split.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('accounts.bank-accounts.*')) }}" href="{{ route('accounts.bank-accounts.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Bank Accounts')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('accounts.safes.*')) }}" href="{{ route('accounts.safes.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Treasury Accounts')</span>
         </a>
       </li>
       @role('admin')

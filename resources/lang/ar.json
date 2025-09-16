@@ -362,5 +362,7 @@
     "You are logged in!": "تم تسجيل دخولك!",
     "click here to request another": "click here to request another",
     "name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image": "name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image",
-    "name@email.com": "name@email.com"
+    "name@email.com": "name@email.com",
+    "Internal Transfer": "تحويل داخلي",
+    "Split Entry": "قيد مُجزّأ"
 }
