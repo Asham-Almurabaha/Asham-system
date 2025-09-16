@@ -15,6 +15,9 @@
       || $isRoute('bank_cash_accounts.*') || $isRoute('transaction_types.*') || $isRoute('transaction_statuses.*')
       || $isRoute('categories.*') || $isRoute('product_types.*')
       || $isRoute('users.*');
+
+  // فتح مجموعة الحسابات؟
+  $accountsOpen = $isRoute('ledger.*');
 @endphp
 
 <ul class="sidebar-nav" id="sidebar-nav">
@@ -59,12 +62,43 @@
     </a>
   </li>
 
-  {{-- دفتر القيود --}}
+  {{-- الحسابات --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('ledger.*')) }} {{ $active($isRoute('ledger.*')) }}"
-       href="{{ route('ledger.index') }}">
-      <i class="bi bi-journal"></i><span>@lang('sidebar.Ledger')</span>
+    <a class="nav-link {{ $coll($accountsOpen) }}"
+       data-bs-target="#accounts-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $accountsOpen ? 'true' : 'false' }}">
+      <i class="bi bi-wallet2"></i><span>@lang('sidebar.Accounts')</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
+
+    <ul id="accounts-nav" class="nav-content collapse {{ $open($accountsOpen) }}" data-bs-parent="#sidebar-nav">
+      <li>
+        <a class="{{ $active($isRoute(['ledger.index'])) }}" href="{{ route('ledger.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Ledger')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute(['ledger.create', 'ledger.store'])) }}" href="{{ route('ledger.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Add Ledger Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute(['ledger.transfer.create', 'ledger.transfer.store'])) }}" href="{{ route('ledger.transfer.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Internal Transfer')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute(['ledger.split.create', 'ledger.split.store'])) }}" href="{{ route('ledger.split.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
+        </a>
+      </li>
+      @role('admin')
+      <li>
+        <a class="{{ $active($isRoute(['ledger.import.*'])) }}" href="{{ route('ledger.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Ledger Entries')</span>
+        </a>
+      </li>
+      @endrole
+    </ul>
   </li>
 
   
