@@ -1,6 +1,6 @@
 @php
     $formClass = $formClass ?? 'd-inline';
-    $buttonClass = $buttonClass ?? 'btn btn-danger btn-sm';
+    $buttonClass = $buttonClass ?? 'btn btn-outline-danger btn-sm';
     $label = $label ?? __('Delete');
     $confirm = $confirm ?? __('Are you sure you want to delete this item?');
 @endphp
