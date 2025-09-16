@@ -222,7 +222,7 @@
                                     foreach (['status','state','contract_status'] as $col) { if (Schema::hasColumn('contracts',$col)) { $statusNameCol = $col; break; } }
                                     $activeQ = $customer->contracts();
                                     if ($statusIdCol) {
-                                        $endedIds = class_exists(\Modules\Contracts\Entities\ContractStatus::class) ? \Modules\Contracts\Entities\ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all() : [];
+                                        $endedIds = class_exists(\Modules\Lookups\Entities\ContractStatus::class) ? \Modules\Lookups\Entities\ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all() : [];
                                         if (!empty($endedIds)) { $activeQ->whereNotIn($statusIdCol, $endedIds); }
                                     } elseif ($statusNameCol) {
                                         $activeQ->whereNotIn($statusNameCol, $endedStatusNames);

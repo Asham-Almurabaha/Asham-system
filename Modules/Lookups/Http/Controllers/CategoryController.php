@@ -1,25 +1,26 @@
 <?php
 
-namespace App\Http\Controllers\Setting;
+namespace Modules\Lookups\Http\Controllers;
+
 use App\Http\Controllers\Controller;
-
-
-use App\Models\Category;
-use App\Models\TransactionStatus;
 use Illuminate\Http\Request;
+use Modules\Lookups\Entities\Category;
+use Modules\Lookups\Entities\TransactionStatus;
 
 class CategoryController extends Controller
 {
     public function index()
     {
         $categories = Category::with('transactionStatuses')->get();
-        return view('categories.index', compact('categories'));
+
+        return view('lookups::categories.index', compact('categories'));
     }
 
     public function create()
     {
         $transactionStatuses = TransactionStatus::all();
-        return view('categories.create', compact('transactionStatuses'));
+
+        return view('lookups::categories.create', compact('transactionStatuses'));
     }
 
     public function store(Request $request)
@@ -43,7 +44,7 @@ class CategoryController extends Controller
         $transactionStatuses = TransactionStatus::all();
         $selectedStatuses = $category->transactionStatuses->pluck('id')->toArray();
 
-        return view('categories.edit', compact('category', 'transactionStatuses', 'selectedStatuses'));
+        return view('lookups::categories.edit', compact('category', 'transactionStatuses', 'selectedStatuses'));
     }
 
     public function update(Request $request, Category $category)

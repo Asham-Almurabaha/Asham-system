@@ -3,8 +3,8 @@
 namespace Modules\Contracts\Services;
 
 use App\Models\LedgerEntry;
-use App\Models\TransactionStatus;
-use App\Models\TransactionType;
+use Modules\Lookups\Entities\TransactionStatus;
+use Modules\Lookups\Entities\TransactionType;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use DateTimeInterface;
@@ -15,7 +15,7 @@ use Modules\Investors\Entities\InvestorTransaction;
 
 class InvestorTransactionLogger
 {
-    /** @var array<string, \App\Models\TransactionStatus> */
+    /** @var array<string, \Modules\Lookups\Entities\TransactionStatus> */
     private array $statusCache = [];
 
     /** @var array<string, int|null> */

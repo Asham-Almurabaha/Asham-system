@@ -3,7 +3,7 @@
 namespace Modules\Investors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\TransactionStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Investors\Entities\Investor;

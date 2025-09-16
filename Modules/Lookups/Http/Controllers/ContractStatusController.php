@@ -1,28 +1,28 @@
 <?php
 
-namespace App\Http\Controllers\Setting;
+namespace Modules\Lookups\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\Contracts\Entities\ContractStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Modules\Lookups\Entities\ContractStatus;
 use Throwable;
 
 class ContractStatusController extends Controller
 {
-    /** الحالات الأساسية الممنوع تعديلها/حذفها */
     private const PROTECTED_NAMES = ['بدون مستثمر', 'معلق', 'جديد', 'متاخر', 'متعثر', 'منتهي', 'سداد مبكر'];
 
     public function index()
     {
         $statuses = ContractStatus::orderBy('id')->get();
-        return view('contract_statuses.index', compact('statuses'));
+
+        return view('lookups::contract_statuses.index', compact('statuses'));
     }
 
     public function create()
     {
-        return view('contract_statuses.create');
+        return view('lookups::contract_statuses.create');
     }
 
     public function store(Request $request)
@@ -37,7 +37,6 @@ class ContractStatusController extends Controller
         try {
             $data = ['name' => $name];
 
-            // لو عندك عمود is_protected خليه افتراضيًا false
             if (Schema::hasColumn('contract_statuses', 'is_protected')) {
                 $data['is_protected'] = false;
             }
@@ -48,6 +47,7 @@ class ContractStatusController extends Controller
                 ->with('success', 'تم إضافة حالة العقد بنجاح.');
         } catch (Throwable $e) {
             report($e);
+
             return back()->withInput()
                 ->withErrors(['general' => 'تعذّر الحفظ. حاول مرة أخرى.']);
         }
@@ -60,7 +60,7 @@ class ContractStatusController extends Controller
                 ->withErrors(['general' => 'هذه الحالة أساسية ولا يمكن تعديلها.']);
         }
 
-        return view('contract_statuses.edit', compact('contract_status'));
+        return view('lookups::contract_statuses.edit', compact('contract_status'));
     }
 
     public function update(Request $request, ContractStatus $contract_status)
@@ -88,6 +88,7 @@ class ContractStatusController extends Controller
                 ->with('success', 'تم تحديث حالة العقد بنجاح.');
         } catch (Throwable $e) {
             report($e);
+
             return back()->withInput()
                 ->withErrors(['general' => 'تعذّر التحديث. حاول مرة أخرى.']);
         }
@@ -107,17 +108,14 @@ class ContractStatusController extends Controller
                 ->with('success', 'تم حذف حالة العقد بنجاح.');
         } catch (Throwable $e) {
             report($e);
+
             return back()
                 ->withErrors(['general' => 'تعذّر الحذف. قد تكون الحالة مستخدمة في سجلات أخرى.']);
         }
     }
 
-    /* ==================== Helpers ==================== */
-
-    /** اعتبر الحالة محمية إذا كان اسمها ضمن القائمة أو is_protected=true (إن وُجد العمود). */
     private function isProtected(ContractStatus $status): bool
     {
-        // حماية بالاسم
         $normalizedName = $this->normalizeName($status->name);
         $protectedByName = in_array(
             $normalizedName,
@@ -128,7 +126,6 @@ class ContractStatusController extends Controller
             return true;
         }
 
-        // حماية بعمود is_protected (اختياري)
         if (Schema::hasColumn('contract_statuses', 'is_protected')) {
             return (bool) $status->is_protected;
         }
@@ -136,11 +133,11 @@ class ContractStatusController extends Controller
         return false;
     }
 
-    /** توحيد الاسم: trim + دمج المسافات المتعددة لمسافة واحدة. */
     private function normalizeName(?string $name): string
     {
         $name = trim((string) $name);
         $name = preg_replace('/\s+/u', ' ', $name) ?: '';
+
         return $name;
     }
 }

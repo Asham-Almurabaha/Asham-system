@@ -1,26 +1,25 @@
 <?php
 
-namespace App\Http\Controllers\Setting;
+namespace Modules\Lookups\Http\Controllers;
+
 use App\Http\Controllers\Controller;
-use App\Models\InstallmentStatus;
 use Illuminate\Http\Request;
+use Modules\Lookups\Entities\InstallmentStatus;
 
 class InstallmentStatusController extends Controller
 {
-    // عرض كل حالات الأقساط
     public function index()
     {
         $statuses = InstallmentStatus::orderBy('name')->get();
-        return view('installment_statuses.index', compact('statuses'));
+
+        return view('lookups::installment_statuses.index', compact('statuses'));
     }
 
-    // نموذج إنشاء حالة جديدة
     public function create()
     {
-        return view('installment_statuses.create');
+        return view('lookups::installment_statuses.create');
     }
 
-    // تخزين حالة جديدة
     public function store(Request $request)
     {
         $request->validate([
@@ -32,13 +31,11 @@ class InstallmentStatusController extends Controller
         return redirect()->route('installment_statuses.index')->with('success', 'تم إضافة حالة القسط بنجاح.');
     }
 
-    // نموذج تعديل حالة موجودة
     public function edit(InstallmentStatus $installmentStatus)
     {
-        return view('installment_statuses.edit', compact('installmentStatus'));
+        return view('lookups::installment_statuses.edit', compact('installmentStatus'));
     }
 
-    // تحديث الحالة
     public function update(Request $request, InstallmentStatus $installmentStatus)
     {
         $request->validate([
@@ -50,13 +47,10 @@ class InstallmentStatusController extends Controller
         return redirect()->route('installment_statuses.index')->with('success', 'تم تحديث حالة القسط بنجاح.');
     }
 
-    // حذف الحالة
     public function destroy(InstallmentStatus $installmentStatus)
     {
         $installmentStatus->delete();
 
         return redirect()->route('installment_statuses.index')->with('success', 'تم حذف حالة القسط بنجاح.');
     }
-
-    
 }

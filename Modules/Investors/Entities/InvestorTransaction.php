@@ -2,7 +2,7 @@
 
 namespace Modules\Investors\Entities;
 
-use App\Models\TransactionStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Contracts\Entities\Contract;

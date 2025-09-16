@@ -41,9 +41,9 @@
 
     // محاولة جلب IDs للحالات من جدول ContractStatus (إن وجد)
     $endedIds = $pendingIds = [];
-    if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
-        $endedIds   = \Modules\Contracts\Entities\ContractStatus::whereIn('name', $namesEnded)->pluck('id')->all();
-        $pendingIds = \Modules\Contracts\Entities\ContractStatus::whereIn('name', $namesPending)->pluck('id')->all();
+    if (class_exists(\Modules\Lookups\Entities\ContractStatus::class)) {
+        $endedIds   = \Modules\Lookups\Entities\ContractStatus::whereIn('name', $namesEnded)->pluck('id')->all();
+        $pendingIds = \Modules\Lookups\Entities\ContractStatus::whereIn('name', $namesPending)->pluck('id')->all();
     }
 
     // ===== منتهي =====

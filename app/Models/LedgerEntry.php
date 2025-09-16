@@ -5,7 +5,11 @@ namespace App\Models;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Investors\Entities\Investor;
+use Modules\Lookups\Entities\TransactionStatus;
+use Modules\Lookups\Entities\TransactionType;
 
 class LedgerEntry extends Model
 {

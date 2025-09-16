@@ -4,7 +4,7 @@ namespace Modules\Customers\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Customers\Entities\Customer;
-use App\Models\InstallmentStatus;
+use Modules\Lookups\Entities\InstallmentStatus;
 use Illuminate\Support\Facades\Schema;
 
 class CustomerReportController extends Controller
@@ -13,8 +13,8 @@ class CustomerReportController extends Controller
     {
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
         $endedStatusIds = [];
-        if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
-            $endedStatusIds = \Modules\Contracts\Entities\ContractStatus::query()
+        if (class_exists(\Modules\Lookups\Entities\ContractStatus::class)) {
+            $endedStatusIds = \Modules\Lookups\Entities\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
                 ->pluck('id')
                 ->all();
@@ -128,8 +128,8 @@ class CustomerReportController extends Controller
     {
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
         $endedStatusIds = [];
-        if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
-            $endedStatusIds = \Modules\Contracts\Entities\ContractStatus::query()
+        if (class_exists(\Modules\Lookups\Entities\ContractStatus::class)) {
+            $endedStatusIds = \Modules\Lookups\Entities\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
                 ->pluck('id')
                 ->all();

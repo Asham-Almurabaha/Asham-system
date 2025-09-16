@@ -6,7 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\LedgerEntry;
 use Modules\Contracts\Entities\Contract;
-use Modules\Contracts\Entities\ContractStatus;
+use Modules\Lookups\Entities\ContractStatus;
 use App\Models\BankAccount;
 use App\Models\Safe;
 use Modules\Investors\Entities\Investor;

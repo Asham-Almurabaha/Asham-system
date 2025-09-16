@@ -31,8 +31,8 @@
                     $statusCol = \Illuminate\Support\Facades\Schema::hasColumn('contracts','status_id')
                         ? 'status_id' : 'contract_status_id';
 
-                    if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
-                        $endedIds = \Modules\Contracts\Entities\ContractStatus::whereIn('name', $endedNames)->pluck('id');
+                    if (class_exists(\Modules\Lookups\Entities\ContractStatus::class)) {
+                        $endedIds = \Modules\Lookups\Entities\ContractStatus::whereIn('name', $endedNames)->pluck('id');
                         if ($endedIds->isNotEmpty()) {
                             $q->whereNotIn($statusCol, $endedIds);
                         } else {

@@ -4,7 +4,8 @@ namespace Modules\Contracts\Entities;
 
 use Modules\Customers\Entities\Customer;
 use Modules\Guarantors\Entities\Guarantor;
-use App\Models\InstallmentType;
+use Modules\Lookups\Entities\ContractStatus;
+use Modules\Lookups\Entities\InstallmentType;
 use App\Models\OfficeTransaction;
 use App\Models\ProductType;
 use Modules\Investors\Entities\Investor;

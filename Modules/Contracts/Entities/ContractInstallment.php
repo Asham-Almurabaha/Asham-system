@@ -2,7 +2,7 @@
 
 namespace Modules\Contracts\Entities;
 
-use App\Models\InstallmentStatus;
+use Modules\Lookups\Entities\InstallmentStatus;
 use App\Models\OfficeTransaction;
 use Modules\Investors\Entities\InvestorTransaction;
 use App\Traits\Auditable;

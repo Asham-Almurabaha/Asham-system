@@ -1,0 +1,9 @@
+{
+    "name": "nwidart/lookups",
+    "type": "laravel-module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Lookups\\": ""
+        }
+    }
+}

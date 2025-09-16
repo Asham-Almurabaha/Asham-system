@@ -7,7 +7,7 @@ use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
-use Modules\Contracts\Entities\ContractStatus;
+use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Services\InvestorDataService;
 

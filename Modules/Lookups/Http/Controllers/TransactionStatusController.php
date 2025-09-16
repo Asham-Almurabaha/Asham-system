@@ -1,26 +1,26 @@
 <?php
 
-namespace App\Http\Controllers\Setting;
-use App\Http\Controllers\Controller;
+namespace Modules\Lookups\Http\Controllers;
 
-use App\Models\TransactionStatus;
-use App\Models\TransactionType;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Lookups\Entities\TransactionStatus;
+use Modules\Lookups\Entities\TransactionType;
 
 class TransactionStatusController extends Controller
 {
     public function index()
     {
-        // جلب الحالات مع نوع العملية المرتبطة
         $statuses = TransactionStatus::with('transactionType')->get();
-        return view('transaction_statuses.index', compact('statuses'));
+
+        return view('lookups::transaction_statuses.index', compact('statuses'));
     }
 
     public function create()
     {
-        // جلب أنواع العمليات لاختيارها في الفورم
         $types = TransactionType::all();
-        return view('transaction_statuses.create', compact('types'));
+
+        return view('lookups::transaction_statuses.create', compact('types'));
     }
 
     public function store(Request $request)
@@ -30,7 +30,7 @@ class TransactionStatusController extends Controller
             'transaction_type_id' => 'required|exists:transaction_types,id',
         ]);
 
-        TransactionStatus::create($request->all());
+        TransactionStatus::create($request->only('name', 'transaction_type_id'));
 
         return redirect()->route('transaction_statuses.index')->with('success', 'تم إضافة الحالة بنجاح');
     }
@@ -38,7 +38,8 @@ class TransactionStatusController extends Controller
     public function edit(TransactionStatus $transactionStatus)
     {
         $types = TransactionType::all();
-        return view('transaction_statuses.edit', compact('transactionStatus', 'types'));
+
+        return view('lookups::transaction_statuses.edit', compact('transactionStatus', 'types'));
     }
 
     public function update(Request $request, TransactionStatus $transactionStatus)
@@ -48,7 +49,7 @@ class TransactionStatusController extends Controller
             'transaction_type_id' => 'required|exists:transaction_types,id',
         ]);
 
-        $transactionStatus->update($request->all());
+        $transactionStatus->update($request->only('name', 'transaction_type_id'));
 
         return redirect()->route('transaction_statuses.index')->with('success', 'تم تحديث الحالة بنجاح');
     }

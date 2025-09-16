@@ -8,15 +8,7 @@ use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\LedgerEntriesImportController;
-use App\Http\Controllers\Setting\CategoryController;
-use App\Http\Controllers\Setting\ContractStatusController;
-use App\Http\Controllers\Setting\InstallmentStatusController;
-use App\Http\Controllers\Setting\InstallmentTypeController;
-use App\Http\Controllers\Setting\NationalityController;
 use App\Http\Controllers\Setting\SettingController;
-use App\Http\Controllers\Setting\TitleController;
-use App\Http\Controllers\Setting\TransactionStatusController;
-use App\Http\Controllers\Setting\TransactionTypeController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
 use App\Models\Setting;
 use App\Models\User;
@@ -50,14 +42,6 @@ Route::middleware('auth')->group(function () {
     // الإعدادات
     Route::prefix('settings')->group(function () {
         Route::resource('settings', SettingController::class);
-        Route::resource('nationalities', NationalityController::class);
-        Route::resource('titles', TitleController::class);
-        Route::resource('contract_statuses', ContractStatusController::class);
-        Route::resource('installment_statuses', InstallmentStatusController::class);
-        Route::resource('installment_types', InstallmentTypeController::class);
-        Route::resource('transaction_types', TransactionTypeController::class);
-        Route::resource('transaction_statuses', TransactionStatusController::class);
-        Route::resource('categories', CategoryController::class);
     });
 
     // استيراد القيود

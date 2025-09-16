@@ -4,8 +4,8 @@ namespace Modules\Guarantors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Guarantors\Entities\Guarantor;
-use App\Models\Nationality;
-use App\Models\Title;
+use Modules\Lookups\Entities\Nationality;
+use Modules\Lookups\Entities\Title;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -39,8 +39,8 @@ class GuarantorController extends Controller
         // “النشط” من جدول العقود
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
         $endedStatusIds = [];
-        if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
-            $endedStatusIds = \Modules\Contracts\Entities\ContractStatus::query()
+        if (class_exists(\Modules\Lookups\Entities\ContractStatus::class)) {
+            $endedStatusIds = \Modules\Lookups\Entities\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
                 ->pluck('id')->all();
         }

@@ -2,8 +2,8 @@
 
 namespace Modules\Investors\Imports;
 
-use App\Models\Nationality;
-use App\Models\Title;
+use Modules\Lookups\Entities\Nationality;
+use Modules\Lookups\Entities\Title;
 use Modules\Investors\Entities\Investor;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;

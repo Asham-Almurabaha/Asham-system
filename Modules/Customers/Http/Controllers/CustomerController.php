@@ -5,8 +5,8 @@ namespace Modules\Customers\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\Customers\Entities\Customer;
 use Modules\Contracts\Entities\ContractInstallment;
-use App\Models\Nationality;
-use App\Models\Title;
+use Modules\Lookups\Entities\Nationality;
+use Modules\Lookups\Entities\Title;
 use Modules\Customers\Services\CustomerDetailsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -44,8 +44,8 @@ class CustomerController extends Controller
         $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement'];
 
         $endedStatusIds = [];
-        if (class_exists(\Modules\Contracts\Entities\ContractStatus::class)) {
-            $endedStatusIds = \Modules\Contracts\Entities\ContractStatus::query()
+        if (class_exists(\Modules\Lookups\Entities\ContractStatus::class)) {
+            $endedStatusIds = \Modules\Lookups\Entities\ContractStatus::query()
                 ->whereIn('name', $endedStatusNames)
                 ->pluck('id')->all();
         }

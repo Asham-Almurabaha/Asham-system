@@ -9,7 +9,7 @@ use Modules\Investors\Entities\Investor;
 use App\Models\ProductTransaction;
 use App\Models\ProductType;
 use App\Models\Safe;
-use App\Models\TransactionStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 use App\Services\CashAccountsDataService;
 use App\Services\OfficeIncomeMetricsService;
 use App\Services\ProductAvailabilityService;

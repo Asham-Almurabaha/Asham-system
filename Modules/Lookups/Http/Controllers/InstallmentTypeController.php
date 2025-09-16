@@ -1,26 +1,25 @@
 <?php
 
-namespace App\Http\Controllers\Setting;
+namespace Modules\Lookups\Http\Controllers;
+
 use App\Http\Controllers\Controller;
-use App\Models\InstallmentType;
 use Illuminate\Http\Request;
+use Modules\Lookups\Entities\InstallmentType;
 
 class InstallmentTypeController extends Controller
 {
-    // عرض كل أنواع الأقساط
     public function index()
     {
         $types = InstallmentType::orderBy('name')->get();
-        return view('installment_types.index', compact('types'));
+
+        return view('lookups::installment_types.index', compact('types'));
     }
 
-    // نموذج إنشاء نوع قسط جديد
     public function create()
     {
-        return view('installment_types.create');
+        return view('lookups::installment_types.create');
     }
 
-    // تخزين نوع قسط جديد
     public function store(Request $request)
     {
         $request->validate([
@@ -32,13 +31,11 @@ class InstallmentTypeController extends Controller
         return redirect()->route('installment_types.index')->with('success', 'تم إضافة نوع القسط بنجاح.');
     }
 
-    // نموذج تعديل نوع قسط موجود
     public function edit(InstallmentType $installmentType)
     {
-        return view('installment_types.edit', compact('installmentType'));
+        return view('lookups::installment_types.edit', compact('installmentType'));
     }
 
-    // تحديث نوع القسط
     public function update(Request $request, InstallmentType $installmentType)
     {
         $request->validate([
@@ -50,7 +47,6 @@ class InstallmentTypeController extends Controller
         return redirect()->route('installment_types.index')->with('success', 'تم تحديث نوع القسط بنجاح.');
     }
 
-    // حذف نوع القسط
     public function destroy(InstallmentType $installmentType)
     {
         $installmentType->delete();

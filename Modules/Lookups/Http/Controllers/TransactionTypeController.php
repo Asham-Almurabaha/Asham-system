@@ -1,22 +1,23 @@
 <?php
 
-namespace App\Http\Controllers\Setting;
+namespace Modules\Lookups\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\TransactionType;
 use Illuminate\Http\Request;
+use Modules\Lookups\Entities\TransactionType;
 
 class TransactionTypeController extends Controller
 {
     public function index()
     {
         $types = TransactionType::all();
-        return view('transaction_types.index', compact('types'));
+
+        return view('lookups::transaction_types.index', compact('types'));
     }
 
     public function create()
     {
-        return view('transaction_types.create');
+        return view('lookups::transaction_types.create');
     }
 
     public function store(Request $request)
@@ -26,14 +27,14 @@ class TransactionTypeController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        TransactionType::create($request->all());
+        TransactionType::create($request->only('name', 'description'));
 
         return redirect()->route('transaction_types.index')->with('success', 'تم إضافة نوع العملية بنجاح');
     }
 
     public function edit(TransactionType $transactionType)
     {
-        return view('transaction_types.edit', compact('transactionType'));
+        return view('lookups::transaction_types.edit', compact('transactionType'));
     }
 
     public function update(Request $request, TransactionType $transactionType)
@@ -43,7 +44,7 @@ class TransactionTypeController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $transactionType->update($request->all());
+        $transactionType->update($request->only('name', 'description'));
 
         return redirect()->route('transaction_types.index')->with('success', 'تم تحديث نوع العملية بنجاح');
     }

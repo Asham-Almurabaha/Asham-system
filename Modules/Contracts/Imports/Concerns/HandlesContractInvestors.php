@@ -3,7 +3,7 @@
 namespace Modules\Contracts\Imports\Concerns;
 
 use Modules\Contracts\Entities\Contract;
-use Modules\Contracts\Entities\ContractStatus;
+use Modules\Lookups\Entities\ContractStatus;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Contracts\Support\InvestorShareValidator;

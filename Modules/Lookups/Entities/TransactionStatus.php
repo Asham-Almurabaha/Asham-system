@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Lookups\Entities;
 
+use App\Models\LedgerEntry;
+use App\Models\OfficeTransaction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Investors\Entities\InvestorTransaction;
@@ -15,13 +17,11 @@ class TransactionStatus extends Model
         'transaction_type_id',
     ];
 
-    // العلاقة مع نوع العملية
     public function transactionType()
     {
         return $this->belongsTo(TransactionType::class);
     }
 
-    // علاقة مع Category (many to many)
     public function categories()
     {
         return $this->belongsToMany(Category::class, 'category_transaction_status');
@@ -33,12 +33,12 @@ class TransactionStatus extends Model
     }
 
     public function officeTransactions()
-{
-    return $this->hasMany(OfficeTransaction::class, 'status_id');
-}
+    {
+        return $this->hasMany(OfficeTransaction::class, 'status_id');
+    }
 
-public function ledgerEntries() { 
-    return $this->hasMany(LedgerEntry::class, 'status_id'); 
-}
-
+    public function ledgerEntries()
+    {
+        return $this->hasMany(LedgerEntry::class, 'transaction_status_id');
+    }
 }
