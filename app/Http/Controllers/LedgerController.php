@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BankAccount;
 use App\Models\LedgerEntry;
 use Modules\Investors\Entities\Investor;
 // use App\Models\Product; // ❌ لم نعد نستخدمه
 use App\Models\ProductTransaction;
 use Modules\Lookups\Entities\ProductType;
-use App\Models\Safe;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Modules\Lookups\Entities\TransactionStatus;
 use App\Services\CashAccountsDataService;
 use App\Services\OfficeIncomeMetricsService;
@@ -147,7 +147,7 @@ class LedgerController extends Controller
     /* ========================
      * تمرير القيم للواجهة
      * ======================== */
-    return view('ledger.index', array_merge([
+    return view('accounts::ledger.index', array_merge([
         'entries'           => $entries,
         'totIn'             => $totIn,
         'totOut'            => $totOut,
@@ -196,7 +196,7 @@ class LedgerController extends Controller
         $goodsStatusIds  = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])
                             ->pluck('id')->values()->all();
 
-        return view('ledger.create', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
+        return view('accounts::ledger.create', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
     }
 
     public function store(Request $request)
@@ -342,7 +342,7 @@ class LedgerController extends Controller
         $banks = BankAccount::orderBy('name')->get();
         $safes = Safe::orderBy('name')->get();
 
-        return view('ledger.transfer', compact('banks', 'safes'));
+        return view('accounts::ledger.transfer', compact('banks', 'safes'));
     }
 
     public function transferStore(Request $request)
@@ -478,7 +478,7 @@ class LedgerController extends Controller
         $goodsStatusIds  = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])
                             ->pluck('id')->values()->all();
 
-        return view('ledger.split', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
+        return view('accounts::ledger.split', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
     }
 
     public function splitStore(Request $request)

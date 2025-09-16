@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Investors\Entities\Investor;

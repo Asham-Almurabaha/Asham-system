@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\LedgerEntry;
-use App\Models\BankAccount;
-use App\Models\Safe;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Illuminate\Database\Eloquent\Builder;
 
 class OfficeIncomeMetricsService

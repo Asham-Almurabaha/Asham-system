@@ -4,14 +4,14 @@ namespace Modules\Contracts\Http\Controllers;
 
 use Modules\Investors\DTOs\InvestorShare;
 use App\Http\Controllers\Controller;
-use App\Models\BankAccount;
+use Modules\Accounts\Entities\BankAccount;
 use Modules\Customers\Entities\Customer;
 use Modules\Guarantors\Entities\Guarantor;
 use Modules\Lookups\Entities\InstallmentStatus;
 use Modules\Lookups\Entities\InstallmentType;
 use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\ProductType;
-use App\Models\Safe;
+use Modules\Accounts\Entities\Safe;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 use App\Services\InstallmentsMonthlyService;

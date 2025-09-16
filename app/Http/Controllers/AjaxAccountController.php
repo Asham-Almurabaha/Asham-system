@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\LedgerEntry;
-use App\Models\BankAccount;
-use App\Models\Safe;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

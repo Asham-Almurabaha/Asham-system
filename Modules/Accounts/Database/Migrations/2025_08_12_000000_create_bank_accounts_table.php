@@ -25,12 +25,6 @@ return new class extends Migration {
 
             $table->timestamps();
         });
-        // إضافة القيم الافتراضية
-        DB::table('bank_accounts')->insert([
-            ['name' => 'الحساب الرئيسي', 'bank_name' => 'البنك الراجحي', 'account_number' => '1234567890', 'iban' => 'SA1234567890123456789012', 'opening_balance' => 0, 'currency_code' => 'SAR', 'is_active' => true],
-            ['name' => 'حساب الفرع الثاني', 'bank_name' => 'البنك العربي', 'account_number' => '0987654321', 'iban' => 'SA0987654321098765432109', 'opening_balance' => 0, 'currency_code' => 'SAR', 'is_active' => true],
-            ['name' => 'حساب احتياطي', 'bank_name' => null, 'account_number' => null, 'iban' => null, 'opening_balance' => 0, 'currency_code' => 'SAR', 'is_active' => false],
-        ]);
     }
 
     public function down(): void

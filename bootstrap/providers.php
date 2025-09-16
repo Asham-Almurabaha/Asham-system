@@ -2,6 +2,7 @@
 
 return [
     App\Providers\ViewServiceProvider::class,
+    Modules\Accounts\Providers\AccountsServiceProvider::class,
     Modules\Lookups\Providers\LookupsServiceProvider::class,
     Modules\Customers\Providers\CustomersServiceProvider::class,
     Modules\Contracts\Providers\ContractsServiceProvider::class,

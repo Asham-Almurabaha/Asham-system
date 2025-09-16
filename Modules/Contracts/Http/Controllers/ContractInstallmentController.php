@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Modules\Lookups\Entities\InstallmentStatus;
 use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 use Carbon\Carbon;
@@ -330,10 +332,10 @@ class ContractInstallmentController extends Controller
 
         $accountNote = '';
         if ($bankAccountId) {
-            $bankName   = optional(\App\Models\BankAccount::find($bankAccountId))->name;
+            $bankName   = optional(BankAccount::find($bankAccountId))->name;
             $accountNote = $bankName ? " | بنك: {$bankName}" : " | بنك";
         } elseif ($safeId) {
-            $safeName   = optional(\App\Models\Safe::find($safeId))->name;
+            $safeName   = optional(Safe::find($safeId))->name;
             $accountNote = $safeName ? " | خزنة: {$safeName}" : " | خزنة";
         }
 

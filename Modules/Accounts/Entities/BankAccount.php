@@ -1,6 +1,8 @@
 <?php
-namespace App\Models;
 
+namespace Modules\Accounts\Entities;
+
+use App\Models\LedgerEntry;
 use Illuminate\Database\Eloquent\Model;
 
 class BankAccount extends Model
@@ -13,8 +15,11 @@ class BankAccount extends Model
         'opening_balance',
         'currency_code',
         'is_active',
-        'notes'
+        'notes',
     ];
 
-    public function ledgerEntries() { return $this->hasMany(LedgerEntry::class); }
+    public function ledgerEntries()
+    {
+        return $this->hasMany(LedgerEntry::class);
+    }
 }

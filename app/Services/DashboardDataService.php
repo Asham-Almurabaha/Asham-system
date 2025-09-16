@@ -5,10 +5,10 @@ namespace App\Services;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use App\Models\LedgerEntry;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
 use Modules\Lookups\Entities\ContractStatus;
-use App\Models\BankAccount;
-use App\Models\Safe;
 use Modules\Investors\Entities\Investor;
 
 class DashboardDataService

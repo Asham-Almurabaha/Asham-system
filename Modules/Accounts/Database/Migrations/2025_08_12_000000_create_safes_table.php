@@ -23,12 +23,6 @@ return new class extends Migration {
 
             $table->timestamps();
         });
-        // إضافة القيم الافتراضية
-        DB::table('safes')->insert([
-            ['name' => 'الخزنة الرئيسية', 'location' => 'المكتب الرئيسي', 'opening_balance' => 0, 'currency_code' => 'SAR', 'is_active' => true],
-            ['name' => 'خزنة الفرع الثاني', 'location' => 'فرع الرياض', 'opening_balance' => 0, 'currency_code' => 'SAR', 'is_active' => true],
-            ['name' => 'خزنة احتياطية', 'location' => null, 'opening_balance' => 0, 'currency_code' => 'SAR', 'is_active' => false],
-        ]);
     }
 
     public function down(): void

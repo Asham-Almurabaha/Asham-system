@@ -13,7 +13,7 @@ class LedgerEntriesImportController extends Controller
 {
     public function create()
     {
-        return view('ledger.import');
+        return view('accounts::ledger.import');
     }
 
     public function store(Request $request)
