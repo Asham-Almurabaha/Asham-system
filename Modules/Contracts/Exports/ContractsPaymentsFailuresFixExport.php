@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -14,7 +15,7 @@ class ContractsPaymentsFailuresFixExport implements FromArray, WithHeadings, Sho
     private array $rows;
 
     /** @var string[] */
-    private array $headings;
+    private array $headingKeys;
 
     /**
      * @param array<int, array<string, mixed>> $failures
@@ -22,12 +23,12 @@ class ContractsPaymentsFailuresFixExport implements FromArray, WithHeadings, Sho
     public function __construct(array $failures)
     {
         $this->rows = $failures;
-        $this->headings = $this->buildHeadings($failures);
+        $this->headingKeys = $this->buildHeadings($failures);
     }
 
     public function headings(): array
     {
-        return $this->headings;
+        return ExcelHeadingLocalizer::translateMany($this->headingKeys);
     }
 
     public function array(): array
@@ -40,7 +41,7 @@ class ContractsPaymentsFailuresFixExport implements FromArray, WithHeadings, Sho
 
             $row = [];
 
-            foreach ($this->headings as $heading) {
+        foreach ($this->headingKeys as $heading) {
                 if ($heading === '__errors') {
                     $row[] = is_array($messages) ? implode(' | ', $messages) : (string) $messages;
                     continue;
@@ -89,7 +90,7 @@ class ContractsPaymentsFailuresFixExport implements FromArray, WithHeadings, Sho
 
     public function styles(Worksheet $sheet)
     {
-        if (empty($this->headings)) {
+        if (empty($this->headingKeys)) {
             return [];
         }
 

@@ -2,6 +2,7 @@
 
 namespace Modules\Investors\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -14,12 +15,12 @@ class InvestorsFailuresFixExport implements FromArray, WithHeadings, ShouldAutoS
 
     public function headings(): array
     {
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'name','national_id','phone','email','address',
             'nationality','title','id_card_image','contract_image',
             'office_share_percentage',
             'errors','source_row',
-        ];
+        ]);
     }
 
     public function array(): array

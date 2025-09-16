@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -15,7 +16,7 @@ class ContractsInvestorsFailuresFixExport implements FromArray, WithHeadings, Sh
 
     public function title(): string
     {
-        return 'Failures';
+        return ExcelHeadingLocalizer::translateTitle('failures');
     }
 
     public function headings(): array
@@ -33,7 +34,7 @@ class ContractsInvestorsFailuresFixExport implements FromArray, WithHeadings, Sh
         $base[] = '__errors';
         $base[] = '__row';
 
-        return $base;
+        return ExcelHeadingLocalizer::translateMany($base);
     }
 
     public function array(): array

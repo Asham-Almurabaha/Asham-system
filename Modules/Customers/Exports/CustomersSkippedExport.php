@@ -2,6 +2,7 @@
 
 namespace Modules\Customers\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -15,16 +16,16 @@ class CustomersSkippedExport implements FromArray, WithHeadings, ShouldAutoSize,
 
     public function title(): string
     {
-        return 'Skipped';
+        return ExcelHeadingLocalizer::translateTitle('skipped');
     }
 
     public function headings(): array
     {
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'name','national_id','phone','email','address',
             'nationality','title','id_card_image','contract_image',
             'reason','source_row',
-        ];
+        ]);
     }
 
     public function array(): array

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -14,7 +15,7 @@ class LedgerEntriesTemplateExport implements FromArray, WithHeadings
         // - لازم تختار إمّا bank_account_id أو safe_id (واحد فقط)
         // - transaction_date بصيغة Y-m-d
         // - product_type_id و quantity تُستخدم فقط مع حالات البضائع (شراء/بيع بضائع)
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'party_category',    // إلزامي: investors | office
             'investor_id',       // مطلوب إذا كانت الفئة investors
             'status_id',         // إلزامي: ID من transaction_statuses
@@ -28,7 +29,7 @@ class LedgerEntriesTemplateExport implements FromArray, WithHeadings
             'ref',               // اختياري
             'product_type_id',   // اختياري (لبنود البضائع)
             'quantity',          // اختياري (لبنود البضائع)
-        ];
+        ]);
     }
 
     public function array(): array

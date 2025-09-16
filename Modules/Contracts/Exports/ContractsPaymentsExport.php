@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -55,7 +56,7 @@ class ContractsPaymentsExport implements FromCollection, WithHeadings, ShouldAut
             $base[] = "payment{$n}_date";
         }
 
-        return $base;
+        return ExcelHeadingLocalizer::translateMany($base);
     }
 }
 

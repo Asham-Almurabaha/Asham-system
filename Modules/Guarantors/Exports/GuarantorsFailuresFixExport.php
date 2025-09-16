@@ -2,6 +2,7 @@
 
 namespace Modules\Guarantors\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -14,11 +15,11 @@ class GuarantorsFailuresFixExport implements FromArray, WithHeadings, ShouldAuto
 
     public function headings(): array
     {
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'name','national_id','phone','email','address',
             'nationality','title','notes','id_card_image',
             'errors','source_row',
-        ];
+        ]);
     }
 
     public function array(): array

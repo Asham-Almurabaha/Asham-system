@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -14,7 +15,12 @@ class ImportFailuresExport implements FromArray, WithHeadings, ShouldAutoSize, W
 
     public function headings(): array
     {
-        return ['row', 'attribute', 'messages', 'values'];
+        return ExcelHeadingLocalizer::translateMany([
+            'row',
+            'attribute',
+            'messages',
+            'values',
+        ]);
     }
 
     public function array(): array

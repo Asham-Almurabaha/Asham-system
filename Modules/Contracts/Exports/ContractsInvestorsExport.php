@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -56,6 +57,6 @@ class ContractsInvestorsExport implements FromCollection, WithHeadings, ShouldAu
             $base[] = "investor{$i}_pct";
         }
 
-        return $base;
+        return ExcelHeadingLocalizer::translateMany($base);
     }
 }

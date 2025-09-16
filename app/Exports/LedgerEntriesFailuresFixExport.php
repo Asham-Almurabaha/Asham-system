@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -14,7 +15,7 @@ class LedgerEntriesFailuresFixExport implements FromArray, WithHeadings, ShouldA
 
     public function headings(): array
     {
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'party_category',   // investors | office
             'investor_id',      // مطلوب لو party_category=investors
             'status_id',
@@ -28,7 +29,7 @@ class LedgerEntriesFailuresFixExport implements FromArray, WithHeadings, ShouldA
             'notes',
             'errors',           // رسائل الخطأ للصف
             'source_row',       // رقم الصف الأصلي
-        ];
+        ]);
     }
 
     public function array(): array

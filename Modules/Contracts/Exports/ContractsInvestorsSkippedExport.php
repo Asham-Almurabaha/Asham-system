@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -15,7 +16,7 @@ class ContractsInvestorsSkippedExport implements FromArray, WithHeadings, Should
 
     public function title(): string
     {
-        return 'Skipped';
+        return ExcelHeadingLocalizer::translateTitle('skipped');
     }
 
     public function headings(): array
@@ -33,7 +34,7 @@ class ContractsInvestorsSkippedExport implements FromArray, WithHeadings, Should
         $base[] = 'reason';
         $base[] = 'source_row';
 
-        return $base;
+        return ExcelHeadingLocalizer::translateMany($base);
     }
 
     public function array(): array

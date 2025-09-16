@@ -2,6 +2,7 @@
 
 namespace Modules\Guarantors\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -26,12 +27,12 @@ class GuarantorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize
 
     public function title(): string
     {
-        return 'Skipped';
+        return ExcelHeadingLocalizer::translateTitle('skipped');
     }
 
     public function headings(): array
     {
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'name',
             'national_id',
             'phone',
@@ -44,7 +45,7 @@ class GuarantorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize
             'contract_image',
             'reason',
             'source_row',
-        ];
+        ]);
     }
 
     public function array(): array

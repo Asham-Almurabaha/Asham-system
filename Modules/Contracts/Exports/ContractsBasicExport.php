@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -21,7 +22,7 @@ class ContractsBasicExport implements FromArray, WithHeadings, ShouldAutoSize
             'start_date','first_installment_date',
         ];
 
-        return $base;
+        return ExcelHeadingLocalizer::translateMany($base);
     }
 
     public function array(): array

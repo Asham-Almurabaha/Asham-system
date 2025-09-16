@@ -2,6 +2,7 @@
 
 namespace Modules\Guarantors\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -10,7 +11,7 @@ class GuarantorsTemplateExport implements FromArray, WithHeadings
     public function headings(): array
     {
         // أعمدة متوافقة مع جدول guarantors والاستيراد
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'name',            // إلزامي
             'national_id',     // إلزامي (10 أرقام يبدأ بـ 1 أو 2)
             'phone',           // إلزامي (05XXXXXXXX أو 9665XXXXXXXX)
@@ -20,7 +21,7 @@ class GuarantorsTemplateExport implements FromArray, WithHeadings
             'title',           // اختياري (بالاسم ويجب يكون موجود بجدول titles)
             'notes',           // اختياري
             'id_card_image',   // اختياري (مسار/اسم ملف إن وُجد)
-        ];
+        ]);
     }
 
     public function array(): array

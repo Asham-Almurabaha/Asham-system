@@ -2,6 +2,7 @@
 
 namespace Modules\Investors\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -9,7 +10,7 @@ class InvestorsTemplateExport implements FromArray, WithHeadings
 {
     public function headings(): array
     {
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'name',                    // إلزامي
             'national_id',             // إلزامي (10 أرقام يبدأ بـ 1 أو 2)
             'phone',                   // إلزامي (05XXXXXXXX أو 9665XXXXXXXX)
@@ -21,7 +22,7 @@ class InvestorsTemplateExport implements FromArray, WithHeadings
             'notes',                   // اختياري
             'id_card_image',           // اختياري (مسار/اسم ملف)
             'contract_image',          // اختياري (مسار/اسم ملف)
-        ];
+        ]);
     }
 
     public function array(): array

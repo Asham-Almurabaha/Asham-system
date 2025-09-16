@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Exports;
 
+use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -14,7 +15,7 @@ class ContractsBasicFailuresFixExport implements FromArray, WithHeadings, Should
 
     public function headings(): array
     {
-        return [
+        return ExcelHeadingLocalizer::translateMany([
             'contract_number','customer_id','customer_name',
             'guarantor_id','guarantor_name',
             'product_type_id','product_type_name',
@@ -24,7 +25,7 @@ class ContractsBasicFailuresFixExport implements FromArray, WithHeadings, Should
             'installment_value','installments_count',
             'start_date','first_installment_date',
             '__errors','__row',
-        ];
+        ]);
     }
 
     public function array(): array
