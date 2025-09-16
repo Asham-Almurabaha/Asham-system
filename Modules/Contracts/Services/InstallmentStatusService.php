@@ -2,7 +2,7 @@
 
 namespace Modules\Contracts\Services;
 
-use Modules\Lookups\Entities\InstallmentStatus;
+use App\Models\Lookups\InstallmentStatus;
 use Illuminate\Support\Carbon;
 use Modules\Contracts\Entities\ContractInstallment;
 

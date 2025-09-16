@@ -3,11 +3,11 @@
 namespace Modules\Contracts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\Lookups\Entities\InstallmentStatus;
+use App\Models\Lookups\InstallmentStatus;
 use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;
-use Modules\Lookups\Entities\TransactionStatus;
-use Modules\Lookups\Entities\TransactionType;
+use App\Models\Lookups\TransactionStatus;
+use App\Models\Lookups\TransactionType;
 use Carbon\Carbon;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
-use Modules\Lookups\Entities\ContractStatus;
+use App\Models\Lookups\ContractStatus;
 use Modules\Contracts\Services\InstallmentStatusService;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 

@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Lookups\Http\Controllers;
+namespace App\Http\Controllers\Lookups;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Lookups\Entities\TransactionType;
+use App\Models\Lookups\TransactionType;
 
 class TransactionTypeController extends Controller
 {
@@ -12,12 +12,12 @@ class TransactionTypeController extends Controller
     {
         $types = TransactionType::all();
 
-        return view('lookups::transaction_types.index', compact('types'));
+        return view('lookups.transaction_types.index', compact('types'));
     }
 
     public function create()
     {
-        return view('lookups::transaction_types.create');
+        return view('lookups.transaction_types.create');
     }
 
     public function store(Request $request)
@@ -34,7 +34,7 @@ class TransactionTypeController extends Controller
 
     public function edit(TransactionType $transactionType)
     {
-        return view('lookups::transaction_types.edit', compact('transactionType'));
+        return view('lookups.transaction_types.edit', compact('transactionType'));
     }
 
     public function update(Request $request, TransactionType $transactionType)

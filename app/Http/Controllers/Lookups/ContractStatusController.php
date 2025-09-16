@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\Lookups\Http\Controllers;
+namespace App\Http\Controllers\Lookups;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
-use Modules\Lookups\Entities\ContractStatus;
+use App\Models\Lookups\ContractStatus;
 use Throwable;
 
 class ContractStatusController extends Controller
@@ -17,12 +17,12 @@ class ContractStatusController extends Controller
     {
         $statuses = ContractStatus::orderBy('id')->get();
 
-        return view('lookups::contract_statuses.index', compact('statuses'));
+        return view('lookups.contract_statuses.index', compact('statuses'));
     }
 
     public function create()
     {
-        return view('lookups::contract_statuses.create');
+        return view('lookups.contract_statuses.create');
     }
 
     public function store(Request $request)
@@ -60,7 +60,7 @@ class ContractStatusController extends Controller
                 ->withErrors(['general' => 'هذه الحالة أساسية ولا يمكن تعديلها.']);
         }
 
-        return view('lookups::contract_statuses.edit', compact('contract_status'));
+        return view('lookups.contract_statuses.edit', compact('contract_status'));
     }
 
     public function update(Request $request, ContractStatus $contract_status)

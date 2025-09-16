@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Investors\Entities\Investor;
-use Modules\Lookups\Entities\TransactionStatus;
-use Modules\Lookups\Entities\TransactionType;
+use App\Models\Lookups\TransactionStatus;
+use App\Models\Lookups\TransactionType;
 
 class LedgerEntry extends Model
 {

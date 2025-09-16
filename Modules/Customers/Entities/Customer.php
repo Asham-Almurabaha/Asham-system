@@ -2,8 +2,8 @@
 
 namespace Modules\Customers\Entities;
 
-use Modules\Lookups\Entities\Nationality;
-use Modules\Lookups\Entities\Title;
+use App\Models\Lookups\Nationality;
+use App\Models\Lookups\Title;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Contracts\Entities\Contract;

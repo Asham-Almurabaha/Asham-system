@@ -4,12 +4,12 @@ namespace Modules\Contracts\Imports;
 
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
-use Modules\Lookups\Entities\ContractStatus;
+use App\Models\Lookups\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Customers\Entities\Customer;
 use Modules\Guarantors\Entities\Guarantor;
-use Modules\Lookups\Entities\InstallmentStatus;
-use Modules\Lookups\Entities\InstallmentType;
+use App\Models\Lookups\InstallmentStatus;
+use App\Models\Lookups\InstallmentType;
 use App\Models\ProductType;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;

@@ -3,8 +3,8 @@
 namespace Modules\Guarantors\Imports;
 
 use Modules\Guarantors\Entities\Guarantor;
-use Modules\Lookups\Entities\Nationality;
-use Modules\Lookups\Entities\Title;
+use App\Models\Lookups\Nationality;
+use App\Models\Lookups\Title;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\ToModel;

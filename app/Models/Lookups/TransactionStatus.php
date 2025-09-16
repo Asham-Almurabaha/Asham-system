@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Lookups\Entities;
+namespace App\Models\Lookups;
 
 use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;

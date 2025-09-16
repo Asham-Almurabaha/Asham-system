@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Lookups\Http\Controllers;
+namespace App\Http\Controllers\Lookups;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Lookups\Entities\TransactionStatus;
-use Modules\Lookups\Entities\TransactionType;
+use App\Models\Lookups\TransactionStatus;
+use App\Models\Lookups\TransactionType;
 
 class TransactionStatusController extends Controller
 {
@@ -13,14 +13,14 @@ class TransactionStatusController extends Controller
     {
         $statuses = TransactionStatus::with('transactionType')->get();
 
-        return view('lookups::transaction_statuses.index', compact('statuses'));
+        return view('lookups.transaction_statuses.index', compact('statuses'));
     }
 
     public function create()
     {
         $types = TransactionType::all();
 
-        return view('lookups::transaction_statuses.create', compact('types'));
+        return view('lookups.transaction_statuses.create', compact('types'));
     }
 
     public function store(Request $request)
@@ -39,7 +39,7 @@ class TransactionStatusController extends Controller
     {
         $types = TransactionType::all();
 
-        return view('lookups::transaction_statuses.edit', compact('transactionStatus', 'types'));
+        return view('lookups.transaction_statuses.edit', compact('transactionStatus', 'types'));
     }
 
     public function update(Request $request, TransactionStatus $transactionStatus)

@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Lookups\Http\Controllers;
+namespace App\Http\Controllers\Lookups;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Lookups\Entities\InstallmentStatus;
+use App\Models\Lookups\InstallmentStatus;
 
 class InstallmentStatusController extends Controller
 {
@@ -12,12 +12,12 @@ class InstallmentStatusController extends Controller
     {
         $statuses = InstallmentStatus::orderBy('name')->get();
 
-        return view('lookups::installment_statuses.index', compact('statuses'));
+        return view('lookups.installment_statuses.index', compact('statuses'));
     }
 
     public function create()
     {
-        return view('lookups::installment_statuses.create');
+        return view('lookups.installment_statuses.create');
     }
 
     public function store(Request $request)
@@ -33,7 +33,7 @@ class InstallmentStatusController extends Controller
 
     public function edit(InstallmentStatus $installmentStatus)
     {
-        return view('lookups::installment_statuses.edit', compact('installmentStatus'));
+        return view('lookups.installment_statuses.edit', compact('installmentStatus'));
     }
 
     public function update(Request $request, InstallmentStatus $installmentStatus)

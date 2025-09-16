@@ -1,16 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Lookups\Http\Controllers\CategoryController;
-use Modules\Lookups\Http\Controllers\ContractStatusController;
-use Modules\Lookups\Http\Controllers\InstallmentStatusController;
-use Modules\Lookups\Http\Controllers\InstallmentTypeController;
-use Modules\Lookups\Http\Controllers\NationalityController;
-use Modules\Lookups\Http\Controllers\TitleController;
-use Modules\Lookups\Http\Controllers\TransactionStatusController;
-use Modules\Lookups\Http\Controllers\TransactionTypeController;
+use App\Http\Controllers\Lookups\CategoryController;
+use App\Http\Controllers\Lookups\ContractStatusController;
+use App\Http\Controllers\Lookups\InstallmentStatusController;
+use App\Http\Controllers\Lookups\InstallmentTypeController;
+use App\Http\Controllers\Lookups\NationalityController;
+use App\Http\Controllers\Lookups\TitleController;
+use App\Http\Controllers\Lookups\TransactionStatusController;
+use App\Http\Controllers\Lookups\TransactionTypeController;
 
-Route::middleware(['web', 'auth'])->prefix('settings')->group(function () {
+Route::prefix('settings')->group(function () {
     Route::resource('nationalities', NationalityController::class);
     Route::resource('titles', TitleController::class);
     Route::resource('categories', CategoryController::class);

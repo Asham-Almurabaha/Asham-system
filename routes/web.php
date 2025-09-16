@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('settings')->group(function () {
         Route::resource('settings', SettingController::class);
     });
+    require base_path('routes/lookups.php');
 
     // استيراد القيود
     Route::prefix('ledger/import')->name('ledger.')->group(function () {

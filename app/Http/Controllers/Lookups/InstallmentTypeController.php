@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Lookups\Http\Controllers;
+namespace App\Http\Controllers\Lookups;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Lookups\Entities\InstallmentType;
+use App\Models\Lookups\InstallmentType;
 
 class InstallmentTypeController extends Controller
 {
@@ -12,12 +12,12 @@ class InstallmentTypeController extends Controller
     {
         $types = InstallmentType::orderBy('name')->get();
 
-        return view('lookups::installment_types.index', compact('types'));
+        return view('lookups.installment_types.index', compact('types'));
     }
 
     public function create()
     {
-        return view('lookups::installment_types.create');
+        return view('lookups.installment_types.create');
     }
 
     public function store(Request $request)
@@ -33,7 +33,7 @@ class InstallmentTypeController extends Controller
 
     public function edit(InstallmentType $installmentType)
     {
-        return view('lookups::installment_types.edit', compact('installmentType'));
+        return view('lookups.installment_types.edit', compact('installmentType'));
     }
 
     public function update(Request $request, InstallmentType $installmentType)

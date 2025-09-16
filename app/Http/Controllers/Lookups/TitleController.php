@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Lookups\Http\Controllers;
+namespace App\Http\Controllers\Lookups;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Lookups\Entities\Title;
+use App\Models\Lookups\Title;
 
 class TitleController extends Controller
 {
@@ -12,12 +12,12 @@ class TitleController extends Controller
     {
         $titles = Title::orderByDesc('id')->get();
 
-        return view('lookups::titles.index', compact('titles'));
+        return view('lookups.titles.index', compact('titles'));
     }
 
     public function create()
     {
-        return view('lookups::titles.create');
+        return view('lookups.titles.create');
     }
 
     public function store(Request $request)
@@ -33,7 +33,7 @@ class TitleController extends Controller
 
     public function edit(Title $title)
     {
-        return view('lookups::titles.edit', compact('title'));
+        return view('lookups.titles.edit', compact('title'));
     }
 
     public function update(Request $request, Title $title)

@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Lookups\Http\Controllers;
+namespace App\Http\Controllers\Lookups;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Lookups\Entities\Nationality;
+use App\Models\Lookups\Nationality;
 
 class NationalityController extends Controller
 {
@@ -12,12 +12,12 @@ class NationalityController extends Controller
     {
         $nationalities = Nationality::orderBy('name')->get();
 
-        return view('lookups::nationalities.index', compact('nationalities'));
+        return view('lookups.nationalities.index', compact('nationalities'));
     }
 
     public function create()
     {
-        return view('lookups::nationalities.create');
+        return view('lookups.nationalities.create');
     }
 
     public function store(Request $request)
@@ -35,7 +35,7 @@ class NationalityController extends Controller
     {
         $nationality = Nationality::findOrFail($id);
 
-        return view('lookups::nationalities.edit', compact('nationality'));
+        return view('lookups.nationalities.edit', compact('nationality'));
     }
 
     public function update(Request $request, $id)

@@ -1,12 +1,13 @@
 <?php
 
-namespace Modules\Lookups\Entities;
+namespace App\Models\Lookups;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Investors\Entities\InvestorTransaction;
 
-class InstallmentType extends Model
+class InstallmentStatus extends Model
 {
     use HasFactory;
 
@@ -15,5 +16,10 @@ class InstallmentType extends Model
     public function installments()
     {
         return $this->hasMany(ContractInstallment::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(InvestorTransaction::class, 'status_id');
     }
 }
