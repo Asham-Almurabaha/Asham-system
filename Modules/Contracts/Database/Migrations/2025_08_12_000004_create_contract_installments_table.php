@@ -27,6 +27,6 @@ class CreateContractInstallmentsTable extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('installments');
+        Schema::dropIfExists('contract_installments');
     }
 }
