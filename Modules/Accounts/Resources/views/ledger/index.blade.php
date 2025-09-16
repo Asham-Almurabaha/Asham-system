@@ -38,7 +38,7 @@
         <div class="card-body">
             <form method="GET" action="{{ route('ledger.index') }}" class="row gy-2 gx-2 align-items-end" id="filtersForm">
                 <div class="col-12 col-md-2">
-                    <label class="form-label mb-1">@lang('ledger.Category')</label>
+                    <label class="form-label mb-1">@lang('accounts::ledger.Category')</label>
                     <select name="party_category" id="party_category" class="form-select form-select-sm">
                         <option value="">الكل</option>
                         <option value="investors" @selected(($filters['party_category'] ?? '') === 'investors')>المستثمرون</option>
@@ -47,7 +47,7 @@
                 </div>
 
                 <div class="col-12 col-md-2" id="investorWrap">
-                    <label class="form-label mb-1">@lang('ledger.Investor')</label>
+                    <label class="form-label mb-1">@lang('accounts::ledger.Investor')</label>
                     <select name="investor_id" id="investor_id" class="form-select form-select-sm">
                         <option value="">الكل</option>
                         @foreach($investors as $inv)
@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="col-12 col-md-2">
-                    <label class="form-label mb-1">@lang('ledger.Status')</label>
+                    <label class="form-label mb-1">@lang('accounts::ledger.Status')</label>
                     <select name="status_id" id="status_id" class="form-select form-select-sm">
                         <option value="">الكل</option>
 
@@ -80,7 +80,7 @@
                 </div>
 
                 <div class="col-6 col-md-2">
-                    <label class="form-label mb-1">@lang('ledger.Account Type')</label>
+                    <label class="form-label mb-1">@lang('accounts::ledger.Account Type')</label>
                     <select name="account_type" id="account_type" class="form-select form-select-sm">
                         <option value="">الكل</option>
                         <option value="bank" @selected(($filters['account_type'] ?? '') === 'bank')>حساب بنكي</option>
@@ -89,11 +89,11 @@
                 </div>
 
                 <div class="col-6 col-md-1 js-date">
-                    <label class="form-label mb-1">@lang('ledger.From')</label>
+                    <label class="form-label mb-1">@lang('accounts::ledger.From')</label>
                     <input type="date" name="from" id="from" value="{{ $filters['from'] ?? '' }}" class="form-control form-control-sm">
                 </div>
                 <div class="col-6 col-md-1 js-date">
-                    <label class="form-label mb-1">@lang('ledger.To')</label>
+                    <label class="form-label mb-1">@lang('accounts::ledger.To')</label>
                     <input type="date" name="to" id="to" value="{{ $filters['to'] ?? '' }}" class="form-control form-control-sm">
                 </div>
 

@@ -1,7 +1,7 @@
 ﻿{{-- resources/views/ledger/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', __('ledger_import.Import Ledger Entries from Excel'))
+@section('title', __('accounts::ledger_import.Import Ledger Entries from Excel'))
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
@@ -22,7 +22,7 @@
       </div>
       <div class="ms-auto d-none d-md-block">
         <a href="{{ route('ledger.import.template') }}" class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-filetype-xlsx me-1"></i> @lang('ledger_import.Download template')
+          <i class="bi bi-filetype-xlsx me-1"></i> @lang('accounts::ledger_import.Download template')
         </a>
       </div>
     </div>
@@ -137,7 +137,7 @@
       <div class="d-flex align-items-start">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i>
         <div>
-          <div class="fw-semibold mb-1">@lang('ledger_import.Errors during read/save:')</div>
+          <div class="fw-semibold mb-1">@lang('accounts::ledger_import.Errors during read/save:')</div>
           <ul class="mb-0">
             @foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach
           </ul>
@@ -154,13 +154,13 @@
         <div class="col-12">
           <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
             <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
-            <div class="mb-2 fw-semibold">@lang('ledger_import.Drag file here or click to choose')</div>
-            <div class="text-muted small mb-3">@lang('ledger_import.Excel/CSV only — validation before save')</div>
+            <div class="mb-2 fw-semibold">@lang('accounts::ledger_import.Drag file here or click to choose')</div>
+            <div class="text-muted small mb-3">@lang('accounts::ledger_import.Excel/CSV only — validation before save')</div>
             <input id="fileInput" type="file" name="file"
                    class="position-absolute w-100 h-100 top-0 start-0 opacity-0"
                    accept=".xlsx,.xls,.csv" required>
             <div class="small">
-              <span class="text-secondary">@lang('ledger_import.Selected file:')</span>
+              <span class="text-secondary">@lang('accounts::ledger_import.Selected file:')</span>
               <span id="fileName" class="fw-semibold">—</span>
               <span id="fileMeta" class="text-muted"></span>
             </div>
@@ -170,12 +170,12 @@
 
         <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
           <button id="submitBtn" class="btn btn-primary" disabled>
-            <i class="bi bi-upload me-1"></i> @lang('ledger_import.Import Now')
+            <i class="bi bi-upload me-1"></i> @lang('accounts::ledger_import.Import Now')
           </button>
 
           @if ($hasFailures && Route::has('ledger.import.failures.fix'))
             <a class="btn btn-warning" href="{{ route('ledger.import.failures.fix') }}">
-              <i class="bi bi-wrench-adjustable me-1"></i> @lang('ledger_import.Download file to fix rows')
+              <i class="bi bi-wrench-adjustable me-1"></i> @lang('accounts::ledger_import.Download file to fix rows')
             </a>
           @endif
         </div>
@@ -187,11 +187,11 @@
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
         <i class="bi bi-list-check me-2"></i>
-        <span>@lang('ledger_import.Validation Errors')</span>
+        <span>@lang('accounts::ledger_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
         <button class="btn btn-sm btn-outline-secondary ms-auto"
                 data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
-          @lang('ledger_import.Show/Hide')
+          @lang('accounts::ledger_import.Show/Hide')
         </button>
       </div>
 
@@ -201,10 +201,10 @@
             <table class="table table-sm table-striped table-hover align-middle mb-0">
               <thead class="table-light sticky-top">
                 <tr>
-                  <th style="width:110px">@lang('ledger_import.Row Number')</th>
-                  <th style="width:220px">@lang('ledger_import.Field')</th>
-                  <th>@lang('ledger_import.Messages')</th>
-                  <th style="min-width:260px">@lang('ledger_import.Values')</th>
+                  <th style="width:110px">@lang('accounts::ledger_import.Row Number')</th>
+                  <th style="width:220px">@lang('accounts::ledger_import.Field')</th>
+                  <th>@lang('accounts::ledger_import.Messages')</th>
+                  <th style="min-width:260px">@lang('accounts::ledger_import.Values')</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,7 +236,7 @@
             </table>
           </div>
           <div class="p-3 text-muted small">
-            @lang('ledger_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')
+            @lang('accounts::ledger_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')
           </div>
         </div>
       </div>
@@ -277,12 +277,12 @@
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     if (!okExt.includes(ext)) {
-      err.textContent = @js(__('ledger_import.Unsupported file format. Allowed: xlsx, xls, csv'));
+      err.textContent = @js(__('accounts::ledger_import.Unsupported file format. Allowed: xlsx, xls, csv'));
       err.classList.remove('d-none');
       return;
     }
     if (file.size > MAX_SIZE) {
-      err.textContent = @js(__('ledger_import.File size exceeds 10MB.'));
+      err.textContent = @js(__('accounts::ledger_import.File size exceeds 10MB.'));
       err.classList.remove('d-none');
       return;
     }

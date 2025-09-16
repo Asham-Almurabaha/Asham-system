@@ -18,7 +18,7 @@
         <p class="text-muted mb-0">
           @lang('customers::customers_import.Upload an Excel/CSV file with specs:')
           <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image</code>
-          — @lang('ledger_import.First row is headers.')
+          — @lang('accounts::ledger_import.First row is headers.')
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">

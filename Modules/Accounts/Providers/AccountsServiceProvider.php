@@ -10,6 +10,7 @@ class AccountsServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../Database/Migrations');
         $this->loadViewsFrom(__DIR__.'/../Resources/views', 'accounts');
+        $this->loadTranslationsFrom(__DIR__.'/../Resources/lang', 'accounts');
     }
 
     public function register(): void
