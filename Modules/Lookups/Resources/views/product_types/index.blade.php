@@ -37,11 +37,10 @@
                                 <td class="text-start">{{ $productType->name }}</td>
                                 <td>
                                     <a href="{{ route('product_types.edit', $productType) }}" class="btn btn-primary btn-sm me-1">{{ __('Edit') }}</a>
-                                    <form action="{{ route('product_types.destroy', $productType) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ __('Are you sure to delete this product type?') }}');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm">{{ __('Delete') }}</button>
-                                    </form>
+                                    @include('lookups::components.delete-button', [
+                                        'action' => route('product_types.destroy', $productType),
+                                        'confirm' => __('Are you sure to delete this product type?'),
+                                    ])
                                 </td>
                             </tr>
                         @empty

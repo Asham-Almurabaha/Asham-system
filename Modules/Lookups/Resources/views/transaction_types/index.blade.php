@@ -38,11 +38,11 @@
                             <td class="text-start">{{ $type->name }}</td>
                             <td>
                                 <a href="{{ route('transaction_types.edit', $type->id) }}" class="btn btn-primary btn-sm me-1">@lang('lookups::transaction_types.Edit')</a>
-                                <form action="{{ route('transaction_types.destroy', $type->id) }}" method="POST" class="d-inline" onsubmit="return confirm('@lang('lookups::transaction_types.Are you sure you want to delete this transaction type?')');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">@lang('lookups::transaction_types.Delete')</button>
-                                </form>
+                                @include('lookups::components.delete-button', [
+                                    'action' => route('transaction_types.destroy', $type->id),
+                                    'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
+                                    'label' => __('lookups::transaction_types.Delete'),
+                                ])
                             </td>
                         </tr>
                     @empty

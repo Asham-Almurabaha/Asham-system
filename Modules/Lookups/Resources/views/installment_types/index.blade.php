@@ -39,11 +39,10 @@
                             <td>
                                 <a href="{{ route('installment_types.edit', $type->id) }}" class="btn btn-primary btn-sm me-1">{{ __('Edit') }}</a>
 
-                                <form action="{{ route('installment_types.destroy', $type->id) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ __('Are you sure to delete this installment type?') }}');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm">{{ __('Delete') }}</button>
-                                </form>
+                                @include('lookups::components.delete-button', [
+                                    'action' => route('installment_types.destroy', $type->id),
+                                    'confirm' => __('Are you sure to delete this installment type?'),
+                                ])
                             </td>
                         </tr>
                     @empty
