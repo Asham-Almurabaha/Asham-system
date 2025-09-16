@@ -112,6 +112,65 @@ trait HandlesContractPayments
         return $out;
     }
 
+    /**
+     * يوزع قيمة المجمع السابق على الأقساط حسب ترتيب الاستحقاق ويعيد عدد الأقساط المتأثرة.
+     */
+    protected function allocatePreviousCumulative(Contract $contract, float $amount): int
+    {
+        $amount = round((float) $amount, 2);
+        if ($amount <= 0) {
+            return 0;
+        }
+
+        /** @var \Illuminate\Support\Collection<int,ContractInstallment> $installments */
+        $installments = ContractInstallment::where('contract_id', $contract->id)
+            ->orderBy('due_date')
+            ->orderBy('id')
+            ->get();
+
+        if ($installments->isEmpty()) {
+            return 0;
+        }
+
+        $payments = [];
+
+        foreach ($installments as $installment) {
+            if ($amount <= 0) {
+                break;
+            }
+
+            $dueAmount  = (float) $installment->due_amount;
+            $paidAmount = (float) $installment->payment_amount;
+            $remaining  = round($dueAmount - $paidAmount, 2);
+
+            if ($remaining <= 0) {
+                continue;
+            }
+
+            $paymentValue = min($remaining, $amount);
+            if ($paymentValue <= 0) {
+                continue;
+            }
+
+            $payments[] = [
+                'amount' => $paymentValue,
+                'date'   => $installment->due_date
+                    ? $installment->due_date->format('Y-m-d')
+                    : null,
+            ];
+
+            $amount = round($amount - $paymentValue, 2);
+        }
+
+        if (empty($payments)) {
+            return 0;
+        }
+
+        $this->allocatePaymentsToInstallments($contract, $payments);
+
+        return count($payments);
+    }
+
     /** ينشئ قيود دفتر لكل سداد (لو لقى حالة/نوع مناسبين) */
     protected function createPaymentLedgerEntries(Contract $contract, array $payments): void
     {

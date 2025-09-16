@@ -50,17 +50,31 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
                     continue;
                 }
 
+                $previousCumulative = isset($data['previous_cumulative'])
+                    ? (float) $data['previous_cumulative']
+                    : 0.0;
+
                 $payments = $this->parsePaymentsFlexible($data);
-                if (empty($payments)) {
+                if (empty($payments) && $previousCumulative <= 0) {
                     $this->skipped++;
                     $this->pushFailure($rowNum, 'payments', $data, ['لا توجد سدادات صالحة.']);
                     continue;
                 }
 
-                DB::transaction(function () use ($contract, $payments) {
-                    $this->createPaymentLedgerEntries($contract, $payments);
-                    $this->allocatePaymentsToInstallments($contract, $payments);
-                    $this->inserted += count($payments);
+                DB::transaction(function () use ($contract, $payments, $previousCumulative) {
+                    $appliedCount = 0;
+
+                    if ($previousCumulative > 0) {
+                        $appliedCount += $this->allocatePreviousCumulative($contract, $previousCumulative);
+                    }
+
+                    if (!empty($payments)) {
+                        $this->createPaymentLedgerEntries($contract, $payments);
+                        $this->allocatePaymentsToInstallments($contract, $payments);
+                        $appliedCount += count($payments);
+                    }
+
+                    $this->inserted += $appliedCount;
                 });
             } catch (\Throwable $e) {
                 $this->skipped++;

@@ -123,6 +123,14 @@ class ContractsImport implements ToCollection, WithHeadingRow, WithChunkReading,
                     $this->createSaleDiffLedgerEntry($contract, $payload);
 
                     // ===== السدادات: حتى 18 (amount+date) + عمود payments الموحد =====
+                    $previousCumulative = isset($data['previous_cumulative'])
+                        ? (float) $data['previous_cumulative']
+                        : 0.0;
+
+                    if ($previousCumulative > 0) {
+                        $this->allocatePreviousCumulative($contract, $previousCumulative);
+                    }
+
                     $payments = $this->parsePaymentsFlexible($data);
                     if (!empty($payments)) {
                         // قيد دفتر لكل سداد (لو وُجد status/type مناسبين)
