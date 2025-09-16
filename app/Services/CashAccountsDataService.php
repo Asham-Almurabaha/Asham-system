@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\LedgerEntry;
 use App\Models\BankAccount;
 use App\Models\Safe;
-use App\Models\Lookups\TransactionStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 

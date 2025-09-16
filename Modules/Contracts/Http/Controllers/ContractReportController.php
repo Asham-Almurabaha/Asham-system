@@ -8,7 +8,7 @@ use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Modules\Contracts\Entities\Contract;
-use App\Models\Lookups\ContractStatus;
+use Modules\Lookups\Entities\ContractStatus;
 
 class ContractReportController extends Controller
 {

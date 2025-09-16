@@ -3,9 +3,9 @@
 namespace Modules\Investors\Entities;
 
 use App\Models\LedgerEntry;
-use App\Models\Lookups\Nationality;
+use Modules\Lookups\Entities\Nationality;
 use App\Models\OfficeTransaction;
-use App\Models\Lookups\Title;
+use Modules\Lookups\Entities\Title;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

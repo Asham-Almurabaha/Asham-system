@@ -3,8 +3,8 @@
 namespace App\Imports;
 
 use App\Models\LedgerEntry;
-use App\Models\Lookups\TransactionStatus;
-use App\Models\Lookups\TransactionType;
+use Modules\Lookups\Entities\TransactionStatus;
+use Modules\Lookups\Entities\TransactionType;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Maatwebsite\Excel\Concerns\Importable;

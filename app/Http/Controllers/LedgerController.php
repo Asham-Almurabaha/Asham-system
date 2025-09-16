@@ -7,9 +7,9 @@ use App\Models\LedgerEntry;
 use Modules\Investors\Entities\Investor;
 // use App\Models\Product; // ❌ لم نعد نستخدمه
 use App\Models\ProductTransaction;
-use App\Models\ProductType;
+use Modules\Lookups\Entities\ProductType;
 use App\Models\Safe;
-use App\Models\Lookups\TransactionStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 use App\Services\CashAccountsDataService;
 use App\Services\OfficeIncomeMetricsService;
 use App\Services\ProductAvailabilityService;

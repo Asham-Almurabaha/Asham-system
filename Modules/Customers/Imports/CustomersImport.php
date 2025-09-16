@@ -3,8 +3,8 @@
 namespace Modules\Customers\Imports;
 
 use Modules\Customers\Entities\Customer;
-use App\Models\Lookups\Nationality;
-use App\Models\Lookups\Title;
+use Modules\Lookups\Entities\Nationality;
+use Modules\Lookups\Entities\Title;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\ToModel;

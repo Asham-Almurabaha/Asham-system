@@ -9,8 +9,4 @@ return [
     'Department' => 'Department',
     'Departments' => 'Departments',
     'Add Department' => 'Add Department',
-    'Nationality' => 'Nationality',
-    'Nationalities' => 'Nationalities',
-    'Nationalities Table' => 'Nationalities Table',
-    'Add Nationality' => 'Add Nationality',
 ];

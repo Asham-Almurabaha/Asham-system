@@ -4,15 +4,15 @@ namespace Modules\Investors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\LedgerEntry;
-use App\Models\Lookups\Nationality;
-use App\Models\Lookups\Title;
+use Modules\Lookups\Entities\Nationality;
+use Modules\Lookups\Entities\Title;
 use App\Services\InstallmentsMonthlyService;
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Lookups\ContractStatus;
+use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Services\InvestorDataService;
 

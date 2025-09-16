@@ -9,9 +9,5 @@ return [
     'Department' => 'القسم',
     'Departments' => 'الأقسام',
     'Add Department' => 'إضافة قسم',
-    'Nationality' => 'الجنسية',
-    'Nationalities' => 'الجنسيات',
-    'Nationalities Table' => 'جدول الجنسيات',
-    'Add Nationality' => 'إضافة جنسية',
 ];
 

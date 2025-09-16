@@ -9,11 +9,11 @@
   // هل مجموعة الإعدادات مفتوحة؟
   $settingsOpen = $isPath('*/setting*')
       || $isRoute('settings.*') || $isRoute('nationalities.*') || $isRoute('titles.*')
-      || $isRoute('contract_statuses.*') 
+      || $isRoute('contract_statuses.*')
       || $isRoute('installment_statuses.*') || $isRoute('installment_types.*')
       || $isRoute('products.*') || $isRoute('product_entries.*')
       || $isRoute('bank_cash_accounts.*') || $isRoute('transaction_types.*') || $isRoute('transaction_statuses.*')
-      || $isRoute('categories.*')
+      || $isRoute('categories.*') || $isRoute('product_types.*')
       || $isRoute('users.*');
 @endphp
 
@@ -83,6 +83,52 @@
       <li>
         <a class="{{ $active($isRoute('settings.index')) }}" href="{{ route('settings.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
+        </a>
+      </li>
+      <li class="nav-heading">@lang('sidebar.Lookup Tables')</li>
+      <li>
+        <a class="{{ $active($isRoute('nationalities.*')) }}" href="{{ route('nationalities.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Nationalities')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('titles.*')) }}" href="{{ route('titles.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Titles')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('contract_statuses.*')) }}" href="{{ route('contract_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Contract Statuses')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('installment_types.*')) }}" href="{{ route('installment_types.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Types')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('transaction_types.*')) }}" href="{{ route('transaction_types.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Types')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('product_types.*')) }}" href="{{ route('product_types.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Product Types')</span>
         </a>
       </li>
       <li class="nav-heading">@lang('sidebar.Users and Permissions')</li>

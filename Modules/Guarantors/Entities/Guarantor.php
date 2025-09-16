@@ -4,8 +4,8 @@ namespace Modules\Guarantors\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Lookups\Nationality;
-use App\Models\Lookups\Title;
+use Modules\Lookups\Entities\Nationality;
+use Modules\Lookups\Entities\Title;
 use Modules\Contracts\Entities\Contract;
 
 class Guarantor extends Model

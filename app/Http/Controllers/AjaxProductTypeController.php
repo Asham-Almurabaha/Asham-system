@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProductType;
+use Modules\Lookups\Entities\ProductType;
 use App\Models\ProductTransaction;
 use App\Models\LedgerEntry;
 use Illuminate\Http\Request;

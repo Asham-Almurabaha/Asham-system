@@ -1,0 +1,11 @@
+{
+    "name": "Lookups",
+    "alias": "lookups",
+    "description": "",
+    "keywords": [],
+    "version": "1.0.0",
+    "priority": 0,
+    "providers": [
+        "Modules\\Lookups\\Providers\\LookupsServiceProvider"
+    ]
+}

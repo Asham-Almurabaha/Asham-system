@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\ProductType;
+use Modules\Lookups\Entities\ProductType;
 use App\Models\ProductTransaction;
 use App\Models\LedgerEntry;
 use Illuminate\Support\Facades\DB;
