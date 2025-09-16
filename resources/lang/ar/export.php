@@ -46,6 +46,7 @@ return [
         'installment_type_id' => 'معرّف نوع القسط',
         'installment_type_name' => 'نوع القسط',
         'installment_value' => 'قيمة القسط',
+        'previous_cumulative' => 'مجمع سابق',
         'installments_count' => 'عدد الأقساط',
         'start_date' => 'تاريخ البداية',
         'first_installment_date' => 'تاريخ أول قسط',

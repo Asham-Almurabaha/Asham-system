@@ -46,6 +46,7 @@ return [
         'installment_type_id' => 'Installment Type ID',
         'installment_type_name' => 'Installment Type',
         'installment_value' => 'Installment Value',
+        'previous_cumulative' => 'Previous Cumulative',
         'installments_count' => 'Installments Count',
         'start_date' => 'Start Date',
         'first_installment_date' => 'First Installment Date',

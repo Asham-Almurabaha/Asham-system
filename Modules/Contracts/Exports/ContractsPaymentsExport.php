@@ -11,6 +11,10 @@ use Modules\Contracts\Entities\Contract;
 
 class ContractsPaymentsExport implements FromCollection, WithHeadings, ShouldAutoSize
 {
+    private const FIRST_EXPORT_INSTALLMENT = 1;
+
+    private const TOTAL_EXPORT_INSTALLMENTS = 18;
+
     public function collection(): Collection
     {
         $rows = collect();
@@ -21,6 +25,13 @@ class ContractsPaymentsExport implements FromCollection, WithHeadings, ShouldAut
             $paidAmount = $contract->installments->sum('payment_amount');
             $remainingAmount = (float) $contract->total_value - (float) $paidAmount;
             $installmentValue = (float) $contract->installment_value;
+            $previousCumulative = $contract->installments
+                ->filter(function ($installment) {
+                    return (int) $installment->installment_number < self::FIRST_EXPORT_INSTALLMENT;
+                })
+                ->sum(function ($installment) {
+                    return (float) $installment->payment_amount;
+                });
             $remainingInstallments = $installmentValue > 0
                 ? (int) ceil($remainingAmount / $installmentValue)
                 : 0;
@@ -29,9 +40,10 @@ class ContractsPaymentsExport implements FromCollection, WithHeadings, ShouldAut
                 $contract->contract_number,
                 $remainingAmount,
                 $installmentValue,
+                $previousCumulative,
             ];
 
-            for ($n = 1; $n <= 18; $n++) {
+            for ($n = self::FIRST_EXPORT_INSTALLMENT; $n <= self::TOTAL_EXPORT_INSTALLMENTS; $n++) {
                 $installment = $contract->installments->firstWhere('installment_number', $n);
                 $row[] = $installment?->payment_amount ?? '';
                 $row[] = $installment?->payment_date?->toDateString() ?? '';
@@ -49,9 +61,10 @@ class ContractsPaymentsExport implements FromCollection, WithHeadings, ShouldAut
             'contract_number',
             'remaining_amount',
             'installment_value',
+            'previous_cumulative',
         ];
 
-        for ($n = 1; $n <= 18; $n++) {
+        for ($n = self::FIRST_EXPORT_INSTALLMENT; $n <= self::TOTAL_EXPORT_INSTALLMENTS; $n++) {
             $base[] = "payment{$n}_amount";
             $base[] = "payment{$n}_date";
         }
