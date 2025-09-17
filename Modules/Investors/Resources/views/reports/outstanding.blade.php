@@ -60,13 +60,13 @@
   </div>
 
   <div class="row g-3 kpi mb-4">
-    <div class="col-12 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Investors (All)')</div>
         <div class="fs-5 fw-bold">{{ number_format($countAll) }}</div>
       </div></div>
     </div>
-    <div class="col-12 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Remaining (All Investors)')</div>
         <div class="fs-5 fw-bold text-danger">
@@ -74,7 +74,7 @@
         </div>
       </div></div>
     </div>
-    <div class="col-12 col-md-3">
+    <div class="col-12 col-md-4">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Remaining Without Office Share')</div>
         <div class="fs-5 fw-bold text-primary">
@@ -82,7 +82,7 @@
         </div>
       </div></div>
     </div>
-    <div class="col-12 col-md-3">
+    {{-- <div class="col-12 col-md-3">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Average Remaining per Investor')</div>
         <div class="fs-5 fw-bold">
@@ -90,7 +90,7 @@
         </div>
         <div class="small-muted mt-1">@lang('reports.Office Share Portion Pending'): {{ number_format($grandOffice, 2) }} <span class="small-muted">{{ $cs }}</span></div>
       </div></div>
-    </div>
+    </div> --}}
   </div>
 
   <div class="table-responsive">
