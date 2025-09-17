@@ -11,12 +11,7 @@
   $items = collect($items);
 
   $countAll      = $isPaginated ? $rows->total() : $items->count();
-  $pageCount     = $items->count();
-  $pageTotals    = collect($pageTotals ?? []);
   $grandTotals   = collect($grandTotals ?? []);
-  $pageWith      = (float) $pageTotals->get('with_office', 0);
-  $pageWithout   = (float) $pageTotals->get('without_office', 0);
-  $pageOffice    = (float) $pageTotals->get('office_share', max(0, $pageWith - $pageWithout));
   $grandWith     = (float) $grandTotals->get('with_office', 0);
   $grandWithout  = (float) $grandTotals->get('without_office', 0);
   $grandOffice   = (float) $grandTotals->get('office_share', max(0, $grandWith - $grandWithout));
@@ -60,13 +55,13 @@
   </div>
 
   <div class="row g-3 kpi mb-4">
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-3">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Investors (All)')</div>
         <div class="fs-5 fw-bold">{{ number_format($countAll) }}</div>
       </div></div>
     </div>
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-3">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Remaining (All Investors)')</div>
         <div class="fs-5 fw-bold text-danger">
@@ -74,11 +69,19 @@
         </div>
       </div></div>
     </div>
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-3">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Remaining Without Office Share')</div>
         <div class="fs-5 fw-bold text-primary">
           {{ number_format($grandWithout, 2) }} <span class="small-muted">{{ $cs }}</span>
+        </div>
+      </div></div>
+    </div>
+    <div class="col-12 col-md-3">
+      <div class="card"><div class="card-body text-center">
+        <div class="small-muted">@lang('reports.Office Share Portion Pending')</div>
+        <div class="fs-5 fw-bold text-warning">
+          {{ number_format($grandOffice, 2) }} <span class="small-muted">{{ $cs }}</span>
         </div>
       </div></div>
     </div>
@@ -136,31 +139,13 @@
           </tr>
         @endforelse
       </tbody>
-      <tfoot>
-        <tr>
-          <th colspan="5" class="bg-light">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-2 px-2 py-2">
-              <div class="fw-semibold">@lang('reports.Page Totals')</div>
-              <div class="small-muted">
-                <span class="me-3">@lang('reports.With Office Share'): {{ number_format($pageWith, 2) }} <span class="small-muted">{{ $cs }}</span></span>
-                <span class="me-3">@lang('reports.Without Office Share'): {{ number_format($pageWithout, 2) }} <span class="small-muted">{{ $cs }}</span></span>
-                <span>@lang('reports.Office Share Portion'): {{ number_format($pageOffice, 2) }} <span class="small-muted">{{ $cs }}</span></span>
-              </div>
-            </div>
-          </th>
-        </tr>
-        @if($isPaginated)
-          <tr>
-            <th colspan="5" class="bg-white">
-              <div class="no-print d-flex justify-content-center p-2">
-                {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}
-              </div>
-            </th>
-          </tr>
-        @endif
-      </tfoot>
     </table>
   </div>
+  @if($isPaginated)
+    <div class="no-print d-flex justify-content-center p-2">
+      {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}
+    </div>
+  @endif
 @endsection
 
 @section('actions')
