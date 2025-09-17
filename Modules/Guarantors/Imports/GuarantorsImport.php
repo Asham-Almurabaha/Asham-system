@@ -3,6 +3,7 @@
 namespace Modules\Guarantors\Imports;
 
 use Modules\Guarantors\Entities\Guarantor;
+use Modules\Lookups\Entities\GuarantorStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Illuminate\Support\Str;
@@ -75,16 +76,21 @@ class GuarantorsImport implements
         $idCardImage   = $this->safeStr($row['id_card_image']   ?? $row['صورة_الهوية'] ?? null);
         $contractImage = $this->safeStr($row['contract_image']  ?? $row['صورة_العقد']  ?? null);
 
-        $nationalityId   = $row['nationality_id'] ?? $row['الجنسية_id'] ?? null;
-        $titleId         = $row['title_id']       ?? $row['الوظيفة_id']   ?? null;
-        $nationalityName = $row['nationality']    ?? $row['الجنسية']     ?? null;
-        $titleName       = $row['title']          ?? $row['الوظيفة']      ?? null;
+        $nationalityId     = $row['nationality_id']     ?? $row['الجنسية_id']     ?? null;
+        $titleId           = $row['title_id']           ?? $row['الوظيفة_id']     ?? null;
+        $guarantorStatusId = $row['guarantor_status_id'] ?? $row['حالة_الكفيل_id'] ?? null;
+        $nationalityName   = $row['nationality']        ?? $row['الجنسية']       ?? null;
+        $titleName         = $row['title']              ?? $row['الوظيفة']        ?? null;
+        $guarantorStatusName = $row['guarantor_status'] ?? $row['حالة_الكفيل']   ?? null;
 
         if (!$nationalityId && $nationalityName) {
             $nationalityId = $this->resolveIdByName($nationalityName, Nationality::class, ['name','name_en']);
         }
         if (!$titleId && $titleName) {
             $titleId = $this->resolveIdByName($titleName, Title::class, ['name','name_en']);
+        }
+        if (!$guarantorStatusId && $guarantorStatusName) {
+            $guarantorStatusId = $this->resolveIdByName($guarantorStatusName, GuarantorStatus::class, ['name']);
         }
 
         // تعريف أدنى: name + (national_id أو phone)
@@ -111,6 +117,7 @@ class GuarantorsImport implements
             'notes'          => $notes ?: null,
             'nationality_id' => $nationalityId ?: null,
             'title_id'       => $titleId ?: null,
+            'guarantor_status_id' => $guarantorStatusId ?: null,
             'id_card_image'  => $idCardImage ?: null,
             'contract_image' => $contractImage ?: null,
         ];
@@ -192,6 +199,8 @@ class GuarantorsImport implements
             '*.nationality' => 'nullable|string|max:255',
             '*.title_id'    => 'nullable|integer|exists:titles,id',
             '*.title'       => 'nullable|string|max:255',
+            '*.guarantor_status_id' => 'nullable|integer|exists:guarantor_statuses,id',
+            '*.guarantor_status'    => 'nullable|string|max:255',
             '*.id_card_image'  => 'nullable|string|max:255',
             '*.contract_image' => 'nullable|string|max:255',
         ];

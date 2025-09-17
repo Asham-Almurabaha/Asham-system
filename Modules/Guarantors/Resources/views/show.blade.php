@@ -71,6 +71,7 @@
                     <h3 class="mb-0 fw-bold fs-2 text-dark hover-primary">{{ $guarantor->name }}</h3>
                     <div class="small text-muted-2 mt-1">
                         <span class="chip me-1"><i class="bi bi-badge-ad"></i> {{ optional($guarantor->title)->name ?? '—' }}</span>
+                        <span class="chip me-1"><i class="bi bi-person-badge"></i> {{ optional($guarantor->guarantorStatus)->name ?? '—' }}</span>
                         <span class="chip me-1"><i class="bi bi-flag"></i> {{ optional($guarantor->nationality)->name ?? '—' }}</span>
                         <span class="chip"><i class="bi bi-hash"></i> ID: {{ $guarantor->id }}</span>
                     </div>
@@ -155,6 +156,10 @@
                     <div class="row mt-2">
                         <div class="col-5 label-col">{{ __('guarantors::messages.Job Title') }}</div>
                         <div class="col-7 value-col">{{ optional($guarantor->title)->name ?? '—' }}</div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-5 label-col">{{ __('guarantors::messages.Guarantor Status') }}</div>
+                        <div class="col-7 value-col">{{ optional($guarantor->guarantorStatus)->name ?? '—' }}</div>
                     </div>
                 </div>
 

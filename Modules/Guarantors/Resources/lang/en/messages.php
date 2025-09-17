@@ -30,6 +30,7 @@ return [
     'Nationality' => 'Nationality',
     'Address' => 'Address',
     'Job Title' => 'Job Title',
+    'Guarantor Status' => 'Guarantor Status',
     'ID Card Image' => 'ID Card Image',
     'Actions' => 'Actions',
 
@@ -94,7 +95,7 @@ return [
     // Import Page
     'Import Guarantors from Excel' => 'Import Guarantors from Excel',
     'Import Guarantors' => 'Import Guarantors',
-    'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.' => 'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.',
+    'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, guarantor_status, notes, id_card_image, contract_image — first row is headers.' => 'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, guarantor_status, notes, id_card_image, contract_image — first row is headers.',
     'Download Template' => 'Download Template',
     'Failed to execute the operation:' => 'Failed to execute the operation:',
     'Total Rows' => 'Total Rows',
@@ -140,6 +141,8 @@ return [
         'notes' => 'Notes',
         'nationality_id' => 'Nationality',
         'title_id' => 'Job Title',
+        'guarantor_status_id' => 'Guarantor Status',
+        'guarantor_status' => 'Guarantor Status',
         'id_card_image' => 'ID Card Image',
         'contract_image' => 'Contract Image',
     ],

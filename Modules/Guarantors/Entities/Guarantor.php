@@ -4,6 +4,7 @@ namespace Modules\Guarantors\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Lookups\Entities\GuarantorStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Modules\Contracts\Entities\Contract;
@@ -20,6 +21,7 @@ class Guarantor extends Model
         'address',
         'nationality_id',
         'title_id',
+        'guarantor_status_id',
         'id_card_image',
         'notes',
     ];
@@ -32,6 +34,11 @@ class Guarantor extends Model
     public function title()
     {
         return $this->belongsTo(Title::class);
+    }
+
+    public function guarantorStatus()
+    {
+        return $this->belongsTo(GuarantorStatus::class);
     }
 
     public function contracts()

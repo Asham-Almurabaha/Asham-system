@@ -4,6 +4,7 @@ namespace Modules\Guarantors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Guarantors\Entities\Guarantor;
+use Modules\Lookups\Entities\GuarantorStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Illuminate\Http\Request;
@@ -16,7 +17,11 @@ class GuarantorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Guarantor::query();
+        $query = Guarantor::query()->with([
+            'nationality:id,name',
+            'title:id,name',
+            'guarantorStatus:id,name',
+        ]);
 
         // ===== بحث باسم الكفيل فقط =====
         $nameQ = trim((string) $request->input('guarantor_q', ''));
@@ -112,7 +117,8 @@ class GuarantorController extends Controller
     {
         $nationalities = Nationality::all();
         $titles = Title::all();
-        return view('guarantors::create', compact('nationalities', 'titles'));
+        $guarantorStatuses = GuarantorStatus::select('id', 'name')->orderBy('name')->get();
+        return view('guarantors::create', compact('nationalities', 'titles', 'guarantorStatuses'));
     }
 
     public function store(Request $request)
@@ -125,6 +131,7 @@ class GuarantorController extends Controller
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',
+            'guarantor_status_id' => 'nullable|exists:guarantor_statuses,id',
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);
@@ -140,6 +147,8 @@ class GuarantorController extends Controller
 
     public function show(Guarantor $guarantor)
     {
+        $guarantor->loadMissing(['guarantorStatus:id,name', 'title:id,name', 'nationality:id,name']);
+
         return view('guarantors::show', compact('guarantor'));
     }
 
@@ -147,7 +156,8 @@ class GuarantorController extends Controller
     {
         $nationalities = Nationality::all();
         $titles = Title::all();
-        return view('guarantors::edit', compact('guarantor', 'nationalities', 'titles'));
+        $guarantorStatuses = GuarantorStatus::select('id', 'name')->orderBy('name')->get();
+        return view('guarantors::edit', compact('guarantor', 'nationalities', 'titles', 'guarantorStatuses'));
     }
 
     public function update(Request $request, Guarantor $guarantor)
@@ -160,6 +170,7 @@ class GuarantorController extends Controller
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',
+            'guarantor_status_id' => 'nullable|exists:guarantor_statuses,id',
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);

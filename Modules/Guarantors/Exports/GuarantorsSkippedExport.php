@@ -40,6 +40,7 @@ class GuarantorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize
             'address',
             'nationality',
             'title',
+            'guarantor_status',
             'notes',
             'id_card_image',
             'contract_image',
@@ -64,6 +65,7 @@ class GuarantorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize
                 $this->clean($this->pick($vals, ['address','العنوان'])),
                 $this->clean($this->pick($vals, ['nationality','الجنسية'])),
                 $this->clean($this->pick($vals, ['title','الوظيفة'])),
+                $this->clean($this->pick($vals, ['guarantor_status','حالة_الكفيل'])),
                 $this->clean($this->pick($vals, ['notes','ملاحظات'])),
                 $this->clean($this->pick($vals, ['id_card_image','صورة_الهوية'])),
                 $this->clean($this->pick($vals, ['contract_image','صورة_العقد'])),
@@ -78,10 +80,10 @@ class GuarantorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize
     public function styles(Worksheet $sheet)
     {
         // Bold header
-        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:M1')->getFont()->setBold(true);
 
-        // Wrap text in reason column (K)
-        $sheet->getStyle('K:K')->getAlignment()->setWrapText(true);
+        // Wrap text in reason column (L)
+        $sheet->getStyle('L:L')->getAlignment()->setWrapText(true);
 
         // Freeze header row
         $sheet->freezePane('A2');

@@ -19,6 +19,7 @@ class GuarantorsTemplateExport implements FromArray, WithHeadings
             'address',         // اختياري
             'nationality',     // اختياري (بالاسم ويجب يكون موجود بجدول nationalities)
             'title',           // اختياري (بالاسم ويجب يكون موجود بجدول titles)
+            'guarantor_status',// اختياري (بالاسم ويجب يكون موجود بجدول guarantor_statuses)
             'notes',           // اختياري
             'id_card_image',   // اختياري (مسار/اسم ملف إن وُجد)
         ]);
@@ -36,6 +37,7 @@ class GuarantorsTemplateExport implements FromArray, WithHeadings
                 'الرياض - حي الملقا',
                 'سعودي',         // nationality (اسم موجود في جدول nationalities)
                 'موظف',          // title (اسم موجود في جدول titles)
+                'نشط',           // guarantor_status (اسم موجود في جدول guarantor_statuses)
                 'ضامن للعميل أحمد',
                 '',
             ],
@@ -48,6 +50,7 @@ class GuarantorsTemplateExport implements FromArray, WithHeadings
                 'Dammam',
                 'سعودي',
                 'حكومي',
+                'Pending',       // guarantor_status
                 'ملاحظات إضافية',
                 '',
             ],

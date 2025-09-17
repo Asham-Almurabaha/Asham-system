@@ -129,6 +129,23 @@
                         @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- حالة الكفيل --}}
+                    <div class="col-md-6">
+                        <label for="guarantor_status_id" class="form-label">{{ __('guarantors::messages.Guarantor Status') }}</label>
+                        <select
+                            name="guarantor_status_id"
+                            id="guarantor_status_id"
+                            class="form-select @error('guarantor_status_id') is-invalid @enderror">
+                            <option value="">-- {{ __('guarantors::messages.Choose') }} --</option>
+                            @foreach (($guarantorStatuses ?? []) as $status)
+                                @if(is_object($status))
+                                    <option value="{{ $status->id }}" @selected(old('guarantor_status_id') == $status->id)>{{ $status->name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('guarantor_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
                     {{-- العنوان --}}
                     <div class="col-12">
                         <label for="address" class="form-label">{{ __('guarantors::messages.Address') }}</label>

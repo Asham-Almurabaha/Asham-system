@@ -152,6 +152,7 @@
                     <tr>
                         <th style="width:60px">{{ __('guarantors::messages.#') }}</th>
                         <th>{{ __('guarantors::messages.Name') }}</th>
+                        <th>{{ __('guarantors::messages.Guarantor Status') }}</th>
                         <th>{{ __('guarantors::messages.National ID') }}</th>
                         <th>{{ __('guarantors::messages.Phone') }}</th>
                         <th>{{ __('guarantors::messages.Email') }}</th>
@@ -172,6 +173,7 @@
                                     {{ $g->name }}
                                 </a>
                             </td>
+                            <td>{{ optional($g->guarantorStatus)->name ?? '—' }}</td>
                             <td dir="ltr">{{ $g->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $g->phone ?? '—' }}</td>
                             <td class="text-start">{{ $g->email ?? '—' }}</td>
@@ -192,7 +194,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="py-5">
+                            <td colspan="10" class="py-5">
                                 <div class="text-muted">
                                     {{ __('guarantors::messages.No matching results for your search.') }}
                                     <a href="{{ route('guarantors.index') }}" class="ms-1">{{ __('guarantors::messages.Show All') }}</a>
