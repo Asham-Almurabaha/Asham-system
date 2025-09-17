@@ -298,130 +298,243 @@
 </template>
 
 @push('scripts')
+<script src="{{ asset('assets/js/ledger-goods-manager.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // عناصر عامة
-    const catSel     = document.getElementById('party_category');
-    const invWrap    = document.getElementById('investorWrap');
-    const statusInv  = document.getElementById('status_investors');
-    const statusOff  = document.getElementById('status_office');
-    const statusHid  = document.getElementById('status_id_hidden');
-    const dirBadge   = document.getElementById('dirBadge');
+document.addEventListener('DOMContentLoaded', () => {
+    const $ = (id) => document.getElementById(id);
 
-    // سيولة المستثمر
-    const investorSel      = document.getElementById('investor_id');
-    const invLiquidityWrap = document.getElementById('invLiquidityWrap');
-    const invAvailValue    = document.getElementById('invAvailValue');
-    const invAvailLoading  = document.getElementById('invAvailLoading');
-    let investorAvail = null;
-    const INVESTOR_LIQ_URL_TPL = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
+    const catSel     = $('party_category');
+    const invWrap    = $('investorWrap');
+    const investorSel = $('investor_id');
+    const invLiquidityWrap = $('invLiquidityWrap');
+    const invAvailValue   = $('invAvailValue');
+    const invAvailLoading = $('invAvailLoading');
 
-    const amount     = document.getElementById('amount');
-    const bankShare  = document.getElementById('bank_share');
-    const safeShare  = document.getElementById('safe_share');
-    const bankSel    = document.getElementById('bank_account_id');
-    const safeSel    = document.getElementById('safe_id');
-    const sumHint    = document.getElementById('sumHint');
-    const ratioHint  = document.getElementById('ratioHint');
-    const btnSubmit  = document.getElementById('btnSubmit');
-    const btnSpinner = document.getElementById('btnSpinner');
-    const form       = document.getElementById('splitForm');
+    const statusSelects = {
+        investors: $('status_investors'),
+        office: $('status_office'),
+    };
+    const statusHidden = $('status_id_hidden');
+    const dirBadge     = $('dirBadge');
 
-    // المتاح في الحسابات
-    const bankAvailValue   = document.getElementById('bankAvailValue');
-    const bankAvailLoading = document.getElementById('bankAvailLoading');
-    const safeAvailValue   = document.getElementById('safeAvailValue');
-    const safeAvailLoading = document.getElementById('safeAvailLoading');
+    const amount    = $('amount');
+    const bankShare = $('bank_share');
+    const safeShare = $('safe_share');
+    const bankSel   = $('bank_account_id');
+    const safeSel   = $('safe_id');
+    const sumHint   = $('sumHint');
+    const ratioHint = $('ratioHint');
+    const btnSubmit = $('btnSubmit');
+    const btnSpinner= $('btnSpinner');
+    const form      = $('splitForm');
+
+    const bankAvailValue   = $('bankAvailValue');
+    const bankAvailLoading = $('bankAvailLoading');
+    const safeAvailValue   = $('safeAvailValue');
+    const safeAvailLoading = $('safeAvailLoading');
+
+    const goodsSection    = $('goods_section');
+    const productsWrapper = $('products_wrapper');
+    const btnAddProduct   = $('btnAddProduct');
+    const rowTpl          = $('product_row_tpl');
 
     let bankAvail = null;
     let safeAvail = null;
+    let investorAvail = null;
+    let lastEdited = null;
+    let programmatic = false;
 
-    // ===== البضائع
-    const goodsSection    = document.getElementById('goods_section');
-    const productsWrapper = document.getElementById('products_wrapper');
-    const btnAddProduct   = document.getElementById('btnAddProduct');
-    const rowTpl          = document.getElementById('product_row_tpl');
+    const parseGoodsIds = (select) => {
+        if (!select) {
+            return [];
+        }
+        try {
+            return JSON.parse(select.dataset.goodsIds || '[]').map(Number);
+        } catch (error) {
+            return [];
+        }
+    };
 
-    let lastEdited = null;     // 'bank' | 'safe' | null
-    let programmatic = false;  // منع حلقات التحديث
+    const currentStatusKey = () => (catSel.value === 'office' ? 'office' : 'investors');
+    const currentStatusSelect = () => statusSelects[currentStatusKey()];
+    const selectedStatusOption = () => {
+        const select = currentStatusSelect();
+        return select ? select.options[select.selectedIndex] : null;
+    };
+    const selectedStatusId = () => {
+        const option = selectedStatusOption();
+        return option ? Number(option.value || 0) : 0;
+    };
+    const currentDirectionType = () => {
+        const option = selectedStatusOption();
+        return option ? (option.dataset.type || '') : '';
+    };
+    const isGoodsStatus = () => {
+        const select = currentStatusSelect();
+        const ids = parseGoodsIds(select);
+        return ids.includes(selectedStatusId());
+    };
+    const isSaleGoods = () => isGoodsStatus() && currentDirectionType() === '1';
+    const investorSelected = () => catSel.value === 'investors' && investorSel && investorSel.value;
 
-    // ===== فئة/حالات =====
-    function goodsIdsFrom(el){
-        try { return JSON.parse(el.dataset.goodsIds || '[]').map(Number); }
-        catch(e){ return []; }
-    }
-    function currentStatusSelect(){ return catSel.value==='investors' ? statusInv : statusOff; }
+    const PT_AVAIL_URL = @json(route('product-types.available', ['productType' => '__ID__']));
+    const fetchGoodsAvailability = (() => {
+        const cache = Object.create(null);
+        return async (typeId) => {
+            if (!typeId) {
+                return { success: true, available: 0 };
+            }
+            if (cache[typeId] !== undefined) {
+                return cache[typeId];
+            }
+            try {
+                const url = PT_AVAIL_URL.replace('__ID__', encodeURIComponent(typeId));
+                const response = await fetch(url, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                const data = await response.json();
+                cache[typeId] = data;
+                return data;
+            } catch (error) {
+                const payload = { success: false, message: error.message };
+                cache[typeId] = payload;
+                return payload;
+            }
+        };
+    })();
 
-    function currentDirectionType(){
-        const sel = currentStatusSelect();
-        const theOpt = sel.options[sel.selectedIndex];
-        return theOpt ? (theOpt.dataset.type || '') : '';
-    }
+    let nextProductIndex = (() => {
+        if (!productsWrapper) {
+            return 0;
+        }
+        let max = -1;
+        productsWrapper.querySelectorAll('.js-product-select[name^="products["]').forEach((select) => {
+            const match = select.name.match(/^products\[(\d+)\]/);
+            if (match) {
+                max = Math.max(max, Number(match[1]));
+            }
+        });
+        return max + 1;
+    })();
 
-    function investorSelected(){
-        return catSel.value === 'investors' && investorSel && investorSel.value;
-    }
-    function toggleInvestorLiquidityUI(){
-        if (!invLiquidityWrap) return;
-        invLiquidityWrap.classList.toggle('d-none', !investorSelected());
-        if (!investorSelected()){
-            investorAvail = null;
-            if (invAvailValue) invAvailValue.textContent = '—';
+    const prepareNewProductRow = (row) => {
+        const select = row.querySelector('.js-product-select');
+        const qty    = row.querySelector('.js-qty-input');
+        const index  = nextProductIndex++;
+        if (select) {
+            select.name = `products[${index}][product_type_id]`;
+        }
+        if (qty) {
+            qty.name = `products[${index}][quantity]`;
+        }
+    };
+
+    let goodsManager = null;
+    const refreshGoodsRows = () => {
+        if (!goodsManager) {
+            return;
+        }
+        goodsManager.toggleSection();
+        goodsManager.refreshRows();
+        goodsManager.validate();
+    };
+    const validateGoods = () => (goodsManager ? goodsManager.validate() : true);
+
+    if (window.LedgerGoods) {
+        goodsManager = window.LedgerGoods.create({
+            section: goodsSection,
+            wrapper: productsWrapper,
+            template: rowTpl,
+            addButton: btnAddProduct,
+            isSectionActive: isGoodsStatus,
+            isSaleMode: isSaleGoods,
+            fetchAvailability: fetchGoodsAvailability,
+            prepareNewRow: prepareNewProductRow,
+            minRows: 1,
+        });
+
+        if (goodsManager) {
+            goodsManager.bindExisting();
+            goodsManager.toggleSection();
+            goodsManager.refreshRows();
         }
     }
 
-    function syncCategoryUI(){
-        invWrap.style.display = (catSel.value==='investors') ? '' : 'none';
-        statusInv.hidden = !(catSel.value==='investors');
-        statusOff.hidden = !(catSel.value==='office');
-        syncStatusHiddenAndBadge();
-        toggleGoodsSection();
-        enforceStatusBeforeAccounts();
-        enforceAccountBeforeShare();
+    function toggleInvestorLiquidityUI() {
+        if (!invLiquidityWrap) {
+            return;
+        }
+        const visible = investorSelected();
+        invLiquidityWrap.classList.toggle('d-none', !visible);
+        if (!visible) {
+            investorAvail = null;
+            if (invAvailValue) {
+                invAvailValue.textContent = '—';
+            }
+        }
+    }
 
-        // سيولة المستثمر عند تغيير الفئة
+    const INVESTOR_LIQ_URL_TPL = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
+
+    async function refreshInvestorLiquidity() {
         toggleInvestorLiquidityUI();
-        if (investorSelected()) {
-            refreshInvestorLiquidity();
-        } else {
+        if (!investorSelected()) {
+            applyMaxByDirection();
+            validate();
+            return;
+        }
+
+        const id = investorSel.value || '';
+        investorAvail = null;
+        if (invAvailValue) {
+            invAvailValue.textContent = '—';
+        }
+        if (!id) {
+            applyMaxByDirection();
+            validate();
+            return;
+        }
+
+        if (invAvailLoading) {
+            invAvailLoading.classList.remove('d-none');
+        }
+        try {
+            const url = INVESTOR_LIQ_URL_TPL.replace('__ID__', encodeURIComponent(id));
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            const data = await response.json();
+            const raw = Number(data.cash ?? data.balance ?? 0);
+            if (Number.isFinite(raw)) {
+                investorAvail = raw;
+                const formatted = data.formatted ?? raw.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                if (invAvailValue) {
+                    invAvailValue.textContent = formatted;
+                }
+            }
+        } catch (error) {
             investorAvail = null;
+        } finally {
+            if (invAvailLoading) {
+                invAvailLoading.classList.add('d-none');
+            }
+            applyMaxByDirection();
+            validate();
         }
-
-        applyMaxByDirection();
-        validate();
-        // ✅ تحقق كميات البضائع
-        validateGoodsQuantities();
     }
 
-    function syncStatusHiddenAndBadge(){
-        const sel = currentStatusSelect();
-        // إخفاء التحويلات (type=3)
-        for (let i=0; i<sel.options.length; i++){
-            const o = sel.options[i];
-            if (o.dataset && o.dataset.type === '3') { o.hidden = true; o.disabled = true; }
-        }
-
-        const opt = sel.options[sel.selectedIndex];
-        statusHid.value = opt ? (opt.value || '') : '';
-
-        const t = opt ? (opt.dataset.type || '') : '';
-        let text='—', cls='bg-secondary';
-        if (t==='1'){ text='داخل (إيداع)'; cls='bg-success'; }
-        else if (t==='2'){ text='خارج (سحب)'; cls='bg-danger'; }
-        dirBadge.textContent = text; dirBadge.className = 'badge rounded-pill ' + cls;
-
-        toggleGoodsSection();
-        enforceStatusBeforeAccounts();
-        applyMaxByDirection();
-        validate();
-        enforceAccountBeforeShare();
-
-        // ✅ تحقق كميات البضائع
-        validateGoodsQuantities();
-    }
-
-    // الحالة أولاً قبل الحسابات
-    function clearBankSelection(){
+    function clearBankSelection() {
         bankSel.value = '';
         bankAvail = null;
         bankAvailValue.textContent = '—';
@@ -430,7 +543,8 @@ document.addEventListener('DOMContentLoaded', function () {
         bankShare.setCustomValidity('');
         bankShare.classList.remove('is-invalid');
     }
-    function clearSafeSelection(){
+
+    function clearSafeSelection() {
         safeSel.value = '';
         safeAvail = null;
         safeAvailValue.textContent = '—';
@@ -439,171 +553,211 @@ document.addEventListener('DOMContentLoaded', function () {
         safeShare.setCustomValidity('');
         safeShare.classList.remove('is-invalid');
     }
-    function enforceStatusBeforeAccounts(){
-        const hasStatus = !!statusHid.value;
+
+    function enforceStatusBeforeAccounts() {
+        const hasStatus = !!statusHidden.value;
         bankSel.disabled = !hasStatus;
         safeSel.disabled = !hasStatus;
-        if (!hasStatus){
+        if (!hasStatus) {
             clearBankSelection();
             clearSafeSelection();
             enforceAccountBeforeShare();
         }
     }
 
-    // لازم اختيار الحساب قبل كتابة المبلغ الخاص به
-    function enforceAccountBeforeShare(){
+    function enforceAccountBeforeShare() {
         const bankChosen = !!bankSel.value;
         const safeChosen = !!safeSel.value;
 
         bankShare.readOnly = !bankChosen;
         bankShare.classList.toggle('bg-light', !bankChosen);
-        if (!bankChosen) { bankShare.value = '0'; }
+        if (!bankChosen) {
+            bankShare.value = '0';
+        }
 
         safeShare.readOnly = !safeChosen;
         safeShare.classList.toggle('bg-light', !safeChosen);
-        if (!safeChosen) { safeShare.value = '0'; }
+        if (!safeChosen) {
+            safeShare.value = '0';
+        }
 
         validate();
     }
 
-    // ===== عرض/إخفاء قسم البضائع حسب الحالة المختارة
-    function selectedStatusId(){
-        const sel = currentStatusSelect();
-        const opt = sel.options[sel.selectedIndex];
-        return opt ? Number(opt.value || 0) : 0;
-    }
-    function isGoodsStatus(){
-        const sel = currentStatusSelect();
-        const ids = goodsIdsFrom(sel);
-        const cur = selectedStatusId();
-        return ids.includes(cur);
-    }
-    function isSaleGoods(){
-        // بيع بضائع = (حالة بضائع) + اتجاه داخل (type=1)
-        return isGoodsStatus() && currentDirectionType() === '1';
-    }
-    function toggleGoodsSection(){
-        goodsSection.style.display = isGoodsStatus() ? '' : 'none';
+    const refreshGoodsState = () => {
+        refreshGoodsRows();
+        validateGoods();
+    };
+
+    function syncStatusHiddenAndBadge() {
+        const select = currentStatusSelect();
+        if (select) {
+            Array.from(select.options).forEach((option) => {
+                if (option.dataset && option.dataset.type === '3') {
+                    option.hidden = true;
+                    option.disabled = true;
+                }
+            });
+        }
+
+        const option = selectedStatusOption();
+        statusHidden.value = option ? (option.value || '') : '';
+
+        const type = option ? (option.dataset.type || '') : '';
+        let text = '—';
+        let cls = 'bg-secondary';
+        if (type === '1') {
+            text = 'داخل (إيداع)';
+            cls = 'bg-success';
+        } else if (type === '2') {
+            text = 'خارج (سحب)';
+            cls = 'bg-danger';
+        }
+        dirBadge.textContent = text;
+        dirBadge.className = 'badge rounded-pill ' + cls;
+
+        refreshGoodsState();
+        enforceStatusBeforeAccounts();
+        applyMaxByDirection();
+        validate();
+        enforceAccountBeforeShare();
     }
 
-    // ===== إدارة صفوف البضائع
-    function nextProductIndex(){
-        const rows = productsWrapper.querySelectorAll('.product-row');
-        return rows.length ? Math.max(...Array.from(rows).map(r => {
-            const sel = r.querySelector('select[name^="products["]');
-            if (!sel) return -1;
-            const m = sel.name.match(/^products\[(\d+)\]/);
-            return m ? Number(m[1]) : -1;
-        })) + 1 : 0;
-    }
-    function wireRowNames(row, index){
-        const sel = row.querySelector('.js-product-select');
-        const theQty = row.querySelector('.js-qty-input');
-        if (sel) sel.setAttribute('name', `products[${index}][product_type_id]`);
-        if (theQty) theQty.setAttribute('name', `products[${index}][quantity]`);
-    }
-    function addProductRow(){
-        const frag = rowTpl.content.cloneNode(true);
-        const row = frag.querySelector('.product-row');
-        wireRowNames(row, nextProductIndex());
-        productsWrapper.appendChild(frag);
-        const appended = productsWrapper.querySelector('.product-row:last-child');
-        if (appended) bindProductRow(appended);
-        // ✅ تحقق الكميات
-        validateGoodsQuantities();
-    }
-    function handleRemoveClick(e){
-        if (!e.target.classList.contains('js-remove-product')) return;
-        const row = e.target.closest('.product-row');
-        if (!row) return;
-        if (productsWrapper.querySelectorAll('.product-row').length > 1){
-            row.remove();
-            // ✅ تحقق الكميات
-            validateGoodsQuantities();
+    function syncCategoryUI() {
+        const isInvestors = catSel.value === 'investors';
+        invWrap.style.display = isInvestors ? '' : 'none';
+        statusSelects.investors.hidden = !isInvestors;
+        statusSelects.office.hidden = isInvestors;
+
+        if (!isInvestors) {
+            investorAvail = null;
+            if (invAvailValue) {
+                invAvailValue.textContent = '—';
+            }
+        }
+
+        syncStatusHiddenAndBadge();
+        toggleInvestorLiquidityUI();
+        if (isInvestors) {
+            refreshInvestorLiquidity();
         }
     }
 
-    // ===== أرقام
-    function parseDec(v){
-        if (v == null) return null;
-        const s = String(v).trim().replace(',', '.');
-        if (s === '' || s === '.' || s === '-.' ) return null;
-        const n = Number(s);
-        return Number.isFinite(n) ? n : null;
+    function parseDec(value) {
+        if (value == null) {
+            return null;
+        }
+        const str = String(value).trim().replace(',', '.');
+        if (str === '' || str === '.' || str === '-.') {
+            return null;
+        }
+        const num = Number(str);
+        return Number.isFinite(num) ? num : null;
     }
-    function r2(n){ return Math.round(n * 100) / 100; }
-    function fmt2(n){ return (Number.isFinite(n) ? n : 0).toFixed(2); }
-    function formatOnBlur(el){
+
+    const r2 = (n) => Math.round(n * 100) / 100;
+    const fmt2 = (n) => (Number.isFinite(n) ? n : 0).toFixed(2);
+
+    function formatOnBlur(el) {
         const n = parseDec(el.value);
-        if (n == null) return;
+        if (n == null) {
+            return;
+        }
         el.value = fmt2(Math.max(0, n));
     }
 
-    function updateFromBank(){
-        if (programmatic || bankShare.readOnly) return;
+    function updateFromBank() {
+        if (programmatic || bankShare.readOnly) {
+            return;
+        }
         lastEdited = 'bank';
-        const a = parseDec(amount.value);
-        const b = parseDec(bankShare.value);
+        const total = parseDec(amount.value);
+        const bankVal = parseDec(bankShare.value);
         programmatic = true;
-        if (a == null || b == null){ safeShare.value = ''; programmatic = false; return validate(); }
-        const s = a - b;
-        safeShare.value = s >= 0 ? String(r2(s)) : '';
+        if (total == null || bankVal == null) {
+            safeShare.value = '';
+            programmatic = false;
+            validate();
+            return;
+        }
+        const safeVal = total - bankVal;
+        safeShare.value = safeVal >= 0 ? String(r2(safeVal)) : '';
         programmatic = false;
         validate();
     }
 
-    function updateFromSafe(){
-        if (programmatic || safeShare.readOnly) return;
+    function updateFromSafe() {
+        if (programmatic || safeShare.readOnly) {
+            return;
+        }
         lastEdited = 'safe';
-        const a = parseDec(amount.value);
-        const s = parseDec(safeShare.value);
+        const total = parseDec(amount.value);
+        const safeVal = parseDec(safeShare.value);
         programmatic = true;
-        if (a == null || s == null){ bankShare.value = ''; programmatic = false; return validate(); }
-        const b = a - s;
-        bankShare.value = b >= 0 ? String(r2(b)) : '';
+        if (total == null || safeVal == null) {
+            bankShare.value = '';
+            programmatic = false;
+            validate();
+            return;
+        }
+        const bankVal = total - safeVal;
+        bankShare.value = bankVal >= 0 ? String(r2(bankVal)) : '';
         programmatic = false;
         validate();
     }
 
-    function updateFromAmount(){
-        if (programmatic) return;
+    function updateFromAmount() {
+        if (programmatic) {
+            return;
+        }
         programmatic = true;
-        if (!bankShare.readOnly) bankShare.value = '0';
-        if (!safeShare.readOnly) safeShare.value  = '0';
+        if (!bankShare.readOnly) {
+            bankShare.value = '0';
+        }
+        if (!safeShare.readOnly) {
+            safeShare.value = '0';
+        }
         lastEdited = null;
         programmatic = false;
         validate();
     }
 
-    // ===== جلب المتاح في الحسابات
-    async function fetchAvailability(type, id){
-        const url = `{{ route('ajax.accounts.availability') }}?account_type=${encodeURIComponent(type)}&account_id=${encodeURIComponent(id)}`;
-        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-        if (!res.ok) return null;
-        const data = await res.json();
-        if (data && data.success){
-            return {
-                raw: Number(data.available),
-                formatted: (data.available_formatted ?? Number(data.available).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}))
-            };
+    async function fetchAvailability(type, id) {
+        const params = new URLSearchParams({ account_type: type, account_id: id });
+        const url = `{{ route('ajax.accounts.availability') }}` + `?${params.toString()}`;
+        const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) {
+            return null;
+        }
+        const data = await response.json();
+        if (data && data.success) {
+            const raw = Number(data.available);
+            const formatted = data.available_formatted ?? raw.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            return { raw, formatted };
         }
         return null;
     }
 
-    async function refreshBankAvailability(){
+    async function refreshBankAvailability() {
         bankAvail = null;
         bankAvailValue.textContent = '—';
         bankAvailLoading.classList.remove('d-none');
         try {
-            const val = bankSel.value || '';
-            if (!val){ return; }
-            const out = await fetchAvailability('bank', val);
-            if (out){
-                bankAvail = out.raw;
-                bankAvailValue.textContent = out.formatted;
+            const id = bankSel.value || '';
+            if (!id) {
+                return;
             }
-        } catch(e){ console.error(e); }
-        finally {
+            const payload = await fetchAvailability('bank', id);
+            if (payload) {
+                bankAvail = payload.raw;
+                bankAvailValue.textContent = payload.formatted;
+            }
+        } catch (error) {
+            bankAvail = null;
+        } finally {
             bankAvailLoading.classList.add('d-none');
             applyMaxByDirection();
             validate();
@@ -611,20 +765,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function refreshSafeAvailability(){
+    async function refreshSafeAvailability() {
         safeAvail = null;
         safeAvailValue.textContent = '—';
         safeAvailLoading.classList.remove('d-none');
         try {
-            const val = safeSel.value || '';
-            if (!val){ return; }
-            const out = await fetchAvailability('safe', val);
-            if (out){
-                safeAvail = out.raw;
-                safeAvailValue.textContent = out.formatted;
+            const id = safeSel.value || '';
+            if (!id) {
+                return;
             }
-        } catch(e){ console.error(e); }
-        finally {
+            const payload = await fetchAvailability('safe', id);
+            if (payload) {
+                safeAvail = payload.raw;
+                safeAvailValue.textContent = payload.formatted;
+            }
+        } catch (error) {
+            safeAvail = null;
+        } finally {
             safeAvailLoading.classList.add('d-none');
             applyMaxByDirection();
             validate();
@@ -632,65 +789,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // سيولة المستثمر (تشتغل فقط لو مختار مستثمر)
-    async function refreshInvestorLiquidity(){
-        toggleInvestorLiquidityUI();
-        if (!investorSelected()){
-            applyMaxByDirection();
-            validate();
-            return;
-        }
-        const id = investorSel.value || '';
-        investorAvail = null;
-        if (invAvailValue) invAvailValue.textContent = '—';
-        if (!id){
-            applyMaxByDirection();
-            validate();
-            return;
-        }
-        if (invAvailLoading) invAvailLoading.classList.remove('d-none');
-        try{
-            const url = INVESTOR_LIQ_URL_TPL.replace('__ID__', encodeURIComponent(id));
-            const res = await fetch(url, { headers: { 'Accept':'application/json' }, credentials: 'same-origin' });
-            if (res.ok){
-                const data = await res.json();
-                const raw = Number(data.cash ?? data.balance ?? 0);
-                if (Number.isFinite(raw)){
-                    investorAvail = raw;
-                    const fmt = (data.formatted ?? raw.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
-                    if (invAvailValue) invAvailValue.textContent = fmt;
-                }
-            }
-        }catch(e){ /* ignore */ }
-        finally{
-            if (invAvailLoading) invAvailLoading.classList.add('d-none');
-            applyMaxByDirection();
-            validate();
-        }
-    }
-
-    // ===== المتاح + منع تجاوز المتاح في حالة السحب
-    function applyMaxByDirection(){
-        const t = currentDirectionType();
-
-        if (t === '2'){ // سحب
-            // إجمالي القيد لا يتجاوز سيولة المستثمر (فقط لو مختار مستثمر)
-            if (investorSelected() && investorAvail !== null){
+    function applyMaxByDirection() {
+        if (currentDirectionType() === '2') {
+            if (investorSelected() && investorAvail !== null) {
                 amount.setAttribute('max', String(investorAvail));
             } else {
                 amount.removeAttribute('max');
             }
 
-            // حد أقصى لحصة البنك/الخزنة = min(متاح الحساب, سيولة المستثمر إن وجدت ومختار)
-            let bankCap = (bankAvail !== null) ? bankAvail : null;
-            let safeCap = (safeAvail !== null) ? safeAvail : null;
-            if (investorSelected() && investorAvail !== null){
-                bankCap = (bankCap === null) ? investorAvail : Math.min(bankCap, investorAvail);
-                safeCap = (safeCap === null) ? investorAvail : Math.min(safeCap, investorAvail);
+            let bankCap = bankAvail !== null ? bankAvail : null;
+            let safeCap = safeAvail !== null ? safeAvail : null;
+            if (investorSelected() && investorAvail !== null) {
+                bankCap = bankCap === null ? investorAvail : Math.min(bankCap, investorAvail);
+                safeCap = safeCap === null ? investorAvail : Math.min(safeCap, investorAvail);
             }
 
-            if (bankCap !== null) bankShare.setAttribute('max', String(bankCap)); else bankShare.removeAttribute('max');
-            if (safeCap !== null) safeShare.setAttribute('max', String(safeCap)); else safeShare.removeAttribute('max');
+            if (bankCap !== null) {
+                bankShare.setAttribute('max', String(bankCap));
+            } else {
+                bankShare.removeAttribute('max');
+            }
+
+            if (safeCap !== null) {
+                safeShare.setAttribute('max', String(safeCap));
+            } else {
+                safeShare.removeAttribute('max');
+            }
         } else {
             amount.removeAttribute('max');
             bankShare.removeAttribute('max');
@@ -702,36 +826,43 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function validate(){
-        const a = parseDec(amount.value);
-        const b = parseDec(bankShare.value);
-        const s = parseDec(safeShare.value);
+    function validate() {
+        const total = parseDec(amount.value);
+        const bankVal = parseDec(bankShare.value);
+        const safeVal = parseDec(safeShare.value);
 
-        let okSum = false, sum = 0;
-        if (a != null && b != null && s != null){
-            sum = r2(b + s);
-            okSum = (a > 0) && (r2(a) === sum);
+        let okSum = false;
+        let sum = 0;
+        if (total != null && bankVal != null && safeVal != null) {
+            sum = r2(bankVal + safeVal);
+            okSum = (total > 0) && (r2(total) === sum);
         }
 
-        sumHint.textContent = `المجموع الحالي: ${sum.toFixed ? sum.toFixed(2) : '0.00'} / الإجمالي: ${a!=null ? r2(a).toFixed(2) : '0.00'}`;
-        sumHint.className   = okSum ? 'text-success' : 'text-danger';
+        sumHint.textContent = `المجموع الحالي: ${sum.toFixed ? sum.toFixed(2) : '0.00'} / الإجمالي: ${total != null ? r2(total).toFixed(2) : '0.00'}`;
+        sumHint.className = okSum ? 'text-success' : 'text-danger';
 
-        const bp = (a && b!=null) ? Math.round((r2(b)/r2(a))*100) : 0;
-        const sp = (a && s!=null) ? (100 - bp) : 0;
-        ratioHint.textContent = (a && (b!=null || s!=null)) ? `النِسب: بنك ${bp}% — خزنة ${sp}%` : '';
+        const bankPercent = (total && bankVal != null) ? Math.round((r2(bankVal) / r2(total)) * 100) : 0;
+        const safePercent = (total && safeVal != null) ? (100 - bankPercent) : 0;
+        ratioHint.textContent = (total && (bankVal != null || safeVal != null))
+            ? `النِسب: بنك ${bankPercent}% — خزنة ${safePercent}%`
+            : '';
 
-        bankSel.required = !!(b && b > 0);
-        safeSel.required = !!(s && s > 0);
+        bankSel.required = !!(bankVal && bankVal > 0);
+        safeSel.required = !!(safeVal && safeVal > 0);
 
-        const t = currentDirectionType();
-        let bankOk = true, safeOk = true, investorOk = true;
+        const direction = currentDirectionType();
+        let bankOk = true;
+        let safeOk = true;
+        let investorOk = true;
 
-        if (t === '2'){
-            if (bankAvail !== null && b != null && b > bankAvail + 1e-9) { bankOk = false; }
-            if (safeAvail !== null && s != null && s > safeAvail + 1e-9) { safeOk = false; }
-
-            // شرط سيولة المستثمر على الإجمالي (فقط لو مختار مستثمر)
-            if (investorSelected() && investorAvail !== null && a != null && a > investorAvail + 1e-9){
+        if (direction === '2') {
+            if (bankAvail !== null && bankVal != null && bankVal > bankAvail + 1e-9) {
+                bankOk = false;
+            }
+            if (safeAvail !== null && safeVal != null && safeVal > safeAvail + 1e-9) {
+                safeOk = false;
+            }
+            if (investorSelected() && investorAvail !== null && total != null && total > investorAvail + 1e-9) {
                 investorOk = false;
             }
         }
@@ -745,208 +876,83 @@ document.addEventListener('DOMContentLoaded', function () {
         amount.classList.toggle('is-invalid', !investorOk);
 
         let ok = okSum && bankOk && safeOk && investorOk;
-        if (ok && b && b > 0 && !bankSel.value) ok = false;
-        if (ok && s && s > 0 && !safeSel.value) ok = false;
+        if (ok && bankVal && bankVal > 0 && !bankSel.value) {
+            ok = false;
+        }
+        if (ok && safeVal && safeVal > 0 && !safeSel.value) {
+            ok = false;
+        }
 
         btnSubmit.disabled = !ok;
     }
 
-    // ====== المتاح لكل نوع بضاعة (جلب من السيرفر + ضبط max في الكمية *فقط عند بيع البضائع*) ======
-    const PT_AVAIL_URL = @json(route('product-types.available', ['productType' => '__ID__']));
-    const ptAvailCache = Object.create(null);
+    catSel.addEventListener('change', () => {
+        syncCategoryUI();
+        refreshGoodsState();
+    });
 
-    async function fetchPtAvailable(typeId){
-        if (!typeId) return { success:true, available:0 };
-        if (ptAvailCache[typeId] !== undefined) return ptAvailCache[typeId];
-        try{
-            const url = PT_AVAIL_URL.replace('__ID__', encodeURIComponent(typeId));
-            const res = await fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
-            if (!res.ok) throw new Error('HTTP '+res.status);
-            const data = await res.json();
-            ptAvailCache[typeId] = data;
-            return data;
-        }catch(e){
-            ptAvailCache[typeId] = { success:false, message:e.message };
-            return ptAvailCache[typeId];
-        }
-    }
-
-    function setRowAvailabilityUI(row, payload){
-        const badge = row.querySelector('.js-available-badge');
-        const qty   = row.querySelector('.js-qty-input');
-        if (!badge || !qty) return;
-
-        if (!payload || payload.success !== true){
-            const msg = (payload && payload.message) ? payload.message : 'تعذّر جلب المتاح';
-            badge.textContent = 'خطأ: ' + msg;
-            badge.className = 'badge bg-danger text-white js-available-badge';
-            qty.removeAttribute('max');
+    Object.values(statusSelects).forEach((select) => {
+        if (!select) {
             return;
         }
-
-        const avail = Number(payload.available ?? payload.stock?.available ?? 0);
-        const safeAvailQty = Number.isFinite(avail) ? Math.max(0, Math.floor(avail)) : 0;
-        badge.textContent = 'المتاح: ' + safeAvailQty.toLocaleString('ar-EG');
-        badge.className = 'badge bg-light text-dark js-available-badge';
-
-        // ✅ نعيّن max فقط عند "بيع بضائع"
-        if (isSaleGoods()) {
-            qty.setAttribute('max', String(safeAvailQty)); // قد تكون 0
-        } else {
-            qty.removeAttribute('max');
-        }
-
-        // لقط الكمية ضمن الحدود
-        const maxAttr = qty.getAttribute('max');
-        const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
-        let v = parseInt(qty.value || '0', 10) || 0;
-        if (v < 0) v = 0;
-        if (isFinite(max) && v > max) v = max;
-        qty.value = v ? String(v) : '';
-    }
-
-    async function reloadRowAvailability(row){
-        const sel = row.querySelector('.js-product-select');
-        const badge = row.querySelector('.js-available-badge');
-        if (!sel || !badge) return;
-
-        badge.textContent = 'جاري التحميل...';
-        badge.className = 'badge bg-secondary text-white js-available-badge';
-
-        const typeId = sel.value || '';
-        const payload = await fetchPtAvailable(typeId);
-        setRowAvailabilityUI(row, payload);
-
-        // ✅ تحقق الكميات بعد التحديث
-        validateGoodsQuantities();
-    }
-
-    function bindProductRow(row){
-        const sel = row.querySelector('.js-product-select');
-        const qty = row.querySelector('.js-qty-input');
-        if (sel){
-            sel.addEventListener('change', () => reloadRowAvailability(row));
-            if (sel.value) reloadRowAvailability(row); else setRowAvailabilityUI(row, { success:true, available:0 });
-        }
-        if (qty){
-            const clampQty = () => {
-                const maxAttr = qty.getAttribute('max');
-                const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
-                let v = parseInt(qty.value || '0', 10) || 0;
-                if (v < 0) v = 0;
-                if (isFinite(max) && v > max) v = max;
-                qty.value = v ? String(v) : '';
-            };
-            qty.addEventListener('input', () => { clampQty(); validateGoodsQuantities(); });
-            qty.addEventListener('blur',  () => { clampQty(); validateGoodsQuantities(); });
-        }
-    }
-
-    // ✅ تحقق عام للبضائع: لا بيع > المتاح
-    function validateGoodsQuantities(){
-        const sale = isSaleGoods();
-        let ok = true;
-
-        if (!productsWrapper) return true;
-
-        productsWrapper.querySelectorAll('.product-row').forEach(row => {
-            const sel = row.querySelector('.js-product-select');
-            const qty = row.querySelector('.js-qty-input');
-            if (!sel || !qty || !sel.value) return;
-
-            qty.classList.remove('is-invalid');
-            qty.setCustomValidity('');
-
-            if (!sale) return; // التحقق فقط عند البيع
-
-            const maxAttr = qty.getAttribute('max');
-            const max = (maxAttr !== null) ? parseInt(maxAttr,10) : null;
-            const val = parseInt(qty.value || '0', 10) || 0;
-
-            if (max !== null && !Number.isNaN(max) && val > max){
-                ok = false;
-                qty.classList.add('is-invalid');
-                qty.setCustomValidity('الكمية أكبر من المتاح في المخزون.');
-            }
+        select.addEventListener('change', () => {
+            syncStatusHiddenAndBadge();
+            clearBankSelection();
+            clearSafeSelection();
+            enforceAccountBeforeShare();
         });
-
-        // لا نغيّر لوجيك الزر هنا؛ نكتفي بمنع الإرسال في الـ submit handler أدناه
-        return ok;
-    }
-
-    // اربط الصفوف الحالية
-    if (productsWrapper){
-        productsWrapper.querySelectorAll('.product-row').forEach(bindProductRow);
-    }
-
-    // Events
-    catSel.addEventListener('change', () => { syncCategoryUI(); validateGoodsQuantities(); });
-    statusInv.addEventListener('change', function(){
-        syncStatusHiddenAndBadge();
-        clearBankSelection();
-        clearSafeSelection();
-        enforceAccountBeforeShare();
-        validateGoodsQuantities();
-    });
-    statusOff.addEventListener('change', function(){
-        syncStatusHiddenAndBadge();
-        clearBankSelection();
-        clearSafeSelection();
-        enforceAccountBeforeShare();
-        validateGoodsQuantities();
     });
 
-    amount.addEventListener('input',  updateFromAmount);
+    amount.addEventListener('input', updateFromAmount);
     bankShare.addEventListener('input', updateFromBank);
     safeShare.addEventListener('input', updateFromSafe);
 
-    [amount, bankShare, safeShare].forEach(el => {
-        el.addEventListener('blur', ()=>formatOnBlur(el));
-        el.addEventListener('wheel', e => { e.preventDefault(); el.blur(); }, { passive:false });
+    [amount, bankShare, safeShare].forEach((el) => {
+        el.addEventListener('blur', () => formatOnBlur(el));
+        el.addEventListener('wheel', (event) => {
+            event.preventDefault();
+            el.blur();
+        }, { passive: false });
     });
 
     bankSel.addEventListener('change', refreshBankAvailability);
     safeSel.addEventListener('change', refreshSafeAvailability);
 
-    if (investorSel){
+    if (investorSel) {
         investorSel.addEventListener('change', () => {
             toggleInvestorLiquidityUI();
             refreshInvestorLiquidity();
         });
     }
 
-    if (btnAddProduct) btnAddProduct.addEventListener('click', addProductRow);
-    if (productsWrapper) productsWrapper.addEventListener('click', handleRemoveClick);
-
-    // ✅ مانع إرسال مستقل للبضائع قبل الليسنر الأصلي
-    form.addEventListener('submit', function(e){
-        if (!validateGoodsQuantities()){
-            e.preventDefault();
-            e.stopPropagation();
+    form.addEventListener('submit', (event) => {
+        if (!validateGoods()) {
+            event.preventDefault();
+            event.stopPropagation();
             alert('لا يمكنك بيع كمية أكبر من المتاح في المخزون.');
             return;
         }
-    }, { capture: true });
 
-    form.addEventListener('submit', function(){
         btnSubmit.disabled = true;
         btnSpinner.classList.remove('d-none');
         [amount, bankShare, safeShare].forEach(formatOnBlur);
     });
 
-    // init
     syncCategoryUI();
-    syncStatusHiddenAndBadge();
-    if (!amount.value || isNaN(parseFloat(String(amount.value).replace(',', '.')))) amount.value = '0';
-    updateFromAmount();
     enforceAccountBeforeShare();
 
-    // تهيئة السيولة والمتاحات (لو فيه old values)
-    toggleInvestorLiquidityUI();
+    if (!amount.value || isNaN(parseFloat(String(amount.value).replace(',', '.')))) {
+        amount.value = '0';
+    }
+
+    updateFromAmount();
     refreshInvestorLiquidity();
     refreshBankAvailability();
     refreshSafeAvailability();
+    refreshGoodsState();
 });
 </script>
 @endpush
+
+
 @endsection

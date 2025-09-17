@@ -271,88 +271,165 @@
 @endsection
 
 @push('scripts')
+<script src="{{ asset('assets/js/ledger-goods-manager.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const catSel        = document.getElementById('party_category');
-    const investorWrap  = document.getElementById('investorWrap');
-    const investorSel   = document.getElementById('investor_id');
-    const invAvailValue = document.getElementById('invAvailValue');
-    const invAvailLoading = document.getElementById('invAvailLoading');
+document.addEventListener('DOMContentLoaded', () => {
+    const $ = (id) => document.getElementById(id);
 
-    const statusInv   = document.getElementById('status_investors');
-    const statusOff   = document.getElementById('status_office');
-    const statusHidden= document.getElementById('status_id_hidden');
-    const dirBadge    = document.getElementById('dirBadge');
+    const catSel        = $('party_category');
+    const investorWrap  = $('investorWrap');
+    const investorSel   = $('investor_id');
+    const invAvailValue = $('invAvailValue');
+    const invAvailLoading = $('invAvailLoading');
 
-    const accountPicker = document.getElementById('account_picker');
-    const bankHidden    = document.getElementById('bank_account_id');
-    const safeHidden    = document.getElementById('safe_id');
+    const statusSelects = {
+        investors: $('status_investors'),
+        office: $('status_office'),
+    };
+    const statusHidden = $('status_id_hidden');
+    const dirBadge     = $('dirBadge');
 
-    const amountInput = document.getElementById('amount');
-    const availSpan   = document.getElementById('availValue');
-    const availLoading= document.getElementById('availLoading');
+    const accountPicker = $('account_picker');
+    const bankHidden    = $('bank_account_id');
+    const safeHidden    = $('safe_id');
 
-    const btnSave     = document.getElementById('btnSave');
-    const btnSpinner  = document.getElementById('btnSpinner');
-    const form        = document.getElementById('createForm');
+    const amountInput  = $('amount');
+    const availSpan    = $('availValue');
+    const availLoading = $('availLoading');
 
-    // ====== البضائع
-    const goodsSection    = document.getElementById('goods_section');
-    const productsWrapper = document.getElementById('products_wrapper');
-    const btnAddProduct   = document.getElementById('btnAddProduct');
-    const rowTpl          = document.getElementById('product_row_tpl');
+    const btnSave    = $('btnSave');
+    const btnSpinner = $('btnSpinner');
+    const form       = $('createForm');
 
-    // Helpers
-    function goodsIdsFrom(el){ try { return JSON.parse(el.dataset.goodsIds || '[]').map(Number); } catch(e){ return []; } }
-    function currentStatusSelect(){ return catSel.value === 'investors' ? statusInv : statusOff; }
+    const goodsSection    = $('goods_section');
+    const productsWrapper = $('products_wrapper');
+    const btnAddProduct   = $('btnAddProduct');
+    const rowTpl          = $('product_row_tpl');
 
-    // حالة المتاح
-    let accountAvail  = null; // متاح الحساب (بنك/خزنة)
-    let investorAvail = null; // سيولة المستثمر
+    let accountAvail  = null;
+    let investorAvail = null;
 
-    function currentDirectionType(){
-        const sel = currentStatusSelect();
-        const opt = sel ? sel.options[sel.selectedIndex] : null;
-        return opt ? (opt.dataset.type || '') : '';
-    }
-
-    function syncCategoryUI(){
-        investorWrap.style.display = (catSel.value === 'investors') ? '' : 'none';
-        statusInv.hidden = !(catSel.value === 'investors');
-        statusOff.hidden = !(catSel.value === 'office');
-        syncStatusHiddenAndBadge();
-        toggleGoodsSection();
-        enforceStatusBeforeAccount();
-
-        // تحديث/تصفير سيولة المستثمر حسب الفئة
-        if (catSel.value === 'investors') {
-            refreshInvestorLiquidity();
-        } else {
-            investorAvail = null;
-            invAvailValue.textContent = '—';
+    const parseGoodsIds = (select) => {
+        if (!select) {
+            return [];
         }
+        try {
+            return JSON.parse(select.dataset.goodsIds || '[]').map(Number);
+        } catch (error) {
+            return [];
+        }
+    };
 
-        applyMaxByDirection();
-        validateAmount();
-        reapplyRowsAvailabilityPolicy();
-        validateGoodsQuantities();
+    const currentStatusKey = () => (catSel.value === 'office' ? 'office' : 'investors');
+    const currentStatusSelect = () => statusSelects[currentStatusKey()];
+    const selectedStatusOption = () => {
+        const select = currentStatusSelect();
+        return select ? select.options[select.selectedIndex] : null;
+    };
+    const selectedStatusId = () => {
+        const option = selectedStatusOption();
+        return option ? Number(option.value || 0) : 0;
+    };
+    const currentDirectionType = () => {
+        const option = selectedStatusOption();
+        return option ? (option.dataset.type || '') : '';
+    };
+    const isGoodsStatus = () => {
+        const select = currentStatusSelect();
+        const ids = parseGoodsIds(select);
+        return ids.includes(selectedStatusId());
+    };
+
+    const AVAIL_URL_TPL = @json(route('product-types.available', ['productType' => '__ID__']));
+    const fetchGoodsAvailability = (() => {
+        const cache = Object.create(null);
+        return async (typeId) => {
+            if (!typeId) {
+                return { success: true, available: 0 };
+            }
+            if (cache[typeId] !== undefined) {
+                return cache[typeId];
+            }
+            try {
+                const url = AVAIL_URL_TPL.replace('__ID__', encodeURIComponent(typeId));
+                const response = await fetch(url, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                const data = await response.json();
+                cache[typeId] = data;
+                return data;
+            } catch (error) {
+                const payload = { success: false, message: error.message };
+                cache[typeId] = payload;
+                return payload;
+            }
+        };
+    })();
+
+    let nextProductIndex = (() => {
+        if (!productsWrapper) {
+            return 0;
+        }
+        let max = -1;
+        productsWrapper.querySelectorAll('.js-product-select[name^="products["]').forEach((select) => {
+            const match = select.name.match(/^products\[(\d+)\]/);
+            if (match) {
+                max = Math.max(max, Number(match[1]));
+            }
+        });
+        return max + 1;
+    })();
+
+    const prepareNewProductRow = (row) => {
+        const select = row.querySelector('.js-product-select');
+        const qty = row.querySelector('.js-qty-input');
+        const index = nextProductIndex++;
+        if (select) {
+            select.name = `products[${index}][product_type_id]`;
+        }
+        if (qty) {
+            qty.name = `products[${index}][quantity]`;
+        }
+    };
+
+    let goodsManager = null;
+
+    const refreshGoodsRows = () => {
+        if (!goodsManager) {
+            return;
+        }
+        goodsManager.toggleSection();
+        goodsManager.refreshRows();
+        goodsManager.validate();
+    };
+
+    const validateGoods = () => (goodsManager ? goodsManager.validate() : true);
+
+    if (window.LedgerGoods) {
+        goodsManager = window.LedgerGoods.create({
+            section: goodsSection,
+            wrapper: productsWrapper,
+            template: rowTpl,
+            addButton: btnAddProduct,
+            isSectionActive: isGoodsStatus,
+            isSaleMode: () => isGoodsStatus() && currentDirectionType() === '1',
+            fetchAvailability: fetchGoodsAvailability,
+            prepareNewRow: prepareNewProductRow,
+            minRows: 1,
+        });
+
+        if (goodsManager) {
+            goodsManager.bindExisting();
+            goodsManager.toggleSection();
+            goodsManager.refreshRows();
+        }
     }
 
-    function syncStatusHiddenAndBadge(){
-        const sel = currentStatusSelect();
-        const opt = sel.options[sel.selectedIndex];
-        statusHidden.value = opt ? (opt.value || '') : '';
-        const t = opt ? (opt.dataset.type || '') : '';
-        let text='—', cls='bg-secondary';
-        if (t==='1'){ text='داخل (إيداع)'; cls='bg-success'; }
-        else if (t==='2'){ text='خارج (سحب)'; cls='bg-danger'; }
-        dirBadge.textContent = text; dirBadge.className = 'badge rounded-pill ' + cls;
-        enforceStatusBeforeAccount();
-        applyMaxByDirection();
-        validateAmount();
-    }
-
-    function clearAccountSelection(){
+    function clearAccountSelection() {
         accountPicker.value = '';
         bankHidden.value = '';
         safeHidden.value = '';
@@ -361,109 +438,72 @@ document.addEventListener('DOMContentLoaded', function () {
         accountAvail = null;
     }
 
-    function enforceStatusBeforeAccount(){
+    function enforceStatusBeforeAccount() {
         const hasStatus = !!statusHidden.value;
         accountPicker.disabled = !hasStatus;
-        if (!hasStatus){ clearAccountSelection(); }
-    }
-
-    function syncAccountHidden(){
-        const val = accountPicker.value || '';
-        if (!val){ bankHidden.value=''; safeHidden.value=''; return; }
-        const [type, id] = val.split(':');
-        if (type === 'bank'){ bankHidden.value = id; safeHidden.value = ''; }
-        else if (type === 'safe'){ safeHidden.value = id; bankHidden.value = ''; }
-    }
-
-    // عرض/إخفاء قسم البضائع
-    function selectedStatusId(){
-        const sel = currentStatusSelect();
-        const opt = sel.options[sel.selectedIndex];
-        return opt ? Number(opt.value || 0) : 0;
-    }
-    function isGoodsStatus(){
-        const sel = currentStatusSelect();
-        const ids = goodsIdsFrom(sel);
-        const cur = selectedStatusId();
-        return ids.includes(cur);
-    }
-
-    function toggleGoodsSection(){
-        goodsSection.style.display = isGoodsStatus() ? '' : 'none';
-    }
-
-    // إدارة صفوف البضائع
-    function nextProductIndex(){
-        const rows = productsWrapper.querySelectorAll('.product-row');
-        return rows.length ? Math.max(...Array.from(rows).map(r => {
-            const sel = r.querySelector('select[name^="products["]');
-            if (!sel) return -1;
-            const m = sel.name.match(/^products\[(\d+)\]/);
-            return m ? Number(m[1]) : -1;
-        })) + 1 : 0;
-    }
-    function wireRowNames(row, index){
-        const sel = row.querySelector('.js-product-select');
-        const qty = row.querySelector('.js-qty-input');
-        if (sel) sel.setAttribute('name', `products[${index}][product_type_id]`);
-        if (qty) qty.setAttribute('name', `products[${index}][quantity]`);
-    }
-    function addProductRow(){
-        const frag = rowTpl.content.cloneNode(true);
-        const row = frag.querySelector('.product-row');
-        wireRowNames(row, nextProductIndex());
-        productsWrapper.appendChild(frag);
-        const appended = productsWrapper.querySelector('.product-row:last-child');
-        if (appended) bindProductRow(appended);
-        validateGoodsQuantities();
-    }
-    function handleRemoveClick(e){
-        if (!e.target.classList.contains('js-remove-product')) return;
-        const row = e.target.closest('.product-row');
-        if (!row) return;
-        if (productsWrapper.querySelectorAll('.product-row').length > 1){
-            row.remove();
-            validateGoodsQuantities();
+        if (!hasStatus) {
+            clearAccountSelection();
         }
     }
 
-    // --- توابع للمساعدة سابقًا (قد لا تُستخدم الآن) ---
-    function isCardSaleMode(){
-        return isGoodsStatus() && currentDirectionType() === '1';
-    }
-    function rowIsCard(row){
-        const sel = row.querySelector('.js-product-select');
-        if (!sel) return false;
-        const opt = sel.options[sel.selectedIndex];
-        return !!(opt && Number(opt.dataset.card) === 1);
-    }
-    function reapplyRowsAvailabilityPolicy(){
-        productsWrapper.querySelectorAll('.product-row').forEach(row => {
-            const sel = row.querySelector('.js-product-select');
-            if (sel && sel.value) {
-                reloadRowAvailability(row);
-            } else {
-                setRowAvailabilityUI(row, { success:true, available:0 });
-            }
-        });
+    function syncAccountHidden() {
+        const value = accountPicker.value || '';
+        if (!value) {
+            bankHidden.value = '';
+            safeHidden.value = '';
+            return;
+        }
+        const [type, id] = value.split(':');
+        if (type === 'bank') {
+            bankHidden.value = id;
+            safeHidden.value = '';
+        } else if (type === 'safe') {
+            safeHidden.value = id;
+            bankHidden.value = '';
+        }
     }
 
-    // حد السحب = min(متاح الحساب، سيولة المستثمر إن وُجد مستثمر مختار)
-    function applyMaxByDirection(){
-        const t = currentDirectionType();
+    function refreshGoodsState() {
+        refreshGoodsRows();
+        validateGoods();
+    }
 
-        if (t === '2') { // سحب
-            let cap = null;
+    function syncStatusHiddenAndBadge() {
+        const option = selectedStatusOption();
+        statusHidden.value = option ? (option.value || '') : '';
 
-            if (accountAvail !== null) cap = accountAvail;
+        const type = option ? (option.dataset.type || '') : '';
+        let text = '—';
+        let cls = 'bg-secondary';
+        if (type === '1') {
+            text = 'داخل (إيداع)';
+            cls = 'bg-success';
+        } else if (type === '2') {
+            text = 'خارج (سحب)';
+            cls = 'bg-danger';
+        }
+        dirBadge.textContent = text;
+        dirBadge.className = 'badge rounded-pill ' + cls;
 
+        enforceStatusBeforeAccount();
+        applyMaxByDirection();
+        validateAmount();
+        refreshGoodsState();
+    }
+
+    function applyMaxByDirection() {
+        if (currentDirectionType() === '2') {
+            let cap = accountAvail !== null ? accountAvail : null;
             const isInvestorFlow = (catSel.value === 'investors') && investorSel && investorSel.value;
             if (isInvestorFlow && investorAvail !== null) {
-                cap = (cap === null) ? investorAvail : Math.min(cap, investorAvail);
+                cap = cap === null ? investorAvail : Math.min(cap, investorAvail);
             }
 
-            if (cap !== null) amountInput.setAttribute('max', String(cap));
-            else amountInput.removeAttribute('max');
+            if (cap !== null) {
+                amountInput.setAttribute('max', String(cap));
+            } else {
+                amountInput.removeAttribute('max');
+            }
         } else {
             amountInput.removeAttribute('max');
             amountInput.setCustomValidity('');
@@ -471,21 +511,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function validateAmount(){
-        const t = currentDirectionType();
+    function validateAmount() {
+        const type = currentDirectionType();
         const val = parseFloat(amountInput.value || '0');
 
         let cap = null;
-        if (t === '2') {
-            if (accountAvail !== null) cap = accountAvail;
-
+        if (type === '2') {
+            if (accountAvail !== null) {
+                cap = accountAvail;
+            }
             const isInvestorFlow = (catSel.value === 'investors') && investorSel && investorSel.value;
             if (isInvestorFlow && investorAvail !== null) {
-                cap = (cap === null) ? investorAvail : Math.min(cap, investorAvail);
+                cap = cap === null ? investorAvail : Math.min(cap, investorAvail);
             }
         }
 
-        if (t === '2' && cap !== null && val > cap + 1e-9){
+        if (type === '2' && cap !== null && val > cap + 1e-9) {
             amountInput.setCustomValidity('المبلغ يتجاوز الحد المسموح (سيولة المستثمر/متاح الحساب).');
         } else {
             amountInput.setCustomValidity('');
@@ -493,38 +534,49 @@ document.addEventListener('DOMContentLoaded', function () {
         amountInput.classList.toggle('is-invalid', !!amountInput.validationMessage);
     }
 
-    // جلب متاح الحساب (بنك/خزنة)
-    async function refreshAvailability(){
-        const val = accountPicker.value || '';
+    async function refreshAvailability() {
+        const value = accountPicker.value || '';
         accountAvail = null;
         availSpan.textContent = '—';
         amountInput.removeAttribute('max');
 
-        if (!val){ applyMaxByDirection(); validateAmount(); return; }
+        if (!value) {
+            applyMaxByDirection();
+            validateAmount();
+            return;
+        }
 
-        const [type, id] = val.split(':');
-        if (!type || !id){ applyMaxByDirection(); validateAmount(); return; }
+        const [type, id] = value.split(':');
+        if (!type || !id) {
+            applyMaxByDirection();
+            validateAmount();
+            return;
+        }
 
         availLoading.classList.remove('d-none');
         try {
-            const url = `{{ route('ajax.accounts.availability') }}` + `?account_type=${encodeURIComponent(type)}&account_id=${encodeURIComponent(id)}`;
-            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-
-            if (!res.ok) {
+            const params = new URLSearchParams({
+                account_type: type,
+                account_id: id
+            });
+            const url = `{{ route('ajax.accounts.availability') }}` + `?${params.toString()}`;
+            const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            const data = await response.json();
+            if (data && data.success) {
+                accountAvail = Number(data.available);
+                const formatted = data.available_formatted ?? accountAvail.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                availSpan.textContent = formatted;
+            } else {
                 accountAvail = null;
                 availSpan.textContent = '—';
-            } else {
-                const data = await res.json();
-                if (data && data.success){
-                    accountAvail = Number(data.available);
-                    const s = (data.available_formatted ?? accountAvail.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
-                    availSpan.textContent = s;
-                } else {
-                    accountAvail = null;
-                    availSpan.textContent = '—';
-                }
             }
-        } catch (e){
+        } catch (error) {
             accountAvail = null;
             availSpan.textContent = '—';
         } finally {
@@ -534,38 +586,48 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // سيولة المستثمر
     const INVESTOR_LIQ_URL_TPL = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
 
-    async function refreshInvestorLiquidity(){
-        // نطبّق فقط لو الفئة "المستثمرون" ومختار مستثمر
-        if (catSel.value !== 'investors') { investorAvail = null; invAvailValue.textContent = '—'; return; }
+    async function refreshInvestorLiquidity() {
+        if (catSel.value !== 'investors') {
+            investorAvail = null;
+            invAvailValue.textContent = '—';
+            return;
+        }
 
         const id = investorSel.value || '';
         investorAvail = null;
         invAvailValue.textContent = '—';
-        if (!id) { applyMaxByDirection(); validateAmount(); return; }
+        if (!id) {
+            applyMaxByDirection();
+            validateAmount();
+            return;
+        }
 
         invAvailLoading.classList.remove('d-none');
-        try{
+        try {
             const url = INVESTOR_LIQ_URL_TPL.replace('__ID__', encodeURIComponent(id));
-            const res = await fetch(url, { headers: { 'Accept':'application/json' }, credentials: 'same-origin' });
-            if (!res.ok) {
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+            const data = await response.json();
+            const raw = Number(data.cash ?? data.balance ?? 0);
+            if (Number.isFinite(raw)) {
+                investorAvail = raw;
+                const formatted = data.formatted ?? raw.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                invAvailValue.textContent = formatted;
+            } else {
                 investorAvail = null;
                 invAvailValue.textContent = '—';
-            } else {
-                const data = await res.json();
-                const raw = Number(data.cash ?? data.balance ?? 0);
-                if (Number.isFinite(raw)) {
-                    investorAvail = raw;
-                    const fmt = (data.formatted ?? raw.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}));
-                    invAvailValue.textContent = fmt;
-                } else {
-                    investorAvail = null;
-                    invAvailValue.textContent = '—';
-                }
             }
-        } catch(e){
+        } catch (error) {
             investorAvail = null;
             invAvailValue.textContent = '—';
         } finally {
@@ -575,196 +637,73 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // المتاح لكل نوع بضاعة (جلب من السيرفر + ضبط max فقط لو بيع بضائع)
-    const AVAIL_URL_TPL = @json(route('product-types.available', ['productType' => '__ID__']));
-    const availableCache = Object.create(null);
+    function syncCategoryUI() {
+        const isInvestors = catSel.value === 'investors';
+        investorWrap.style.display = isInvestors ? '' : 'none';
+        statusSelects.investors.hidden = !isInvestors;
+        statusSelects.office.hidden = isInvestors;
 
-    async function fetchAvailableFor(typeId){
-        if (!typeId) return { success:true, available:0 };
-        if (availableCache[typeId] !== undefined) return availableCache[typeId];
-        try{
-            const url = AVAIL_URL_TPL.replace('__ID__', encodeURIComponent(typeId));
-            const res = await fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
-            if (!res.ok) throw new Error('HTTP '+res.status);
-            const data = await res.json();
-            availableCache[typeId] = data;
-            return data;
-        }catch(e){
-            availableCache[typeId] = { success:false, message:e.message };
-            return availableCache[typeId];
+        if (!isInvestors) {
+            investorAvail = null;
+            invAvailValue.textContent = '—';
+        }
+
+        syncStatusHiddenAndBadge();
+
+        if (isInvestors) {
+            refreshInvestorLiquidity();
         }
     }
 
-    function setRowAvailabilityUI(row, payload){
-        const badge = row.querySelector('.js-available-badge');
-        const qty   = row.querySelector('.js-qty-input');
+    catSel.addEventListener('change', () => {
+        syncCategoryUI();
+        refreshGoodsState();
+    });
 
-        if (!badge || !qty) return;
-
-        if (!payload || payload.success !== true){
-            const msg = (payload && payload.message) ? payload.message : 'تعذّر جلب المتاح';
-            badge.textContent = 'خطأ: ' + msg;
-            badge.className = 'badge bg-danger text-white js-available-badge';
-            qty.removeAttribute('max');     // لا نفرض max عند فشل الجلب
+    Object.values(statusSelects).forEach((select) => {
+        if (!select) {
             return;
         }
-
-        const avail = Number(payload.available ?? payload.stock?.available ?? 0);
-        const safeAvail = Number.isFinite(avail) ? Math.max(0, Math.floor(avail)) : 0;
-
-        badge.textContent = 'المتاح: ' + safeAvail.toLocaleString('ar-EG');
-        badge.className = 'badge bg-light text-dark js-available-badge';
-
-        // ✅ شرط: max فقط في حالة "بيع البضائع" (أي نوع)
-        if (isGoodsStatus() && currentDirectionType() === '1') {
-            qty.setAttribute('max', String(safeAvail)); // قد تكون 0
-        } else {
-            qty.removeAttribute('max');
-        }
-
-        // لقط القيمة ضمن الحدود لو max موجود
-        const maxAttr = qty.getAttribute('max');
-        const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
-        let v = parseInt(qty.value || '0', 10) || 0;
-        if (v < 0) v = 0;
-        if (isFinite(max) && v > max) v = max;
-        qty.value = v ? String(v) : '';
-    }
-
-    async function reloadRowAvailability(row){
-        const sel = row.querySelector('.js-product-select');
-        const qty = row.querySelector('.js-qty-input');
-        const badge = row.querySelector('.js-available-badge');
-        if (!sel || !qty || !badge) return;
-
-        // حالة التحميل
-        badge.textContent = 'جاري التحميل...';
-        badge.className = 'badge bg-secondary text-white js-available-badge';
-
-        const typeId = sel.value || '';
-        const payload = await fetchAvailableFor(typeId);
-        setRowAvailabilityUI(row, payload);
-        validateGoodsQuantities();
-    }
-
-    function bindProductRow(row){
-        const sel = row.querySelector('.js-product-select');
-        const qty = row.querySelector('.js-qty-input');
-
-        if (sel){
-            sel.addEventListener('change', () => reloadRowAvailability(row));
-            // تهيئة أولية إن كان النوع مختارًا من old()
-            if (sel.value) reloadRowAvailability(row);
-            else setRowAvailabilityUI(row, { success:true, available:0 });
-        }
-        if (qty){
-            const clampQty = () => {
-                const maxAttr = qty.getAttribute('max');
-                const max = maxAttr ? parseInt(maxAttr,10) : Infinity;
-                let v = parseInt(qty.value || '0', 10) || 0;
-                if (v < 0) v = 0;
-                if (isFinite(max) && v > max) v = max;
-                qty.value = v ? String(v) : '';
-            };
-            qty.addEventListener('input', () => { clampQty(); validateGoodsQuantities(); });
-            qty.addEventListener('blur',  () => { clampQty(); validateGoodsQuantities(); });
-        }
-    }
-
-    // ✅ تحقق عام: لا تبيع أكثر من المتاح في حالة بيع البضائع
-    function validateGoodsQuantities(){
-        const isSale = isGoodsStatus() && currentDirectionType() === '1';
-        let ok = true;
-
-        productsWrapper.querySelectorAll('.product-row').forEach(row => {
-            const sel = row.querySelector('.js-product-select');
-            const qty = row.querySelector('.js-qty-input');
-            if (!sel || !qty || !sel.value) return;
-
-            // نظّف أي حالة قديمة
-            qty.classList.remove('is-invalid');
-            qty.setCustomValidity('');
-
-            if (!isSale) return; // التحقق ينطبق فقط في البيع
-
-            const maxAttr = qty.getAttribute('max');
-            const max = maxAttr !== null ? parseInt(maxAttr,10) : null;
-            const val = parseInt(qty.value || '0', 10) || 0;
-            const effectiveMax = (max === null || isNaN(max)) ? 0 : max;
-
-            if (val > effectiveMax){
-                ok = false;
-                qty.classList.add('is-invalid');
-                qty.setCustomValidity('الكمية أكبر من المتاح في المخزون.');
-            }
+        select.addEventListener('change', () => {
+            syncStatusHiddenAndBadge();
+            clearAccountSelection();
         });
-
-        return ok;
-    }
-
-    // اربط كل الصفوف الحالية
-    productsWrapper.querySelectorAll('.product-row').forEach(bindProductRow);
-
-    // Events
-    catSel.addEventListener('change', () => { syncCategoryUI(); reapplyRowsAvailabilityPolicy(); validateGoodsQuantities(); });
-
-    statusInv.addEventListener('change', function(){
-        syncStatusHiddenAndBadge();
-        toggleGoodsSection();
-        clearAccountSelection(); // يلزم اختيار الحساب بعد تغيير الحالة
-        reapplyRowsAvailabilityPolicy();
-        validateGoodsQuantities();
     });
 
-    statusOff.addEventListener('change', function(){
-        syncStatusHiddenAndBadge();
-        toggleGoodsSection();
-        clearAccountSelection(); // يلزم اختيار الحساب بعد تغيير الحالة
-        reapplyRowsAvailabilityPolicy();
-        validateGoodsQuantities();
-    });
-
-    accountPicker.addEventListener('change', function(){
+    accountPicker.addEventListener('change', () => {
         syncAccountHidden();
         refreshAvailability();
     });
 
-    investorSel.addEventListener('change', function(){
+    investorSel.addEventListener('change', () => {
         refreshInvestorLiquidity();
     });
 
-    if (btnAddProduct) btnAddProduct.addEventListener('click', addProductRow);
-    productsWrapper.addEventListener('click', handleRemoveClick);
-
     amountInput.addEventListener('input', validateAmount);
 
-    form.addEventListener('submit', function(e){
-        // الحالة أولاً
-        if (!statusHidden.value){
-            e.preventDefault();
-            e.stopPropagation();
+    form.addEventListener('submit', (event) => {
+        if (!statusHidden.value) {
+            event.preventDefault();
+            event.stopPropagation();
             alert('يرجى اختيار الحالة أولاً.');
             return;
         }
 
-        // تأكيد المزامنة قبل الإرسال
         syncStatusHiddenAndBadge();
         syncAccountHidden();
         applyMaxByDirection();
         validateAmount();
 
-        // ✅ منع بيع كمية أكبر من المتاح قبل الإرسال
-        const goodsOk = validateGoodsQuantities();
-        if (!goodsOk){
-            e.preventDefault();
-            e.stopPropagation();
+        if (!validateGoods()) {
+            event.preventDefault();
+            event.stopPropagation();
             alert('لا يمكنك بيع كمية أكبر من المتاح في المخزون.');
             return;
         }
 
-        if (!form.checkValidity()){
-            e.preventDefault();
-            e.stopPropagation();
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
             amountInput.reportValidity();
             return;
         }
@@ -773,7 +712,6 @@ document.addEventListener('DOMContentLoaded', function () {
         btnSpinner.classList.remove('d-none');
     });
 
-    // init
     syncCategoryUI();
     syncStatusHiddenAndBadge();
     syncAccountHidden();
@@ -782,11 +720,9 @@ document.addEventListener('DOMContentLoaded', function () {
         amountInput.value = '0';
     }
 
-    // جلب سيولة المستثمر ومتـاح الحساب لو في old()
     refreshInvestorLiquidity();
     refreshAvailability();
-    reapplyRowsAvailabilityPolicy();
-    validateGoodsQuantities();
+    refreshGoodsState();
 });
 </script>
 @endpush
