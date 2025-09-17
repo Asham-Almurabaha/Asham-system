@@ -23,7 +23,7 @@ class CustomersSkippedExport implements FromArray, WithHeadings, ShouldAutoSize,
     {
         return ExcelHeadingLocalizer::translateMany([
             'name','national_id','phone','email','address',
-            'nationality','title','id_card_image','contract_image',
+            'nationality','title','customer_status','id_card_image','contract_image',
             'reason','source_row',
         ]);
     }
@@ -42,6 +42,7 @@ class CustomersSkippedExport implements FromArray, WithHeadings, ShouldAutoSize,
                 $this->pick($vals, ['address','العنوان']),
                 $this->pick($vals, ['nationality','الجنسية']),
                 $this->pick($vals, ['title','الوظيفة']),
+                $this->pick($vals, ['customer_status','حالة_العميل']),
                 $this->pick($vals, ['id_card_image','صورة_الهوية']),
                 $this->pick($vals, ['contract_image','صورة_العقد']),
                 $this->flatten($reason),
@@ -53,8 +54,8 @@ class CustomersSkippedExport implements FromArray, WithHeadings, ShouldAutoSize,
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A1:K1')->getFont()->setBold(true);
-        $sheet->getStyle('J:J')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
+        $sheet->getStyle('K:K')->getAlignment()->setWrapText(true);
         $sheet->freezePane('A2');
         return [];
     }

@@ -29,6 +29,7 @@ return [
         'address' => 'العنوان',
         'nationality' => 'الجنسية',
         'title' => 'الوظيفة',
+        'customer_status' => 'حالة العميل',
         'id_card_image' => 'صورة الهوية',
         'contract_image' => 'صورة العقد',
         'reason' => 'السبب',

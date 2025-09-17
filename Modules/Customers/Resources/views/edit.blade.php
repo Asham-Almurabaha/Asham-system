@@ -137,6 +137,27 @@
                         @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- Customer Status --}}
+                    <div class="col-md-6">
+                        <label for="customer_status_id" class="form-label">{{ __('Customer Status') }}</label>
+                        <select
+                            name="customer_status_id"
+                            id="customer_status_id"
+                            class="form-select @error('customer_status_id') is-invalid @enderror">
+                            <option value="">-- {{ __('Choose') }} --</option>
+                            @foreach (($customerStatuses ?? []) as $row)
+                                @php
+                                    $sid   = is_object($row) ? $row->id   : (is_array($row) ? ($row['id'] ?? null)   : null);
+                                    $sname = is_object($row) ? $row->name : (is_array($row) ? ($row['name'] ?? null) : null);
+                                @endphp
+                                @if($sid && $sname)
+                                    <option value="{{ $sid }}" @selected(old('customer_status_id', $customer->customer_status_id) == $sid)>{{ $sname }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('customer_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
                     {{-- Address --}}
                     <div class="col-12">
                         <label for="address" class="form-label">{{ __('Address') }}</label>

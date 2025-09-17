@@ -29,6 +29,7 @@ return [
         'address' => 'Address',
         'nationality' => 'Nationality',
         'title' => 'Job Title',
+        'customer_status' => 'Customer Status',
         'id_card_image' => 'ID Card Image',
         'contract_image' => 'Contract Image',
         'reason' => 'Reason',

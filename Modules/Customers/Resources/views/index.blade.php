@@ -193,6 +193,7 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('Name') }}</th>
+                        <th>{{ __('Customer Status') }}</th>
                         <th>{{ __('National ID') }}</th>
                         <th>{{ __('Phone') }}</th>
                         <th>{{ __('Number of Active Contracts') }}</th>
@@ -212,6 +213,7 @@
                                     {{ $customer->name }}
                                 </a>
                             </td>
+                            <td>{{ optional($customer->customerStatus)->name ?? __('Undefined') }}</td>
                             <td dir="ltr">{{ $customer->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $customer->phone ?? '—' }}</td>
 
@@ -246,7 +248,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="py-5">
+                            <td colspan="9" class="py-5">
                                 <div class="text-muted">
                                     {{ __('No matching results for your search.') }}
                                     <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>

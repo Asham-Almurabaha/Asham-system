@@ -19,6 +19,7 @@ class CustomersTemplateExport implements FromArray, WithHeadings
             'address',         // اختياري
             'nationality',     // اختياري (بالاسم ويجب يكون موجود بجدول nationalities)
             'title',           // اختياري (بالاسم ويجب يكون موجود بجدول titles)
+            'customer_status', // اختياري (بالاسم ويجب يكون موجود بجدول customer_statuses)
             'notes',           // اختياري
             'id_card_image',   // اختياري (مسار/اسم ملف إن وُجد)
         ]);
@@ -36,6 +37,7 @@ class CustomersTemplateExport implements FromArray, WithHeadings
                 'الرياض - حي النرجس',
                 'سعودي',         // nationality (اسم موجود في جدول nationalities)
                 'حكومي',         // title (اسم موجود في جدول titles)
+                'عميل نشط',      // customer_status (اسم موجود في جدول customer_statuses)
                 'عميل قديم – أولوية تواصل',
                 '',              // id_card_image
             ],
@@ -48,6 +50,7 @@ class CustomersTemplateExport implements FromArray, WithHeadings
                 'Dammam - Corniche',
                 'سعودي',
                 'حكومي',
+                'Pending',        // customer_status
                 'ملاحظات إضافية',
                 '',
             ],

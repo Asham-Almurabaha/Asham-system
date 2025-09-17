@@ -58,6 +58,10 @@
                     <div class="small text-muted-2 mt-1">
                         <span class="chip me-1"><i class="bi bi-badge-ad"></i> {{ optional($customer->title)->name ?? '—' }}</span>
                         <span class="chip me-1"><i class="bi bi-flag"></i> {{ optional($customer->nationality)->name ?? '—' }}</span>
+                        <span class="chip me-1">
+                            <i class="bi bi-tag"></i>
+                            {{ optional($customer->customerStatus)->name ?? __('Undefined') }}
+                        </span>
                         <span class="chip"><i class="bi bi-hash"></i> {{ __('ID') }}: {{ $customer->id }}</span>
                     </div>
                 </div>

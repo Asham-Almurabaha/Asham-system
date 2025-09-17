@@ -15,6 +15,7 @@ return array (
   'Nationality' => 'Nationality',
   'Address' => 'Address',
   'Job' => 'Job',
+  'Customer Status' => 'Customer Status',
   'ID Card Image' => 'ID Card Image',
   'View full size image' => 'View full size image',
   'Actions' => 'Actions',

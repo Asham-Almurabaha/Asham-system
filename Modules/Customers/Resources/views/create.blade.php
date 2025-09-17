@@ -129,6 +129,23 @@
                         @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
+                    {{-- حالة العميل --}}
+                    <div class="col-md-6">
+                        <label for="customer_status_id" class="form-label">{{ __('Customer Status') }}</label>
+                        <select
+                            name="customer_status_id"
+                            id="customer_status_id"
+                            class="form-select @error('customer_status_id') is-invalid @enderror">
+                            <option value="">{{ __('-- Choose --') }}</option>
+                            @foreach (($customerStatuses ?? []) as $status)
+                                @if(is_object($status))
+                                    <option value="{{ $status->id }}" @selected(old('customer_status_id') == $status->id)>{{ $status->name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('customer_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
                     {{-- العنوان --}}
                     <div class="col-12">
                         <label for="address" class="form-label">{{ __('Address') }}</label>

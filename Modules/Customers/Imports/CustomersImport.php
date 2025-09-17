@@ -3,6 +3,7 @@
 namespace Modules\Customers\Imports;
 
 use Modules\Customers\Entities\Customer;
+use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Illuminate\Support\Str;
@@ -80,14 +81,19 @@ class CustomersImport implements
         // IDs مباشرة أو بالأسماء
         $nationalityId   = $row['nationality_id'] ?? $row['الجنسية_id'] ?? null;
         $titleId         = $row['title_id']       ?? $row['الوظيفة_id']   ?? null;
+        $customerStatusId   = $row['customer_status_id'] ?? $row['حالة_العميل_id'] ?? null;
         $nationalityName = $row['nationality']    ?? $row['الجنسية']     ?? null;
         $titleName       = $row['title']          ?? $row['الوظيفة']      ?? null;
+        $customerStatusName = $row['customer_status'] ?? $row['حالة_العميل'] ?? null;
 
         if (!$nationalityId && $nationalityName) {
             $nationalityId = $this->resolveIdByName($nationalityName, Nationality::class, ['name','name_en']);
         }
         if (!$titleId && $titleName) {
             $titleId = $this->resolveIdByName($titleName, Title::class, ['name','name_en']);
+        }
+        if (!$customerStatusId && $customerStatusName) {
+            $customerStatusId = $this->resolveIdByName($customerStatusName, CustomerStatus::class, ['name']);
         }
 
         // أقل تعريف: لازم name + (national_id أو phone)
@@ -115,6 +121,7 @@ class CustomersImport implements
             'notes'          => $notes ?: null,
             'nationality_id' => $nationalityId ?: null,
             'title_id'       => $titleId ?: null,
+            'customer_status_id' => $customerStatusId ?: null,
             'id_card_image'  => $idCardImage ?: null,
             'contract_image' => $contractImage ?: null,
         ];
@@ -198,6 +205,8 @@ class CustomersImport implements
             '*.nationality' => 'nullable|string|max:255',
             '*.title_id'    => 'nullable|integer|exists:titles,id',
             '*.title'       => 'nullable|string|max:255',
+            '*.customer_status_id' => 'nullable|integer|exists:customer_statuses,id',
+            '*.customer_status'    => 'nullable|string|max:255',
             '*.id_card_image'  => 'nullable|string|max:255',
             '*.contract_image' => 'nullable|string|max:255',
         ];

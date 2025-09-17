@@ -15,6 +15,7 @@ return array (
   'Nationality' => 'الجنسية',
   'Address' => 'العنوان',
   'Job' => 'الوظيفة',
+  'Customer Status' => 'حالة العميل',
   'ID Card Image' => 'صورة الهوية',
   'View full size image' => 'عرض الصورة بحجم كامل',
   'Actions' => 'الإجراءات',

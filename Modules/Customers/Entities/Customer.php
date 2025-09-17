@@ -2,6 +2,7 @@
 
 namespace Modules\Customers\Entities;
 
+use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ class Customer extends Model
         'name',
         'national_id',
         'title_id',
+        'customer_status_id',
         'phone',
         'email',
         'address',
@@ -38,5 +40,10 @@ class Customer extends Model
     public function contracts()
     {
         return $this->hasMany(Contract::class);
+    }
+
+    public function customerStatus()
+    {
+        return $this->belongsTo(CustomerStatus::class);
     }
 }

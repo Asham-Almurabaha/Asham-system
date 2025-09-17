@@ -5,6 +5,7 @@ namespace Modules\Customers\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\Customers\Entities\Customer;
 use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Modules\Customers\Services\CustomerDetailsService;
@@ -20,7 +21,7 @@ class CustomerController extends Controller
     // عرض كل العملاء
     public function index(Request $request)
     {
-        $query = Customer::query();
+        $query = Customer::query()->with(['customerStatus:id,name']);
 
         // ===== بحث باسم العميل فقط =====
         $nameQ = trim((string) $request->input('customer_q', ''));
@@ -103,7 +104,8 @@ class CustomerController extends Controller
     {
         $titles = Title::all();
         $nationalities = Nationality::all();
-        return view('customers::create', compact('titles', 'nationalities'));
+        $customerStatuses = CustomerStatus::select('id', 'name')->orderBy('name')->get();
+        return view('customers::create', compact('titles', 'nationalities', 'customerStatuses'));
     }
 
     // حفظ عميل جديد
@@ -117,6 +119,7 @@ class CustomerController extends Controller
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',
+            'customer_status_id' => 'nullable|exists:customer_statuses,id',
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);
@@ -134,6 +137,8 @@ class CustomerController extends Controller
     // عرض تفاصيل عميل
     public function show(Customer $customer, Request $request, CustomerDetailsService $detailsSvc)
     {
+        $customer->loadMissing(['customerStatus:id,name', 'title:id,name', 'nationality:id,name']);
+
         // helpers لتنظيف المُدخلات
         $parseIds = function ($value): array {
             if (is_string($value)) {
@@ -211,7 +216,8 @@ class CustomerController extends Controller
     {
         $titles = Title::all();
         $nationalities = Nationality::all();
-        return view('customers::edit', compact('customer', 'titles', 'nationalities'));
+        $customerStatuses = CustomerStatus::select('id', 'name')->orderBy('name')->get();
+        return view('customers::edit', compact('customer', 'titles', 'nationalities', 'customerStatuses'));
     }
 
     // تحديث بيانات عميل
@@ -225,6 +231,7 @@ class CustomerController extends Controller
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
             'nationality_id' => 'nullable|exists:nationalities,id',
+            'customer_status_id' => 'nullable|exists:customer_statuses,id',
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);
