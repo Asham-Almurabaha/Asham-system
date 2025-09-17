@@ -44,6 +44,9 @@ class CustomersImport implements
     protected array $skippedSimple   = [];
     protected array $pendingUpdates  = [];
 
+    private ?int $defaultCustomerStatusId = null;
+    private bool $defaultCustomerStatusResolved = false;
+
     public function headingRow(): int { return 1; }
 
     public function onFailure(Failure ...$failures): void
@@ -169,7 +172,16 @@ class CustomersImport implements
                     'payload' => $payload,
                 ];
             } else {
-                Customer::create($payload);
+                $payloadForCreate = $payload;
+
+                if (empty($payloadForCreate['customer_status_id'])) {
+                    $defaultStatusId = $this->getDefaultCustomerStatusId();
+                    if ($defaultStatusId) {
+                        $payloadForCreate['customer_status_id'] = $defaultStatusId;
+                    }
+                }
+
+                Customer::create($payloadForCreate);
                 $this->inserted++;
             }
         } catch (\Throwable $e) {
@@ -312,5 +324,17 @@ class CustomersImport implements
         if (is_string($b)) $b = trim($b);
 
         return $a == $b;
+    }
+
+    private function getDefaultCustomerStatusId(): ?int
+    {
+        if (!$this->defaultCustomerStatusResolved) {
+            $this->defaultCustomerStatusId = CustomerStatus::query()
+                ->whereIn('name', ['جديد', 'new', 'New'])
+                ->value('id');
+            $this->defaultCustomerStatusResolved = true;
+        }
+
+        return $this->defaultCustomerStatusId;
     }
 }
