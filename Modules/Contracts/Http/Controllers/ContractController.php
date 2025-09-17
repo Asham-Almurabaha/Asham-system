@@ -21,7 +21,7 @@ use Modules\Lookups\Entities\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Contracts\Support\InvestorShareValidationException;
 use Modules\Contracts\Support\InvestorShareValidator;
-use Modules\Contracts\Services\ContractStatusUpdater;
+use Modules\Contracts\Services\ContractStatusRefresher;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
@@ -40,7 +40,7 @@ class ContractController extends Controller
     public function __construct(
         private InvestorTransactionLogger $investorTransactionLogger,
         private InvestorShareValidator $investorShareValidator,
-        private ContractStatusUpdater $contractStatusUpdater
+        private ContractStatusRefresher $contractStatusRefresher
     )
     {
     }
@@ -131,7 +131,7 @@ class ContractController extends Controller
                 break;
             }
 
-            $this->contractStatusUpdater->refresh($newIds);
+            $this->contractStatusRefresher->refresh($newIds);
 
             $updatedIds = array_values(array_unique(array_merge($updatedIds, $newIds)));
 
@@ -538,7 +538,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        $this->contractStatusUpdater->refreshContract($contract);
+        $this->contractStatusRefresher->refreshContract($contract);
 
         $contract->load([
             'customer',
