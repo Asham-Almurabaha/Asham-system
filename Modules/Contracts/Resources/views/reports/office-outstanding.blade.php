@@ -1,4 +1,4 @@
-@extends('layouts.print-portrait')
+@extends('layouts.print-landscape')
 
 @section('title', __('reports.Contracts Office Profit Outstanding'))
 @section('report_title', __('reports.Contracts Office Profit Outstanding'))

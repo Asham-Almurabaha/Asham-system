@@ -79,14 +79,23 @@ class ContractReportController extends Controller
 
         $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
 
+        $profitShareExpr = <<<'SQL'
+CASE
+    WHEN COALESCE(ci.share_percentage, 0) > 0
+        THEN COALESCE(c.investor_profit, 0) * COALESCE(ci.share_percentage, 0) / 100
+    ELSE COALESCE(ci.share_value, 0)
+END
+SQL;
+
+        $officeDueSelect = <<<SQL
+ci.contract_id,
+ROUND(SUM(($profitShareExpr) * COALESCE(inv.office_share_percentage, 0) / 100), 2) AS office_due
+SQL;
+
         $officeDueSub = DB::table('contract_investor as ci')
             ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
             ->join('investors as inv', 'ci.investor_id', '=', 'inv.id')
-            ->selectRaw(
-                'ci.contract_id, '
-                . 'SUM(ROUND(COALESCE(c.investor_profit, 0) * COALESCE(ci.share_percentage, 0) / 100 '
-                . '* COALESCE(inv.office_share_percentage, 0) / 100, 2)) AS office_due'
-            )
+            ->selectRaw($officeDueSelect)
             ->groupBy('ci.contract_id');
 
         $officePaidSub = DB::table('office_transactions as ot')
