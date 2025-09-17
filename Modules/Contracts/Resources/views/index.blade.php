@@ -437,6 +437,14 @@
 
         <li>
           <a class="dropdown-item d-flex align-items-center gap-2"
+             href="{{ route('reports.contracts.office_outstanding') }}">
+            <i class="bi bi-cash-coin text-warning"></i>
+            <span>{{ __('reports.Contracts Office Profit Outstanding') }}</span>
+          </a>
+        </li>
+
+        <li>
+          <a class="dropdown-item d-flex align-items-center gap-2"
              href="{{ route('reports.contracts.without_investor') }}">
             <i class="bi bi-person-slash text-muted"></i>
             <span>{{ __('Without Investor') }}</span>

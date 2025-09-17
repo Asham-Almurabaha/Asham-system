@@ -39,6 +39,7 @@ Route::post('/installments/defer/{id}', [ContractInstallmentController::class, '
 Route::post('/installments/excuse/{id}', [ContractInstallmentController::class, 'excuseAjax']);
 
 // التقارير والعرض والطباعة
+Route::get('reports/contracts/office-outstanding', [ContractReportController::class, 'officeOutstanding'])->name('reports.contracts.office_outstanding');
 Route::get('reports/contracts/status/{status}', [ContractReportController::class, 'status'])->name('reports.contracts.status');
 Route::get('reports/contracts/without-investor', [ContractReportController::class, 'withoutInvestor'])->name('reports.contracts.without_investor');
 Route::get('/contracts/{contract}/print', [ContractReportController::class, 'show'])->name('contracts.print');

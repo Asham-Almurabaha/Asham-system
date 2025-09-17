@@ -6,10 +6,12 @@ use Alkoumi\LaravelHijriDate\Hijri;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Services\ContractStatusUpdater;
 use Modules\Lookups\Entities\ContractStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 
 class ContractReportController extends Controller
 {
@@ -67,6 +69,61 @@ class ContractReportController extends Controller
 
         $title = __('Contracts Report').' - '.__('Without Investor');
         return view('contracts::reports.status', compact('rows','title'));
+    }
+
+    public function officeOutstanding()
+    {
+        $this->contractStatusUpdater->refresh();
+
+        $currencySymbol = 'ر.س';
+
+        $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
+
+        $officeDueSub = DB::table('contract_investor as ci')
+            ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
+            ->join('investors as inv', 'ci.investor_id', '=', 'inv.id')
+            ->selectRaw(
+                'ci.contract_id, '
+                . 'SUM(ROUND(COALESCE(c.investor_profit, 0) * COALESCE(ci.share_percentage, 0) / 100 '
+                . '* COALESCE(inv.office_share_percentage, 0) / 100, 2)) AS office_due'
+            )
+            ->groupBy('ci.contract_id');
+
+        $officePaidSub = DB::table('office_transactions as ot')
+            ->selectRaw('ot.contract_id, SUM(ot.amount) AS office_paid')
+            ->when($officeStatusId, fn ($q) => $q->where('ot.status_id', $officeStatusId))
+            ->groupBy('ot.contract_id');
+
+        $rows = Contract::query()
+            ->with(['customer', 'contractStatus'])
+            ->joinSub($officeDueSub, 'od', fn ($join) => $join->on('od.contract_id', '=', 'contracts.id'))
+            ->leftJoinSub($officePaidSub, 'op', fn ($join) => $join->on('op.contract_id', '=', 'contracts.id'))
+            ->select('contracts.*')
+            ->addSelect(DB::raw('ROUND(COALESCE(od.office_due, 0), 2) AS office_due'))
+            ->addSelect(DB::raw('ROUND(COALESCE(op.office_paid, 0), 2) AS office_paid'))
+            ->addSelect(DB::raw('ROUND(GREATEST(COALESCE(od.office_due, 0) - COALESCE(op.office_paid, 0), 0), 2) AS office_remaining'))
+            ->whereRaw('ROUND(COALESCE(od.office_due, 0), 2) > 0')
+            ->whereRaw('ROUND(GREATEST(COALESCE(od.office_due, 0) - COALESCE(op.office_paid, 0), 0), 2) > 0')
+            ->orderByDesc('office_remaining')
+            ->get()
+            ->map(function (Contract $contract) {
+                $contract->office_due = round((float) ($contract->office_due ?? 0), 2);
+                $contract->office_paid = round((float) ($contract->office_paid ?? 0), 2);
+                $contract->office_remaining = round((float) ($contract->office_remaining ?? 0), 2);
+                return $contract;
+            });
+
+        $totals = [
+            'due'       => round($rows->sum(fn ($c) => (float) ($c->office_due ?? 0)), 2),
+            'paid'      => round($rows->sum(fn ($c) => (float) ($c->office_paid ?? 0)), 2),
+            'remaining' => round($rows->sum(fn ($c) => (float) ($c->office_remaining ?? 0)), 2),
+        ];
+
+        return view('contracts::reports.office-outstanding', [
+            'rows'           => $rows,
+            'currencySymbol' => $currencySymbol,
+            'totals'         => $totals,
+        ]);
     }
 
      public function show(Contract $contract)
