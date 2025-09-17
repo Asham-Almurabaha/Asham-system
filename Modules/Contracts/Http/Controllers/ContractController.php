@@ -51,7 +51,7 @@ class ContractController extends Controller
 
     public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
     {
-        $perPage     = 10;
+        $perPage     = 20;
         $currentPage = max((int) $request->get('page', 1), 1);
 
         $pivotTable = (new Contract)->investors()->getTable();
