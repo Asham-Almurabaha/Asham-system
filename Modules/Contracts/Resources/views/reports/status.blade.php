@@ -37,6 +37,7 @@
       <thead class="table-light">
         <tr>
           <th style="width:56px">#</th>
+          <th>{{ __('Contract Number') }}</th>
           <th class="text-start">{{ __('Customer') }}</th>
           <th>{{ __('Status') }}</th>
           <th>{{ __('Total Contract') }}</th>
@@ -47,6 +48,7 @@
         @forelse($rows as $i => $c)
           <tr>
             <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
+            <td>{{ $c->contract_number ?? $c->id ?? '-' }}</td>
             <td class="text-start">{{ $c->customer->name ?? '-' }}</td>
             <td>{{ $c->contractStatus->name ?? ($c->status ?? '-') }}</td>
             <td>{{ number_format((float)($c->total_value ?? 0), 2) }}</td>
@@ -54,7 +56,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="5" class="py-5 text-muted">{{ __('reports.No data available.') }}</td>
+            <td colspan="6" class="py-5 text-muted">{{ __('reports.No data available.') }}</td>
           </tr>
         @endforelse
       </tbody>

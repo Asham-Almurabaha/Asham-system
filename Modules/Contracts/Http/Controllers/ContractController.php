@@ -157,7 +157,7 @@ class ContractController extends Controller
         $remainingIds = array_values(array_diff($finalPageIds, $updatedIds));
 
         if (!empty($remainingIds)) {
-            $this->refreshContractsStatuses($remainingIds);
+            $this->contractStatusRefresher->refresh($remainingIds);
 
             $updatedIds = array_values(array_unique(array_merge($updatedIds, $remainingIds)));
         }
