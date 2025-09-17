@@ -19,6 +19,7 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
     Route::get('/payments', [ContractsImportController::class, 'createPayments'])->name('import.payments.form');
     Route::post('/payments', [ContractsImportController::class, 'storePayments'])->name('import.payments');
     Route::get('/payments/failures/fix', [ContractsImportController::class, 'exportPaymentsFailuresFix'])->name('import.payments.failures.fix');
+    Route::get('/payments/skipped/export', [ContractsImportController::class, 'exportPaymentsSkipped'])->name('import.payments.skipped.export');
 
     Route::get('/template', [ContractsImportController::class, 'template'])->name('import.template');
     Route::get('/failures/fix', [ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');

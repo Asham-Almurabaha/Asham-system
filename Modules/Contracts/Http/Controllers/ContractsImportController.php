@@ -459,15 +459,18 @@ class ContractsImportController extends Controller
 
             $customSimple = (array) $import->getFailuresSimple();
             $failuresSimple = array_values(array_merge($traitSimple, $customSimple));
+            $skippedSimple  = (array) $import->skipped();
 
             session()->forget([
                 'contracts_payments_import.summary',
                 'contracts_payments_import.failures_simple',
                 'contracts_payments_import.errors_simple',
+                'contracts_payments_import.skipped_simple',
             ]);
             session()->put('contracts_payments_import.summary',        $summary);
             session()->put('contracts_payments_import.failures_simple', $failuresSimple);
             session()->put('contracts_payments_import.errors_simple',  (array) $import->getErrorsSimple());
+            session()->put('contracts_payments_import.skipped_simple',  $skippedSimple);
             session()->save();
 
             return redirect()->route('contracts.import.payments.form')
@@ -599,6 +602,43 @@ class ContractsImportController extends Controller
                 is_array($failures) ? $failures : (array) $failures
             ),
             'contracts_payments_issues.xlsx'
+        );
+    }
+
+    /**
+     * تنزيل ملف بالصفوف المتخطّاة في استيراد سدادات العقود.
+     */
+    public function exportPaymentsSkipped()
+    {
+        $skipped = session('contracts_payments_import.skipped_simple', []);
+
+        if ($skipped instanceof Collection) {
+            $skipped = $skipped->all();
+        }
+
+        if (empty($skipped) || (is_countable($skipped) && count($skipped) === 0)) {
+            return redirect()->route('contracts.import.payments.form')
+                ->with('info', 'لا توجد صفوف متخطاة لتوليد ملف.');
+        }
+
+        $prepared = array_map(function ($row) {
+            $values = (array) ($row['values'] ?? []);
+            $reason = $row['reason'] ?? ($row['messages'] ?? '');
+
+            if (is_array($reason)) {
+                $reason = implode(' | ', $reason);
+            }
+
+            return [
+                'row'      => (int) ($row['row'] ?? 0),
+                'values'   => $values,
+                'messages' => [$reason],
+            ];
+        }, is_array($skipped) ? $skipped : (array) $skipped);
+
+        return Excel::download(
+            new ContractsPaymentsFailuresFixExport($prepared),
+            'contracts_payments_skipped.xlsx'
         );
     }
 }

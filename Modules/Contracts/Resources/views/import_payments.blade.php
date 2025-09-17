@@ -52,6 +52,10 @@
     if ($failuresBag instanceof \Illuminate\Support\Collection) {
         $failuresBag = $failuresBag->all();
     }
+    $skippedBag = session('contracts_payments_import.skipped_simple') ?? [];
+    if ($skippedBag instanceof \Illuminate\Support\Collection) {
+        $skippedBag = $skippedBag->all();
+    }
     $summary      = session('summary') ?: session('contracts_payments_import.summary') ?: [];
     $errorsSimple = session('errors_simple') ?? session('contracts_payments_import.errors_simple') ?? [];
     $rows     = (int)($summary['rows']     ?? 0);
@@ -59,8 +63,9 @@
     $skipped  = (int)($summary['skipped']  ?? 0);
     $changed  = (int)($summary['changed']  ?? $inserted);
     $failuresCount = is_array($failuresBag) ? count($failuresBag) : (is_object($failuresBag) && method_exists($failuresBag,'count') ? $failuresBag->count() : 0);
+    $skippedCount  = is_array($skippedBag) ? count($skippedBag) : (is_object($skippedBag) && method_exists($skippedBag,'count') ? $skippedBag->count() : 0);
     $hasFailures = $failuresCount > 0;
-    $hasIssues = $hasFailures || $skipped > 0;
+    $hasSkipped  = $skippedCount > 0;
   @endphp
 
   @if ($rows || $changed || $skipped)
@@ -138,16 +143,18 @@
           <button id="submitBtn" class="btn btn-primary" disabled>
             <i class="bi bi-upload me-1"></i> ابدأ الاستيراد
           </button>
-          @if ($hasIssues && Route::has('contracts.import.payments.failures.fix'))
+          @if ($hasFailures && Route::has('contracts.import.payments.failures.fix'))
             <a class="btn btn-warning" href="{{ route('contracts.import.payments.failures.fix') }}">
               <i class="bi bi-wrench-adjustable me-1"></i>
-              تنزيل ملف لتصحيح الصفوف
-              @if ($hasFailures)
-                <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
-              @endif
-              @if ($skipped > 0)
-                <span class="badge text-bg-warning ms-1">{{ $skipped }}</span>
-              @endif
+              تصدير أخطاء التحقق
+              <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+            </a>
+          @endif
+          @if ($hasSkipped && Route::has('contracts.import.payments.skipped.export'))
+            <a class="btn btn-outline-warning" href="{{ route('contracts.import.payments.skipped.export') }}">
+              <i class="bi bi-skip-forward-fill me-1"></i>
+              تصدير الصفوف المتخطاة
+              <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
             </a>
           @endif
         </div>
@@ -267,6 +274,64 @@
                   <td>{{ $attributeValue }}</td>
                   <td>{{ $messagesValue }}</td>
                   <td>{{ $valuesValue }}</td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  @if ($hasSkipped)
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <h5 class="card-title mb-3">الصفوف المتخطّاة ({{ $skippedCount }})</h5>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>الصف</th>
+                <th>السبب</th>
+                <th>القيم</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach ($skippedBag as $row)
+                @php
+                  $rowNumber = (int) ($row['row'] ?? 0);
+                  $reasonRaw = $row['reason'] ?? ($row['messages'] ?? '');
+                  if (is_array($reasonRaw)) {
+                      $reason = implode(' | ', $reasonRaw);
+                  } else {
+                      $reason = (string) $reasonRaw;
+                  }
+
+                  $valuesRaw = $row['values'] ?? [];
+                  if ($valuesRaw instanceof \Illuminate\Support\Collection) {
+                      $valuesRaw = $valuesRaw->all();
+                  }
+
+                  if (is_array($valuesRaw)) {
+                      $valuesText = json_encode($valuesRaw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                      if ($valuesText === false) {
+                          $valuesText = '';
+                      }
+                  } elseif ($valuesRaw instanceof \Stringable || (is_object($valuesRaw) && method_exists($valuesRaw, '__toString'))) {
+                      $valuesText = (string) $valuesRaw;
+                  } elseif (is_scalar($valuesRaw)) {
+                      $valuesText = (string) $valuesRaw;
+                  } elseif ($valuesRaw === null) {
+                      $valuesText = '';
+                  } else {
+                      $encoded = json_encode($valuesRaw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                      $valuesText = $encoded === false ? '' : $encoded;
+                  }
+                @endphp
+                <tr>
+                  <td>{{ $rowNumber }}</td>
+                  <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                  <td class="text-break"><code>{{ $valuesText }}</code></td>
                 </tr>
               @endforeach
             </tbody>

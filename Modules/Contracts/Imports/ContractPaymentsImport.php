@@ -22,6 +22,9 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
     private int $inserted = 0;
     private int $skipped = 0;
 
+    /** @var array<int,array{row:int,values:array,reason:string}> */
+    private array $skippedSimple = [];
+
     /** @var array<int,array{row:int,attribute?:string|array,values:array,messages:array}> */
     private array $failuresSimple = [];
     /** @var string[] */
@@ -60,6 +63,8 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
 
                     if ($this->hasAnyPaymentInput($data)) {
                         $this->pushFailure($rowNum, 'payments', $data, ['لا توجد سدادات صالحة.']);
+                    } else {
+                        $this->pushSkippedSimple($rowNum, $data, ['لا توجد بيانات سداد في هذا الصف.']);
                     }
 
                     continue;
@@ -95,6 +100,19 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
             'attribute' => $attr,
             'values' => $vals,
             'messages' => $messages,
+        ];
+
+        $this->pushSkippedSimple($row, $vals, $messages);
+    }
+
+    private function pushSkippedSimple(int $row, array $values, array $messages): void
+    {
+        $reason = implode(' | ', array_map(static fn($msg) => (string) $msg, $messages));
+
+        $this->skippedSimple[] = [
+            'row'    => $row,
+            'values' => $values,
+            'reason' => $reason,
         ];
     }
 
@@ -247,6 +265,7 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
     public function getSkippedCount(): int { return $this->skipped; }
     public function getFailuresSimple(): array { return $this->failuresSimple; }
     public function getErrorsSimple(): array { return $this->errorsSimple; }
+    public function skipped(): array { return $this->skippedSimple; }
 
     public function chunkSize(): int { return 500; }
     public function batchSize(): int { return 500; }
