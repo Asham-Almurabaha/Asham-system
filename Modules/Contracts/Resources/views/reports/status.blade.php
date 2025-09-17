@@ -48,8 +48,26 @@
         @forelse($rows as $i => $c)
           <tr>
             <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
-            <td>{{ $c->contract_number ?? $c->id ?? '-' }}</td>
-            <td class="text-start">{{ $c->customer->name ?? '-' }}</td>
+            <td>
+              @php($contractNumber = $c->contract_number ?? $c->id ?? null)
+              @if($contractNumber !== null && $contractNumber !== '')
+                <a href="{{ route('contracts.show', $c) }}" class="text-decoration-none fw-bold text-dark">
+                  {{ $contractNumber }}
+                </a>
+              @else
+                -
+              @endif
+            </td>
+            <td class="text-start">
+              @php($customer = $c->customer)
+              @if($customer)
+                <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold text-dark">
+                  {{ $customer->name ?? '-' }}
+                </a>
+              @else
+                -
+              @endif
+            </td>
             <td>{{ $c->contractStatus->name ?? ($c->status ?? '-') }}</td>
             <td>{{ number_format((float)($c->total_value ?? 0), 2) }}</td>
             <td>{{ optional($c->start_date)->format('Y-m-d') ?? ($c->start_date ? \Carbon\Carbon::parse($c->start_date)->format('Y-m-d') : '-') }}</td>
