@@ -83,7 +83,9 @@ class ContractReportController extends Controller
 CASE
     WHEN COALESCE(ci.share_percentage, 0) > 0
         THEN COALESCE(c.investor_profit, 0) * COALESCE(ci.share_percentage, 0) / 100
-    ELSE COALESCE(ci.share_value, 0)
+    WHEN COALESCE(ci.share_value, 0) > 0 AND COALESCE(c.contract_value, 0) > 0
+        THEN COALESCE(c.investor_profit, 0) * COALESCE(ci.share_value, 0) / NULLIF(c.contract_value, 0)
+    ELSE 0
 END
 SQL;
 

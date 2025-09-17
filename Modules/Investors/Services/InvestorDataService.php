@@ -42,16 +42,26 @@ class InvestorDataService
         $totalProfitNetAll    = 0.0;
 
         foreach ($contractsAll as $cAll) {
+            $contractValueAll = (float) ($cAll->contract_value ?? 0);
             $sharePctAll = (float) ($cAll->pivot->share_percentage ?? 0);
             $shareValAll = (float) ($cAll->pivot->share_value ?? 0);
 
-            if ($shareValAll <= 0 && isset($cAll->contract_value)) {
-                $shareValAll = round(((float)$cAll->contract_value) * $sharePctAll / 100, 2);
+            $shareRatioAll = 0.0;
+            if ($sharePctAll > 0) {
+                $shareRatioAll = $sharePctAll / 100;
+                if ($shareValAll <= 0 && $contractValueAll > 0) {
+                    $shareValAll = round($contractValueAll * $shareRatioAll, 2);
+                }
+            } elseif ($shareValAll > 0 && $contractValueAll > 0) {
+                $shareRatioAll = $shareValAll / $contractValueAll;
             }
 
-            $profitGrossAll = isset($cAll->investor_profit)
-                ? round(((float)$cAll->investor_profit) * $sharePctAll / 100, 2)
-                : 0.0;
+            $shareValAll = round($shareValAll, 2);
+
+            $profitGrossAll = 0.0;
+            if ($shareRatioAll > 0 && isset($cAll->investor_profit)) {
+                $profitGrossAll = round(((float)$cAll->investor_profit) * $shareRatioAll, 2);
+            }
 
             $officeCutAll = round($profitGrossAll * $pctOffice / 100, 2);
             $profitNetAll = $profitGrossAll - $officeCutAll;
@@ -84,16 +94,26 @@ class InvestorDataService
 
         $contractBreakdown = [];
         foreach ($activeContracts as $c) {
+            $contractValue = (float) ($c->contract_value ?? 0);
             $sharePct = (float) ($c->pivot->share_percentage ?? 0);
             $shareVal = (float) ($c->pivot->share_value ?? 0);
 
-            if ($shareVal <= 0 && isset($c->contract_value)) {
-                $shareVal = round(((float)$c->contract_value) * $sharePct / 100, 2);
+            $shareRatio = 0.0;
+            if ($sharePct > 0) {
+                $shareRatio = $sharePct / 100;
+                if ($shareVal <= 0 && $contractValue > 0) {
+                    $shareVal = round($contractValue * $shareRatio, 2);
+                }
+            } elseif ($shareVal > 0 && $contractValue > 0) {
+                $shareRatio = $shareVal / $contractValue;
             }
 
-            $profitGross = isset($c->investor_profit)
-                ? round(((float)$c->investor_profit) * $sharePct / 100, 2)
-                : 0.0;
+            $shareVal = round($shareVal, 2);
+
+            $profitGross = 0.0;
+            if ($shareRatio > 0 && isset($c->investor_profit)) {
+                $profitGross = round(((float)$c->investor_profit) * $shareRatio, 2);
+            }
 
             $officeCut = round($profitGross * $pctOffice / 100, 2);
             $profitNet = $profitGross - $officeCut;

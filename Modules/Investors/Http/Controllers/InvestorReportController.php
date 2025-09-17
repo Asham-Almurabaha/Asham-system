@@ -127,7 +127,8 @@ class InvestorReportController extends Controller
             ->groupBy('investor_id', 'contract_id');
 
         $capitalExpr = "CASE WHEN COALESCE(ci.share_value, 0) <= 0 THEN COALESCE(c.contract_value, 0) * COALESCE(ci.share_percentage, 0) / 100 ELSE COALESCE(ci.share_value, 0) END";
-        $profitGrossExpr = "COALESCE(c.investor_profit, 0) * COALESCE(ci.share_percentage, 0) / 100";
+        $shareRatioExpr = "CASE WHEN COALESCE(ci.share_percentage, 0) > 0 THEN COALESCE(ci.share_percentage, 0) / 100 WHEN COALESCE(ci.share_value, 0) > 0 AND COALESCE(c.contract_value, 0) > 0 THEN COALESCE(ci.share_value, 0) / NULLIF(c.contract_value, 0) ELSE 0 END";
+        $profitGrossExpr = "COALESCE(c.investor_profit, 0) * ($shareRatioExpr)";
         $officeCutExpr = "$profitGrossExpr * COALESCE(inv.office_share_percentage, 0) / 100";
         $profitNetExpr = "($profitGrossExpr - $officeCutExpr)";
         $paidExpr = 'COALESCE(le.paid_in, 0)';
@@ -215,15 +216,25 @@ class InvestorReportController extends Controller
                 $officeShare = 0.0;
 
                 foreach ($contracts as $contract) {
+                    $contractValue = (float) ($contract->contract_value ?? 0);
                     $sharePct = (float) ($contract->share_percentage ?? 0);
                     $shareVal = (float) ($contract->share_value ?? 0);
-                    if ($shareVal <= 0 && $sharePct > 0 && isset($contract->contract_value)) {
-                        $shareVal = round(((float) $contract->contract_value) * $sharePct / 100, 2);
+
+                    $shareRatio = 0.0;
+                    if ($sharePct > 0) {
+                        $shareRatio = $sharePct / 100;
+                        if ($shareVal <= 0 && $contractValue > 0) {
+                            $shareVal = round($contractValue * $shareRatio, 2);
+                        }
+                    } elseif ($shareVal > 0 && $contractValue > 0) {
+                        $shareRatio = $shareVal / $contractValue;
                     }
 
+                    $shareVal = round($shareVal, 2);
+
                     $profitGross = 0.0;
-                    if ($sharePct > 0 && isset($contract->investor_profit)) {
-                        $profitGross = round(((float) $contract->investor_profit) * $sharePct / 100, 2);
+                    if ($shareRatio > 0 && isset($contract->investor_profit)) {
+                        $profitGross = round(((float) $contract->investor_profit) * $shareRatio, 2);
                     }
 
                     $officeCut = round($profitGross * $pctOffice / 100, 2);
