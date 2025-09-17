@@ -14,6 +14,7 @@ return array (
   'Export Failures' => 'تصدير الإخفاقات',
   'Reports' => 'التقارير',
   'Investors Liquidity Report' => 'تقرير سيولة المستثمرين',
+  'Investors Outstanding Report' => 'تقرير المتبقي على العملاء للمستثمرين',
   'Results' => 'النتائج',
   'Filter' => 'تصفية',
   'Investor (by name)' => 'المستثمر (بالاسم)',

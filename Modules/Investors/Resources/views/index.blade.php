@@ -132,6 +132,11 @@
             📄 {{ __('investors::investors.Investors Liquidity Report') }}
           </a>
         </li>
+        <li>
+          <a class="dropdown-item" href="{{ route('reports.investors.outstanding') }}">
+            📄 {{ __('investors::investors.Investors Outstanding Report') }}
+          </a>
+        </li>
       </ul>
     </div>
 

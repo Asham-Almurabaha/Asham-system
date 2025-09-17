@@ -11,6 +11,7 @@ return array (
   'Export Failures' => 'Export Failures',
   'Reports' => 'Reports',
   'Investors Liquidity Report' => 'Investors Liquidity Report',
+  'Investors Outstanding Report' => 'Investors Outstanding Report',
   'Results' => 'Results',
   'Filter' => 'Filter',
   'Investor (by name)' => 'Investor (by name)',

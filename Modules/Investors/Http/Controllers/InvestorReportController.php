@@ -98,6 +98,184 @@ class InvestorReportController extends Controller
         );
     }
 
+    public function outstanding(Request $request)
+    {
+        $filters = [
+            'q'        => $request->query('q'),
+            'per_page' => (int) $request->query('per_page', 25),
+        ];
+
+        $query = Investor::query()
+            ->select(['id', 'name', 'office_share_percentage'])
+            ->when($filters['q'], function ($q, $v) {
+                $q->where('name', 'like', "%{$v}%");
+            })
+            ->orderBy('name');
+
+        $rows = $query
+            ->paginate(max(1, $filters['per_page']))
+            ->withQueryString();
+
+        $currencySymbol = 'ر.س';
+        $endedNames = ['مكتمل', 'منتهي', 'سداد مبكر', 'إلغاء', 'Closed', 'Completed', 'Early Settlement', 'Inactive'];
+        $endedIds = ContractStatus::whereIn('name', $endedNames)->pluck('id')->all();
+
+        $ledgerSub = DB::table('ledger_entries')
+            ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
+            ->where('direction', 'in')
+            ->whereNull('deleted_at')
+            ->groupBy('investor_id', 'contract_id');
+
+        $capitalExpr = "CASE WHEN COALESCE(ci.share_value, 0) <= 0 THEN COALESCE(c.contract_value, 0) * COALESCE(ci.share_percentage, 0) / 100 ELSE COALESCE(ci.share_value, 0) END";
+        $profitGrossExpr = "COALESCE(c.investor_profit, 0) * COALESCE(ci.share_percentage, 0) / 100";
+        $officeCutExpr = "$profitGrossExpr * COALESCE(inv.office_share_percentage, 0) / 100";
+        $profitNetExpr = "($profitGrossExpr - $officeCutExpr)";
+        $paidExpr = 'COALESCE(le.paid_in, 0)';
+        $remainingWithExpr = "($capitalExpr + $profitGrossExpr) - $paidExpr";
+        $remainingWithoutExpr = "($capitalExpr + $profitNetExpr) - $paidExpr";
+
+        $totalsRow = DB::table('contract_investor as ci')
+            ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
+            ->join('investors as inv', 'ci.investor_id', '=', 'inv.id')
+            ->leftJoinSub($ledgerSub, 'le', function ($join) {
+                $join->on('le.contract_id', '=', 'ci.contract_id')
+                    ->on('le.investor_id', '=', 'ci.investor_id');
+            })
+            ->when(!empty($endedIds), function ($q) use ($endedIds) {
+                $q->whereNotIn('c.contract_status_id', $endedIds);
+            })
+            ->when($filters['q'], function ($q, $v) {
+                $q->where('inv.name', 'like', "%{$v}%");
+            })
+            ->selectRaw(
+                "SUM(CASE WHEN $remainingWithExpr < 0 THEN 0 ELSE $remainingWithExpr END) AS remaining_with_office, " .
+                "SUM(CASE WHEN $remainingWithoutExpr < 0 THEN 0 ELSE $remainingWithoutExpr END) AS remaining_without_office"
+            )
+            ->first();
+
+        $grandTotals = [
+            'with_office'    => $totalsRow ? round((float) ($totalsRow->remaining_with_office ?? 0), 2) : 0.0,
+            'without_office' => $totalsRow ? round((float) ($totalsRow->remaining_without_office ?? 0), 2) : 0.0,
+        ];
+        $grandTotals['office_share'] = round(max(0.0, $grandTotals['with_office'] - $grandTotals['without_office']), 2);
+
+        $items = $rows->getCollection();
+        $ids = $items->pluck('id');
+
+        $pageTotals = [
+            'with_office'    => 0.0,
+            'without_office' => 0.0,
+            'office_share'   => 0.0,
+        ];
+
+        if ($ids->isNotEmpty()) {
+            $contractRows = DB::table('contract_investor as ci')
+                ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
+                ->whereIn('ci.investor_id', $ids)
+                ->when(!empty($endedIds), function ($q) use ($endedIds) {
+                    $q->whereNotIn('c.contract_status_id', $endedIds);
+                })
+                ->select([
+                    'ci.investor_id',
+                    'ci.contract_id',
+                    'ci.share_percentage',
+                    'ci.share_value',
+                    'c.contract_value',
+                    'c.investor_profit',
+                ])
+                ->get();
+
+            $contractsByInvestor = $contractRows->groupBy('investor_id');
+            $contractIds = $contractRows->pluck('contract_id')->filter()->unique();
+
+            $paidByInvestor = collect();
+            if ($contractIds->isNotEmpty()) {
+                $paidRows = DB::table('ledger_entries')
+                    ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
+                    ->whereIn('investor_id', $ids)
+                    ->whereIn('contract_id', $contractIds)
+                    ->where('direction', 'in')
+                    ->whereNull('deleted_at')
+                    ->groupBy('investor_id', 'contract_id')
+                    ->get();
+
+                $paidByInvestor = $paidRows->groupBy('investor_id')->map(function ($rows) {
+                    return $rows->mapWithKeys(fn ($r) => [$r->contract_id => (float) ($r->paid_in ?? 0)]);
+                });
+            }
+
+            $items->transform(function ($investor) use ($contractsByInvestor, $paidByInvestor, &$pageTotals) {
+                $id = $investor->id;
+                $pctOffice = (float) ($investor->office_share_percentage ?? 0);
+                $contracts = $contractsByInvestor->get($id, collect());
+                $paidMap = $paidByInvestor->get($id, collect());
+
+                $withOffice = 0.0;
+                $withoutOffice = 0.0;
+                $officeShare = 0.0;
+
+                foreach ($contracts as $contract) {
+                    $sharePct = (float) ($contract->share_percentage ?? 0);
+                    $shareVal = (float) ($contract->share_value ?? 0);
+                    if ($shareVal <= 0 && $sharePct > 0 && isset($contract->contract_value)) {
+                        $shareVal = round(((float) $contract->contract_value) * $sharePct / 100, 2);
+                    }
+
+                    $profitGross = 0.0;
+                    if ($sharePct > 0 && isset($contract->investor_profit)) {
+                        $profitGross = round(((float) $contract->investor_profit) * $sharePct / 100, 2);
+                    }
+
+                    $officeCut = round($profitGross * $pctOffice / 100, 2);
+                    $profitNet = $profitGross - $officeCut;
+
+                    $expectedWith = $shareVal + $profitGross;
+                    $expectedWithout = $shareVal + $profitNet;
+
+                    if ($paidMap instanceof \Illuminate\Support\Collection) {
+                        $paid = (float) $paidMap->get($contract->contract_id, 0.0);
+                    } else {
+                        $paid = (float) ($paidMap[$contract->contract_id] ?? 0.0);
+                    }
+
+                    $remainingWith = $expectedWith - $paid;
+                    $remainingWithout = $expectedWithout - $paid;
+
+                    $remainingWith = $remainingWith < 0 ? 0.0 : round($remainingWith, 2);
+                    $remainingWithout = $remainingWithout < 0 ? 0.0 : round($remainingWithout, 2);
+
+                    $withOffice += $remainingWith;
+                    $withoutOffice += $remainingWithout;
+                    $officeShare += max(0.0, round($remainingWith - $remainingWithout, 2));
+                }
+
+                $investor->remaining_with_office = round($withOffice, 2);
+                $investor->remaining_without_office = round($withoutOffice, 2);
+                $investor->remaining_office_share = round($officeShare, 2);
+
+                $pageTotals['with_office'] += $investor->remaining_with_office;
+                $pageTotals['without_office'] += $investor->remaining_without_office;
+                $pageTotals['office_share'] += $investor->remaining_office_share;
+
+                return $investor;
+            });
+        }
+
+        $pageTotals = [
+            'with_office'    => round($pageTotals['with_office'], 2),
+            'without_office' => round($pageTotals['without_office'], 2),
+            'office_share'   => round(max(0.0, $pageTotals['office_share']), 2),
+        ];
+
+        return view('investors::reports.outstanding', [
+            'rows'           => $rows,
+            'filters'        => $filters,
+            'currencySymbol' => $currencySymbol,
+            'grandTotals'    => $grandTotals,
+            'pageTotals'     => $pageTotals,
+        ]);
+    }
+
     public function allliquidity(Request $request)
     {
         $filters = [

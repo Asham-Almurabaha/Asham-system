@@ -49,7 +49,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'investor-transactions.index','investor-transactions.create','investor-transactions.store','investor-transactions.show','investor-transactions.edit','investor-transactions.update','investor-transactions.destroy',
             // Investor Reports
             'investors.statement.statement','investors.withdrawals.withdrawals','investors.deposits.deposits','investors.transactions.transactions',
-            'reports.investors.Allliquidity',
+            'reports.investors.Allliquidity','reports.investors.outstanding',
             // AJAX (لو عايز تتحكم فيها)
             'ajax.investors.liquidity','investors.cash','investors.liquidity',
 
