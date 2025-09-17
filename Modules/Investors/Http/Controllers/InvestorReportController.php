@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
 use Modules\Lookups\Entities\ContractStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Services\InvestorDataService;
 
@@ -117,6 +118,7 @@ class InvestorReportController extends Controller
             ->withQueryString();
 
         $currencySymbol = 'ر.س';
+        $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
         $endedNames = ['مكتمل', 'منتهي', 'سداد مبكر', 'إلغاء', 'Closed', 'Completed', 'Early Settlement', 'Inactive'];
         $endedIds = ContractStatus::whereIn('name', $endedNames)->pluck('id')->all();
 
@@ -125,6 +127,13 @@ class InvestorReportController extends Controller
             ->where('direction', 'in')
             ->whereNull('deleted_at')
             ->groupBy('investor_id', 'contract_id');
+
+        $officePaidSub = DB::table('office_transactions as ot')
+            ->selectRaw('ot.investor_id, ot.contract_id, SUM(ot.amount) AS office_paid')
+            ->when($officeStatusId, function ($q) use ($officeStatusId) {
+                $q->where('ot.status_id', $officeStatusId);
+            })
+            ->groupBy('ot.investor_id', 'ot.contract_id');
 
         $capitalExprRaw = "CASE WHEN COALESCE(ci.share_value, 0) <= 0 THEN COALESCE(c.contract_value, 0) * COALESCE(ci.share_percentage, 0) / 100 ELSE COALESCE(ci.share_value, 0) END";
         $capitalExpr = "ROUND($capitalExprRaw, 2)";
@@ -135,7 +144,7 @@ class InvestorReportController extends Controller
         $paidExpr = 'COALESCE(le.paid_in, 0)';
         $expectedWithExpr = "($capitalExpr + $profitGrossExpr)";
         $remainingWithExpr = "GREATEST($expectedWithExpr - $paidExpr, 0)";
-        $officePaidExpr = "LEAST($officeCutExpr, ROUND($paidExpr * $officePctExpr / 100, 2))";
+        $officePaidExpr = "LEAST(COALESCE(op.office_paid, 0), $officeCutExpr)";
         $remainingOfficeExpr = "GREATEST($officeCutExpr - $officePaidExpr, 0)";
         $remainingWithoutExpr = "GREATEST($remainingWithExpr - $remainingOfficeExpr, 0)";
 
@@ -145,6 +154,10 @@ class InvestorReportController extends Controller
             ->leftJoinSub($ledgerSub, 'le', function ($join) {
                 $join->on('le.contract_id', '=', 'ci.contract_id')
                     ->on('le.investor_id', '=', 'ci.investor_id');
+            })
+            ->leftJoinSub($officePaidSub, 'op', function ($join) {
+                $join->on('op.contract_id', '=', 'ci.contract_id')
+                    ->on('op.investor_id', '=', 'ci.investor_id');
             })
             ->when(!empty($endedIds), function ($q) use ($endedIds) {
                 $q->whereNotIn('c.contract_status_id', $endedIds);
@@ -195,6 +208,7 @@ class InvestorReportController extends Controller
             $contractIds = $contractRows->pluck('contract_id')->filter()->unique();
 
             $paidByInvestor = collect();
+            $officePaidByInvestor = collect();
             if ($contractIds->isNotEmpty()) {
                 $paidRows = DB::table('ledger_entries')
                     ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
@@ -208,13 +222,28 @@ class InvestorReportController extends Controller
                 $paidByInvestor = $paidRows->groupBy('investor_id')->map(function ($rows) {
                     return $rows->mapWithKeys(fn ($r) => [$r->contract_id => (float) ($r->paid_in ?? 0)]);
                 });
+
+                $officePaidRows = DB::table('office_transactions as ot')
+                    ->selectRaw('ot.investor_id, ot.contract_id, SUM(ot.amount) AS office_paid')
+                    ->whereIn('ot.investor_id', $ids)
+                    ->whereIn('ot.contract_id', $contractIds)
+                    ->when($officeStatusId, function ($q) use ($officeStatusId) {
+                        $q->where('ot.status_id', $officeStatusId);
+                    })
+                    ->groupBy('ot.investor_id', 'ot.contract_id')
+                    ->get();
+
+                $officePaidByInvestor = $officePaidRows->groupBy('investor_id')->map(function ($rows) {
+                    return $rows->mapWithKeys(fn ($r) => [$r->contract_id => (float) ($r->office_paid ?? 0)]);
+                });
             }
 
-            $items->transform(function ($investor) use ($contractsByInvestor, $paidByInvestor, &$pageTotals) {
+            $items->transform(function ($investor) use ($contractsByInvestor, $paidByInvestor, $officePaidByInvestor, &$pageTotals) {
                 $id = $investor->id;
                 $pctOffice = (float) ($investor->office_share_percentage ?? 0);
                 $contracts = $contractsByInvestor->get($id, collect());
                 $paidMap = $paidByInvestor->get($id, collect());
+                $officePaidMap = $officePaidByInvestor->get($id, collect());
 
                 $withOffice = 0.0;
                 $withoutOffice = 0.0;
@@ -251,7 +280,13 @@ class InvestorReportController extends Controller
                         $paid = (float) ($paidMap[$contract->contract_id] ?? 0.0);
                     }
 
-                    $officePaid = min($officeCut, round($paid * $pctOffice / 100, 2));
+                    if ($officePaidMap instanceof \Illuminate\Support\Collection) {
+                        $officePaid = (float) $officePaidMap->get($contract->contract_id, 0.0);
+                    } else {
+                        $officePaid = (float) ($officePaidMap[$contract->contract_id] ?? 0.0);
+                    }
+
+                    $officePaid = min($officeCut, round($officePaid, 2));
                     $remainingOffice = max(0.0, round($officeCut - $officePaid, 2));
 
                     $remainingWith = max(0.0, round($expectedWith - $paid, 2));
