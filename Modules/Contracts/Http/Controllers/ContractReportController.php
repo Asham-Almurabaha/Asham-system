@@ -115,7 +115,7 @@ SQL;
             ->addSelect(DB::raw('ROUND(GREATEST(COALESCE(od.office_due, 0) - COALESCE(op.office_paid, 0), 0), 2) AS office_remaining'))
             ->whereRaw('ROUND(COALESCE(od.office_due, 0), 2) > 0')
             ->whereRaw('ROUND(GREATEST(COALESCE(od.office_due, 0) - COALESCE(op.office_paid, 0), 0), 2) > 0')
-            ->orderByDesc('office_remaining')
+            ->orderByDesc('contracts.contract_number')
             ->get()
             ->map(function (Contract $contract) {
                 $contract->office_due = round((float) ($contract->office_due ?? 0), 2);

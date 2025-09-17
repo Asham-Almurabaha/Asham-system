@@ -126,14 +126,18 @@ class InvestorReportController extends Controller
             ->whereNull('deleted_at')
             ->groupBy('investor_id', 'contract_id');
 
-        $capitalExpr = "CASE WHEN COALESCE(ci.share_value, 0) <= 0 THEN COALESCE(c.contract_value, 0) * COALESCE(ci.share_percentage, 0) / 100 ELSE COALESCE(ci.share_value, 0) END";
+        $capitalExprRaw = "CASE WHEN COALESCE(ci.share_value, 0) <= 0 THEN COALESCE(c.contract_value, 0) * COALESCE(ci.share_percentage, 0) / 100 ELSE COALESCE(ci.share_value, 0) END";
+        $capitalExpr = "ROUND($capitalExprRaw, 2)";
         $shareRatioExpr = "CASE WHEN COALESCE(ci.share_percentage, 0) > 0 THEN COALESCE(ci.share_percentage, 0) / 100 WHEN COALESCE(ci.share_value, 0) > 0 AND COALESCE(c.contract_value, 0) > 0 THEN COALESCE(ci.share_value, 0) / NULLIF(c.contract_value, 0) ELSE 0 END";
-        $profitGrossExpr = "COALESCE(c.investor_profit, 0) * ($shareRatioExpr)";
-        $officeCutExpr = "$profitGrossExpr * COALESCE(inv.office_share_percentage, 0) / 100";
-        $profitNetExpr = "($profitGrossExpr - $officeCutExpr)";
+        $profitGrossExpr = "ROUND(COALESCE(c.investor_profit, 0) * ($shareRatioExpr), 2)";
+        $officePctExpr = 'COALESCE(inv.office_share_percentage, 0)';
+        $officeCutExpr = "ROUND($profitGrossExpr * $officePctExpr / 100, 2)";
         $paidExpr = 'COALESCE(le.paid_in, 0)';
-        $remainingWithExpr = "($capitalExpr + $profitGrossExpr) - $paidExpr";
-        $remainingWithoutExpr = "($capitalExpr + $profitNetExpr) - $paidExpr";
+        $expectedWithExpr = "($capitalExpr + $profitGrossExpr)";
+        $remainingWithExpr = "GREATEST($expectedWithExpr - $paidExpr, 0)";
+        $officePaidExpr = "LEAST($officeCutExpr, ROUND($paidExpr * $officePctExpr / 100, 2))";
+        $remainingOfficeExpr = "GREATEST($officeCutExpr - $officePaidExpr, 0)";
+        $remainingWithoutExpr = "GREATEST($remainingWithExpr - $remainingOfficeExpr, 0)";
 
         $totalsRow = DB::table('contract_investor as ci')
             ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
@@ -149,8 +153,9 @@ class InvestorReportController extends Controller
                 $q->where('inv.name', 'like', "%{$v}%");
             })
             ->selectRaw(
-                "SUM(CASE WHEN $remainingWithExpr < 0 THEN 0 ELSE $remainingWithExpr END) AS remaining_with_office, " .
-                "SUM(CASE WHEN $remainingWithoutExpr < 0 THEN 0 ELSE $remainingWithoutExpr END) AS remaining_without_office"
+                "SUM(ROUND($remainingWithExpr, 2)) AS remaining_with_office, " .
+                "SUM(ROUND($remainingWithoutExpr, 2)) AS remaining_without_office, " .
+                "SUM(ROUND($remainingOfficeExpr, 2)) AS remaining_office_share"
             )
             ->first();
 
@@ -158,7 +163,7 @@ class InvestorReportController extends Controller
             'with_office'    => $totalsRow ? round((float) ($totalsRow->remaining_with_office ?? 0), 2) : 0.0,
             'without_office' => $totalsRow ? round((float) ($totalsRow->remaining_without_office ?? 0), 2) : 0.0,
         ];
-        $grandTotals['office_share'] = round(max(0.0, $grandTotals['with_office'] - $grandTotals['without_office']), 2);
+        $grandTotals['office_share'] = $totalsRow ? round((float) ($totalsRow->remaining_office_share ?? 0), 2) : 0.0;
 
         $items = $rows->getCollection();
         $ids = $items->pluck('id');
@@ -238,10 +243,7 @@ class InvestorReportController extends Controller
                     }
 
                     $officeCut = round($profitGross * $pctOffice / 100, 2);
-                    $profitNet = $profitGross - $officeCut;
-
-                    $expectedWith = $shareVal + $profitGross;
-                    $expectedWithout = $shareVal + $profitNet;
+                    $expectedWith = round($shareVal + $profitGross, 2);
 
                     if ($paidMap instanceof \Illuminate\Support\Collection) {
                         $paid = (float) $paidMap->get($contract->contract_id, 0.0);
@@ -249,15 +251,15 @@ class InvestorReportController extends Controller
                         $paid = (float) ($paidMap[$contract->contract_id] ?? 0.0);
                     }
 
-                    $remainingWith = $expectedWith - $paid;
-                    $remainingWithout = $expectedWithout - $paid;
+                    $officePaid = min($officeCut, round($paid * $pctOffice / 100, 2));
+                    $remainingOffice = max(0.0, round($officeCut - $officePaid, 2));
 
-                    $remainingWith = $remainingWith < 0 ? 0.0 : round($remainingWith, 2);
-                    $remainingWithout = $remainingWithout < 0 ? 0.0 : round($remainingWithout, 2);
+                    $remainingWith = max(0.0, round($expectedWith - $paid, 2));
+                    $remainingWithout = max(0.0, round($remainingWith - $remainingOffice, 2));
 
                     $withOffice += $remainingWith;
                     $withoutOffice += $remainingWithout;
-                    $officeShare += max(0.0, round($remainingWith - $remainingWithout, 2));
+                    $officeShare += $remainingOffice;
                 }
 
                 $investor->remaining_with_office = round($withOffice, 2);
