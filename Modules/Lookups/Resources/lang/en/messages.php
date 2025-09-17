@@ -36,6 +36,13 @@ return [
         'protected_edit' => 'This customer status is protected and cannot be edited.',
         'protected_delete' => 'This customer status is protected and cannot be deleted.',
     ],
+    'guarantor_statuses' => [
+        'created' => 'Guarantor status added successfully.',
+        'updated' => 'Guarantor status updated successfully.',
+        'deleted' => 'Guarantor status deleted successfully.',
+        'protected_edit' => 'This guarantor status is protected and cannot be edited.',
+        'protected_delete' => 'This guarantor status is protected and cannot be deleted.',
+    ],
     'installment_statuses' => [
         'created' => 'Installment status added successfully.',
         'updated' => 'Installment status updated successfully.',

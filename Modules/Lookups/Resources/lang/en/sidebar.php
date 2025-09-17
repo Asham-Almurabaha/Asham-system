@@ -4,6 +4,7 @@ return [
     'Nationalities' => 'Nationalities',
     'Titles' => 'Titles',
     'Categories' => 'Categories',
+    'Guarantor Statuses' => 'Guarantor Statuses',
     'Contract Statuses' => 'Contract Statuses',
     'Customer Statuses' => 'Customer Statuses',
     'Installment Statuses' => 'Installment Statuses',

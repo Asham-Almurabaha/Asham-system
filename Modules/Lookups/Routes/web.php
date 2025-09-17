@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Lookups\Http\Controllers\CategoryController;
 use Modules\Lookups\Http\Controllers\CustomerStatusController;
 use Modules\Lookups\Http\Controllers\ContractStatusController;
+use Modules\Lookups\Http\Controllers\GuarantorStatusController;
 use Modules\Lookups\Http\Controllers\InstallmentStatusController;
 use Modules\Lookups\Http\Controllers\InstallmentTypeController;
 use Modules\Lookups\Http\Controllers\NationalityController;
@@ -16,6 +17,7 @@ Route::middleware(['web', 'auth'])->prefix('settings')->group(function () {
     Route::resource('nationalities', NationalityController::class);
     Route::resource('titles', TitleController::class);
     Route::resource('categories', CategoryController::class);
+    Route::resource('guarantor_statuses', GuarantorStatusController::class);
     Route::resource('customer_statuses', CustomerStatusController::class);
     Route::resource('contract_statuses', ContractStatusController::class);
     Route::resource('installment_statuses', InstallmentStatusController::class);

@@ -10,6 +10,7 @@
   $settingsOpen = $isPath('*/setting*')
       || $isRoute('settings.*') || $isRoute('nationalities.*') || $isRoute('titles.*')
       || $isRoute('contract_statuses.*')
+      || $isRoute('guarantor_statuses.*')
       || $isRoute('installment_statuses.*') || $isRoute('installment_types.*')
       || $isRoute('products.*') || $isRoute('product_entries.*')
       || $isRoute('bank_cash_accounts.*') || $isRoute('transaction_types.*') || $isRoute('transaction_statuses.*')
@@ -145,6 +146,11 @@
       <li>
         <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('guarantor_statuses.*')) }}" href="{{ route('guarantor_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Guarantor Statuses')</span>
         </a>
       </li>
       <li>

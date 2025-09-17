@@ -48,6 +48,12 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'قائمة سوداء', 'is_protected' => true],
         ], $now);
 
+        $this->syncNamedRecords('guarantor_statuses', [
+            ['name' => 'مرفوع فيه', 'is_protected' => true],
+            ['name' => 'ملتزم', 'is_protected' => true],
+            ['name' => 'قائمة سوداء', 'is_protected' => true],
+        ], $now);
+
         $this->syncNamedRecords('installment_statuses', [
             ['name' => 'لم يحل', 'is_protected' => true],
             ['name' => 'متأخر', 'is_protected' => true],
