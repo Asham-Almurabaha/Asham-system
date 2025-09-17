@@ -7,6 +7,7 @@ use Modules\Contracts\Entities\ContractInstallment;
 use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
+use Modules\Contracts\Services\InstallmentPaymentDistributionService;
 use Modules\Contracts\Services\InstallmentStatusService;
 
 trait HandlesContractPayments
@@ -213,6 +214,11 @@ trait HandlesContractPayments
 
         if ($insts->isEmpty()) return;
 
+        $contract->loadMissing('investors');
+        $sumPct = (float) $contract->investors->sum(fn($i) => (float) ($i->pivot->share_percentage ?? 0));
+        $canDistribute = $contract->investors->isNotEmpty() && round($sumPct, 2) === 100.00;
+        $distributionService = $canDistribute ? app(InstallmentPaymentDistributionService::class) : null;
+
         foreach ($payments as $p) {
             $left = (float)$p['amount'];
             if ($left <= 0) continue;
@@ -239,6 +245,16 @@ trait HandlesContractPayments
 
                 // استخدم نفس منطق تحديث حالة القسط المستخدم في السدادات اليدوية
                 InstallmentStatusService::recalculate($inst);
+
+                if ($distributionService) {
+                    $distributionService->logInstallmentPayment(
+                        $contract,
+                        $inst,
+                        $canPay,
+                        'سداد قسط',
+                        $payDate
+                    );
+                }
 
                 if ($left <= 0) break; // خلّصنا سداد واحد
             }

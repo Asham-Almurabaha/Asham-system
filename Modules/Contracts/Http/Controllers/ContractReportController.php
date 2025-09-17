@@ -8,12 +8,19 @@ use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Services\ContractStatusUpdater;
 use Modules\Lookups\Entities\ContractStatus;
 
 class ContractReportController extends Controller
 {
+    public function __construct(private ContractStatusUpdater $contractStatusUpdater)
+    {
+    }
+
     public function status($status)
     {
+        $this->contractStatusUpdater->refresh();
+
         $statusIdCol = null;
         foreach (['contract_status_id','status_id','state_id'] as $col) {
             if (Schema::hasColumn('contracts', $col)) { $statusIdCol = $col; break; }
@@ -50,6 +57,8 @@ class ContractReportController extends Controller
 
     public function withoutInvestor()
     {
+        $this->contractStatusUpdater->refresh();
+
         $rows = Contract::query()
             ->with(['customer','guarantor','productType','contractStatus'])
             ->doesntHave('investors')
@@ -62,6 +71,8 @@ class ContractReportController extends Controller
 
      public function show(Contract $contract)
     {
+        $this->contractStatusUpdater->refreshContract($contract);
+
         // تحميل العلاقات
         $contract->load([
             'customer',
@@ -125,6 +136,8 @@ class ContractReportController extends Controller
 
     public function closure(Contract $contract)
     {
+        $this->contractStatusUpdater->refreshContract($contract);
+
         $contract->load([
             'customer',
             'guarantor',
@@ -187,6 +200,8 @@ class ContractReportController extends Controller
 
     public function paidInstallments(Contract $contract)
     {
+        $this->contractStatusUpdater->refreshContract($contract);
+
         // نحمل العلاقات الصحيحة حسب الموديل (installments)
         $contract->load([
             'customer',

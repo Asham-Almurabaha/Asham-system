@@ -21,6 +21,7 @@ use Modules\Lookups\Entities\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Contracts\Support\InvestorShareValidationException;
 use Modules\Contracts\Support\InvestorShareValidator;
+use Modules\Contracts\Services\ContractStatusUpdater;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
@@ -38,7 +39,8 @@ class ContractController extends Controller
 
     public function __construct(
         private InvestorTransactionLogger $investorTransactionLogger,
-        private InvestorShareValidator $investorShareValidator
+        private InvestorShareValidator $investorShareValidator,
+        private ContractStatusUpdater $contractStatusUpdater
     )
     {
     }
@@ -129,7 +131,7 @@ class ContractController extends Controller
                 break;
             }
 
-            $this->refreshContractsStatuses($newIds);
+            $this->contractStatusUpdater->refresh($newIds);
 
             $updatedIds = array_values(array_unique(array_merge($updatedIds, $newIds)));
 
@@ -138,9 +140,39 @@ class ContractController extends Controller
             }
         }
 
+        $contractRelations = ['customer', 'guarantor', 'contractStatus', 'productType', 'investors'];
+
         $contracts = $contractsOrderedQuery
-            ->with(['customer', 'guarantor', 'contractStatus', 'productType', 'investors'])
+            ->with($contractRelations)
             ->paginate($perPage);
+
+        $finalPageIds = $contracts->getCollection()
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $remainingIds = array_values(array_diff($finalPageIds, $updatedIds));
+
+        if (!empty($remainingIds)) {
+            $this->refreshContractsStatuses($remainingIds);
+
+            $updatedIds = array_values(array_unique(array_merge($updatedIds, $remainingIds)));
+        }
+
+        $contracts->setCollection(
+            $contracts->getCollection()->map(function (Contract $contract) use ($contractRelations) {
+                $fresh = $contract->fresh($contractRelations);
+
+                if ($fresh instanceof Contract) {
+                    return $fresh;
+                }
+
+                return $contract->loadMissing($contractRelations);
+            })
+        );
 
         $investors = Investor::orderBy('name')->get(['id', 'name']);
         $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
@@ -506,7 +538,7 @@ class ContractController extends Controller
 
     public function show(Contract $contract)
     {
-        $this->updateInstallmentsStatuses($contract);
+        $this->contractStatusUpdater->refreshContract($contract);
 
         $contract->load([
             'customer',
@@ -746,129 +778,4 @@ class ContractController extends Controller
         ]);
     }
 
-    private function refreshContractsStatuses(?array $onlyIds = null): void
-    {
-        if ($onlyIds !== null) {
-            $onlyIds = array_values(array_filter(array_map('intval', $onlyIds)));
-
-            if (empty($onlyIds)) {
-                return;
-            }
-        }
-
-        $excludedNames = ['منتهي', 'سداد مبكر', 'مطلوب'];
-        $excludedIds   = ContractStatus::whereIn('name', $excludedNames)->pluck('id')->filter()->all();
-
-        $query = Contract::query()
-            ->when(!empty($excludedIds), fn ($q) => $q->whereNotIn('contract_status_id', $excludedIds))
-            ->when($onlyIds !== null, fn ($q) => $q->whereIn('id', $onlyIds))
-            ->with(['investors', 'installments.installmentStatus', 'contractStatus']);
-
-        if ($onlyIds !== null) {
-            $query->get()->each(fn ($contract) => $this->updateInstallmentsStatuses($contract));
-            return;
-        }
-
-        $query->chunkById(100, function ($contracts) {
-            foreach ($contracts as $contract) {
-                $this->updateInstallmentsStatuses($contract);
-            }
-        });
-    }
-
-    private function updateInstallmentsStatuses(Contract $contract): void
-    {
-        // ✅ اشتغل بس لما مجموع نسب المستثمرين = 100%
-        $contract->loadMissing('investors', 'installments.installmentStatus', 'contractStatus');
-
-        $sumPct = (float) $contract->investors
-            ->sum(fn($i) => (float) ($i->pivot->share_percentage ?? 0));
-
-        if (round($sumPct, 2) !== 100.00) {
-            return;
-        }
-
-        // عقود مُستثناة
-        $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب'];
-        if (in_array($contract->contractStatus->name ?? '', $excludedContractStatuses, true)) {
-            return;
-        }
-
-        $today = now();
-
-        static $statuses = null;
-        static $contractStatuses = null;
-
-        if ($statuses === null) {
-            $statuses = InstallmentStatus::pluck('id', 'name')->all();
-        }
-
-        if ($contractStatuses === null) {
-            $contractStatuses = ContractStatus::pluck('id', 'name')->all();
-        }
-
-        $lateCount     = 0;
-        $maatherCount  = 0;
-        $allPaid       = true;
-        $anyLate       = false;
-        $allNotDueYet  = true;
-
-        foreach ($contract->installments as $installment) {
-            $statusName = $installment->installmentStatus->name ?? null;
-
-            if (!empty($installment->notes) && stripos($installment->notes, 'معتذر') !== false) {
-                $maatherCount++;
-            }
-
-            if (in_array($statusName, ['مدفوع كامل', 'مدفوع مبكر', 'مدفوع متأخر', 'مدفوع جزئي', 'مؤجل', 'معتذر'], true)) {
-                $allNotDueYet = false;
-                continue;
-            }
-
-            $dueDate   = Carbon::parse($installment->due_date);
-            $paid      = (float) ($installment->payment_amount ?? 0);
-            $dueAmount = (float) ($installment->due_amount ?? 0);
-
-            if ($paid < $dueAmount) {
-                $allPaid = false;
-
-                if ($dueDate->between($today->copy()->subDays(7), $today->copy()->addDays(7))) {
-                    $installment->installment_status_id = $statuses['مستحق'] ?? $installment->installment_status_id;
-                    $allNotDueYet = false;
-                }
-                elseif ($dueDate->greaterThan($today->copy()->addDays(7))) {
-                    $installment->installment_status_id = $statuses['لم يحل'] ?? $installment->installment_status_id;
-                }
-                elseif ($dueDate->lessThan($today->copy()->subDays(7))) {
-                    $installment->installment_status_id = $statuses['متأخر'] ?? $installment->installment_status_id;
-                    $lateCount++;
-                    $anyLate = true;
-                    $allNotDueYet = false;
-                }
-            }
-
-            $installment->save();
-        }
-
-        if ($allPaid) {
-            $contract->contract_status_id = $contractStatuses['منتهي'] ?? $contract->contract_status_id;
-        }
-        elseif ($allNotDueYet) {
-            $contract->contract_status_id = $contractStatuses['جديد'] ?? $contract->contract_status_id;
-        }
-        elseif ($maatherCount > 2) {
-            $contract->contract_status_id = $contractStatuses['غير منتظم'] ?? $contract->contract_status_id;
-        }
-        elseif ($lateCount >= 3) {
-            $contract->contract_status_id = $contractStatuses['متعثر'] ?? $contract->contract_status_id;
-        }
-        elseif ($anyLate) {
-            $contract->contract_status_id = $contractStatuses['متأخر'] ?? $contract->contract_status_id;
-        }
-        else {
-            $contract->contract_status_id = $contractStatuses['منتظم'] ?? $contract->contract_status_id;
-        }
-
-        $contract->save();
-    }
 }
