@@ -29,6 +29,13 @@ return [
         'protected_edit' => 'This status is protected and cannot be modified.',
         'protected_delete' => 'This status is protected and cannot be deleted.',
     ],
+    'customer_statuses' => [
+        'created' => 'Customer status added successfully.',
+        'updated' => 'Customer status updated successfully.',
+        'deleted' => 'Customer status deleted successfully.',
+        'protected_edit' => 'This customer status is protected and cannot be edited.',
+        'protected_delete' => 'This customer status is protected and cannot be deleted.',
+    ],
     'installment_statuses' => [
         'created' => 'Installment status added successfully.',
         'updated' => 'Installment status updated successfully.',

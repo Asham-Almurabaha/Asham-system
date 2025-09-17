@@ -153,6 +153,11 @@
         </a>
       </li>
       <li>
+        <a class="{{ $active($isRoute('customer_statuses.*')) }}" href="{{ route('customer_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Customer Statuses')</span>
+        </a>
+      </li>
+      <li>
         <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
         </a>

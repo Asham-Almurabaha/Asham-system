@@ -5,6 +5,7 @@ return [
     'Titles' => 'Titles',
     'Categories' => 'Categories',
     'Contract Statuses' => 'Contract Statuses',
+    'Customer Statuses' => 'Customer Statuses',
     'Installment Statuses' => 'Installment Statuses',
     'Installment Types' => 'Installment Types',
     'Transaction Statuses' => 'Transaction Statuses',
