@@ -57,7 +57,11 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
                 $payments = $this->parsePaymentsFlexible($data);
                 if (empty($payments) && $previousCumulative <= 0) {
                     $this->skipped++;
-                    $this->pushFailure($rowNum, 'payments', $data, ['لا توجد سدادات صالحة.']);
+
+                    if ($this->hasAnyPaymentInput($data)) {
+                        $this->pushFailure($rowNum, 'payments', $data, ['لا توجد سدادات صالحة.']);
+                    }
+
                     continue;
                 }
 
@@ -92,6 +96,127 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
             'values' => $vals,
             'messages' => $messages,
         ];
+    }
+
+    private function hasAnyPaymentInput(array $data): bool
+    {
+        $raw = $data['payments'] ?? null;
+        if (is_string($raw)) {
+            $raw = trim($raw);
+            if ($raw !== '') {
+                foreach (explode('|', $raw) as $chunk) {
+                    $chunk = trim($chunk);
+                    if ($chunk === '') {
+                        continue;
+                    }
+
+                    if (str_contains($chunk, '#')) {
+                        [$chunk] = array_map('trim', explode('#', $chunk, 2));
+                    }
+
+                    if ($chunk === '') {
+                        continue;
+                    }
+
+                    [$left, $right] = array_pad(array_map('trim', explode(':', $chunk, 2)), 2, null);
+
+                    $leftHasValue = $left !== null && $left !== '';
+                    $rightHasValue = $right !== null && $right !== '';
+
+                    $leftIsDate = $leftHasValue && strtotime($left) !== false;
+                    $rightIsDate = $rightHasValue && strtotime($right) !== false;
+
+                    if ($leftHasValue) {
+                        if (is_numeric($left)) {
+                            if ((float) $left > 0) {
+                                return true;
+                            }
+                        } elseif (!$leftIsDate) {
+                            return true;
+                        }
+                    }
+
+                    if ($rightHasValue) {
+                        if (is_numeric($right)) {
+                            if ((float) $right > 0) {
+                                return true;
+                            }
+                        } elseif (!$rightIsDate) {
+                            return true;
+                        }
+                    }
+
+                    if (($leftIsDate && !$rightHasValue) || ($rightIsDate && !$leftHasValue)) {
+                        return true;
+                    }
+                }
+            }
+        } elseif (is_numeric($raw) && (float) $raw > 0) {
+            return true;
+        }
+
+        for ($n = 1; $n <= 18; $n++) {
+            $amountKeys = [
+                "payment{$n}_amount", "payment{$n}_value",
+                "installment{$n}_amount", "installment{$n}_value",
+                "qist{$n}_amount", "qist{$n}_value",
+                "qst{$n}_amount", "qst{$n}_value",
+                "qest{$n}_amount", "qest{$n}_value",
+            ];
+
+            foreach ($amountKeys as $key) {
+                if (!array_key_exists($key, $data)) {
+                    continue;
+                }
+
+                $value = $data[$key];
+                if (is_string($value)) {
+                    $value = trim($value);
+                }
+
+                if ($value === '' || $value === null) {
+                    continue;
+                }
+
+                if (is_numeric($value)) {
+                    if ((float) $value > 0) {
+                        return true;
+                    }
+
+                    continue;
+                }
+
+                return true;
+            }
+        }
+
+        $firstPaymentKeys = ['down_payment', 'first_payment_amount'];
+        foreach ($firstPaymentKeys as $key) {
+            if (!array_key_exists($key, $data)) {
+                continue;
+            }
+
+            $value = $data[$key];
+            if (is_string($value)) {
+                $value = trim($value);
+            }
+
+            if ($value === '' || $value === null) {
+                continue;
+            }
+
+            if (is_numeric($value)) {
+                if ((float) $value > 0) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private function toDate($v): ?string
