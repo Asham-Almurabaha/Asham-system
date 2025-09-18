@@ -5,6 +5,7 @@ return array (
   'Contracts' => 'Contracts',
   'Contracts List' => 'Contracts List',
   'Add New Contract' => 'Add New Contract',
+  'View Dashboard' => 'View Dashboard',
   'Advanced Filter' => 'Advanced Filter',
   'Results' => 'Results',
   'Search' => 'Search',

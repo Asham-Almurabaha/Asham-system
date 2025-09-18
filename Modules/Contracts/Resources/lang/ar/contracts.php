@@ -5,6 +5,7 @@ return array (
   'Contracts' => 'العقود',
   'Contracts List' => 'قائمة العقود',
   'Add New Contract' => 'إضافة عقد جديد',
+  'View Dashboard' => 'عرض لوحة التحكم',
   'Advanced Filter' => 'تصفية متقدمة',
   'Results' => 'النتائج',
   'Search' => 'بحث',

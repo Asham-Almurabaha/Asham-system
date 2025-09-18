@@ -20,6 +20,9 @@
             <a href="{{ route('contracts.create') }}" class="btn btn-success">
                 <i class="bi bi-plus-lg"></i> {{ __('Add New Contract') }}
             </a>
+            <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-dark">
+                <i class="bi bi-speedometer2"></i> {{ __('contracts::contracts.View Dashboard') }}
+            </a>
             @role('admin')
             <div class="btn-group">
                 <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
