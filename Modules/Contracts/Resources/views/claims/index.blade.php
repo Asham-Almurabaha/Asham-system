@@ -13,49 +13,6 @@
     </nav>
 </div>
 
-<div class="card shadow-sm mb-3">
-    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <a href="{{ route('contract-claims.create') }}" class="btn btn-success">
-            <i class="bi bi-plus-lg"></i> {{ __('contracts::claims.add_claim') }}
-        </a>
-
-        <span class="ms-auto small text-muted">
-            {{ __('contracts::claims.results_count', ['count' => number_format($claims->total())]) }}
-        </span>
-
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
-                data-bs-target="#claimsFilterBar" aria-expanded="{{ request()->hasAny(['contract_number', 'filed_party_role']) ? 'true' : 'false' }}"
-                aria-controls="claimsFilterBar">
-            {{ __('contracts::claims.filters') }}
-        </button>
-    </div>
-
-    <div class="collapse @if(request()->hasAny(['contract_number', 'filed_party_role'])) show @endif border-top" id="claimsFilterBar">
-        <div class="card-body">
-            <form action="{{ route('contract-claims.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-                <div class="col-12 col-md-4">
-                    <label class="form-label mb-1">{{ __('contracts::claims.contract_number') }}</label>
-                    <input type="text" name="contract_number" value="{{ request('contract_number') }}" class="form-control form-control-sm" placeholder="{{ __('contracts::claims.contract_number_placeholder') }}">
-                </div>
-                <div class="col-12 col-md-4">
-                    <label class="form-label mb-1">{{ __('contracts::claims.filed_party_role') }}</label>
-                    <select name="filed_party_role" class="form-select form-select-sm">
-                        <option value="">{{ __('contracts::claims.choose_filed_party') }}</option>
-                        @foreach ($partyRoles as $roleKey => $label)
-                            <option value="{{ $roleKey }}" @selected(request('filed_party_role') === $roleKey)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary btn-sm">{{ __('contracts::claims.search') }}</button>
-                </div>
-                <div class="col-auto">
-                    <a href="{{ route('contract-claims.index') }}" class="btn btn-outline-secondary btn-sm">{{ __('contracts::claims.clear') }}</a>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <div class="card shadow-sm">
     <div class="card-body p-0">
@@ -69,7 +26,6 @@
                         <th>{{ __('contracts::claims.claim_amount') }}</th>
                         <th>{{ __('contracts::claims.claim_date') }}</th>
                         <th>{{ __('contracts::claims.document_number') }}</th>
-                        <th style="width:120px;">{{ __('contracts::claims.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,30 +42,11 @@
                         <td>{{ number_format((float) $claim->claim_amount, 2) }}</td>
                         <td>{{ optional($claim->claim_date)->format('Y-m-d') }}</td>
                         <td>{{ $claim->document_number }}</td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-2">
-                                <a href="{{ route('contract-claims.edit', $claim) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                                <form action="{{ route('contract-claims.destroy', $claim) }}" method="POST" onsubmit="return confirm('{{ __('contracts::claims.delete_confirm') }}');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="py-4">
+                        <td colspan="6" class="py-4">
                             <div class="text-muted">{{ __('contracts::claims.no_results') }}</div>
-                            <div class="mt-2">
-                                <a href="{{ route('contract-claims.create') }}" class="btn btn-sm btn-success">
-                                    <i class="bi bi-plus-lg"></i> {{ __('contracts::claims.add_first_claim') }}
-                                </a>
-                            </div>
                         </td>
                     </tr>
                 @endforelse
