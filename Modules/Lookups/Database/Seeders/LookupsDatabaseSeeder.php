@@ -54,15 +54,15 @@ class LookupsDatabaseSeeder extends Seeder
 
         $this->syncNamedRecords('customer_statuses', [
             ['name' => 'جديد', 'is_protected' => true],
-            ['name' => 'مرفوع فيه', 'is_protected' => true],
             ['name' => 'ملتزم', 'is_protected' => true],
+            ['name' => 'مرفوع فيه', 'is_protected' => true],
             ['name' => 'قائمة سوداء', 'is_protected' => true],
         ], $now);
 
         $this->syncNamedRecords('guarantor_statuses', [
             ['name' => 'جديد', 'is_protected' => true],
-            ['name' => 'مرفوع فيه', 'is_protected' => true],
             ['name' => 'ملتزم', 'is_protected' => true],
+            ['name' => 'مرفوع فيه', 'is_protected' => true],
             ['name' => 'قائمة سوداء', 'is_protected' => true],
         ], $now);
 

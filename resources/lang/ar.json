@@ -236,6 +236,7 @@
     "Per Page": "لكل صفحة",
     "Percentage": "النسبة المئوية",
     "Percentage (%)": "النسبة المئوية (%)",
+    "Percentage: :value%": "النسبة المئوية: :value%",
     "Percentage Paid of Total Due": "نسبة المدفوع من إجمالي المستحق",
     "Percentage Unpaid of Total Due": "نسبة غير المدفوع من إجمالي المستحق",
     "Percentage:": "النسبة المئوية:",

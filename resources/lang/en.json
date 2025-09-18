@@ -162,6 +162,7 @@
     "Password": "Password",
     "Pending Contracts": "Pending Contracts",
     "Percentage": "Percentage",
+    "Percentage: :value%": "Percentage: :value%",
     "Percentage Paid of Total Due": "Percentage Paid of Total Due",
     "Percentage Unpaid of Total Due": "Percentage Unpaid of Total Due",
     "Percentage:": "Percentage:",
