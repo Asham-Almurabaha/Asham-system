@@ -303,6 +303,53 @@
         </div>
     @endforeach
 </div>
+
+<div class="card shadow-sm mb-4" dir="rtl">
+    <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h6 class="mb-1">{{ __('Monthly Installments Summary') }} <span class="text-muted">({{ $monthLabel }})</span></h6>
+            <div class="small text-muted">
+                <i class="bi bi-filter"></i>
+                {{ __('Excludes statuses:') }} {{ $excludedStatusesTx }}
+            </div>
+        </div>
+        <form action="{{ route('contracts.dashboard') }}" method="GET" class="row g-2 align-items-end flex-grow-1 flex-md-grow-0" dir="rtl">
+            <div class="col-12 col-md-auto">
+                <label class="form-label small mb-1" for="investor_id">{{ __('Investor') }}</label>
+                <select name="investor_id" id="investor_id" class="form-select form-select-sm">
+                    <option value="">{{ __('All Investors') }}</option>
+                    @foreach($investors as $investor)
+                        <option value="{{ $investor->id }}" {{ (string) request('investor_id') === (string) $investor->id ? 'selected' : '' }}>
+                            {{ $investor->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-auto">
+                <label class="form-label small mb-1" for="month">{{ __('Month') }}</label>
+                <input type="number" name="m" id="month" min="1" max="12" class="form-control form-control-sm" value="{{ request('m', $mVal) }}">
+            </div>
+            <div class="col-6 col-md-auto">
+                <label class="form-label small mb-1" for="year">{{ __('Year') }}</label>
+                <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
+            </div>
+            <div class="col-12 col-md-auto d-flex gap-2">
+                <button class="btn btn-primary btn-sm">{{ __('Update') }}</button>
+                <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-secondary btn-sm">{{ __('Clear') }}</a>
+            </div>
+        </form>
+    </div>
+    <div class="card-body p-20">
+        <div class="row g-3">
+            @foreach($monthlyInstallmentCards as $card)
+                <div class="{{ $card['col_class'] }}">
+                    @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+
 <div class="row g-3 mb-4" dir="rtl">
     <div class="col-lg-6">
         <div class="card h-100 border-0 shadow-sm">
@@ -362,51 +409,7 @@
     </div>
 </div>
 
-<div class="card shadow-sm mb-4" dir="rtl">
-    <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
-            <h6 class="mb-1">{{ __('Monthly Installments Summary') }} <span class="text-muted">({{ $monthLabel }})</span></h6>
-            <div class="small text-muted">
-                <i class="bi bi-filter"></i>
-                {{ __('Excludes statuses:') }} {{ $excludedStatusesTx }}
-            </div>
-        </div>
-        <form action="{{ route('contracts.dashboard') }}" method="GET" class="row g-2 align-items-end flex-grow-1 flex-md-grow-0" dir="rtl">
-            <div class="col-12 col-md-auto">
-                <label class="form-label small mb-1" for="investor_id">{{ __('Investor') }}</label>
-                <select name="investor_id" id="investor_id" class="form-select form-select-sm">
-                    <option value="">{{ __('All Investors') }}</option>
-                    @foreach($investors as $investor)
-                        <option value="{{ $investor->id }}" {{ (string) request('investor_id') === (string) $investor->id ? 'selected' : '' }}>
-                            {{ $investor->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6 col-md-auto">
-                <label class="form-label small mb-1" for="month">{{ __('Month') }}</label>
-                <input type="number" name="m" id="month" min="1" max="12" class="form-control form-control-sm" value="{{ request('m', $mVal) }}">
-            </div>
-            <div class="col-6 col-md-auto">
-                <label class="form-label small mb-1" for="year">{{ __('Year') }}</label>
-                <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
-            </div>
-            <div class="col-12 col-md-auto d-flex gap-2">
-                <button class="btn btn-primary btn-sm">{{ __('Update') }}</button>
-                <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-secondary btn-sm">{{ __('Clear') }}</a>
-            </div>
-        </form>
-    </div>
-    <div class="card-body p-20">
-        <div class="row g-3">
-            @foreach($monthlyInstallmentCards as $card)
-                <div class="{{ $card['col_class'] }}">
-                    @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
-                </div>
-            @endforeach
-        </div>
-    </div>
-</div>
+
 
 
 
