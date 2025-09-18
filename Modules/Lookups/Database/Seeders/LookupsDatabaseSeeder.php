@@ -141,6 +141,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'تحويل بين حسابات', 'type' => 'تحويل بين حسابات'],
             ['name' => 'رصيد افتتاحي', 'type' => 'إيداع'],
             ['name' => 'رأس المال', 'type' => 'إيداع'],
+            ['name' => 'زكاة المال', 'type' => 'سحب'],
         ];
 
         $records = [];
@@ -183,6 +184,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['status' => 'تحويل بين حسابات', 'category' => 'المكتب'],
             ['status' => 'رصيد افتتاحي', 'category' => 'المكتب'],
             ['status' => 'رأس المال', 'category' => 'المستثمرين'],
+            ['status' => 'زكاة المال', 'category' => 'المستثمرين'],
         ];
 
         foreach ($pairs as $pair) {
