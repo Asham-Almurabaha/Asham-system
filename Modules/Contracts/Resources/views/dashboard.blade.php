@@ -102,9 +102,41 @@
         <a href="{{ route('contracts.index') }}" class="btn btn-outline-primary">
             <i class="bi bi-table"></i> {{ __('Manage Contracts') }}
         </a>
-        <a href="#contracts-reports" class="btn btn-success">
-            <i class="bi bi-bar-chart"></i> {{ __('Reports') }}
-        </a>
+
+        <div class="d-flex gap-2">
+            <div class="dropdown">
+                <button class="btn btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                    📊 {{ __('Status Reports') }}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
+                    @foreach($contractStatuses as $status)
+                        @php
+                            $name = (string) ($status->name ?? '-');
+                            [$ic, $cls] = $statusIcon($name);
+                        @endphp
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.status', $status->id) }}">
+                                <i class="bi {{ $ic }} {{ $cls }}"></i>
+                                <span>{{ $name }}</span>
+                            </a>
+                        </li>
+                    @endforeach
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.office_outstanding') }}">
+                            <i class="bi bi-cash-coin text-warning"></i>
+                            <span>{{ __('Office Outstanding Report') }}</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.without_investor') }}">
+                            <i class="bi bi-people text-danger"></i>
+                            <span>{{ __('Contracts Without Investor') }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -306,48 +338,6 @@
     </div>
 </div>
 
-<div class="card shadow-sm" dir="rtl" id="contracts-reports">
-    <div class="card-body d-flex flex-wrap gap-3 align-items-center justify-content-between">
-        <div>
-            <h6 class="mb-1">{{ __('Reports') }}</h6>
-            <p class="text-muted mb-0">{{ __('Open detailed reports for contract statuses or office outstanding balances.') }}</p>
-        </div>
-        <div class="d-flex gap-2">
-            <div class="dropdown">
-                <button class="btn btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-                    📊 {{ __('Status Reports') }}
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
-                    @foreach($contractStatuses as $status)
-                        @php
-                            $name = (string) ($status->name ?? '-');
-                            [$ic, $cls] = $statusIcon($name);
-                        @endphp
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.status', $status->id) }}">
-                                <i class="bi {{ $ic }} {{ $cls }}"></i>
-                                <span>{{ $name }}</span>
-                            </a>
-                        </li>
-                    @endforeach
-                    <li><hr class="dropdown-divider"></li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.office_outstanding') }}">
-                            <i class="bi bi-cash-coin text-warning"></i>
-                            <span>{{ __('Office Outstanding Report') }}</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.without_investor') }}">
-                            <i class="bi bi-people text-danger"></i>
-                            <span>{{ __('Contracts Without Investor') }}</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
