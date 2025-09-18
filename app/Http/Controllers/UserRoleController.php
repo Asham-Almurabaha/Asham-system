@@ -11,8 +11,18 @@ class UserRoleController extends Controller
     public function index()
     {
         // هنعرض كل المستخدمين مع أدوارهم
-        $users = User::with('roles')->orderBy('id','asc')->paginate(15);
-        return view('users.index', compact('users'));
+        $users = User::with('roles')->orderBy('id', 'asc')->paginate(15);
+
+        $totalUsers        = User::count();
+        $usersWithRoles    = User::whereHas('roles')->count();
+        $usersWithoutRoles = User::whereDoesntHave('roles')->count();
+
+        return view('users.index', compact(
+            'users',
+            'totalUsers',
+            'usersWithRoles',
+            'usersWithoutRoles'
+        ));
     }
 
     public function edit(User $user)
