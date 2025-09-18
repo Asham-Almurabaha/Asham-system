@@ -193,7 +193,7 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('Name') }}</th>
-                        <th>{{ __('Customer Status') }}</th>
+                        <th>{{ __('customers::messages.Customer Status') }}</th>
                         <th>{{ __('National ID') }}</th>
                         <th>{{ __('Phone') }}</th>
                         <th>{{ __('Number of Active Contracts') }}</th>

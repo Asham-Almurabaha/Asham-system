@@ -6,6 +6,7 @@ return [
     'Guarantors' => 'Guarantors',
     'Investors' => 'Investors',
     'Contracts' => 'Contracts',
+    'Claims' => 'Claims',
     'Ledger' => 'Ledger',
     'Settings' => 'Settings',
     'General Settings' => 'General Settings',

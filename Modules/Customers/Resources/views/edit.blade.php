@@ -139,7 +139,7 @@
 
                     {{-- Customer Status --}}
                     <div class="col-md-6">
-                        <label for="customer_status_id" class="form-label">{{ __('Customer Status') }}</label>
+                        <label for="customer_status_id" class="form-label">{{ __('customers::messages.Customer Status') }}</label>
                         <select
                             name="customer_status_id"
                             id="customer_status_id"

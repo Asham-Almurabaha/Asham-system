@@ -6,6 +6,7 @@ use Modules\Contracts\Http\Controllers\ContractInstallmentController;
 use Modules\Contracts\Http\Controllers\ContractReportController;
 use Modules\Contracts\Http\Controllers\ContractsImportController;
 use Modules\Contracts\Http\Controllers\ContractsExportController;
+use Modules\Contracts\Http\Controllers\ContractClaimController;
 
 // استيراد العقود
 Route::prefix('contracts/import')->name('contracts.')->group(function () {
@@ -25,6 +26,8 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
     Route::get('/failures/fix', [ContractsImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
     Route::get('/basic/failures/fix', [ContractsImportController::class, 'exportBasicFailuresFix'])->name('import.basic.failures.fix');
 });
+
+Route::resource('contract-claims', ContractClaimController::class)->except(['show']);
 
 // CRUD العقود
 Route::resource('contracts', ContractController::class);

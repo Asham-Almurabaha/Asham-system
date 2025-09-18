@@ -10,6 +10,7 @@ use App\Models\OfficeTransaction;
 use Modules\Lookups\Entities\ProductType;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Entities\InvestorTransaction;
+use Modules\Contracts\Entities\ContractClaim;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -107,6 +108,11 @@ class Contract extends Model
     public function officeTransactions()
     {
         return $this->hasMany(OfficeTransaction::class, 'contract_id');
+    }
+
+    public function claims()
+    {
+        return $this->hasMany(ContractClaim::class);
     }
 
 

@@ -6,6 +6,7 @@ return array (
   'Guarantors' => 'الكفلاء',
   'Investors' => 'المستثمرين',
   'Contracts' => 'العقود',
+  'Claims' => 'المطالبات',
   'Ledger' => 'دفتر القيود',
   'Settings' => 'الإعدادات',
   'General Settings' => 'الإعدادات العامة',
