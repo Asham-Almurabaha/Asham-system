@@ -19,6 +19,8 @@ use Modules\Lookups\Entities\GuarantorStatus;
 
 class ContractClaimController extends Controller
 {
+    private const CHANGE_STATUS_NAMES = ['مقبول', 'مرفوض'];
+
     private ?int $customerClaimStatusId = null;
     private ?int $guarantorClaimStatusId = null;
     private ?int $contractClaimStatusId = null;
@@ -61,10 +63,15 @@ class ContractClaimController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $claimStatuses = ClaimStatus::orderBy('name')->get(['id', 'name']);
+
         return view('contracts::claims.index', [
             'claims' => $claims,
             'partyRoles' => $this->partyRoleOptions(),
-            'claimStatuses' => ClaimStatus::orderBy('name')->get(['id', 'name']),
+            'claimStatuses' => $claimStatuses,
+            'changeStatusOptions' => $claimStatuses
+                ->filter(fn ($status) => in_array($status->name, self::CHANGE_STATUS_NAMES, true))
+                ->values(),
             'paidWithDiscountClaimStatusId' => $this->paidWithDiscountClaimStatusId(),
         ]);
     }

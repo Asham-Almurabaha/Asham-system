@@ -66,7 +66,7 @@
                                             class="btn btn-outline-primary btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#{{ $modalId }}"
-                                            @if ($claimStatuses->isEmpty()) disabled @endif>
+                                            @if ($changeStatusOptions->isEmpty()) disabled @endif>
                                         {{ __('contracts::claims.change_status') }}
                                     </button>
 
@@ -138,7 +138,7 @@
                             <label for="claim-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_status') }}</label>
                             <select name="claim_status_id" id="claim-status-{{ $claim->id }}" class="form-select" required>
                                 <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
-                                @foreach ($claimStatuses as $status)
+                                @foreach ($changeStatusOptions as $status)
                                     <option value="{{ $status->id }}" @selected((string) old('claim_status_id', $claim->claim_status_id) === (string) $status->id)>{{ $status->name }}</option>
                                 @endforeach
                             </select>
