@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
 use Modules\Contracts\Http\Requests\ApplyContractClaimDiscountRequest;
+use Modules\Contracts\Http\Requests\StoreContractClaimPaymentRequest;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimStatusRequest;
@@ -144,6 +145,37 @@ class ContractClaimController extends Controller
         return redirect()
             ->route('contract-claims.index')
             ->with('success', __('contracts::claims.discount_applied'));
+    }
+
+    public function storePayment(StoreContractClaimPaymentRequest $request, ContractClaim $contractClaim)
+    {
+        $payload = $request->validated();
+
+        $claim = DB::transaction(function () use ($contractClaim, $payload) {
+            $contractClaim->payments()->create([
+                'claim_status_id' => $payload['claim_status_id'],
+                'amount' => $payload['amount'],
+                'paid_at' => $payload['paid_at'],
+            ]);
+
+            $contractClaim->update([
+                'claim_status_id' => $payload['claim_status_id'],
+            ]);
+
+            return $contractClaim->fresh();
+        });
+
+        $this->updateRelatedStatuses($claim);
+
+        if ($request->boolean('return_to_contract')) {
+            return redirect()
+                ->route('contracts.show', $claim->contract_id)
+                ->with('success', __('contracts::claims.payment_recorded'));
+        }
+
+        return redirect()
+            ->route('contract-claims.index')
+            ->with('success', __('contracts::claims.payment_recorded'));
     }
 
     public function destroy(ContractClaim $contractClaim)

@@ -197,6 +197,11 @@
         </a>
       </li>
       <li>
+        <a class="{{ $active($isRoute('claim_payment_statuses.*')) }}" href="{{ route('claim_payment_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim Payment Statuses')</span>
+        </a>
+      </li>
+      <li>
         <a class="{{ $active($isRoute('claim_first_parties.*')) }}" href="{{ route('claim_first_parties.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim First Parties')</span>
         </a>

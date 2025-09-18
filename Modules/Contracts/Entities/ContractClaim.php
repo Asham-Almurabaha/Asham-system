@@ -6,6 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Lookups\Entities\ClaimFirstParty;
 use Modules\Lookups\Entities\ClaimStatus;
 
@@ -52,6 +53,11 @@ class ContractClaim extends Model
     public function claimStatus(): BelongsTo
     {
         return $this->belongsTo(ClaimStatus::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(ContractClaimPayment::class, 'contract_claim_id');
     }
 
     public function getFiledPartyNameAttribute(): ?string

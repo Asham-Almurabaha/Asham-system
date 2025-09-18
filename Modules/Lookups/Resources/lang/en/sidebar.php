@@ -7,6 +7,7 @@ return [
     'Guarantor Statuses' => 'Guarantor Statuses',
     'Contract Statuses' => 'Contract Statuses',
     'Claim Statuses' => 'Claim Statuses',
+    'Claim Payment Statuses' => 'Claim Payment Statuses',
     'Claim First Parties' => 'Claim First Parties',
     'Customer Statuses' => 'Customer Statuses',
     'Installment Statuses' => 'Installment Statuses',
