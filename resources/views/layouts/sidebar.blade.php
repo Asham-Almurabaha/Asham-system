@@ -76,6 +76,11 @@
 
     <ul id="contracts-nav" class="nav-content collapse {{ $open($contractsOpen) }}" data-bs-parent="#sidebar-nav">
       <li>
+        <a class="{{ $active($isRoute('contracts.dashboard')) }}" href="{{ route('contracts.dashboard') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Contracts Dashboard')</span>
+        </a>
+      </li>
+      <li>
         <a class="{{ $active($isRoute([
           'contracts.index',
           'contracts.create',
@@ -95,11 +100,7 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Contracts')</span>
         </a>
       </li>
-      <li>
-        <a class="{{ $active($isRoute('contracts.dashboard')) }}" href="{{ route('contracts.dashboard') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Contracts Dashboard')</span>
-        </a>
-      </li>
+      
     </ul>
   </li>
 
