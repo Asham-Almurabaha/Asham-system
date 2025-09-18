@@ -13,87 +13,6 @@
     </nav>
 </div>
 
-{{-- @php
-    $allTotal    = (int)($investorsTotalAll ?? 0);
-    $allActive   = (int)($activeInvestorsTotalAll ?? 0);
-    $allInactive = max($allTotal - $allActive, 0);
-
-    $activePct   = $allTotal > 0 ? round(($allActive / $allTotal) * 100, 1) : 0;
-    $inactivePct = $allTotal > 0 ? round(($allInactive / $allTotal) * 100, 1) : 0;
-
-    $newThisMonthAll = (int)($newInvestorsThisMonthAll ?? 0);
-    $newThisWeekAll  = (int)($newInvestorsThisWeekAll  ?? 0);
-@endphp --}}
-
-{{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> --}}
-
-
-
-{{-- ====== كروت عامة ====== --}}
-{{-- <div class="row g-4 mb-3" dir="rtl">
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-people fs-4 text-primary"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('investors::investors.Total Investors — All System') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($allTotal) }}</div>
-                    <div class="subnote">{{ __('investors::investors.Not affected by filters') }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-person-check fs-4 text-success"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('investors::investors.Active Investors') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($allActive) }}</div>
-                    <div class="subnote">{{ __('investors::investors.Active Percentage') }}: {{ number_format($activePct,1) }}%</div>
-                </div>
-            </div>
-            <div class="mt-3">
-                <div class="progress bar-8">
-                    <div class="progress-bar" style="width: {{ $activePct }}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-person-x fs-4 text-danger"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('investors::investors.Inactive Investors') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($allInactive) }}</div>
-                    <div class="subnote">{{ __('investors::investors.Percentage') }}: {{ number_format($inactivePct,1) }}%</div>
-                </div>
-            </div>
-            <div class="mt-3">
-                <div class="progress bar-8">
-                    <div class="progress-bar bg-danger" style="width: {{ $inactivePct }}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-calendar2-plus fs-4 text-primary"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('investors::investors.New Investors This Month') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($newThisMonthAll) }}</div>
-                    <div class="subnote">{{ __('investors::investors.This Week') }}: {{ number_format($newThisWeekAll) }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> --}}
-
 {{-- ====== شريط الأدوات + فلاتر ====== --}}
 <div class="card shadow-sm mb-3">
   <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
@@ -128,13 +47,7 @@
         </a>
       @endrole
 
-      {{-- تم حذف زر التمبليت زي العملاء --}}
-      {{-- @if (Route::has('investors.import.template'))
-        <a href="{{ route('investors.import.template') }}" class="btn btn-outline-secondary">
-          <i class="bi bi-file-earmark-spreadsheet"></i> تمبليت
-        </a>
-      @endif --}}
-
+      
       @if (session('failures') && count(session('failures')))
         <a href="{{ route('investors.import.export_failures') }}" class="btn btn-warning">
           <i class="bi bi-exclamation-triangle"></i> {{ __('investors::investors.Export Failures') }}
