@@ -58,17 +58,21 @@
                         @php($modalId = 'changeClaimStatusModal-' . $claim->id)
                         @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
                         @php($paymentModalId = 'recordClaimPaymentModal-' . $claim->id)
-                        @php($isPaidStatus = str_contains((string) optional($claim->claimStatus)->name, 'مدفوع'))
+                        @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
+                        @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
+                        @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
                         <td class="text-nowrap">
                             @unless ($isPaidStatus)
                                 <div class="d-flex flex-wrap justify-content-center gap-2">
-                                    <button type="button"
-                                            class="btn btn-outline-primary btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#{{ $modalId }}"
-                                            @if ($changeStatusOptions->isEmpty()) disabled @endif>
-                                        {{ __('contracts::claims.change_status') }}
-                                    </button>
+                                    @if ($isUnderReviewStatus)
+                                        <button type="button"
+                                                class="btn btn-outline-primary btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#{{ $modalId }}"
+                                                @if ($changeStatusOptions->isEmpty()) disabled @endif>
+                                            {{ __('contracts::claims.change_status') }}
+                                        </button>
+                                    @endif
 
                                     <button type="button"
                                             class="btn btn-outline-dark btn-sm"
@@ -120,37 +124,41 @@
         @php($discountLabelId = $discountModalId . 'Label')
         @php($paymentModalId = 'recordClaimPaymentModal-' . $claim->id)
         @php($paymentLabelId = $paymentModalId . 'Label')
-        @php($isPaidStatus = str_contains((string) optional($claim->claimStatus)->name, 'مدفوع'))
+        @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
+        @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
+        @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
         @if ($isPaidStatus)
             @continue
         @endif
-        <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
-                    @csrf
-                    @method('patch')
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3 text-start">
-                            <label for="claim-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_status') }}</label>
-                            <select name="claim_status_id" id="claim-status-{{ $claim->id }}" class="form-select" required>
-                                <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
-                                @foreach ($changeStatusOptions as $status)
-                                    <option value="{{ $status->id }}" @selected((string) old('claim_status_id', $claim->claim_status_id) === (string) $status->id)>{{ $status->name }}</option>
-                                @endforeach
-                            </select>
+        @if ($isUnderReviewStatus)
+            <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
+                        @csrf
+                        @method('patch')
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
-                    </div>
-                </form>
+                        <div class="modal-body">
+                            <div class="mb-3 text-start">
+                                <label for="claim-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_status') }}</label>
+                                <select name="claim_status_id" id="claim-status-{{ $claim->id }}" class="form-select" required>
+                                    <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
+                                    @foreach ($changeStatusOptions as $status)
+                                        <option value="{{ $status->id }}" @selected((string) old('claim_status_id', $claim->claim_status_id) === (string) $status->id)>{{ $status->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </div>
+        @endif
 
         <div class="modal fade" id="{{ $paymentModalId }}" tabindex="-1" aria-labelledby="{{ $paymentLabelId }}" aria-hidden="true">
             <div class="modal-dialog">
