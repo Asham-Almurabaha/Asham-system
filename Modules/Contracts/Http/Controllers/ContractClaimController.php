@@ -102,6 +102,12 @@ class ContractClaimController extends Controller
 
         $this->updateRelatedStatuses($contractClaim);
 
+        if ($request->boolean('return_to_contract')) {
+            return redirect()
+                ->route('contracts.show', $contractClaim->contract_id)
+                ->with('success', __('contracts::claims.status_updated'));
+        }
+
         return redirect()
             ->route('contract-claims.index')
             ->with('success', __('contracts::claims.status_updated'));

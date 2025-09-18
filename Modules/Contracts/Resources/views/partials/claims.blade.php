@@ -3,6 +3,7 @@
 
     $claimsCollection = $contract->claims ?? collect();
     $claimsCollection = $claimsCollection->values();
+    $claimStatusesCollection = collect($claimStatuses ?? [])->values();
 
     $availablePartyOptions = [];
 
@@ -57,6 +58,7 @@
                             <th>{{ __('contracts::claims.claim_first_party') }}</th>
                             <th>{{ __('contracts::claims.filed_party_role') }}</th>
                             <th class="text-end">{{ __('contracts::claims.claim_amount') }}</th>
+                            <th class="text-center">{{ __('contracts::claims.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -74,6 +76,16 @@
                                     </div>
                                 </td>
                                 <td class="text-end">{{ number_format((float) $claim->claim_amount, 2) }}</td>
+                                @php($modalId = 'changeClaimStatusModal-contract-' . $contract->id . '-' . $claim->id)
+                                <td class="text-center">
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#{{ $modalId }}"
+                                            @if ($claimStatusesCollection->isEmpty()) disabled @endif>
+                                        {{ __('contracts::claims.change_status') }}
+                                    </button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -190,4 +202,54 @@
             });
         </script>
     @endif
+    @if ($claimStatusesCollection->isNotEmpty())
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var claimStatusModals = document.querySelectorAll('[id^="changeClaimStatusModal-contract-"]');
+                claimStatusModals.forEach(function (modalEl) {
+                    modalEl.addEventListener('shown.bs.modal', function () {
+                        var select = modalEl.querySelector('select[name="claim_status_id"]');
+                        if (select) {
+                            select.focus();
+                        }
+                    });
+                });
+            });
+        </script>
+    @endif
 @endpush
+
+@if ($claimStatusesCollection->isNotEmpty())
+    @foreach ($claimsCollection as $claim)
+        @php($modalId = 'changeClaimStatusModal-contract-' . $contract->id . '-' . $claim->id)
+        @php($labelId = $modalId . 'Label')
+        <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
+                    @csrf
+                    @method('patch')
+                    <input type="hidden" name="return_to_contract" value="1">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 text-start">
+                            <label for="claim-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_status') }}</label>
+                            <select name="claim_status_id" id="claim-status-{{ $claim->id }}" class="form-select" required>
+                                <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
+                                @foreach ($claimStatusesCollection as $status)
+                                    <option value="{{ $status->id }}" @selected($status->id === $claim->claim_status_id)>{{ $status->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
+@endif

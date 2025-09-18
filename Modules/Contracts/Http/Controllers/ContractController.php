@@ -10,6 +10,7 @@ use Modules\Guarantors\Entities\Guarantor;
 use Modules\Lookups\Entities\InstallmentStatus;
 use Modules\Lookups\Entities\InstallmentType;
 use Modules\Lookups\Entities\ClaimFirstParty;
+use Modules\Lookups\Entities\ClaimStatus;
 use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\ProductType;
 use Modules\Accounts\Entities\Safe;
@@ -562,10 +563,11 @@ class ContractController extends Controller
         $safes = Safe::all();
 
         $claimFirstParties = ClaimFirstParty::orderBy('name')->get(['id', 'name']);
+        $claimStatuses = ClaimStatus::orderBy('name')->get(['id', 'name']);
 
 
 
-        return view('contracts::show', compact('contract', 'investors','banks','safes','claimFirstParties'));
+        return view('contracts::show', compact('contract', 'investors','banks','safes','claimFirstParties', 'claimStatuses'));
     }
 
     public function updateImages(Request $request, Contract $contract)
