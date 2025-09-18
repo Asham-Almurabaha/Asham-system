@@ -1,15 +1,15 @@
 @extends('layouts.master')
 
-@section('title', __('Add New Claim Payment Status'))
+@section('title', __('Edit Claim Paying Party'))
 
 @section('content')
 <div class="pagetitle">
-    <h1>{{ __('Add New Claim Payment Status') }}</h1>
+    <h1>{{ __('Edit Claim Paying Party') }}</h1>
     <nav>
         <ol class="breadcrumb">
             <li class="breadcrumb-item">{{ __('Settings') }}</li>
-            <li class="breadcrumb-item">{{ __('Claim Payment Statuses') }}</li>
-            <li class="breadcrumb-item active">{{ __('Create') }}</li>
+            <li class="breadcrumb-item">{{ __('Claim Paying Parties') }}</li>
+            <li class="breadcrumb-item active">{{ __('Edit') }}</li>
         </ol>
     </nav>
 </div><!-- End Page Title -->
@@ -27,16 +27,17 @@
 <div class="col-lg-6">
     <div class="card">
         <div class="card-body p-20">
-            <form action="{{ route('claim_payment_statuses.store') }}" method="POST">
+            <form action="{{ route('claim_paying_parties.update', $claim_paying_party->id) }}" method="POST">
                 @csrf
+                @method('PUT')
 
                 <div class="mb-3">
                     <label for="name" class="form-label">{{ __('Name') }}</label>
-                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
+                    <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $claim_paying_party->name) }}" required autofocus>
                 </div>
 
-                <button type="submit" class="btn btn-outline-success">{{ __('Save') }}</button>
-                <a href="{{ route('claim_payment_statuses.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
+                <button type="submit" class="btn btn-outline-primary">{{ __('Update') }}</button>
+                <a href="{{ route('claim_paying_parties.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
             </form>
         </div>
     </div>

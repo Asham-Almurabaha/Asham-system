@@ -12,14 +12,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('claim_payment_statuses', function (Blueprint $table) {
+        Schema::create('claim_paying_parties', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
             $table->boolean('is_protected')->default(false);
             $table->timestamps();
         });
 
-        DB::table('claim_payment_statuses')->insert([
+        DB::table('claim_paying_parties')->insert([
             ['name' => 'المحكمة', 'is_protected' => true],
             ['name' => 'العميل', 'is_protected' => true],
             ['name' => 'الكفيل', 'is_protected' => true],
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('claim_payment_statuses');
+        Schema::dropIfExists('claim_paying_parties');
     }
 };
