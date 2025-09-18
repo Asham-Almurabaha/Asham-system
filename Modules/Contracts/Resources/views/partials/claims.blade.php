@@ -245,8 +245,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
+                        <button type="submit" class="btn btn-outline-primary">{{ __('contracts::claims.update_status') }}</button>
                     </div>
                 </form>
             </div>
