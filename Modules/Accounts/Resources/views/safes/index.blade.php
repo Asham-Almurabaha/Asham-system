@@ -3,37 +3,38 @@
 @section('title', __('accounts::accounts.safes.index_title'))
 
 @section('content')
-    <div class="pagetitle">
-        <h1>@lang('accounts::accounts.safes.index_title')</h1>
-        <nav>
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">@lang('sidebar.Accounts')</li>
-                <li class="breadcrumb-item active">@lang('accounts::accounts.safes.index_title')</li>
-            </ol>
-        </nav>
-    </div>
+    <div class="container-xxl py-4">
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('settings.index') }}">@lang('sidebar.Settings')</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">@lang('accounts::accounts.safes.index_title')</li>
+                    </ol>
+                </nav>
+                <h1 class="h4 mb-0">@lang('accounts::accounts.safes.index_title')</h1>
+            </div>
 
-    <div class="card d-inline-block mb-3">
-        <div class="card-body p-20">
-            <a href="{{ route('accounts.safes.create') }}" class="btn btn-success">
-                @lang('accounts::accounts.safes.actions.create')
-            </a>
+            <div class="ms-auto d-flex flex-wrap gap-2">
+                <a href="{{ route('accounts.safes.create') }}" class="btn btn-success">
+                    <i class="bi bi-plus-lg me-1"></i>@lang('accounts::accounts.safes.actions.create')
+                </a>
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-body p-20">
+        <div class="card border-0 shadow-sm">
             <div class="table-responsive">
-                <table class="table table-striped align-middle">
-                    <thead>
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <th scope="col" class="text-center" style="width:60px;">#</th>
+                            <th scope="col" class="text-center" style="width:70px">#</th>
                             <th scope="col">@lang('accounts::accounts.safes.fields.name')</th>
                             <th scope="col">@lang('accounts::accounts.safes.fields.location')</th>
                             <th scope="col" class="text-end">@lang('accounts::accounts.safes.fields.opening_balance')</th>
                             <th scope="col">@lang('accounts::accounts.safes.fields.currency_code')</th>
                             <th scope="col">@lang('accounts::accounts.safes.fields.is_active')</th>
-                            <th scope="col" class="text-center">@lang('accounts::accounts.shared.actions')</th>
+                            <th scope="col" class="text-end" style="width:200px">@lang('accounts::accounts.shared.actions')</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,9 +52,9 @@
                                         <span class="badge bg-secondary-subtle text-muted">@lang('accounts::accounts.status.inactive')</span>
                                     @endif
                                 </td>
-                                <td class="text-center">
-                                    <div class="d-flex gap-2 justify-content-center">
-                                        <a href="{{ route('accounts.safes.edit', $safe) }}" class="btn btn-primary btn-sm">
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a href="{{ route('accounts.safes.edit', $safe) }}" class="btn btn-sm btn-outline-primary">
                                             @lang('accounts::accounts.shared.edit')
                                         </a>
                                         @include('lookups::components.delete-button', [
