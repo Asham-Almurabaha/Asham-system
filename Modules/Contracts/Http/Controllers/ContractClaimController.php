@@ -21,6 +21,8 @@ class ContractClaimController extends Controller
     private ?int $guarantorClaimStatusId = null;
     private ?int $contractClaimStatusId = null;
     private ?int $defaultClaimStatusId = null;
+    private ?int $acceptedClaimStatusId = null;
+    private ?int $raisedContractStatusId = null;
 
     public function index(Request $request)
     {
@@ -138,13 +140,17 @@ class ContractClaimController extends Controller
             return;
         }
 
-        $hasPreviousClaims = ContractClaim::query()
-            ->where('contract_id', $contract->id)
-            ->where('id', '!=', $claim->id)
-            ->exists();
+        if ($this->isClaimAccepted($claim)) {
+            $this->updateContractStatusToRaised($contract);
+        } else {
+            $hasPreviousClaims = ContractClaim::query()
+                ->where('contract_id', $contract->id)
+                ->where('id', '!=', $claim->id)
+                ->exists();
 
-        if (! $hasPreviousClaims) {
-            $this->updateContractStatus($contract);
+            if (! $hasPreviousClaims) {
+                $this->updateContractStatus($contract);
+            }
         }
 
         if ($claim->filed_party_role === ContractClaim::FILED_PARTY_CUSTOMER) {
@@ -192,6 +198,25 @@ class ContractClaimController extends Controller
         $guarantor->save();
     }
 
+    private function updateContractStatusToRaised(Contract $contract): void
+    {
+        $statusId = $this->raisedContractStatusId();
+
+        if (! $statusId || $contract->contract_status_id === $statusId) {
+            return;
+        }
+
+        $contract->contract_status_id = $statusId;
+        $contract->save();
+    }
+
+    private function isClaimAccepted(ContractClaim $claim): bool
+    {
+        $statusId = $this->acceptedClaimStatusId();
+
+        return $statusId !== null && (int) $claim->claim_status_id === $statusId;
+    }
+
     private function customerClaimStatusId(): ?int
     {
         if ($this->customerClaimStatusId === null) {
@@ -220,6 +245,26 @@ class ContractClaimController extends Controller
         }
 
         return $this->contractClaimStatusId ?: null;
+    }
+
+    private function raisedContractStatusId(): ?int
+    {
+        if ($this->raisedContractStatusId === null) {
+            $id = ContractStatus::where('name', 'مرفوع فيه')->value('id');
+            $this->raisedContractStatusId = $id ? (int) $id : 0;
+        }
+
+        return $this->raisedContractStatusId ?: null;
+    }
+
+    private function acceptedClaimStatusId(): ?int
+    {
+        if ($this->acceptedClaimStatusId === null) {
+            $id = ClaimStatus::where('name', 'مقبول')->value('id');
+            $this->acceptedClaimStatusId = $id ? (int) $id : 0;
+        }
+
+        return $this->acceptedClaimStatusId ?: null;
     }
 
     private function defaultClaimStatusId(): ?int

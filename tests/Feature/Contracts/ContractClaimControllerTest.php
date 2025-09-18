@@ -108,4 +108,90 @@ class ContractClaimControllerTest extends TestCase
             'Contract status should remain unchanged when previous claims exist.'
         );
     }
+
+    public function test_updating_claim_to_accepted_updates_contract_status_to_raised(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $contractRaisedStatus = ContractStatus::where('name', 'مرفوع فيه')->firstOrFail();
+        $claimReviewStatus = ClaimStatus::where('name', 'قيد المراجعة')->firstOrFail();
+        $claimAcceptedStatus = ClaimStatus::where('name', 'مقبول')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Example',
+            'national_id' => '12345678901234',
+            'phone' => '0500000000',
+            'email' => 'customer@example.test',
+            'address' => 'Test Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Example',
+            'national_id' => '98765432109876',
+            'phone' => '0500000001',
+            'email' => 'guarantor@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-2001',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractRequiredStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 2000,
+            'sale_price' => 2200,
+            'contract_value' => 2200,
+            'investor_profit' => 200,
+            'total_value' => 2200,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 200,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $claim = ContractClaim::create([
+            'contract_id' => $contract->id,
+            'claim_first_party_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 750,
+            'claim_date' => now()->subDays(5)->toDateString(),
+            'document_number' => 'DOC-100',
+            'claim_status_id' => $claimReviewStatus->id,
+        ]);
+
+        $response = $this->patch(route('contract-claims.update-status', $claim), [
+            'claim_status_id' => $claimAcceptedStatus->id,
+        ]);
+
+        $response->assertRedirect(route('contract-claims.index'));
+
+        $this->assertSame(
+            $contractRaisedStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Contract status should update to raised when claim is accepted.'
+        );
+
+        $this->assertSame(
+            $claimAcceptedStatus->id,
+            $claim->fresh()->claim_status_id,
+            'Claim status should be updated to accepted.'
+        );
+    }
 }
