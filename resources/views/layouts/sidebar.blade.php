@@ -163,6 +163,16 @@
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim First Parties')</span>
         </a>
       </li>
+      <li>
+        <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+        </a>
+      </li>
 
       <li class="nav-heading">@lang('sidebar.Installments')</li>
       <li>
