@@ -3,51 +3,54 @@
 @section('title', __('lookups::transaction_types.List of Transaction Types'))
 
 @section('content')
-
-<div class="pagetitle">
-    <h1>@lang('lookups::transaction_types.List of Transaction Types')</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">@lang('sidebar.Settings')</li>
-            <li class="breadcrumb-item active">@lang('lookups::sidebar.Transaction Types')</li>
-        </ol>
-    </nav>
-</div><!-- End Page Title -->
-
-<div class="card d-inline-block mb-3">
-    <div class="card-body p-20">
-        <a href="{{ route('transaction_types.create') }}" class="btn btn-success">@lang('lookups::transaction_types.Add New Transaction Type')</a>
+<div class="container-xxl py-4">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('settings.index') }}">@lang('sidebar.Settings')</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@lang('lookups::sidebar.Transaction Types')</li>
+                </ol>
+            </nav>
+            <h1 class="h4 mb-0">@lang('lookups::transaction_types.List of Transaction Types')</h1>
+        </div>
+        <div class="ms-auto d-flex flex-wrap gap-2">
+            <a href="{{ route('transaction_types.create') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg me-1"></i>@lang('lookups::transaction_types.Add New Transaction Type')
+            </a>
+        </div>
     </div>
-</div>
 
-<div class="col-lg-12">
-    <div class="card">
-        <div class="card-body p-20">
-            <table class="table table-striped">
-                <thead>
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th scope="col" class="col-1">#</th>
-                        <th scope="col" >@lang('lookups::transaction_types.Name')</th>
-                        <th scope="col" class="col-2">@lang('lookups::transaction_types.Actions')</th>
+                        <th scope="col" style="width:80px" class="text-center">#</th>
+                        <th scope="col">@lang('lookups::transaction_types.Name')</th>
+                        <th scope="col" class="text-end" style="width:180px">@lang('lookups::transaction_types.Actions')</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($types as $type)
                         <tr>
-                            <th scope="row">{{ $loop->iteration }}</th>
-                            <td class="text-start">{{ $type->name }}</td>
-                            <td>
-                                <a href="{{ route('transaction_types.edit', $type->id) }}" class="btn btn-primary btn-sm me-1">@lang('lookups::transaction_types.Edit')</a>
-                                @include('lookups::components.delete-button', [
-                                    'action' => route('transaction_types.destroy', $type->id),
-                                    'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
-                                    'label' => __('lookups::transaction_types.Delete'),
-                                ])
+                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td class="fw-semibold text-start">{{ $type->name }}</td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <a href="{{ route('transaction_types.edit', $type->id) }}" class="btn btn-sm btn-outline-primary">@lang('lookups::transaction_types.Edit')</a>
+                                    @include('lookups::components.delete-button', [
+                                        'action' => route('transaction_types.destroy', $type->id),
+                                        'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
+                                        'label' => __('lookups::transaction_types.Delete'),
+                                    ])
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="text-center">@lang('lookups::transaction_types.No transaction types yet.')</td>
+                            <td colspan="3" class="text-center text-muted py-4">@lang('lookups::transaction_types.No transaction types yet.')</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -55,5 +58,4 @@
         </div>
     </div>
 </div>
-
 @endsection

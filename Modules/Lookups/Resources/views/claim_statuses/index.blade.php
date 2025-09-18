@@ -3,64 +3,53 @@
 @section('title', __('Claim Statuses List'))
 
 @section('content')
-<div class="pagetitle">
-    <h1>{{ __('Claim Statuses List') }}</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">{{ __('Settings') }}</li>
-            <li class="breadcrumb-item active">{{ __('Claim Statuses') }}</li>
-        </ol>
-    </nav>
-</div><!-- End Page Title -->
-
-@if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
+<div class="container-xxl py-4">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('settings.index') }}">@lang('sidebar.Settings')</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ __('Claim Statuses') }}</li>
+                </ol>
+            </nav>
+            <h1 class="h4 mb-0">{{ __('Claim Statuses List') }}</h1>
+        </div>
+        <div class="ms-auto d-flex flex-wrap gap-2">
+            <a href="{{ route('claim_statuses.create') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg me-1"></i>{{ __('Add New Claim Status') }}
+            </a>
+        </div>
     </div>
-@endif
 
-<div class="card d-inline-block mb-3">
-    <div class="card-body p-20">
-        <a href="{{ route('claim_statuses.create') }}" class="btn btn-success">{{ __('Add New Claim Status') }}</a>
-    </div>
-</div>
-
-<div class="col-lg-12">
-    <div class="card">
-        <div class="card-body p-20">
-            <table class="table table-striped">
-                <thead>
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
                     <tr>
-                        <th scope="col" class="col-1">#</th>
-                        <th scope="col" class="col-9">{{ __('Name') }}</th>
-                        <th scope="col" class="col-2">{{ __('Actions') }}</th>
+                        <th scope="col" style="width:80px" class="text-center">#</th>
+                        <th scope="col">{{ __('Name') }}</th>
+                        <th scope="col" class="text-end" style="width:180px">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($statuses as $status)
                         <tr>
-                            <th scope="row">{{ $loop->iteration }}</th>
-                            <td class="text-start">{{ $status->name }}</td>
-                            <td>
-                                <a href="{{ route('claim_statuses.edit', $status->id) }}" class="btn btn-primary btn-sm me-1">{{ __('Edit') }}</a>
-
-                                @include('lookups::components.delete-button', [
-                                    'action' => route('claim_statuses.destroy', $status->id),
-                                    'confirm' => __('Are you sure to delete this claim status?'),
-                                ])
+                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td class="fw-semibold text-start">{{ $status->name }}</td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-2">
+                                    <a href="{{ route('claim_statuses.edit', $status->id) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
+                                    @include('lookups::components.delete-button', [
+                                        'action' => route('claim_statuses.destroy', $status->id),
+                                        'confirm' => __('Are you sure to delete this claim status?'),
+                                    ])
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="text-center">{{ __('No claim statuses found.') }}</td>
+                            <td colspan="3" class="text-center text-muted py-4">{{ __('No claim statuses found.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
