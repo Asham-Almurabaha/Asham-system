@@ -3,84 +3,84 @@
 @section('title', __('setting.Setting Details'))
 
 @section('content')
-
-<div class="pagetitle">
-    <h1>@lang('setting.Setting Details')</h1>
-    <nav>
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item">@lang('setting.Setting')</li>
-            <li class="breadcrumb-item active">@lang('setting.Setting Details')</li>
-        </ol>
-    </nav>
-</div>
-
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-@if ($setting)
-    <section class="section profile">
-        <div class="card">
-            <div class="card-body pt-3">
-
-                <div class="row mb-3">
-                    <div class="col-lg-3 col-md-4 label">@lang('pages.EN Name')</div>
-                    <div class="col-lg-9 col-md-8">{{ $setting->name }}</div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-lg-3 col-md-4 label">@lang('pages.AR Name')</div>
-                    <div class="col-lg-9 col-md-8">{{ $setting->name_ar }}</div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-lg-3 col-md-4 label">@lang('setting.Logo')</div>
-                    <div class="col-lg-9 col-md-8">
-                        @if ($setting->logo)
-                            <img src="{{ asset('storage/'.$setting->logo) }}" style="width: 100px" alt="logo">
-                        @else
-                            <span class="text-muted">-</span>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-lg-3 col-md-4 label">@lang('setting.Icon')</div>
-                    <div class="col-lg-9 col-md-8">
-                        @if ($setting->favicon)
-                            <img src="{{ asset('storage/'.$setting->favicon) }}" style="width: 50px" alt="favicon">
-                        @else
-                            <span class="text-muted">-</span>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2 mt-4">
-                    <a href="{{ route('settings.edit', $setting->id) }}" class="btn btn-warning">
-                        @lang('pages.Update')
-                    </a>
-
-                    <form action="{{ route('settings.destroy', $setting->id) }}" method="POST" onsubmit="return confirm('@lang('app.Confirm Delete')');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            @lang('pages.Delete')
-                        </button>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    </section>
-@else
-    <div class="alert alert-info">
-        لا توجد إعدادات بعد، يرجى إضافة إعداد جديد.
+<div class="container-fluid py-3">
+    <div class="pagetitle mb-3">
+        <h1>@lang('setting.Setting Details')</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">@lang('setting.Setting')</li>
+                <li class="breadcrumb-item active">@lang('setting.Setting Details')</li>
+            </ol>
+        </nav>
     </div>
 
-    <a href="{{ route('settings.create') }}" class="btn btn-success">
-        @lang('pages.Add')
-    </a>
-@endif
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
+        </div>
+    @endif
+
+    @if ($setting)
+        <div class="row justify-content-center">
+            <div class="col-12 col-xl-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body pt-4">
+                        <div class="row gy-3 align-items-center">
+                            <div class="col-lg-3 col-md-4 text-muted fw-semibold">@lang('pages.EN Name')</div>
+                            <div class="col-lg-9 col-md-8">{{ $setting->name }}</div>
+
+                            <div class="col-lg-3 col-md-4 text-muted fw-semibold">@lang('pages.AR Name')</div>
+                            <div class="col-lg-9 col-md-8">{{ $setting->name_ar }}</div>
+
+                            <div class="col-lg-3 col-md-4 text-muted fw-semibold">@lang('setting.Logo')</div>
+                            <div class="col-lg-9 col-md-8">
+                                @if ($setting->logo)
+                                    <img src="{{ asset('storage/'.$setting->logo) }}" alt="logo" class="img-fluid" style="max-width: 120px;">
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </div>
+
+                            <div class="col-lg-3 col-md-4 text-muted fw-semibold">@lang('setting.Icon')</div>
+                            <div class="col-lg-9 col-md-8">
+                                @if ($setting->favicon)
+                                    <img src="{{ asset('storage/'.$setting->favicon) }}" alt="favicon" class="img-fluid" style="max-width: 70px;">
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mt-4">
+                            <a href="{{ route('settings.edit', $setting->id) }}" class="btn btn-warning">
+                                @lang('pages.Update')
+                            </a>
+                            <form action="{{ route('settings.destroy', $setting->id) }}" method="POST" class="m-0"
+                                  onsubmit="return confirm('{{ __('app.Confirm Delete') }}');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger">
+                                    @lang('pages.Delete')
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @else
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <p class="mb-3">لا توجد إعدادات بعد، يرجى إضافة إعداد جديد.</p>
+                <a href="{{ route('settings.create') }}" class="btn btn-success">
+                    @lang('pages.Add')
+                </a>
+            </div>
+        </div>
+    @endif
+</div>
+@endsection
 
 @section('js')
 <script>
@@ -92,6 +92,4 @@
         });
     }, 5000);
 </script>
-@endsection
-
 @endsection
