@@ -64,9 +64,9 @@
 
                         <div class="col-12">
                             <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
-                                <button type="submit" class="btn btn-outline-success">
+                                <x-save-button>
                                     {{ __('Save') }}
-                                </button>
+                                </x-save-button>
                                 <a href="{{ route('product_entries.index') }}" class="btn btn-outline-secondary">
                                     {{ __('Cancel') }}
                                 </a>

@@ -72,9 +72,9 @@
             </div>
 
             <div class="col-12 d-flex gap-2">
-              <button class="btn btn-outline-success">
-                <i class="bi bi-check2 me-1"></i>@lang('app.Save')
-              </button>
+              <x-save-button>
+                @lang('app.Save')
+              </x-save-button>
               <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
             </div>
           </form>

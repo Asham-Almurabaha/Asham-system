@@ -58,9 +58,9 @@
         </div>
 
         <div class="d-flex gap-2">
-          <button class="btn btn-primary">
+          <x-save-button>
             @lang('users.Save')
-          </button>
+          </x-save-button>
           <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">
             @lang('users.Cancel')
           </a>
