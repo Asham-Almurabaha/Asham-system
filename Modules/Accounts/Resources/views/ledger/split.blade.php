@@ -1,13 +1,25 @@
 @extends('layouts.master')
 
-@section('title', 'قيد مُجزّأ (بنك + خزنة)')
+@php
+    $pageTitleText           = $pageTitleText           ?? 'قيد مُجزّأ (بنك + خزنة)';
+    $pageHeading             = $pageHeading             ?? 'قيد مُجزّأ (جزء بنك + جزء خزنة)';
+    $breadcrumbParentUrl     = $breadcrumbParentUrl     ?? route('ledger.index');
+    $breadcrumbParentLabel   = $breadcrumbParentLabel   ?? __('sidebar.Ledger');
+    $formAction              = $formAction              ?? route('ledger.split.store');
+    $cancelUrl               = $cancelUrl               ?? route('ledger.index');
+    $showLedgerLinks         = $showLedgerLinks         ?? true;
+    $restrictPartyToInvestors= $restrictPartyToInvestors?? false;
+    $redirectRouteName       = $redirectRouteName       ?? null;
+@endphp
+
+@section('title', $pageTitleText)
 
 @section('content')
 <div class="pagetitle mb-3">
-    <h1 class="h3 mb-1">قيد مُجزّأ (جزء بنك + جزء خزنة)</h1>
+    <h1 class="h3 mb-1">{{ $pageHeading }}</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('ledger.index') }}">@lang('sidebar.Ledger')</a></li>
+            <li class="breadcrumb-item"><a href="{{ $breadcrumbParentUrl }}">{{ $breadcrumbParentLabel }}</a></li>
             <li class="breadcrumb-item active">{{ __('Split Entry') }}</li>
         </ol>
     </nav>
@@ -33,16 +45,26 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form action="{{ route('ledger.split.store') }}" method="POST" class="row g-3 mt-1" id="splitForm">
+        <form action="{{ $formAction }}" method="POST" class="row g-3 mt-1" id="splitForm">
             @csrf
+            @if(!empty($redirectRouteName))
+                <input type="hidden" name="redirect_to" value="{{ $redirectRouteName }}">
+            @endif
             <div class="row">
                 {{-- الفئة + المستثمر --}}
                 <div class="col-md-4">
                     <label class="form-label" for="party_category">@lang('accounts::ledger.Category')</label>
-                    <select name="party_category" id="party_category" class="form-select" required>
-                        <option value="investors" @selected($oldCat==='investors')>المستثمرون</option>
-                        <option value="office"    @selected($oldCat==='office')>المكتب</option>
-                    </select>
+                    @if($restrictPartyToInvestors)
+                        <select id="party_category" class="form-select" disabled>
+                            <option value="investors" selected>المستثمرون</option>
+                        </select>
+                        <input type="hidden" name="party_category" value="investors">
+                    @else
+                        <select name="party_category" id="party_category" class="form-select" required>
+                            <option value="investors" @selected($oldCat==='investors')>المستثمرون</option>
+                            <option value="office"    @selected($oldCat==='office')>المكتب</option>
+                        </select>
+                    @endif
                 </div>
 
                 <div class="col-md-4" id="investorWrap">
@@ -78,15 +100,19 @@
                         @endforeach
                     </select>
 
-                    <select id="status_office" class="form-select mb-2" {{ $oldCat==='office' ? '' : 'hidden' }}
-                            data-goods-ids='@json($goodsStatusIds)'>
-                        <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (المكتب)</option>
-                        @foreach(($statusesByCategory['office'] ?? []) as $st)
-                            @if(($st->transaction_type_id ?? null) != 3)
-                                <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
+                    @if(!$restrictPartyToInvestors)
+                        <select id="status_office" class="form-select mb-2" {{ $oldCat==='office' ? '' : 'hidden' }}
+                                data-goods-ids='@json($goodsStatusIds)'>
+                            <option value="" disabled {{ old('status_id') ? '' : 'selected' }}>اختر الحالة (المكتب)</option>
+                            @foreach(($statusesByCategory['office'] ?? []) as $st)
+                                @if(($st->transaction_type_id ?? null) != 3)
+                                    <option value="{{ $st->id }}" data-type="{{ $st->transaction_type_id }}" @selected(old('status_id') == $st->id)>{{ $st->name }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                    @else
+                        <select id="status_office" class="form-select mb-2 d-none" hidden data-goods-ids="[]"></select>
+                    @endif
 
                     <input type="hidden" name="status_id" id="status_id_hidden" value="{{ old('status_id') }}">
                     <div class="mt-1">
@@ -261,12 +287,14 @@
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                     حفظ
                 </button>
-                <a href="{{ route('ledger.index') }}" class="btn btn-secondary">@lang('app.Cancel')</a>
+                <a href="{{ $cancelUrl }}" class="btn btn-secondary">@lang('app.Cancel')</a>
 
-                <div class="ms-auto d-flex gap-2">
-                    <a href="{{ route('ledger.create') }}" class="btn btn-outline-success">إضافة قيد</a>
-                    <a href="{{ route('ledger.transfer.create') }}" class="btn btn-outline-primary">تحويل داخلي</a>
-                </div>
+                @if($showLedgerLinks)
+                    <div class="ms-auto d-flex gap-2">
+                        <a href="{{ route('ledger.create') }}" class="btn btn-outline-success">إضافة قيد</a>
+                        <a href="{{ route('ledger.transfer.create') }}" class="btn btn-outline-primary">تحويل داخلي</a>
+                    </div>
+                @endif
             </div>
         </form>
     </div>

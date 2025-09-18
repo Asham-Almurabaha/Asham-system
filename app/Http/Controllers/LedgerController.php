@@ -16,6 +16,7 @@ use App\Services\ProductAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Route;
 
 class LedgerController extends Controller
 {
@@ -334,7 +335,9 @@ class LedgerController extends Controller
             // TODO: تحديث أرصدة الخزن/البنوك لو عندك
         });
 
-        return redirect()->route('ledger.index')->with('success', 'تم إضافة القيد بنجاح');
+        $redirectRoute = $this->resolveRedirectRoute($request, 'ledger.index');
+
+        return redirect()->route($redirectRoute)->with('success', 'تم إضافة القيد بنجاح');
     }
 
     public function transferCreate()
@@ -661,7 +664,9 @@ class LedgerController extends Controller
             // TODO: تحديث أرصدة الحسابات/الخزن لو عندك.
         });
 
-        return redirect()->route('ledger.index')->with('success', 'تم حفظ القيد المُجزّأ بنجاح');
+        $redirectRoute = $this->resolveRedirectRoute($request, 'ledger.index');
+
+        return redirect()->route($redirectRoute)->with('success', 'تم حفظ القيد المُجزّأ بنجاح');
     }
 
     // =======================
@@ -714,5 +719,15 @@ class LedgerController extends Controller
             ->where('ts.transaction_type_id', self::TYPE_TRANSFER) // تحويل
             ->where('cts.category_id', $this->CAT_OFFICE)          // فئة المكتب
             ->value('ts.id');
+    }
+
+    private function resolveRedirectRoute(Request $request, string $fallback): string
+    {
+        $route = $request->input('redirect_to');
+        if ($route && Route::has($route)) {
+            return $route;
+        }
+
+        return $fallback;
     }
 }

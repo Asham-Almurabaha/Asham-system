@@ -105,6 +105,23 @@
       <a href="{{ route('investors.dashboard') }}" class="btn btn-outline-dark">
         <i class="bi bi-speedometer2"></i> {{ __('investors::investors.View Dashboard') }}
       </a>
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-journal-text"></i> إدارة العمليات المحاسبية
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end text-end">
+          <li>
+            <a class="dropdown-item" href="{{ route('investors.ledger.create') }}">
+              <i class="bi bi-journal-plus"></i> قيد عادي
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{{ route('investors.ledger.split.create') }}">
+              <i class="bi bi-columns-gap"></i> قيد مُجزّأ
+            </a>
+          </li>
+        </ul>
+      </div>
       @role('admin')
         <a href="{{ route('investors.import.form') }}" class="btn btn-outline-primary">
             <i class="bi bi-upload"></i> {{ __('investors::investors.Import Excel') }}

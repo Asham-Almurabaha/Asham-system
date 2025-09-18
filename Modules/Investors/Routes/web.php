@@ -7,6 +7,7 @@ use Modules\Investors\Http\Controllers\InvestorTransactionController;
 use Modules\Investors\Http\Controllers\InvestorController;
 use Modules\Investors\Http\Controllers\InvestorReportController;
 use Modules\Investors\Http\Controllers\InvestorStatementController;
+use Modules\Investors\Http\Controllers\InvestorLedgerController;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('investors/import')->name('investors.')->group(function () {
@@ -27,6 +28,11 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::resource('investors', InvestorController::class);
     Route::resource('investor-transactions', InvestorTransactionController::class);
+
+    Route::prefix('investors/ledger')->name('investors.ledger.')->group(function () {
+        Route::get('/create', [InvestorLedgerController::class, 'create'])->name('create');
+        Route::get('/split/create', [InvestorLedgerController::class, 'split'])->name('split.create');
+    });
 
     Route::get('/investors/{investor}/cash', [AjaxInvestorController::class, 'liquidity'])
         ->name('investors.cash');
