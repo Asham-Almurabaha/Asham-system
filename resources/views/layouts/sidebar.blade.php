@@ -112,13 +112,6 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Treasury Accounts')</span>
         </a>
       </li>
-      @role('admin')
-      <li>
-        <a class="{{ $active($isRoute(['ledger.import.*'])) }}" href="{{ route('ledger.import.form') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Ledger Entries')</span>
-        </a>
-      </li>
-      @endrole
     </ul>
   </li>
 
@@ -140,7 +133,8 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
         </a>
       </li>
-      <li class="nav-heading">@lang('sidebar.Lookup Tables')</li>
+
+      <li class="nav-heading">@lang('sidebar.People & Customers')</li>
       <li>
         <a class="{{ $active($isRoute('nationalities.*')) }}" href="{{ route('nationalities.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Nationalities')</span>
@@ -152,10 +146,12 @@
         </a>
       </li>
       <li>
-        <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
+        <a class="{{ $active($isRoute('customer_statuses.*')) }}" href="{{ route('customer_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Customer Statuses')</span>
         </a>
       </li>
+
+      <li class="nav-heading">@lang('sidebar.Contracts & Guarantees')</li>
       <li>
         <a class="{{ $active($isRoute('guarantor_statuses.*')) }}" href="{{ route('guarantor_statuses.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Guarantor Statuses')</span>
@@ -166,9 +162,11 @@
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Contract Statuses')</span>
         </a>
       </li>
+
+      <li class="nav-heading">@lang('sidebar.Installments')</li>
       <li>
-        <a class="{{ $active($isRoute('customer_statuses.*')) }}" href="{{ route('customer_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Customer Statuses')</span>
+        <a class="{{ $active($isRoute('installment_types.*')) }}" href="{{ route('installment_types.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Types')</span>
         </a>
       </li>
       <li>
@@ -176,14 +174,11 @@
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
         </a>
       </li>
+
+      <li class="nav-heading">@lang('sidebar.Transactions & Finance')</li>
       <li>
-        <a class="{{ $active($isRoute('installment_types.*')) }}" href="{{ route('installment_types.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Types')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+        <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
         </a>
       </li>
       <li>
@@ -192,10 +187,18 @@
         </a>
       </li>
       <li>
+        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+        </a>
+      </li>
+
+      <li class="nav-heading">@lang('sidebar.Products')</li>
+      <li>
         <a class="{{ $active($isRoute('product_types.*')) }}" href="{{ route('product_types.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Product Types')</span>
         </a>
       </li>
+
       <li class="nav-heading">@lang('sidebar.Users and Permissions')</li>
       <li>
         <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
