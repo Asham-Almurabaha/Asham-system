@@ -81,7 +81,7 @@ class GuarantorsImport implements
         $guarantorStatusId = $row['guarantor_status_id'] ?? $row['حالة_الكفيل_id'] ?? null;
         $nationalityName   = $row['nationality']        ?? $row['الجنسية']       ?? null;
         $titleName         = $row['title']              ?? $row['الوظيفة']        ?? null;
-        $guarantorStatusName = $row['guarantor_status'] ?? $row['حالة_الكفيل']   ?? null;
+        $guarantorStatusName = $this->safeStr($row['guarantor_status'] ?? $row['حالة_الكفيل']   ?? null);
 
         if (!$nationalityId && $nationalityName) {
             $nationalityId = $this->resolveIdByName($nationalityName, Nationality::class, ['name','name_en']);
@@ -91,6 +91,11 @@ class GuarantorsImport implements
         }
         if (!$guarantorStatusId && $guarantorStatusName) {
             $guarantorStatusId = $this->resolveIdByName($guarantorStatusName, GuarantorStatus::class, ['name']);
+
+            if (!$guarantorStatusId) {
+                $guarantorStatus = GuarantorStatus::firstOrCreate(['name' => $guarantorStatusName]);
+                $guarantorStatusId = (int) $guarantorStatus->id;
+            }
         }
 
         // تعريف أدنى: name + (national_id أو phone)
