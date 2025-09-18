@@ -22,6 +22,7 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('contracts::claims.contract_number') }}</th>
+                        <th>{{ __('contracts::claims.claim_first_party') }}</th>
                         <th>{{ __('contracts::claims.filed_party_role') }}</th>
                         <th>{{ __('contracts::claims.claim_amount') }}</th>
                         <th>{{ __('contracts::claims.claim_date') }}</th>
@@ -33,6 +34,7 @@
                     <tr>
                         <td class="text-muted">{{ $loop->iteration + ($claims->currentPage() - 1) * $claims->perPage() }}</td>
                         <td class="text-start">{{ $claim->contract->contract_number ?? ('#' . $claim->contract_id) }}</td>
+                        <td class="text-start">{{ optional($claim->claimFirstParty)->name ?? '—' }}</td>
                         <td class="text-start">
                             <div>{{ $claim->filed_party_name ?? '—' }}</div>
                             @if ($claim->filed_party_role)
@@ -45,7 +47,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="py-4">
+                        <td colspan="7" class="py-4">
                             <div class="text-muted">{{ __('contracts::claims.no_results') }}</div>
                         </td>
                     </tr>

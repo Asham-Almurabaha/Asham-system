@@ -5,6 +5,8 @@ namespace Modules\Contracts\Entities;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Lookups\Entities\ClaimFirstParty;
 
 class ContractClaim extends Model
 {
@@ -13,6 +15,7 @@ class ContractClaim extends Model
 
     protected $fillable = [
         'contract_id',
+        'claim_first_party_id',
         'filed_party_role',
         'claim_amount',
         'claim_date',
@@ -35,6 +38,11 @@ class ContractClaim extends Model
     public function contract()
     {
         return $this->belongsTo(Contract::class);
+    }
+
+    public function claimFirstParty(): BelongsTo
+    {
+        return $this->belongsTo(ClaimFirstParty::class);
     }
 
     public function getFiledPartyNameAttribute(): ?string

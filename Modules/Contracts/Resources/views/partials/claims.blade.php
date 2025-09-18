@@ -25,12 +25,16 @@
         $selectedRole = array_key_first($availablePartyOptions);
     }
 
+    $availableFirstParties = collect($claimFirstParties ?? [])->values();
+    $selectedFirstPartyId = old('claim_first_party_id');
+
     $defaultClaimDate = old('claim_date', now()->toDateString());
     $shouldReopenModal = $errors->has('contract_id')
         || $errors->has('filed_party_role')
         || $errors->has('claim_amount')
         || $errors->has('claim_date')
-        || $errors->has('document_number');
+        || $errors->has('document_number')
+        || $errors->has('claim_first_party_id');
 @endphp
 
 <div class="card shadow-sm mb-4">
@@ -49,6 +53,7 @@
                             <th style="width: 60px;" class="text-center">#</th>
                             <th>{{ __('contracts::claims.claim_date') }}</th>
                             <th>{{ __('contracts::claims.document_number') }}</th>
+                            <th>{{ __('contracts::claims.claim_first_party') }}</th>
                             <th>{{ __('contracts::claims.filed_party_role') }}</th>
                             <th class="text-end">{{ __('contracts::claims.claim_amount') }}</th>
                         </tr>
@@ -59,6 +64,7 @@
                                 <td class="text-center">{{ $index + 1 }}</td>
                                 <td>{{ optional($claim->claim_date)->format('Y-m-d') ?? '—' }}</td>
                                 <td>{{ $claim->document_number }}</td>
+                                <td>{{ optional($claim->claimFirstParty)->name ?? '—' }}</td>
                                 <td>
                                     <div>{{ $claim->filed_party_name ?? '—' }}</div>
                                     <div class="text-muted small">
@@ -94,6 +100,26 @@
                     <div class="mb-3">
                         <label class="form-label">{{ __('contracts::claims.contract') }}</label>
                         <div class="form-control bg-light">{{ $contract->contract_number ?? ('#' . $contract->id) }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('contracts::claims.claim_first_party') }}</label>
+                        <select name="claim_first_party_id" class="form-select" @if ($availableFirstParties->isEmpty()) disabled @endif>
+                            <option value="">{{ __('contracts::claims.choose_claim_first_party') }}</option>
+                            @foreach ($availableFirstParties as $firstParty)
+                                <option value="{{ $firstParty->id }}" @selected((string) $selectedFirstPartyId === (string) $firstParty->id)>
+                                    {{ $firstParty->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @if ($availableFirstParties->isEmpty())
+                            <div class="text-danger small mt-1">
+                                {{ __('contracts::claims.no_claim_first_parties') }}
+                            </div>
+                        @endif
+                        @error('claim_first_party_id')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="mb-3">

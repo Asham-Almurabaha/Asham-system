@@ -19,6 +19,7 @@ class ContractClaimController extends Controller
                 },
                 'contract.customer:id,name',
                 'contract.guarantor:id,name',
+                'claimFirstParty:id,name',
             ]);
 
         if ($request->filled('contract_number')) {

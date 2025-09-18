@@ -59,7 +59,7 @@
 @include('contracts::partials.installments', ['contract' => $contract])
 
 {{-- المطالبات --}}
-@include('contracts::partials.claims', ['contract' => $contract])
+@include('contracts::partials.claims', ['contract' => $contract, 'claimFirstParties' => $claimFirstParties])
 
 {{-- الصور --}}
 @include('contracts::partials.images', ['contract' => $contract])
