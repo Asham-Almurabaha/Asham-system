@@ -80,10 +80,7 @@
 
     {{-- ====== تطبيع المتغيّرات ====== --}}
     @php
-        $invTotals       = (object) ($invTotals      ?? ['net' => 0]);
         $officeTotals    = (object) ($officeTotals   ?? ['net' => 0]);
-
-        $invByInvestor   = collect($invByInvestor    ?? []);
 
         $timeSeries      = (array)  ($timeSeries     ?? ['labels'=>[], 'in'=>[], 'out'=>[], 'net'=>[]]);
         $monthlySeries   = (array)  ($monthlySeries  ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
@@ -138,9 +135,6 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Net = In - Out') }}">
-                    <i class="bi bi-people me-1"></i> {{ __('dashboard.Investors Liquidity Net') }}: {{ number_format(($invTotals->net ?? 0), 2) }}
-                </span>
                 <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Profit + Sales Difference + Mukataba') }}">
                     <i class="bi bi-building me-1"></i> {{ __('dashboard.Office Income Net') }}: {{ number_format($officeNet, 2) }}
                 </span>
@@ -199,10 +193,6 @@
         $officeProfit   = (float)($officeMetrics['profit']['total']   ?? 0);
         $salesDiff      = (float)($officeMetrics['sales']['total']    ?? 0);
         $mukatabaTotal  = (float)($officeMetrics['mukataba']['total'] ?? 0);
-
-        // إجماليات المستثمرين
-        $invIn          = (float)($invTotals->inflow  ?? 0);
-        $invOut         = (float)($invTotals->outflow ?? 0);
 
         // أعداد الحسابات
         $banksCount     = ($banksWithOpen ?? collect())->count();
@@ -346,86 +336,6 @@
                 <div class="card-body">
                     <canvas id="topBalancesChart" height="220"></canvas>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ====== أعلى المستثمرين (سيولة فقط) ====== --}}
-    <div class="row g-3 mt-1">
-        <div class="col-12">
-            <div class="section-card card border-0">
-                @php
-                    $rowsRaw = collect($invByInvestor ?? []);
-
-                    $liquid = $rowsRaw
-                        ->map(function ($r) {
-                            $in  = (float) ($r->inflow  ?? 0);
-                            $out = (float) ($r->outflow ?? 0);
-                            $net = $in - $out; // الصافي = داخل − خارج
-                            $r->inflow  = $in;
-                            $r->outflow = $out;
-                            $r->net     = $net;
-                            return $r;
-                        })
-                        ->filter(fn($r) => ($r->inflow > 0 || $r->outflow > 0) && $r->net > 0) // فقط سيولة موجبة
-                        ->sortByDesc('net')
-                        ->take(10)
-                        ->values();
-
-                    $liquidTotalNet = (float) $liquid->sum('net');
-                @endphp
-
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>{{ __('dashboard.Top 10 Investors (Positive Net Liquidity)') }}</span>
-                    <span class="text-muted small" data-bs-toggle="tooltip"
-                        title="{{ __('dashboard.Net = In - Out. Internal transfers are neutral and do not affect the net.') }}">
-                        {{ __('dashboard.Total Net Displayed') }}: {{ number_format($liquidTotalNet, 2) }}
-                    </span>
-                </div>
-
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr class="text-center">
-                                    <th style="width:60px;">#</th>
-                                    <th class="text-start">{{ __('dashboard.Investor') }}</th>
-                                    <th>{{ __('dashboard.In') }}</th>
-                                    <th>{{ __('dashboard.Out') }}</th>
-                                    <th>{{ __('dashboard.Net') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            @forelse($liquid as $idx => $row)
-                                @php
-                                    $in  = (float) ($row->inflow  ?? 0);
-                                    $out = (float) ($row->outflow ?? 0);
-                                    $net = (float) ($row->net     ?? ($in - $out));
-                                @endphp
-                                <tr class="text-center">
-                                    <td>{{ $idx + 1 }}</td>
-                                    <td class="text-start fw-semibold">{{ $row->name ?? ('#'.($row->id ?? '')) }}</td>
-                                    <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
-                                    <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
-                                    <td class="fw-bold text-pos">{{ number_format($net, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-muted text-center py-4">
-                                        {{ __('dashboard.No data for investors with positive liquidity in the current range.') }}
-                                    </td>
-                                </tr>
-                            @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                @if(($liquid->count() ?? 0) > 0)
-                <div class="card-footer small text-muted">
-                    {{ __('dashboard.Net = In - Out. Internal transfers are neutral and do not affect the net.') }}
-                </div>
-                @endif
             </div>
         </div>
     </div>

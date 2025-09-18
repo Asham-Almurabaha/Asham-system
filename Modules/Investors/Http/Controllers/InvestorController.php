@@ -130,8 +130,12 @@ class InvestorController extends Controller
                 COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out,
                 COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS net_balance
             SQL)
+            ->havingRaw(
+                'COALESCE(SUM(CASE WHEN direction = ? THEN amount ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN direction = ? THEN amount ELSE 0 END), 0) > 0',
+                ['in', 'out']
+            )
             ->orderByDesc('net_balance')
-            ->take(5)
+            ->take(10)
             ->get();
 
         $topInvestorIds = $topLiquidityRaw->pluck('investor_id')->all();
@@ -151,7 +155,9 @@ class InvestorController extends Controller
                 'out'   => $totalOut,
                 'net'   => $net,
             ];
-        })->values();
+        })->filter(fn ($row) => $row['net'] > 0)->values();
+
+        $topLiquidityTotalNet = round((float) $topLiquidity->sum('net'), 2);
 
         $recentInvestors = Investor::query()
             ->latest()
@@ -199,6 +205,7 @@ class InvestorController extends Controller
             'percentages'               => $percentages,
             'liquidityTotals'           => $liquidityTotals,
             'topLiquidity'              => $topLiquidity,
+            'topLiquidityTotalNet'      => $topLiquidityTotalNet,
             'recentInvestors'           => $recentInvestors,
             'investorsWithoutContracts' => $investorsWithoutContracts,
             'investorsWithContracts'    => $investorsWithContracts,

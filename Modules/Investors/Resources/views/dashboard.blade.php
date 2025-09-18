@@ -18,6 +18,8 @@
     $percentages = (array) ($percentages ?? []);
     $liquidityTotals = (array) ($liquidityTotals ?? []);
     $contractStats = (array) ($contractStats ?? []);
+    $topLiquidityCollection = collect($topLiquidity ?? []);
+    $topLiquidityTotalNet = (float) ($topLiquidityTotalNet ?? $topLiquidityCollection->sum('net'));
 
     $totalInvestors   = (int) ($investorsTotalAll ?? 0);
     $activeInvestors  = (int) ($activeInvestorsTotalAll ?? 0);
@@ -35,29 +37,35 @@
             <span class="badge bg-light text-dark">{{ __('investors::investors.Active Investors') }}: {{ number_format($activeInvestors) }}</span>
         </div>
     </div>
-    <div class="btn-group" role="group">
-        <a href="{{ route('investors.index') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3">
-            <i class="bi bi-table"></i>
-            <span>{{ __('investors::investors.Manage Investors') }}</span>
-        </a>
-        <button class="btn btn-outline-dark dropdown-toggle d-inline-flex align-items-center gap-2 px-3" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
-            <span class="fs-5">📊</span>
-            <span>{{ __('investors::investors.Reports') }}</span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
-            <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.Allliquidity') }}">
-                    <i class="bi bi-cash-coin text-success"></i>
-                    <span>{{ __('investors::investors.Investors Liquidity Report') }}</span>
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.outstanding') }}">
-                    <i class="bi bi-clipboard-data text-primary"></i>
-                    <span>{{ __('investors::investors.Investors Outstanding Report') }}</span>
-                </a>
-            </li>
-        </ul>
+    <div class="d-flex flex-wrap align-items-center gap-3">
+        <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Net = In - Out') }}">
+            <i class="bi bi-people me-1"></i>
+            {{ __('dashboard.Investors Liquidity Net') }}: {{ number_format($liquidityTotals['net'] ?? 0, 2) }}
+        </span>
+        <div class="btn-group" role="group">
+            <a href="{{ route('investors.index') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3">
+                <i class="bi bi-table"></i>
+                <span>{{ __('investors::investors.Manage Investors') }}</span>
+            </a>
+            <button class="btn btn-outline-dark dropdown-toggle d-inline-flex align-items-center gap-2 px-3" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                <span class="fs-5">📊</span>
+                <span>{{ __('investors::investors.Reports') }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.Allliquidity') }}">
+                        <i class="bi bi-cash-coin text-success"></i>
+                        <span>{{ __('investors::investors.Investors Liquidity Report') }}</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.outstanding') }}">
+                        <i class="bi bi-clipboard-data text-primary"></i>
+                        <span>{{ __('investors::investors.Investors Outstanding Report') }}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -198,9 +206,15 @@
 <div class="row g-3" dir="rtl">
     <div class="col-12 col-xl-6">
         <div class="card shadow-sm h-100">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">{{ __('investors::investors.Top Investors by Liquidity') }}</h6>
-                <span class="badge bg-light text-dark">{{ __('investors::investors.Results') }}: {{ number_format(($topLiquidity ?? collect())->count()) }}</span>
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h6 class="mb-0">{{ __('dashboard.Top 10 Investors (Positive Net Liquidity)') }}</h6>
+                    <div class="small text-muted">{{ __('dashboard.Net = In - Out. Internal transfers are neutral and do not affect the net.') }}</div>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-light text-dark">{{ __('investors::investors.Results') }}: {{ number_format($topLiquidityCollection->count()) }}</span>
+                    <div class="small text-muted mt-1">{{ __('dashboard.Total Net Displayed') }}: {{ number_format($topLiquidityTotalNet, 2) }}</div>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -216,7 +230,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse(($topLiquidity ?? collect()) as $index => $row)
+                            @forelse($topLiquidityCollection as $index => $row)
                                 <tr>
                                     <td class="text-muted">{{ $index + 1 }}</td>
                                     <td class="text-start">
@@ -240,6 +254,11 @@
                     </table>
                 </div>
             </div>
+            @if($topLiquidityCollection->count() > 0)
+                <div class="card-footer small text-muted">
+                    {{ __('dashboard.Net = In - Out. Internal transfers are neutral and do not affect the net.') }}
+                </div>
+            @endif
         </div>
     </div>
 
