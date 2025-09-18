@@ -36,12 +36,12 @@ return [
         'protected_edit' => 'This claim status is protected and cannot be edited.',
         'protected_delete' => 'This claim status is protected and cannot be deleted.',
     ],
-    'claim_paying_parties' => [
-        'created' => 'Claim paying party added successfully.',
-        'updated' => 'Claim paying party updated successfully.',
-        'deleted' => 'Claim paying party deleted successfully.',
-        'protected_edit' => 'This claim paying party is protected and cannot be edited.',
-        'protected_delete' => 'This claim paying party is protected and cannot be deleted.',
+    'claim_payers' => [
+        'created' => 'Claim payer added successfully.',
+        'updated' => 'Claim payer updated successfully.',
+        'deleted' => 'Claim payer deleted successfully.',
+        'protected_edit' => 'This claim payer is protected and cannot be edited.',
+        'protected_delete' => 'This claim payer is protected and cannot be deleted.',
     ],
     'claimants' => [
         'created' => 'Claimant added successfully.',

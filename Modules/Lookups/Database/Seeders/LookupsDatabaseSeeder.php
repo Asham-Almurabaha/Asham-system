@@ -52,7 +52,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'مدفوع كامل', 'is_protected' => true],
         ], $now);
 
-        $this->syncNamedRecords('claim_paying_parties', [
+        $this->syncNamedRecords('claim_payers', [
             ['name' => 'المحكمة', 'is_protected' => true],
             ['name' => 'العميل', 'is_protected' => true],
             ['name' => 'الكفيل', 'is_protected' => true],

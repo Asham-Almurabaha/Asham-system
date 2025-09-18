@@ -1,7 +1,6 @@
 {
     "Add New Category": "Add New Category",
     "Add New Claimant": "Add New Claimant",
-    "Add New Claim Paying Party": "Add New Claim Paying Party",
     "Add New Claim Status": "Add New Claim Status",
     "Add New Contract Status": "Add New Contract Status",
     "Add New Customer Status": "Add New Customer Status",
@@ -14,7 +13,6 @@
     "Add New Transaction Status": "Add New Transaction Status",
     "Are you sure to delete this category?": "Are you sure to delete this category?",
     "Are you sure to delete this claimant?": "Are you sure to delete this claimant?",
-    "Are you sure to delete this claim paying party?": "Are you sure to delete this claim paying party?",
     "Are you sure to delete this claim status?": "Are you sure to delete this claim status?",
     "Are you sure to delete this contract status?": "Are you sure to delete this contract status?",
     "Are you sure to delete this customer status?": "Are you sure to delete this customer status?",
@@ -29,8 +27,6 @@
     "Categories List": "Categories List",
     "Claimants": "Claimants",
     "Claimants List": "Claimants List",
-    "Claim Paying Parties": "Claim Paying Parties",
-    "Claim Paying Parties List": "Claim Paying Parties List",
     "Claim Statuses": "Claim Statuses",
     "Claim Statuses List": "Claim Statuses List",
     "Contract Statuses": "Contract Statuses",
@@ -39,7 +35,6 @@
     "Customer Statuses List": "Customer Statuses List",
     "Edit Category": "Edit Category",
     "Edit Claimant": "Edit Claimant",
-    "Edit Claim Paying Party": "Edit Claim Paying Party",
     "Edit Claim Status": "Edit Claim Status",
     "Edit Customer Status": "Edit Customer Status",
     "Edit Guarantor Status": "Edit Guarantor Status",
@@ -55,7 +50,6 @@
     "Nationalities List": "Nationalities List",
     "No categories found.": "No categories found.",
     "No claimants found.": "No claimants found.",
-    "No claim paying parties found.": "No claim paying parties found.",
     "No claim statuses found.": "No claim statuses found.",
     "No contract statuses found.": "No contract statuses found.",
     "No customer statuses found.": "No customer statuses found.",
@@ -75,5 +69,11 @@
     "Titles List": "Titles List",
     "Transaction Statuses": "Transaction Statuses",
     "Transaction Statuses List": "Transaction Statuses List",
-    "Transaction Type": "Transaction Type"
+    "Transaction Type": "Transaction Type",
+    "Add New Claim Payer": "Add New Claim Payer",
+    "Are you sure to delete this claim payer?": "Are you sure to delete this claim payer?",
+    "Claim Payers": "Claim Payers",
+    "Claim Payers List": "Claim Payers List",
+    "Edit Claim Payer": "Edit Claim Payer",
+    "No claim payers found.": "No claim payers found."
 }

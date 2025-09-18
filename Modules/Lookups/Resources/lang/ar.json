@@ -1,7 +1,6 @@
 {
     "Add New Category": "إضافة مجال جديد",
     "Add New Claimant": "إضافة مطالب جديد",
-    "Add New Claim Paying Party": "إضافة طرف مسدد جديد للمطالبة",
     "Add New Claim Status": "إضافة حالة مطالبة جديدة",
     "Add New Contract Status": "إضافة حالة عقد جديدة",
     "Add New Customer Status": "إضافة حالة عميل جديدة",
@@ -14,7 +13,6 @@
     "Add New Transaction Status": "إضافة حالة عملية جديدة",
     "Are you sure to delete this category?": "هل أنت متأكد من حذف هذا المجال؟",
     "Are you sure to delete this claimant?": "هل أنت متأكد من حذف هذا المطالب؟",
-    "Are you sure to delete this claim paying party?": "هل أنت متأكد من حذف الطرف المسدد للمطالبة؟",
     "Are you sure to delete this claim status?": "هل أنت متأكد من حذف حالة المطالبة هذه؟",
     "Are you sure to delete this contract status?": "هل أنت متأكد من حذف حالة العقد؟",
     "Are you sure to delete this customer status?": "هل أنت متأكد من حذف حالة العميل هذه؟",
@@ -29,8 +27,6 @@
     "Categories List": "قائمة المجالات",
     "Claimants": "المطالبون",
     "Claimants List": "قائمة المطالبين",
-    "Claim Paying Parties": "الأطراف المسددة للمطالبات",
-    "Claim Paying Parties List": "جدول الأطراف المسددة للمطالبات",
     "Claim Statuses": "حالات المطالبات",
     "Claim Statuses List": "قائمة حالات المطالبات",
     "Contract Statuses": "حالات العقود",
@@ -39,7 +35,6 @@
     "Customer Statuses List": "قائمة حالات العملاء",
     "Edit Category": "تعديل المجال",
     "Edit Claimant": "تعديل المطالب",
-    "Edit Claim Paying Party": "تعديل الطرف المسدد للمطالبة",
     "Edit Claim Status": "تعديل حالة المطالبة",
     "Edit Customer Status": "تعديل حالة العميل",
     "Edit Guarantor Status": "تعديل حالة الكفيل",
@@ -55,7 +50,6 @@
     "Nationalities List": "قائمة الجنسيات",
     "No categories found.": "لا توجد مجالات بعد.",
     "No claimants found.": "لا يوجد مطالبون.",
-    "No claim paying parties found.": "لا توجد أطراف مسددة للمطالبات.",
     "No claim statuses found.": "لا توجد حالات مطالبات بعد.",
     "No contract statuses found.": "لا توجد حالات عقود بعد.",
     "No customer statuses found.": "لا توجد حالات عملاء بعد.",
@@ -75,5 +69,11 @@
     "Titles List": "قائمة المسميات الوظيفية",
     "Transaction Statuses": "حالات العمليات",
     "Transaction Statuses List": "قائمة حالات العمليات",
-    "Transaction Type": "نوع العملية"
+    "Transaction Type": "نوع العملية",
+    "Add New Claim Payer": "إضافة مسدد مطالبة جديد",
+    "Are you sure to delete this claim payer?": "هل أنت متأكد من حذف مسدد المطالبة؟",
+    "Claim Payers": "مسددي المطالبات",
+    "Claim Payers List": "جدول مسددي المطالبات",
+    "Edit Claim Payer": "تعديل مسدد المطالبة",
+    "No claim payers found.": "لا يوجد مسددي مطالبات."
 }

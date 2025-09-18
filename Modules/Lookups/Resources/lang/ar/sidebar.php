@@ -7,7 +7,7 @@ return [
     'Guarantor Statuses' => 'حالات الكفلاء',
     'Contract Statuses' => 'حالات العقود',
     'Claim Statuses' => 'حالات المطالبات',
-    'Claim Paying Parties' => 'الأطراف المسددة للمطالبات',
+    'Claim Payers' => 'مسددي المطالبات',
     'Claimants' => 'المطالبون',
     'Customer Statuses' => 'حالات العملاء',
     'Installment Statuses' => 'حالات الأقساط',
