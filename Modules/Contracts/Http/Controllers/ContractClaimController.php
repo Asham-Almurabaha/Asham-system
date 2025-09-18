@@ -4,7 +4,6 @@ namespace Modules\Contracts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimRequest;
@@ -49,13 +48,6 @@ class ContractClaimController extends Controller
         ]);
     }
 
-    public function create()
-    {
-        return view('contracts::claims.create', [
-            'contracts' => $this->contractsForSelect(),
-        ]);
-    }
-
     public function store(StoreContractClaimRequest $request)
     {
         $claim = ContractClaim::create($request->validated());
@@ -69,16 +61,6 @@ class ContractClaimController extends Controller
         return redirect()
             ->route('contract-claims.index')
             ->with('success', __('contracts::claims.created'));
-    }
-
-    public function edit(ContractClaim $contractClaim)
-    {
-        $contractClaim->loadMissing('contract.customer:id,name', 'contract.guarantor:id,name');
-
-        return view('contracts::claims.edit', [
-            'claim' => $contractClaim,
-            'contracts' => $this->contractsForSelect(),
-        ]);
     }
 
     public function update(UpdateContractClaimRequest $request, ContractClaim $contractClaim)
@@ -97,14 +79,6 @@ class ContractClaimController extends Controller
         return redirect()
             ->route('contract-claims.index')
             ->with('success', __('contracts::claims.deleted'));
-    }
-
-    private function contractsForSelect()
-    {
-        return Contract::query()
-            ->with(['customer:id,name', 'guarantor:id,name'])
-            ->orderBy('contract_number')
-            ->get(['id', 'contract_number', 'customer_id', 'guarantor_id']);
     }
 
     private function partyRoleOptions(): array
