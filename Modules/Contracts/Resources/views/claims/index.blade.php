@@ -33,7 +33,15 @@
                 @forelse ($claims as $claim)
                     <tr>
                         <td class="text-muted">{{ $loop->iteration + ($claims->currentPage() - 1) * $claims->perPage() }}</td>
-                        <td class="text-start">{{ $claim->contract->contract_number ?? ('#' . $claim->contract_id) }}</td>
+                        <td class="text-start">
+                            @if ($claim->contract)
+                                <a href="{{ route('contracts.show', $claim->contract) }}" class="fw-bold text-dark text-decoration-none">
+                                    {{ $claim->contract->contract_number }}
+                                </a>
+                            @else
+                                {{ '#' . $claim->contract_id }}
+                            @endif
+                        </td>
                         <td class="text-start">{{ optional($claim->claimFirstParty)->name ?? '—' }}</td>
                         <td class="text-start">
                             <div>{{ $claim->filed_party_name ?? '—' }}</div>
