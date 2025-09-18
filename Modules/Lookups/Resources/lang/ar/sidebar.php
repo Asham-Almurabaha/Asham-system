@@ -6,6 +6,7 @@ return [
     'Categories' => 'المجالات',
     'Guarantor Statuses' => 'حالات الكفلاء',
     'Contract Statuses' => 'حالات العقود',
+    'Claim Statuses' => 'حالات المطالبات',
     'Claim First Parties' => 'أطراف المطالبات (الطرف الأول)',
     'Customer Statuses' => 'حالات العملاء',
     'Installment Statuses' => 'حالات الأقساط',

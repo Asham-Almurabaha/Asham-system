@@ -29,6 +29,13 @@ return [
         'protected_edit' => 'This status is protected and cannot be modified.',
         'protected_delete' => 'This status is protected and cannot be deleted.',
     ],
+    'claim_statuses' => [
+        'created' => 'Claim status added successfully.',
+        'updated' => 'Claim status updated successfully.',
+        'deleted' => 'Claim status deleted successfully.',
+        'protected_edit' => 'This claim status is protected and cannot be edited.',
+        'protected_delete' => 'This claim status is protected and cannot be deleted.',
+    ],
     'claim_first_parties' => [
         'created' => 'Claim first party added successfully.',
         'updated' => 'Claim first party updated successfully.',
