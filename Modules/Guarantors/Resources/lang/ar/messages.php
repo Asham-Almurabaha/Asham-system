@@ -32,6 +32,8 @@ return [
     'Job Title' => 'الوظيفة',
     'Guarantor Status' => 'حالة الكفيل',
     'ID Card Image' => 'صورة الهوية',
+    'Contracts Count' => 'عدد العقود المكفول فيها',
+    'Customers Count' => 'عدد العملاء المكفولين',
     'Actions' => 'إجراءات',
 
     // Actions

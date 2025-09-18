@@ -17,11 +17,18 @@ class GuarantorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Guarantor::query()->with([
-            'nationality:id,name',
-            'title:id,name',
-            'guarantorStatus:id,name',
-        ]);
+        $query = Guarantor::query()
+            ->with([
+                'nationality:id,name',
+                'title:id,name',
+                'guarantorStatus:id,name',
+            ])
+            ->withCount([
+                'contracts',
+                'contracts as customers_count' => function ($q) {
+                    $q->select(DB::raw('COUNT(DISTINCT customer_id)'));
+                },
+            ]);
 
         // ===== بحث باسم الكفيل فقط =====
         $nameQ = trim((string) $request->input('guarantor_q', ''));

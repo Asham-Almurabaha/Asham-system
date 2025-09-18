@@ -32,6 +32,8 @@ return [
     'Job Title' => 'Job Title',
     'Guarantor Status' => 'Guarantor Status',
     'ID Card Image' => 'ID Card Image',
+    'Contracts Count' => 'Contracts Count',
+    'Customers Count' => 'Customers Count',
     'Actions' => 'Actions',
 
     // Actions

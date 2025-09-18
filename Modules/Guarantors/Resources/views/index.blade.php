@@ -155,11 +155,8 @@
                         <th>{{ __('guarantors::messages.Guarantor Status') }}</th>
                         <th>{{ __('guarantors::messages.National ID') }}</th>
                         <th>{{ __('guarantors::messages.Phone') }}</th>
-                        <th>{{ __('guarantors::messages.Email') }}</th>
-                        <th>{{ __('guarantors::messages.Nationality') }}</th>
-                        <th>{{ __('guarantors::messages.Address') }}</th>
-                        <th>{{ __('guarantors::messages.Job Title') }}</th>
-                        <th style="min-width:110px;">{{ __('guarantors::messages.ID Card Image') }}</th>
+                        <th>{{ __('guarantors::messages.Contracts Count') }}</th>
+                        <th>{{ __('guarantors::messages.Customers Count') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -176,25 +173,12 @@
                             <td>{{ optional($g->guarantorStatus)->name ?? '—' }}</td>
                             <td dir="ltr">{{ $g->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $g->phone ?? '—' }}</td>
-                            <td class="text-start">{{ $g->email ?? '—' }}</td>
-                            <td>{{ optional($g->nationality)->name ?? '—' }}</td>
-                            <td class="text-start">{{ $g->address ?? '—' }}</td>
-                            <td>{{ optional($g->title)->name ?? '—' }}</td>
-                            <td>
-                                @if($g->id_card_image)
-                                    <a href="{{ asset('storage/' . $g->id_card_image) }}" target="_blank" data-bs-toggle="tooltip" title="{{ __('guarantors::messages.View full size image') }}">
-                                        <img src="{{ asset('storage/' . $g->id_card_image) }}"
-                                             alt="{{ __('guarantors::messages.ID Card Image') }}" width="70" height="48"
-                                             style="object-fit: cover; border-radius: .25rem;">
-                                    </a>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
+                            <td>{{ number_format($g->contracts_count ?? 0) }}</td>
+                            <td>{{ number_format($g->customers_count ?? 0) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="py-5">
+                            <td colspan="7" class="py-5">
                                 <div class="text-muted">
                                     {{ __('guarantors::messages.No matching results for your search.') }}
                                     <a href="{{ route('guarantors.index') }}" class="ms-1">{{ __('guarantors::messages.Show All') }}</a>
