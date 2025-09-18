@@ -9,6 +9,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimRequest;
+use Modules\Lookups\Entities\ClaimStatus;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\GuarantorStatus;
@@ -18,6 +19,7 @@ class ContractClaimController extends Controller
     private ?int $customerClaimStatusId = null;
     private ?int $guarantorClaimStatusId = null;
     private ?int $contractClaimStatusId = null;
+    private ?int $defaultClaimStatusId = null;
 
     public function index(Request $request)
     {
@@ -29,6 +31,7 @@ class ContractClaimController extends Controller
                 'contract.customer:id,name',
                 'contract.guarantor:id,name',
                 'claimFirstParty:id,name',
+                'claimStatus:id,name',
             ]);
 
         if ($request->filled('contract_number')) {
@@ -61,7 +64,10 @@ class ContractClaimController extends Controller
     public function store(StoreContractClaimRequest $request)
     {
         $claim = DB::transaction(function () use ($request) {
-            $claim = ContractClaim::create($request->validated());
+            $payload = $request->validated();
+            $payload['claim_status_id'] = $this->defaultClaimStatusId();
+
+            $claim = ContractClaim::create($payload);
 
             $this->updateRelatedStatuses($claim);
 
@@ -188,5 +194,15 @@ class ContractClaimController extends Controller
         }
 
         return $this->contractClaimStatusId ?: null;
+    }
+
+    private function defaultClaimStatusId(): ?int
+    {
+        if ($this->defaultClaimStatusId === null) {
+            $id = ClaimStatus::where('name', 'قيد المراجعة')->value('id');
+            $this->defaultClaimStatusId = $id ? (int) $id : 0;
+        }
+
+        return $this->defaultClaimStatusId ?: null;
     }
 }

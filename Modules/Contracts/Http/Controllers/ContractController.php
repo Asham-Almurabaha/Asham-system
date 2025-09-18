@@ -553,6 +553,7 @@ class ContractController extends Controller
                 ->orderByDesc('claim_date')
                 ->orderByDesc('id'),
             'claims.claimFirstParty:id,name',
+            'claims.claimStatus:id,name',
         ]);
 
         $investors = Investor::all();

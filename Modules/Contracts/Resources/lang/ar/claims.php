@@ -21,6 +21,7 @@ return [
     'claim_amount' => 'مبلغ الرفع',
     'claim_date' => 'تاريخ الرفع',
     'document_number' => 'رقم السند',
+    'claim_status' => 'حالة المطالبة',
     'actions' => 'الإجراءات',
     'search' => 'بحث',
     'clear' => 'مسح',

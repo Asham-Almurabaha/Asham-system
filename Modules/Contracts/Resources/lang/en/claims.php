@@ -21,6 +21,7 @@ return [
     'claim_amount' => 'Claim Amount',
     'claim_date' => 'Claim Date',
     'document_number' => 'Document Number',
+    'claim_status' => 'Claim Status',
     'actions' => 'Actions',
     'search' => 'Search',
     'clear' => 'Clear',

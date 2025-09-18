@@ -27,6 +27,7 @@
                         <th>{{ __('contracts::claims.claim_amount') }}</th>
                         <th>{{ __('contracts::claims.claim_date') }}</th>
                         <th>{{ __('contracts::claims.document_number') }}</th>
+                        <th>{{ __('contracts::claims.claim_status') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,10 +53,11 @@
                         <td>{{ number_format((float) $claim->claim_amount, 2) }}</td>
                         <td>{{ optional($claim->claim_date)->format('Y-m-d') }}</td>
                         <td>{{ $claim->document_number }}</td>
+                        <td class="text-start">{{ optional($claim->claimStatus)->name ?? '—' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="py-4">
+                        <td colspan="8" class="py-4">
                             <div class="text-muted">{{ __('contracts::claims.no_results') }}</div>
                         </td>
                     </tr>

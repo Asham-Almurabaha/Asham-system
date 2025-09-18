@@ -53,6 +53,7 @@
                             <th style="width: 60px;" class="text-center">#</th>
                             <th>{{ __('contracts::claims.claim_date') }}</th>
                             <th>{{ __('contracts::claims.document_number') }}</th>
+                            <th>{{ __('contracts::claims.claim_status') }}</th>
                             <th>{{ __('contracts::claims.claim_first_party') }}</th>
                             <th>{{ __('contracts::claims.filed_party_role') }}</th>
                             <th class="text-end">{{ __('contracts::claims.claim_amount') }}</th>
@@ -64,6 +65,7 @@
                                 <td class="text-center">{{ $index + 1 }}</td>
                                 <td>{{ optional($claim->claim_date)->format('Y-m-d') ?? '—' }}</td>
                                 <td>{{ $claim->document_number }}</td>
+                                <td>{{ optional($claim->claimStatus)->name ?? '—' }}</td>
                                 <td>{{ optional($claim->claimFirstParty)->name ?? '—' }}</td>
                                 <td>
                                     <div>{{ $claim->filed_party_name ?? '—' }}</div>
