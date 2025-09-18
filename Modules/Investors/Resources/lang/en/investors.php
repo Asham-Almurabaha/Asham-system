@@ -57,6 +57,7 @@ return array (
   'The value is between 0 and 100.' => 'The value is between 0 and 100.',
   'Current image:' => 'Current image:',
   'Preview after upload:' => 'Preview after upload:',
+  'Validation errors message' => 'There are validation errors. Please check the fields.',
   'You can change the image or delete the current one.' => 'You can change the image or delete the current one.',
   'Investors Dashboard' => 'Investors Dashboard',
   'Dashboard Intro' => 'Monitor investor performance, liquidity, and contract coverage in one place.',

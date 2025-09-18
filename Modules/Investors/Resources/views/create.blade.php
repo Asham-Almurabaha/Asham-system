@@ -1,6 +1,6 @@
 ﻿@extends('layouts.master')
 
-@section('title', 'اضافة مستثمر')
+@section('title', __('investors::investors.Add Investor'))
 
 @section('content')
 <div class="container py-3" dir="rtl">
@@ -16,7 +16,7 @@
     </div>
 
     @if ($errors->any())
-        <div class="alert alert-danger shadow-sm">{{ __("There are validation errors. Please check the fields.") }}</div>
+        <div class="alert alert-danger shadow-sm">{{ __('investors::investors.Validation errors message') }}</div>
     @endif
 
     <div class="card border-0 shadow-sm">
@@ -94,7 +94,7 @@
                             name="nationality_id"
                             id="nationality_id"
                             class="form-select @error('nationality_id') is-invalid @enderror">
-                            <option value="">-- ط§ط®طھط± --</option>
+                            <option value="">{{ __('-- Choose --') }}</option>
                             @foreach (($nationalities ?? []) as $Nationality)
                                 @if(is_object($Nationality))
                                     <option value="{{ $Nationality->id }}" @selected(old('nationality_id') == $Nationality->id)>{{ $Nationality->name }}</option>
@@ -110,7 +110,7 @@
                             name="title_id"
                             id="title_id"
                             class="form-select @error('title_id') is-invalid @enderror">
-                            <option value="">-- ط§ط®طھط± --</option>
+                            <option value="">{{ __('-- Choose --') }}</option>
                             @foreach (($titles ?? []) as $title)
                                 @if(is_object($title))
                                     <option value="{{ $title->id }}" @selected(old('title_id') == $title->id)>{{ $title->name }}</option>
@@ -139,12 +139,11 @@
                             id="id_card_image"
                             class="form-control @error('id_card_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">{{ __('investors::investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
                         @error('id_card_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="id-preview-wrap">
-                            <small class="text-muted d-block mb-1">ظ…ط¹ط§ظٹظ†ط©:</small>
-                            <img id="id-preview" src="#" alt="ظ…ط¹ط§ظٹظ†ط© طµظˆط±ط© ط§ظ„ظ‡ظˆظٹط©" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                            <small class="text-muted d-block mb-1">{{ __('investors::investors.Preview after upload:') }}</small>
+                            <img id="id-preview" src="#" alt="{{ __('investors::investors.ID Card Image') }}" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
 
@@ -156,12 +155,11 @@
                             id="contract_image"
                             class="form-control @error('contract_image') is-invalid @enderror"
                             accept="image/*">
-                        <div class="form-text">{{ __('investors::investors.Allowed extensions: jpg/png/webp â€” suitable size less than 2MB.') }}</div>
                         @error('contract_image') <div class="invalid-feedback">{{ $message }}</div> @enderror
 
                         <div class="mt-2 d-none" id="contract-preview-wrap">
-                            <small class="text-muted d-block mb-1">ظ…ط¹ط§ظٹظ†ط©:</small>
-                            <img id="contract-preview" src="#" alt="ظ…ط¹ط§ظٹظ†ط© طµظˆط±ط© ط§ظ„ط¹ظ‚ط¯" class="rounded border" style="max-height: 140px; object-fit: cover;">
+                            <small class="text-muted d-block mb-1">{{ __('investors::investors.Preview after upload:') }}</small>
+                            <img id="contract-preview" src="#" alt="{{ __('investors::investors.Contract Image') }}" class="rounded border" style="max-height: 140px; object-fit: cover;">
                         </div>
                     </div>
 
@@ -172,7 +170,7 @@
                             name="investment_start_date"
                             id="investment_start_date"
                             class="form-control js-date @error('investment_start_date') is-invalid @enderror"
-                            placeholder="YYYY-MM-DD"
+                            placeholder="{{ __('YYYY-MM-DD') }}"
                             value="{{ old('investment_start_date') }}"
                             dir="ltr">
                         @error('investment_start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror

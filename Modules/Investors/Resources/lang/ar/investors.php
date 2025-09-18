@@ -57,6 +57,7 @@ return array (
   'The value is between 0 and 100.' => 'القيمة بين 0 و 100.',
   'Current image:' => 'الصورة الحالية:',
   'Preview after upload:' => 'معاينة الصورة الجديدة:',
+  'Validation errors message' => 'هناك أخطاء في التحقق. يرجى مراجعة الحقول.',
   'You can change the image or delete the current one.' => 'يمكنك تغيير الصورة أو حذف الحالية.',
   'Investors Dashboard' => 'لوحة تحكم المستثمرين',
   'Dashboard Intro' => 'تابع أداء المستثمرين والسيولة وتغطية العقود في مكان واحد.',
