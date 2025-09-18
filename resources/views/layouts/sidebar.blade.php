@@ -8,10 +8,9 @@
 
   // هل مجموعة الإعدادات مفتوحة؟
   $settingsOpen = $isPath('*/setting*')
-      || $isRoute('settings.*')
-      || $isRoute('nationalities.*')
-      || $isRoute('titles.*')
-      || $isRoute('customer_statuses.*')
+      || $isRoute('settings.*') || $isRoute('nationalities.*') || $isRoute('titles.*')
+      || $isRoute('contract_statuses.*')
+      || $isRoute('claim_first_parties.*')
       || $isRoute('guarantor_statuses.*')
       || $isRoute('contract_statuses.*')
       || $isRoute('installment_statuses.*')
@@ -160,13 +159,8 @@
         </a>
       </li>
       <li>
-        <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+        <a class="{{ $active($isRoute('claim_first_parties.*')) }}" href="{{ route('claim_first_parties.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim First Parties')</span>
         </a>
       </li>
 
