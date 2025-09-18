@@ -73,11 +73,12 @@ class ContractStatusUpdater
             $this->contractStatuses = ContractStatus::pluck('id', 'name')->all();
         }
 
-        $lateCount     = 0;
-        $maatherCount  = 0;
-        $allPaid       = true;
-        $anyLate       = false;
-        $allNotDueYet  = true;
+        $lateCount        = 0;
+        $maatherCount     = 0;
+        $allPaid          = true;
+        $anyLate          = false;
+        $allNotDueYet     = true;
+        $contractRemaining = 0.0;
 
         foreach ($contract->installments as $installment) {
             $statusName = $installment->installmentStatus->name ?? null;
@@ -86,18 +87,23 @@ class ContractStatusUpdater
                 $maatherCount++;
             }
 
+            $dueAmount = (float) ($installment->due_amount ?? 0);
+            $paid      = (float) ($installment->payment_amount ?? 0);
+            $remainingForInstallment = max(0.0, round($dueAmount - $paid, 2));
+            $contractRemaining += $remainingForInstallment;
+
+            if ($remainingForInstallment > 0) {
+                $allPaid = false;
+            }
+
             if (in_array($statusName, ['مدفوع كامل', 'مدفوع مبكر', 'مدفوع متأخر', 'مدفوع جزئي', 'مؤجل', 'معتذر'], true)) {
                 $allNotDueYet = false;
                 continue;
             }
 
             $dueDate   = Carbon::parse($installment->due_date);
-            $paid      = (float) ($installment->payment_amount ?? 0);
-            $dueAmount = (float) ($installment->due_amount ?? 0);
 
-            if ($paid < $dueAmount) {
-                $allPaid = false;
-
+            if ($remainingForInstallment > 0) {
                 if ($dueDate->between($today->copy()->subDays(7), $today->copy()->addDays(7))) {
                     $installment->installment_status_id = $this->installmentStatuses['مستحق'] ?? $installment->installment_status_id;
                     $allNotDueYet = false;
@@ -116,7 +122,9 @@ class ContractStatusUpdater
             $installment->save();
         }
 
-        if ($allPaid) {
+        $contractRemaining = round($contractRemaining, 2);
+
+        if ($contractRemaining <= 0.0) {
             $contract->contract_status_id = $this->contractStatuses['منتهي'] ?? $contract->contract_status_id;
         }
         elseif ($allNotDueYet) {
