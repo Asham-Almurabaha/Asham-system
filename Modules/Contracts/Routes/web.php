@@ -30,6 +30,8 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
 Route::resource('contract-claims', ContractClaimController::class)->except(['show', 'create', 'edit']);
 
 // CRUD العقود
+Route::put('contracts/{contract}/images', [ContractController::class, 'updateImages'])
+    ->name('contracts.images.update');
 Route::resource('contracts', ContractController::class);
 Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');
 

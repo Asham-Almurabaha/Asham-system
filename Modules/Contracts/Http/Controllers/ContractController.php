@@ -568,6 +568,47 @@ class ContractController extends Controller
         return view('contracts::show', compact('contract', 'investors','banks','safes','claimFirstParties'));
     }
 
+    public function updateImages(Request $request, Contract $contract)
+    {
+        $request->validate([
+            'contract_image'           => ['nullable','image','mimes:jpg,jpeg,png,webp','max:4096'],
+            'contract_customer_image'  => ['nullable','image','mimes:jpg,jpeg,png,webp','max:4096'],
+            'contract_guarantor_image' => ['nullable','image','mimes:jpg,jpeg,png,webp','max:4096'],
+        ]);
+
+        if (
+            !$request->hasFile('contract_image') &&
+            !$request->hasFile('contract_customer_image') &&
+            !$request->hasFile('contract_guarantor_image')
+        ) {
+            return back()
+                ->withErrors(['contract_image' => __('Please select at least one image to upload.')])
+                ->withInput();
+        }
+
+        $updates = [];
+
+        if ($path = $this->putImage($request, 'contract_image', self::DIR_CONTRACT_MAIN, $contract->contract_image)) {
+            $updates['contract_image'] = $path;
+        }
+
+        if ($path = $this->putImage($request, 'contract_customer_image', self::DIR_CONTRACT_CUSTOMERS, $contract->contract_customer_image)) {
+            $updates['contract_customer_image'] = $path;
+        }
+
+        if ($path = $this->putImage($request, 'contract_guarantor_image', self::DIR_CONTRACT_GUARANTORS, $contract->contract_guarantor_image)) {
+            $updates['contract_guarantor_image'] = $path;
+        }
+
+        if (!empty($updates)) {
+            $contract->update($updates);
+        }
+
+        return redirect()
+            ->route('contracts.show', $contract)
+            ->with('success', __('Contract images updated successfully.'));
+    }
+
     private function validateContract(Request $request, bool $isUpdate = false): array
     {
         $rules = [
