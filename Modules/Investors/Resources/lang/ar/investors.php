@@ -41,7 +41,7 @@ return array (
   'Active Investors' => 'المستثمرون النشطون',
   'Active Percentage' => 'نسبة النشطين',
   'Inactive Investors' => 'المستثمرون غير النشطين',
-  'Percentage' => 'النسبة',
+  'Percentage' => 'النسبة المئوية',
   'New Investors This Month' => 'مستثمرون جدد هذا الشهر',
   'This Week' => 'هذا الأسبوع',
   'Type investor name...' => 'اكتب اسم المستثمر...',

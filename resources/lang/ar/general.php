@@ -68,7 +68,7 @@ return array (
   'Active Guarantors' => 'الكفلاء النشطون',
   'Active Percentage' => 'نسبة النشطين',
   'Inactive' => 'غير نشطين',
-  'Percentage' => 'النسبة',
+  'Percentage' => 'النسبة المئوية',
   'New Guarantors This Month' => 'كفلاء جدد هذا الشهر',
   'This Week' => 'هذا الأسبوع',
   'Filter' => 'تصفية',

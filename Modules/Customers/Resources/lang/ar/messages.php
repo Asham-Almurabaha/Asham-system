@@ -28,7 +28,7 @@ return array (
   'Active Customers' => 'العملاء النشطون',
   'Active Percentage' => 'النسبة النشطة',
   'Inactive' => 'غير نشط',
-  'Percentage' => 'النسبة',
+  'Percentage' => 'النسبة المئوية',
   'New Customers This Month' => 'عملاء جدد هذا الشهر',
   'This Week' => 'هذا الأسبوع',
   'Type customer name...' => 'اكتب اسم العميل...',

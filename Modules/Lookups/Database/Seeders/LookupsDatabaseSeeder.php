@@ -44,11 +44,11 @@ class LookupsDatabaseSeeder extends Seeder
         ], $now);
 
         $this->syncNamedRecords('claim_statuses', [
-            ['name' => 'مدفوع كامل', 'is_protected' => true],
-            ['name' => 'مدفوع جزئي', 'is_protected' => true],
+            ['name' => 'قيد المراجعة', 'is_protected' => true],
             ['name' => 'مرفوض', 'is_protected' => true],
             ['name' => 'مقبول', 'is_protected' => true],
-            ['name' => 'قيد المراجعة', 'is_protected' => true],
+            ['name' => 'مدفوع كامل', 'is_protected' => true],
+            ['name' => 'مدفوع جزئي', 'is_protected' => true],
         ], $now);
 
         $this->syncNamedRecords('customer_statuses', [
