@@ -102,8 +102,8 @@
         <a href="{{ route('contracts.index') }}" class="btn btn-outline-primary">
             <i class="bi bi-table"></i> {{ __('Manage Contracts') }}
         </a>
-        <a href="{{ route('contracts.create') }}" class="btn btn-success">
-            <i class="bi bi-plus-lg"></i> {{ __('Add New Contract') }}
+        <a href="#contracts-reports" class="btn btn-success">
+            <i class="bi bi-bar-chart"></i> {{ __('Reports') }}
         </a>
     </div>
 </div>
@@ -306,7 +306,7 @@
     </div>
 </div>
 
-<div class="card shadow-sm" dir="rtl">
+<div class="card shadow-sm" dir="rtl" id="contracts-reports">
     <div class="card-body d-flex flex-wrap gap-3 align-items-center justify-content-between">
         <div>
             <h6 class="mb-1">{{ __('Reports') }}</h6>
@@ -345,9 +345,6 @@
                     </li>
                 </ul>
             </div>
-            <a href="{{ route('contracts.export.form') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-download"></i> {{ __('Export Samples') }}
-            </a>
         </div>
     </div>
 </div>
