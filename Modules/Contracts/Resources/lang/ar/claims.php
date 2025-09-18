@@ -24,6 +24,8 @@ return [
     'claim_status' => 'حالة المطالبة',
     'change_status' => 'تغيير الحالة',
     'update_status' => 'تحديث الحالة',
+    'discount_amount' => 'قيمة الخصم',
+    'apply_discount' => 'تطبيق الخصم',
     'actions' => 'الإجراءات',
     'search' => 'بحث',
     'clear' => 'مسح',
@@ -38,7 +40,9 @@ return [
     'created' => 'تم إنشاء المطالبة بنجاح.',
     'updated' => 'تم تحديث المطالبة بنجاح.',
     'status_updated' => 'تم تحديث حالة المطالبة بنجاح.',
+    'discount_applied' => 'تم تطبيق الخصم بنجاح.',
     'deleted' => 'تم حذف المطالبة بنجاح.',
+    'paid_with_discount_status_missing' => 'حالة "مدفوع بخصم" غير مضافة بعد. يرجى إضافتها من شاشة الإعدادات.',
     'validation_missing_customer' => 'العقد المختار لا يحتوي على عميل.',
     'validation_missing_guarantor' => 'العقد المختار لا يحتوي على كفيل.',
 ];

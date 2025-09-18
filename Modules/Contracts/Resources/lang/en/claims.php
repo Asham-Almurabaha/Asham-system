@@ -24,6 +24,8 @@ return [
     'claim_status' => 'Claim Status',
     'change_status' => 'Change Status',
     'update_status' => 'Update Status',
+    'discount_amount' => 'Discount Amount',
+    'apply_discount' => 'Apply Discount',
     'actions' => 'Actions',
     'search' => 'Search',
     'clear' => 'Clear',
@@ -38,7 +40,9 @@ return [
     'created' => 'Claim created successfully.',
     'updated' => 'Claim updated successfully.',
     'status_updated' => 'Claim status updated successfully.',
+    'discount_applied' => 'Discount applied successfully.',
     'deleted' => 'Claim deleted successfully.',
     'validation_missing_customer' => 'The selected contract does not have a customer assigned.',
     'validation_missing_guarantor' => 'The selected contract does not have a guarantor assigned.',
+    'paid_with_discount_status_missing' => 'The "Paid with discount" status is not configured yet. Please add it from the lookups screen.',
 ];

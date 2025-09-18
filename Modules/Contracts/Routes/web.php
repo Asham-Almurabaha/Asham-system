@@ -29,6 +29,8 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
 
 Route::patch('contract-claims/{contractClaim}/status', [ContractClaimController::class, 'updateStatus'])
     ->name('contract-claims.update-status');
+Route::patch('contract-claims/{contractClaim}/discount', [ContractClaimController::class, 'applyDiscount'])
+    ->name('contract-claims.apply-discount');
 Route::resource('contract-claims', ContractClaimController::class)->except(['show', 'create', 'edit']);
 
 // CRUD العقود

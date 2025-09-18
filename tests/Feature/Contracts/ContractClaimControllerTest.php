@@ -194,4 +194,87 @@ class ContractClaimControllerTest extends TestCase
             'Claim status should be updated to accepted.'
         );
     }
+
+    public function test_applying_discount_updates_claim_status_and_amount(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $claimReviewStatus = ClaimStatus::where('name', 'قيد المراجعة')->firstOrFail();
+        $paidWithDiscountStatus = ClaimStatus::where('name', 'مدفوع بخصم')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Example',
+            'national_id' => '12345678901234',
+            'phone' => '0500000000',
+            'email' => 'customer-discount@example.test',
+            'address' => 'Test Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Example',
+            'national_id' => '98765432109876',
+            'phone' => '0500000001',
+            'email' => 'guarantor-discount@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-3001',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractRequiredStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 1500,
+            'sale_price' => 1750,
+            'contract_value' => 1750,
+            'investor_profit' => 250,
+            'total_value' => 1750,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 150,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $claim = ContractClaim::create([
+            'contract_id' => $contract->id,
+            'claim_first_party_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 600,
+            'claim_date' => now()->subDays(7)->toDateString(),
+            'document_number' => 'DOC-200',
+            'claim_status_id' => $claimReviewStatus->id,
+        ]);
+
+        $response = $this->patch(route('contract-claims.apply-discount', $claim), [
+            'discount_amount' => 150.75,
+        ]);
+
+        $response->assertRedirect(route('contract-claims.index'));
+
+        $claim->refresh();
+
+        $this->assertSame(
+            $paidWithDiscountStatus->id,
+            $claim->claim_status_id,
+            'Claim status should change to paid with discount.'
+        );
+
+        $this->assertEquals(150.75, (float) $claim->discount_amount);
+    }
 }

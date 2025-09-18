@@ -56,14 +56,25 @@
                         <td>{{ $claim->document_number }}</td>
                         <td class="text-start">{{ optional($claim->claimStatus)->name ?? '—' }}</td>
                         @php($modalId = 'changeClaimStatusModal-' . $claim->id)
-                        <td>
-                            <button type="button"
-                                    class="btn btn-outline-primary btn-sm"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#{{ $modalId }}"
-                                    @if ($claimStatuses->isEmpty()) disabled @endif>
-                                {{ __('contracts::claims.change_status') }}
-                            </button>
+                        @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
+                        <td class="text-nowrap">
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <button type="button"
+                                        class="btn btn-outline-primary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#{{ $modalId }}"
+                                        @if ($claimStatuses->isEmpty()) disabled @endif>
+                                    {{ __('contracts::claims.change_status') }}
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-outline-success btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#{{ $discountModalId }}"
+                                        @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
+                                    {{ __('contracts::claims.apply_discount') }}
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -93,6 +104,8 @@
     @foreach ($claims as $claim)
         @php($modalId = 'changeClaimStatusModal-' . $claim->id)
         @php($labelId = $modalId . 'Label')
+        @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
+        @php($discountLabelId = $discountModalId . 'Label')
         <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
             <div class="modal-dialog">
                 <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
@@ -116,6 +129,39 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
                         <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="modal fade" id="{{ $discountModalId }}" tabindex="-1" aria-labelledby="{{ $discountLabelId }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="{{ route('contract-claims.apply-discount', $claim) }}" method="post" class="modal-content">
+                    @csrf
+                    @method('patch')
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="{{ $discountLabelId }}">{{ __('contracts::claims.apply_discount') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 text-start">
+                            <label for="claim-discount-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.discount_amount') }}</label>
+                            <input type="number"
+                                   name="discount_amount"
+                                   id="claim-discount-{{ $claim->id }}"
+                                   class="form-control"
+                                   step="0.01"
+                                   min="0"
+                                   required
+                                   value="{{ old('discount_amount', $claim->discount_amount) }}">
+                            @error('discount_amount')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
+                        <button type="submit" class="btn btn-success">{{ __('contracts::claims.apply_discount') }}</button>
                     </div>
                 </form>
             </div>

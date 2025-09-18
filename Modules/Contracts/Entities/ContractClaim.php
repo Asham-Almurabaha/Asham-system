@@ -19,6 +19,7 @@ class ContractClaim extends Model
         'claim_first_party_id',
         'filed_party_role',
         'claim_amount',
+        'discount_amount',
         'claim_date',
         'document_number',
         'claim_status_id',
@@ -27,6 +28,7 @@ class ContractClaim extends Model
     protected $casts = [
         'claim_date' => 'date',
         'claim_amount' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
     ];
 
     public const FILED_PARTY_CUSTOMER = 'customer';

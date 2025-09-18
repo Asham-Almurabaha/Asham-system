@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
+use Modules\Contracts\Http\Requests\ApplyContractClaimDiscountRequest;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimStatusRequest;
@@ -22,6 +23,7 @@ class ContractClaimController extends Controller
     private ?int $contractClaimStatusId = null;
     private ?int $defaultClaimStatusId = null;
     private ?int $acceptedClaimStatusId = null;
+    private ?int $paidWithDiscountClaimStatusId = null;
     private ?int $raisedContractStatusId = null;
 
     public function index(Request $request)
@@ -62,6 +64,7 @@ class ContractClaimController extends Controller
             'claims' => $claims,
             'partyRoles' => $this->partyRoleOptions(),
             'claimStatuses' => ClaimStatus::orderBy('name')->get(['id', 'name']),
+            'paidWithDiscountClaimStatusId' => $this->paidWithDiscountClaimStatusId(),
         ]);
     }
 
@@ -113,6 +116,34 @@ class ContractClaimController extends Controller
         return redirect()
             ->route('contract-claims.index')
             ->with('success', __('contracts::claims.status_updated'));
+    }
+
+    public function applyDiscount(ApplyContractClaimDiscountRequest $request, ContractClaim $contractClaim)
+    {
+        $statusId = $this->paidWithDiscountClaimStatusId();
+
+        if (! $statusId) {
+            return redirect()
+                ->back()
+                ->with('error', __('contracts::claims.paid_with_discount_status_missing'));
+        }
+
+        $payload = $request->validated();
+        $payload['claim_status_id'] = $statusId;
+
+        $contractClaim->update($payload);
+
+        $this->updateRelatedStatuses($contractClaim);
+
+        if ($request->boolean('return_to_contract')) {
+            return redirect()
+                ->route('contracts.show', $contractClaim->contract_id)
+                ->with('success', __('contracts::claims.discount_applied'));
+        }
+
+        return redirect()
+            ->route('contract-claims.index')
+            ->with('success', __('contracts::claims.discount_applied'));
     }
 
     public function destroy(ContractClaim $contractClaim)
@@ -265,6 +296,16 @@ class ContractClaimController extends Controller
         }
 
         return $this->acceptedClaimStatusId ?: null;
+    }
+
+    private function paidWithDiscountClaimStatusId(): ?int
+    {
+        if ($this->paidWithDiscountClaimStatusId === null) {
+            $id = ClaimStatus::where('name', 'مدفوع بخصم')->value('id');
+            $this->paidWithDiscountClaimStatusId = $id ? (int) $id : 0;
+        }
+
+        return $this->paidWithDiscountClaimStatusId ?: null;
     }
 
     private function defaultClaimStatusId(): ?int
