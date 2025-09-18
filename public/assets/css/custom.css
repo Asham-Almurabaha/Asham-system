@@ -562,3 +562,109 @@
 /* Utility: hover turns text/link blue */
 .hover-primary { color:#212529; transition: color .15s ease-in-out; }
 .hover-primary:hover { color:#0d6efd !important; }
+
+/* KPI card layout refinements */
+.kpi-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 100%;
+}
+
+.kpi-card[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+.kpi-card__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.kpi-card__header--spread {
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.kpi-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+}
+
+.kpi-card__icon i {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.kpi-card__content {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-align: inherit;
+}
+
+.kpi-card__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.kpi-card__value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+.kpi-card__meta,
+.kpi-card__description {
+    margin: 0;
+}
+
+.kpi-card__aside {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-align: inherit;
+}
+
+.kpi-card[dir="rtl"] .kpi-card__aside {
+    text-align: left;
+}
+
+.kpi-card__body {
+    margin: 0;
+}
+
+.kpi-card__progress .progress {
+    height: 8px;
+    border-radius: 999px;
+    background-color: #f3f4f6;
+}
+
+.kpi-card__progress .progress .progress-bar {
+    border-radius: inherit;
+}
+
+.kpi-card__footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.kpi-card__footer--split {
+    justify-content: space-between;
+}
+
+.kpi-card__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
