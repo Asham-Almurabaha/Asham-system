@@ -13,8 +13,7 @@ class ContractClaim extends Model
 
     protected $fillable = [
         'contract_id',
-        'filed_in_party',
-        'filed_against_party',
+        'filed_party_role',
         'claim_amount',
         'claim_date',
         'document_number',
@@ -25,8 +24,33 @@ class ContractClaim extends Model
         'claim_amount' => 'decimal:2',
     ];
 
+    public const FILED_PARTY_CUSTOMER = 'customer';
+    public const FILED_PARTY_GUARANTOR = 'guarantor';
+
+    public const FILED_PARTY_ROLES = [
+        self::FILED_PARTY_CUSTOMER,
+        self::FILED_PARTY_GUARANTOR,
+    ];
+
     public function contract()
     {
         return $this->belongsTo(Contract::class);
+    }
+
+    public function getFiledPartyNameAttribute(): ?string
+    {
+        $contract = $this->contract;
+
+        if (! $contract) {
+            return null;
+        }
+
+        $contract->loadMissing('customer:id,name', 'guarantor:id,name');
+
+        return match ($this->filed_party_role) {
+            self::FILED_PARTY_CUSTOMER => optional($contract->customer)->name,
+            self::FILED_PARTY_GUARANTOR => optional($contract->guarantor)->name,
+            default => null,
+        };
     }
 }

@@ -14,7 +14,13 @@ class ContractClaimController extends Controller
     public function index(Request $request)
     {
         $claimsQuery = ContractClaim::query()
-            ->with(['contract:id,contract_number']);
+            ->with([
+                'contract' => function ($query) {
+                    $query->select('id', 'contract_number', 'customer_id', 'guarantor_id');
+                },
+                'contract.customer:id,name',
+                'contract.guarantor:id,name',
+            ]);
 
         if ($request->filled('contract_number')) {
             $contractNumber = trim((string) $request->input('contract_number'));
@@ -23,14 +29,12 @@ class ContractClaimController extends Controller
             });
         }
 
-        if ($request->filled('filed_in_party')) {
-            $filedInParty = trim((string) $request->input('filed_in_party'));
-            $claimsQuery->where('filed_in_party', 'like', "%{$filedInParty}%");
-        }
+        if ($request->filled('filed_party_role')) {
+            $filedPartyRole = (string) $request->input('filed_party_role');
 
-        if ($request->filled('filed_against_party')) {
-            $filedAgainstParty = trim((string) $request->input('filed_against_party'));
-            $claimsQuery->where('filed_against_party', 'like', "%{$filedAgainstParty}%");
+            if (in_array($filedPartyRole, ContractClaim::FILED_PARTY_ROLES, true)) {
+                $claimsQuery->where('filed_party_role', $filedPartyRole);
+            }
         }
 
         $claims = $claimsQuery
@@ -41,6 +45,7 @@ class ContractClaimController extends Controller
 
         return view('contracts::claims.index', [
             'claims' => $claims,
+            'partyRoles' => $this->partyRoleOptions(),
         ]);
     }
 
@@ -62,6 +67,8 @@ class ContractClaimController extends Controller
 
     public function edit(ContractClaim $contractClaim)
     {
+        $contractClaim->loadMissing('contract.customer:id,name', 'contract.guarantor:id,name');
+
         return view('contracts::claims.edit', [
             'claim' => $contractClaim,
             'contracts' => $this->contractsForSelect(),
@@ -89,7 +96,16 @@ class ContractClaimController extends Controller
     private function contractsForSelect()
     {
         return Contract::query()
+            ->with(['customer:id,name', 'guarantor:id,name'])
             ->orderBy('contract_number')
-            ->get(['id', 'contract_number']);
+            ->get(['id', 'contract_number', 'customer_id', 'guarantor_id']);
+    }
+
+    private function partyRoleOptions(): array
+    {
+        return [
+            ContractClaim::FILED_PARTY_CUSTOMER => __('contracts::claims.party_role_customer'),
+            ContractClaim::FILED_PARTY_GUARANTOR => __('contracts::claims.party_role_guarantor'),
+        ];
     }
 }

@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('contract_claims', function (Blueprint $table) {
             $table->id();
             $table->foreignId('contract_id')->constrained('contracts')->cascadeOnDelete();
-            $table->string('filed_in_party');
-            $table->string('filed_against_party');
+            $table->enum('filed_party_role', ['customer', 'guarantor']);
             $table->decimal('claim_amount', 15, 2);
             $table->date('claim_date');
             $table->string('document_number');
@@ -23,6 +22,7 @@ return new class extends Migration
 
             $table->index('claim_date');
             $table->index('document_number');
+            $table->index('filed_party_role');
         });
     }
 

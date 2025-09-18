@@ -24,13 +24,13 @@
         </span>
 
         <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
-                data-bs-target="#claimsFilterBar" aria-expanded="{{ request()->hasAny(['contract_number', 'filed_in_party', 'filed_against_party']) ? 'true' : 'false' }}"
+                data-bs-target="#claimsFilterBar" aria-expanded="{{ request()->hasAny(['contract_number', 'filed_party_role']) ? 'true' : 'false' }}"
                 aria-controls="claimsFilterBar">
             {{ __('contracts::claims.filters') }}
         </button>
     </div>
 
-    <div class="collapse @if(request()->hasAny(['contract_number', 'filed_in_party', 'filed_against_party'])) show @endif border-top" id="claimsFilterBar">
+    <div class="collapse @if(request()->hasAny(['contract_number', 'filed_party_role'])) show @endif border-top" id="claimsFilterBar">
         <div class="card-body">
             <form action="{{ route('contract-claims.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
                 <div class="col-12 col-md-4">
@@ -38,12 +38,13 @@
                     <input type="text" name="contract_number" value="{{ request('contract_number') }}" class="form-control form-control-sm" placeholder="{{ __('contracts::claims.contract_number_placeholder') }}">
                 </div>
                 <div class="col-12 col-md-4">
-                    <label class="form-label mb-1">{{ __('contracts::claims.filed_in_party') }}</label>
-                    <input type="text" name="filed_in_party" value="{{ request('filed_in_party') }}" class="form-control form-control-sm" placeholder="{{ __('contracts::claims.filed_in_party_placeholder') }}">
-                </div>
-                <div class="col-12 col-md-4">
-                    <label class="form-label mb-1">{{ __('contracts::claims.filed_against_party') }}</label>
-                    <input type="text" name="filed_against_party" value="{{ request('filed_against_party') }}" class="form-control form-control-sm" placeholder="{{ __('contracts::claims.filed_against_party_placeholder') }}">
+                    <label class="form-label mb-1">{{ __('contracts::claims.filed_party_role') }}</label>
+                    <select name="filed_party_role" class="form-select form-select-sm">
+                        <option value="">{{ __('contracts::claims.choose_filed_party') }}</option>
+                        @foreach ($partyRoles as $roleKey => $label)
+                            <option value="{{ $roleKey }}" @selected(request('filed_party_role') === $roleKey)>{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary btn-sm">{{ __('contracts::claims.search') }}</button>
@@ -64,11 +65,10 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('contracts::claims.contract_number') }}</th>
-                        <th>{{ __('contracts::claims.filed_in_party') }}</th>
+                        <th>{{ __('contracts::claims.filed_party_role') }}</th>
                         <th>{{ __('contracts::claims.claim_amount') }}</th>
                         <th>{{ __('contracts::claims.claim_date') }}</th>
                         <th>{{ __('contracts::claims.document_number') }}</th>
-                        <th>{{ __('contracts::claims.filed_against_party') }}</th>
                         <th style="width:120px;">{{ __('contracts::claims.actions') }}</th>
                     </tr>
                 </thead>
@@ -77,11 +77,15 @@
                     <tr>
                         <td class="text-muted">{{ $loop->iteration + ($claims->currentPage() - 1) * $claims->perPage() }}</td>
                         <td class="text-start">{{ $claim->contract->contract_number ?? ('#' . $claim->contract_id) }}</td>
-                        <td>{{ $claim->filed_in_party }}</td>
+                        <td class="text-start">
+                            <div>{{ $claim->filed_party_name ?? '—' }}</div>
+                            @if ($claim->filed_party_role)
+                                <div class="text-muted small">{{ __('contracts::claims.party_role_' . $claim->filed_party_role) }}</div>
+                            @endif
+                        </td>
                         <td>{{ number_format((float) $claim->claim_amount, 2) }}</td>
                         <td>{{ optional($claim->claim_date)->format('Y-m-d') }}</td>
                         <td>{{ $claim->document_number }}</td>
-                        <td>{{ $claim->filed_against_party }}</td>
                         <td>
                             <div class="d-flex justify-content-center gap-2">
                                 <a href="{{ route('contract-claims.edit', $claim) }}" class="btn btn-sm btn-outline-primary">
@@ -99,7 +103,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="py-4">
+                        <td colspan="7" class="py-4">
                             <div class="text-muted">{{ __('contracts::claims.no_results') }}</div>
                             <div class="mt-2">
                                 <a href="{{ route('contract-claims.create') }}" class="btn btn-sm btn-success">
