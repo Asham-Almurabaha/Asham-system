@@ -26,6 +26,7 @@ return [
     'update_status' => 'Update Status',
     'discount_amount' => 'Discount Amount',
     'apply_discount' => 'Apply Discount',
+    'pay_with_discount' => 'Pay with Discount',
     'actions' => 'Actions',
     'search' => 'Search',
     'clear' => 'Clear',

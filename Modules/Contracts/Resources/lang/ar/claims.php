@@ -26,6 +26,7 @@ return [
     'update_status' => 'تحديث الحالة',
     'discount_amount' => 'قيمة الخصم',
     'apply_discount' => 'تطبيق الخصم',
+    'pay_with_discount' => 'دفع مع الخصم',
     'actions' => 'الإجراءات',
     'search' => 'بحث',
     'clear' => 'مسح',

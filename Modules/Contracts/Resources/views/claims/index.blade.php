@@ -72,7 +72,7 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#{{ $discountModalId }}"
                                         @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
-                                    {{ __('contracts::claims.apply_discount') }}
+                                    {{ __('contracts::claims.pay_with_discount') }}
                                 </button>
                             </div>
                         </td>
