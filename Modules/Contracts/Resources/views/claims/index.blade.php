@@ -28,6 +28,7 @@
                         <th>{{ __('contracts::claims.claim_date') }}</th>
                         <th>{{ __('contracts::claims.document_number') }}</th>
                         <th>{{ __('contracts::claims.claim_status') }}</th>
+                        <th>{{ __('contracts::claims.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,10 +55,20 @@
                         <td>{{ optional($claim->claim_date)->format('Y-m-d') }}</td>
                         <td>{{ $claim->document_number }}</td>
                         <td class="text-start">{{ optional($claim->claimStatus)->name ?? '—' }}</td>
+                        @php($modalId = 'changeClaimStatusModal-' . $claim->id)
+                        <td>
+                            <button type="button"
+                                    class="btn btn-outline-primary btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#{{ $modalId }}"
+                                    @if ($claimStatuses->isEmpty()) disabled @endif>
+                                {{ __('contracts::claims.change_status') }}
+                            </button>
+                        </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="py-4">
+                        <td colspan="9" class="py-4">
                             <div class="text-muted">{{ __('contracts::claims.no_results') }}</div>
                         </td>
                     </tr>
@@ -73,4 +84,42 @@
         </div>
     @endif
 </div>
+
+@if ($claimStatuses->isEmpty())
+    <div class="alert alert-warning mt-3" role="alert">
+        {{ __('contracts::claims.no_claim_statuses') }}
+    </div>
+@else
+    @foreach ($claims as $claim)
+        @php($modalId = 'changeClaimStatusModal-' . $claim->id)
+        @php($labelId = $modalId . 'Label')
+        <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
+                    @csrf
+                    @method('patch')
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 text-start">
+                            <label for="claim-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_status') }}</label>
+                            <select name="claim_status_id" id="claim-status-{{ $claim->id }}" class="form-select" required>
+                                <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
+                                @foreach ($claimStatuses as $status)
+                                    <option value="{{ $status->id }}" @selected($status->id === $claim->claim_status_id)>{{ $status->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endforeach
+@endif
 @endsection

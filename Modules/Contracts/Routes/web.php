@@ -27,6 +27,8 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
     Route::get('/basic/failures/fix', [ContractsImportController::class, 'exportBasicFailuresFix'])->name('import.basic.failures.fix');
 });
 
+Route::patch('contract-claims/{contractClaim}/status', [ContractClaimController::class, 'updateStatus'])
+    ->name('contract-claims.update-status');
 Route::resource('contract-claims', ContractClaimController::class)->except(['show', 'create', 'edit']);
 
 // CRUD العقود

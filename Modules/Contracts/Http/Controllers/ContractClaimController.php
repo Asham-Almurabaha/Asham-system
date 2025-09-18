@@ -9,6 +9,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimRequest;
+use Modules\Contracts\Http\Requests\UpdateContractClaimStatusRequest;
 use Modules\Lookups\Entities\ClaimStatus;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\CustomerStatus;
@@ -58,6 +59,7 @@ class ContractClaimController extends Controller
         return view('contracts::claims.index', [
             'claims' => $claims,
             'partyRoles' => $this->partyRoleOptions(),
+            'claimStatuses' => ClaimStatus::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -92,6 +94,17 @@ class ContractClaimController extends Controller
         return redirect()
             ->route('contract-claims.index')
             ->with('success', __('contracts::claims.updated'));
+    }
+
+    public function updateStatus(UpdateContractClaimStatusRequest $request, ContractClaim $contractClaim)
+    {
+        $contractClaim->update($request->validated());
+
+        $this->updateRelatedStatuses($contractClaim);
+
+        return redirect()
+            ->route('contract-claims.index')
+            ->with('success', __('contracts::claims.status_updated'));
     }
 
     public function destroy(ContractClaim $contractClaim)
