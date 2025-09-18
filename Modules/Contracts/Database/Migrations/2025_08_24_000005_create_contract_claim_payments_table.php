@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('contract_claim_payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('contract_claim_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('claim_status_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('claim_payer_id')->nullable()->constrained('claim_payers')->nullOnDelete();
             $table->decimal('amount', 12, 2)->default(0);
             $table->date('paid_at');
             $table->timestamps();

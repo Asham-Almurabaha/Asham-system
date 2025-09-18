@@ -78,7 +78,7 @@
                                             class="btn btn-outline-dark btn-sm"
                                             data-bs-toggle="modal"
                                             data-bs-target="#{{ $paymentModalId }}"
-                                            @if ($claimStatuses->isEmpty()) disabled @endif>
+                                            @if ($claimPayers->isEmpty()) disabled @endif>
                                         {{ __('contracts::claims.record_payment') }}
                                     </button>
 
@@ -116,69 +116,85 @@
     <div class="alert alert-warning mt-3" role="alert">
         {{ __('contracts::claims.no_claim_statuses') }}
     </div>
-@else
-    @foreach ($claims as $claim)
-        @php($modalId = 'changeClaimStatusModal-' . $claim->id)
-        @php($labelId = $modalId . 'Label')
-        @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
-        @php($discountLabelId = $discountModalId . 'Label')
-        @php($paymentModalId = 'recordClaimPaymentModal-' . $claim->id)
-        @php($paymentLabelId = $paymentModalId . 'Label')
-        @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
-        @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
-        @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
-        @if ($isPaidStatus)
-            @continue
-        @endif
-        @if ($isUnderReviewStatus)
-            <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
-                <div class="modal-dialog">
-                    <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
-                        @csrf
-                        @method('patch')
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="mb-3 text-start">
-                                <label for="claim-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_status') }}</label>
-                                <select name="claim_status_id" id="claim-status-{{ $claim->id }}" class="form-select" required>
-                                    <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
-                                    @foreach ($changeStatusOptions as $status)
-                                        <option value="{{ $status->id }}" @selected((string) old('claim_status_id', $claim->claim_status_id) === (string) $status->id)>{{ $status->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                            <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        @endif
+@endif
 
-        <div class="modal fade" id="{{ $paymentModalId }}" tabindex="-1" aria-labelledby="{{ $paymentLabelId }}" aria-hidden="true">
+@if ($claimStatuses->isEmpty())
+    <div class="alert alert-warning mt-3" role="alert">
+        {{ __('contracts::claims.no_claim_statuses') }}
+    </div>
+@endif
+
+@if ($claimPayers->isEmpty())
+    <div class="alert alert-warning mt-3" role="alert">
+        {{ __('contracts::claims.no_claim_payers') }}
+    </div>
+@endif
+
+@foreach ($claims as $claim)
+    @php($modalId = 'changeClaimStatusModal-' . $claim->id)
+    @php($labelId = $modalId . 'Label')
+    @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
+    @php($discountLabelId = $discountModalId . 'Label')
+    @php($paymentModalId = 'recordClaimPaymentModal-' . $claim->id)
+    @php($paymentLabelId = $paymentModalId . 'Label')
+    @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
+    @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
+    @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
+    @if ($isPaidStatus)
+        @continue
+    @endif
+    @if ($isUnderReviewStatus && $claimStatuses->isNotEmpty())
+        <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
             <div class="modal-dialog">
-                <form action="{{ route('contract-claims.payments.store', $claim) }}" method="post" class="modal-content">
+                <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
                     @csrf
-                    <input type="hidden" name="payment_claim_id" value="{{ $claim->id }}">
+                    @method('patch')
                     <div class="modal-header">
-                        <h5 class="modal-title" id="{{ $paymentLabelId }}">{{ __('contracts::claims.record_payment') }}</h5>
+                        <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3 text-start">
-                            <label for="claim-payment-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_payment_status') }}</label>
-                            <select name="claim_status_id" id="claim-payment-status-{{ $claim->id }}" class="form-select" required>
+                            <label for="claim-status-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_status') }}</label>
+                            <select name="claim_status_id" id="claim-status-{{ $claim->id }}" class="form-select" required>
                                 <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
-                                @foreach ($claimStatuses as $status)
+                                @foreach ($changeStatusOptions as $status)
                                     <option value="{{ $status->id }}" @selected((string) old('claim_status_id', $claim->claim_status_id) === (string) $status->id)>{{ $status->name }}</option>
                                 @endforeach
                             </select>
-                            @error('claim_status_id')
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    <div class="modal fade" id="{{ $paymentModalId }}" tabindex="-1" aria-labelledby="{{ $paymentLabelId }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <form action="{{ route('contract-claims.payments.store', $claim) }}" method="post" class="modal-content">
+                @csrf
+                <input type="hidden" name="payment_claim_id" value="{{ $claim->id }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="{{ $paymentLabelId }}">{{ __('contracts::claims.record_payment') }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                        <div class="mb-3 text-start">
+                            <label for="claim-payment-payer-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_payer') }}</label>
+                            <select name="claim_payer_id" id="claim-payment-payer-{{ $claim->id }}" class="form-select" required @if ($claimPayers->isEmpty()) disabled @endif>
+                                <option value="">{{ __('contracts::claims.choose_claim_payer') }}</option>
+                                @foreach ($claimPayers as $payer)
+                                    <option value="{{ $payer->id }}" @selected((string) old('claim_payer_id') === (string) $payer->id)>{{ $payer->name }}</option>
+                                @endforeach
+                            </select>
+                            @if ($claimPayers->isEmpty())
+                                <div class="text-danger small">{{ __('contracts::claims.no_claim_payers') }}</div>
+                            @endif
+                            @error('claim_payer_id')
                                 <div class="text-danger small">{{ $message }}</div>
                             @enderror
                         </div>
@@ -252,7 +268,6 @@
             </div>
         </div>
     @endforeach
-@endif
 
 @push('scripts')
     <script>

@@ -14,7 +14,7 @@ class StoreContractClaimPaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'claim_status_id' => ['required', 'exists:claim_statuses,id'],
+            'claim_payer_id' => ['required', 'exists:claim_payers,id'],
             'amount' => ['required', 'numeric', 'min:0'],
             'paid_at' => ['required', 'date'],
             'return_to_contract' => ['nullable', 'boolean'],

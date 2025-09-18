@@ -6,7 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\Lookups\Entities\ClaimStatus;
+use Modules\Lookups\Entities\ClaimPayer;
 
 class ContractClaimPayment extends Model
 {
@@ -15,7 +15,7 @@ class ContractClaimPayment extends Model
 
     protected $fillable = [
         'contract_claim_id',
-        'claim_status_id',
+        'claim_payer_id',
         'amount',
         'paid_at',
     ];
@@ -30,8 +30,8 @@ class ContractClaimPayment extends Model
         return $this->belongsTo(ContractClaim::class, 'contract_claim_id');
     }
 
-    public function claimStatus(): BelongsTo
+    public function claimPayer(): BelongsTo
     {
-        return $this->belongsTo(ClaimStatus::class);
+        return $this->belongsTo(ClaimPayer::class);
     }
 }

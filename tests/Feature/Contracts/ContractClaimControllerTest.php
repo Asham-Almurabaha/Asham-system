@@ -8,6 +8,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
 use Modules\Lookups\Database\Seeders\LookupsDatabaseSeeder;
 use Modules\Lookups\Entities\ClaimStatus;
+use Modules\Lookups\Entities\ClaimPayer;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\GuarantorStatus;
@@ -276,5 +277,92 @@ class ContractClaimControllerTest extends TestCase
         );
 
         $this->assertEquals(150.75, (float) $claim->discount_amount);
+    }
+
+    public function test_recording_claim_payment_creates_entry_with_claim_payer(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $claimReviewStatus = ClaimStatus::where('name', 'قيد المراجعة')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+        $claimPayer = ClaimPayer::where('name', 'المحكمة')->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Payment Example',
+            'national_id' => '11122233344455',
+            'phone' => '0500000010',
+            'email' => 'customer-payment@example.test',
+            'address' => 'Test Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Payment Example',
+            'national_id' => '99988877766655',
+            'phone' => '0500000011',
+            'email' => 'guarantor-payment@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-4001',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractRequiredStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 1800,
+            'sale_price' => 2100,
+            'contract_value' => 2100,
+            'investor_profit' => 300,
+            'total_value' => 2100,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 175,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $claim = ContractClaim::create([
+            'contract_id' => $contract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 500,
+            'claim_date' => now()->subDays(3)->toDateString(),
+            'document_number' => 'DOC-300',
+            'claim_status_id' => $claimReviewStatus->id,
+        ]);
+
+        $response = $this->post(route('contract-claims.payments.store', $claim), [
+            'claim_payer_id' => $claimPayer->id,
+            'amount' => 250.50,
+            'paid_at' => now()->toDateString(),
+        ]);
+
+        $response->assertRedirect(route('contract-claims.index'));
+
+        $this->assertDatabaseHas('contract_claim_payments', [
+            'contract_claim_id' => $claim->id,
+            'claim_payer_id' => $claimPayer->id,
+            'amount' => '250.50',
+        ]);
+
+        $this->assertSame(
+            $claimReviewStatus->id,
+            $claim->fresh()->claim_status_id,
+            'Recording a payment should not change the claim status automatically.'
+        );
     }
 }

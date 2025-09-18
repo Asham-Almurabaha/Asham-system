@@ -12,6 +12,7 @@ use Modules\Contracts\Http\Requests\StoreContractClaimPaymentRequest;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimRequest;
 use Modules\Contracts\Http\Requests\UpdateContractClaimStatusRequest;
+use Modules\Lookups\Entities\ClaimPayer;
 use Modules\Lookups\Entities\ClaimStatus;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\CustomerStatus;
@@ -64,11 +65,13 @@ class ContractClaimController extends Controller
             ->withQueryString();
 
         $claimStatuses = ClaimStatus::orderBy('name')->get(['id', 'name']);
+        $claimPayers = ClaimPayer::orderBy('name')->get(['id', 'name']);
 
         return view('contracts::claims.index', [
             'claims' => $claims,
             'partyRoles' => $this->partyRoleOptions(),
             'claimStatuses' => $claimStatuses,
+            'claimPayers' => $claimPayers,
             'changeStatusOptions' => $claimStatuses
                 ->filter(fn ($status) => in_array($status->name, self::CHANGE_STATUS_NAMES, true))
                 ->values(),
@@ -160,13 +163,9 @@ class ContractClaimController extends Controller
 
         $claim = DB::transaction(function () use ($contractClaim, $payload) {
             $contractClaim->payments()->create([
-                'claim_status_id' => $payload['claim_status_id'],
+                'claim_payer_id' => $payload['claim_payer_id'],
                 'amount' => $payload['amount'],
                 'paid_at' => $payload['paid_at'],
-            ]);
-
-            $contractClaim->update([
-                'claim_status_id' => $payload['claim_status_id'],
             ]);
 
             return $contractClaim->fresh();
