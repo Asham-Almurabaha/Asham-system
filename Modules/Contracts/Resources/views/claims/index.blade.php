@@ -57,24 +57,27 @@
                         <td class="text-start">{{ optional($claim->claimStatus)->name ?? '—' }}</td>
                         @php($modalId = 'changeClaimStatusModal-' . $claim->id)
                         @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
+                        @php($isPaidStatus = str_contains((string) optional($claim->claimStatus)->name, 'مدفوع'))
                         <td class="text-nowrap">
-                            <div class="d-flex flex-wrap justify-content-center gap-2">
-                                <button type="button"
-                                        class="btn btn-outline-primary btn-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#{{ $modalId }}"
-                                        @if ($claimStatuses->isEmpty()) disabled @endif>
-                                    {{ __('contracts::claims.change_status') }}
-                                </button>
+                            @unless ($isPaidStatus)
+                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                                    <button type="button"
+                                            class="btn btn-outline-primary btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#{{ $modalId }}"
+                                            @if ($claimStatuses->isEmpty()) disabled @endif>
+                                        {{ __('contracts::claims.change_status') }}
+                                    </button>
 
-                                <button type="button"
-                                        class="btn btn-outline-success btn-sm"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#{{ $discountModalId }}"
-                                        @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
-                                    {{ __('contracts::claims.pay_with_discount') }}
-                                </button>
-                            </div>
+                                    <button type="button"
+                                            class="btn btn-outline-success btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#{{ $discountModalId }}"
+                                            @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
+                                        {{ __('contracts::claims.pay_with_discount') }}
+                                    </button>
+                                </div>
+                            @endunless
                         </td>
                     </tr>
                 @empty
@@ -106,6 +109,10 @@
         @php($labelId = $modalId . 'Label')
         @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
         @php($discountLabelId = $discountModalId . 'Label')
+        @php($isPaidStatus = str_contains((string) optional($claim->claimStatus)->name, 'مدفوع'))
+        @if ($isPaidStatus)
+            @continue
+        @endif
         <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-labelledby="{{ $labelId }}" aria-hidden="true">
             <div class="modal-dialog">
                 <form action="{{ route('contract-claims.update-status', $claim) }}" method="post" class="modal-content">
