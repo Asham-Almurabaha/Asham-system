@@ -74,21 +74,23 @@
                                         </button>
                                     @endif
 
-                                    <button type="button"
-                                            class="btn btn-outline-dark btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#{{ $paymentModalId }}"
-                                            @if ($claimPayers->isEmpty()) disabled @endif>
-                                        {{ __('contracts::claims.record_payment') }}
-                                    </button>
+                                    @unless ($isUnderReviewStatus)
+                                        <button type="button"
+                                                class="btn btn-outline-dark btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#{{ $paymentModalId }}"
+                                                @if ($claimPayers->isEmpty()) disabled @endif>
+                                            {{ __('contracts::claims.record_payment') }}
+                                        </button>
 
-                                    <button type="button"
-                                            class="btn btn-outline-success btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#{{ $discountModalId }}"
-                                            @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
-                                        {{ __('contracts::claims.pay_with_discount') }}
-                                    </button>
+                                        <button type="button"
+                                                class="btn btn-outline-success btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#{{ $discountModalId }}"
+                                                @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
+                                            {{ __('contracts::claims.pay_with_discount') }}
+                                        </button>
+                                    @endunless
                                 </div>
                             @endunless
                         </td>
