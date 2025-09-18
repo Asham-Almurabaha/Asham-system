@@ -31,6 +31,7 @@ return array (
   'Contract Image' => 'Contract Image',
   'View Contract Image' => 'View Contract Image',
   'Office Share %' => 'Office Share %',
+  'Investment Start Date' => 'Investment Start Date',
   'Actions' => 'Actions',
   'View' => 'View',
   'No matching results.' => 'No matching results.',

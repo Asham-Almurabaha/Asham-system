@@ -27,6 +27,11 @@ class Investor extends Model
         'id_card_image',
         'contract_image',
         'office_share_percentage',
+        'investment_start_date',
+    ];
+
+    protected $casts = [
+        'investment_start_date' => 'date',
     ];
 
     public function nationality()

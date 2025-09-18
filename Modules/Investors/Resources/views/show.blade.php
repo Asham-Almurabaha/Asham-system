@@ -414,6 +414,16 @@
                         <div class="row mt-2"><div class="col-5 label-col">الجنسية</div><div class="col-7 value-col">{{ optional($investor->nationality)->name ?? '—' }}</div></div>
                         <div class="row mt-2"><div class="col-5 label-col">الوظيفة</div><div class="col-7 value-col">{{ optional($investor->title)->name ?? '—' }}</div></div>
                         <div class="row mt-2"><div class="col-5 label-col">{{ __('investors::investors.Office Share %') }}</div><div class="col-7 value-col">{{ number_format((float) ($investor->office_share_percentage ?? 0), 2) }}%</div></div>
+                        <div class="row mt-2">
+                            <div class="col-5 label-col">{{ __('investors::investors.Investment Start Date') }}</div>
+                            <div class="col-7 value-col">
+                                @if($investor->investment_start_date)
+                                    <span dir="ltr">{{ $investor->investment_start_date->format('Y-m-d') }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </div>
+                        </div>
                 </div>
                 <div class="col-md-6">
                     <div class="row">

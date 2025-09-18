@@ -49,5 +49,6 @@ return array (
     'id_card_image' => 'صورة الهوية',
     'contract_image' => 'صورة العقد',
     'office_share_percentage' => 'نسبة مشاركة المكتب',
+    'investment_start_date' => 'تاريخ بدء الاستثمار',
   ),
 );

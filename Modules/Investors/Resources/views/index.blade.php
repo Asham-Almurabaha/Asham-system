@@ -177,6 +177,7 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('investors::investors.Name') }}</th>
+                        <th>{{ __('investors::investors.Investment Start Date') }}</th>
                         <th>{{ __('Current Liquidity') }}</th>
                         <th>{{ __('investors::investors.Active Contracts') }}</th>
                         <th>{{ __('Remaining In Active') }}</th>
@@ -192,6 +193,13 @@
                                     {{ $investor->name }}
                                 </a>
                             </td>
+                            <td>
+                                @if($investor->investment_start_date)
+                                    <span dir="ltr">{{ $investor->investment_start_date->format('Y-m-d') }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                             <td>{{ number_format((float)($liquidityByInvestor[$investor->id] ?? 0), 2) }}</td>
                             <td>{{ number_format((int)($activeCountByInvestor[$investor->id] ?? 0)) }}</td>
                             <td>{{ number_format((float)($remainingByInvestor[$investor->id] ?? 0), 2) }}</td>
@@ -199,7 +207,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="py-5">
+                            <td colspan="6" class="py-5">
                                 <div class="text-muted">{{ __('investors::investors.No matching results.') }} <a href="{{ route('investors.index') }}" class="ms-1">{{ __('investors::investors.Show All') }}</a></div>
                                 <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ {{ __('investors::investors.Add First Investor') }}</a></div>
                             </td>

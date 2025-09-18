@@ -166,6 +166,18 @@
                     </div>
 
                     <div class="col-md-6">
+                        <label for="investment_start_date" class="form-label">{{ __('investors::investors.Investment Start Date') }}</label>
+                        <input
+                            type="date"
+                            name="investment_start_date"
+                            id="investment_start_date"
+                            class="form-control @error('investment_start_date') is-invalid @enderror"
+                            value="{{ old('investment_start_date') }}"
+                            dir="ltr">
+                        @error('investment_start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
+
+                    <div class="col-md-6">
                         <label for="office_share_percentage" class="form-label">{{ __('investors::investors.Office Share %') }} (%)</label>
                         <input
                             type="number"

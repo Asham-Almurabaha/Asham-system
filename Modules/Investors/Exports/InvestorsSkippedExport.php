@@ -43,6 +43,7 @@ class InvestorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize,
             'id_card_image',
             'contract_image',
             'office_share_percentage',
+            'investment_start_date',
             'reason',
             'source_row',
         ]);
@@ -67,6 +68,7 @@ class InvestorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize,
                 $this->clean($this->pick($vals, ['id_card_image','صورة_الهوية'])),
                 $this->clean($this->pick($vals, ['contract_image','صورة_العقد'])),
                 $this->clean($this->pick($vals, ['office_share_percentage','نسبة_مشاركة_المكتب'])),
+                $this->clean($this->pick($vals, ['investment_start_date','تاريخ_بدء_الاستثمار','start_date'])),
                 $this->flattenMessages($reason),
                 (int)($r['row'] ?? 0),
             ];
@@ -78,10 +80,10 @@ class InvestorsSkippedExport implements FromArray, WithHeadings, ShouldAutoSize,
     public function styles(Worksheet $sheet)
     {
         // تمييز الهيدر
-        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:M1')->getFont()->setBold(true);
 
-        // تغليف نص عمود السبب (K)
-        $sheet->getStyle('K:K')->getAlignment()->setWrapText(true);
+        // تغليف نص عمود السبب (L)
+        $sheet->getStyle('L:L')->getAlignment()->setWrapText(true);
 
         // تجميد الصف الأول
         $sheet->freezePane('A2');

@@ -49,5 +49,6 @@ return array (
     'id_card_image' => 'ID card image',
     'contract_image' => 'Contract image',
     'office_share_percentage' => 'Office share %',
+    'investment_start_date' => 'Investment start date',
   ),
 );

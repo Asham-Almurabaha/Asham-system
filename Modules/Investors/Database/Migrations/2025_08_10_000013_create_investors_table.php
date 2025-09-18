@@ -19,6 +19,7 @@ class CreateInvestorsTable extends Migration
             $table->string('id_card_image')->nullable();
             $table->string('contract_image')->nullable();
             $table->decimal('office_share_percentage', 5, 2)->default(0);
+            $table->date('investment_start_date')->nullable();
             $table->timestamps();
         });
     }

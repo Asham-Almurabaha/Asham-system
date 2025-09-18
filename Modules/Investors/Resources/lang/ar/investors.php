@@ -31,6 +31,7 @@ return array (
   'Contract Image' => 'صورة العقد',
   'View Contract Image' => 'عرض صورة العقد',
   'Office Share %' => 'نسبة حصة المكتب',
+  'Investment Start Date' => 'تاريخ بدء الاستثمار',
   'Actions' => 'الإجراءات',
   'View' => 'عرض',
   'No matching results.' => 'لا توجد نتائج مطابقة.',

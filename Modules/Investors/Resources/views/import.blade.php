@@ -16,7 +16,7 @@
         <h1 class="h4 mb-1">@lang('investors::investors_import.Import Investors')</h1>
         <p class="text-muted mb-0">
           @lang('investors::investors_import.Upload an Excel/CSV file with specs:')
-          <code>name, national_id, phone, email, address, nationality, title, id_card_image, contract_image, ...</code>
+          <code>name, national_id, phone, email, address, nationality, title, office_share_percentage, investment_start_date, id_card_image, contract_image, ...</code>
           — الصف الأول عناوين.
         </p>
       </div>

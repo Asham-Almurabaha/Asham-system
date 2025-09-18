@@ -159,6 +159,7 @@ class InvestorController extends Controller
             'id_card_image' => 'nullable|image|max:2048',
             'contract_image' => 'nullable|image|max:2048',
             'office_share_percentage' => 'required|numeric|between:0,100',
+            'investment_start_date' => 'nullable|date',
         ]);
 
         if ($request->hasFile('id_card_image')) {
@@ -228,6 +229,7 @@ class InvestorController extends Controller
             'id_card_image' => 'nullable|image|max:2048',
             'contract_image' => 'nullable|image|max:2048',
             'office_share_percentage' => 'required|numeric|between:0,100',
+            'investment_start_date' => 'nullable|date',
         ]);
 
         if ($request->hasFile('id_card_image')) {

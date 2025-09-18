@@ -19,6 +19,7 @@ class InvestorsTemplateExport implements FromArray, WithHeadings
             'nationality',             // اختياري (بالاسم ويجب أن يكون موجوداً بجدول nationalities)
             'title',                   // اختياري (بالاسم ويجب أن يكون موجوداً بجدول titles)
             'office_share_percentage', // اختياري (رقم عشري % — مثال: 10 أو 12.5)
+            'investment_start_date',   // اختياري (تاريخ بدء الاستثمار بصيغة YYYY-MM-DD)
             'notes',                   // اختياري
             'id_card_image',           // اختياري (مسار/اسم ملف)
             'contract_image',          // اختياري (مسار/اسم ملف)
@@ -37,6 +38,7 @@ class InvestorsTemplateExport implements FromArray, WithHeadings
                 'سعودي',
                 'رجل أعمال',
                 '10',
+                '2024-01-01',
                 'ملاحظات',
                 '',
                 '',
@@ -50,6 +52,7 @@ class InvestorsTemplateExport implements FromArray, WithHeadings
                 'سعودي',
                 'حكومي',
                 '12.5',
+                '2024-03-15',
                 '',
                 '',
                 '',

@@ -5,6 +5,7 @@ namespace Modules\Investors\Imports;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Modules\Investors\Entities\Investor;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -84,6 +85,11 @@ class InvestorsImport implements
 
         $idCardImage   = $this->safeStr($row['id_card_image']   ?? $row['صورة_الهوية'] ?? null);
         $contractImage = $this->safeStr($row['contract_image']  ?? $row['صورة_العقد']  ?? null);
+        $investmentStart = $this->parseDate($row['investment_start_date']
+            ?? $row['start_date']
+            ?? $row['investment_start']
+            ?? $row['تاريخ_بدء_الاستثمار']
+            ?? null);
 
         $shareRaw   = $row['office_share_percentage'] ?? $row['نسبة_مشاركة_المكتب'] ?? null;
         $officeShare = is_null($shareRaw) ? null : (float)str_replace(['%',' '], '', (string)$shareRaw);
@@ -128,6 +134,7 @@ class InvestorsImport implements
             'id_card_image'           => $idCardImage ?: null,
             'contract_image'          => $contractImage ?: null,
             'office_share_percentage' => $officeShare,
+            'investment_start_date'   => $investmentStart,
         ];
 
         $updates = $payload;
@@ -211,6 +218,7 @@ class InvestorsImport implements
             '*.id_card_image'           => 'nullable|string|max:255',
             '*.contract_image'          => 'nullable|string|max:255',
             '*.office_share_percentage' => 'nullable|numeric|min:0|max:100',
+            '*.investment_start_date'   => 'nullable|date',
         ];
     }
 
@@ -227,6 +235,7 @@ class InvestorsImport implements
             '*.office_share_percentage.numeric' => 'نسبة مشاركة المكتب يجب أن تكون رقمية.',
             '*.office_share_percentage.min'     => 'النسبة لا تقل عن 0%.',
             '*.office_share_percentage.max'     => 'النسبة لا تزيد عن 100%.',
+            '*.investment_start_date.date'      => 'تاريخ بدء الاستثمار غير صالح.',
         ];
     }
 
@@ -314,9 +323,47 @@ class InvestorsImport implements
         if ($a === null && $b === null) return true;
         if ($a === null || $b === null) return false;
 
+        if ($a instanceof \Carbon\CarbonInterface) {
+            $a = $a->toDateString();
+        }
+        if ($b instanceof \Carbon\CarbonInterface) {
+            $b = $b->toDateString();
+        }
+
         if (is_string($a)) $a = trim($a);
         if (is_string($b)) $b = trim($b);
 
         return $a == $b;
+    }
+
+    private function parseDate(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return Carbon::instance($value)->toDateString();
+        }
+
+        if (is_numeric($value) && class_exists(\PhpOffice\PhpSpreadsheet\Shared\Date::class)) {
+            try {
+                $dt = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float)$value);
+                return Carbon::instance($dt)->toDateString();
+            } catch (\Throwable $e) {
+                // ignore and fallback
+            }
+        }
+
+        $stringValue = trim((string)$value);
+        if ($stringValue === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($stringValue)->toDateString();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

@@ -18,7 +18,7 @@ class InvestorsFailuresFixExport implements FromArray, WithHeadings, ShouldAutoS
         return ExcelHeadingLocalizer::translateMany([
             'name','national_id','phone','email','address',
             'nationality','title','id_card_image','contract_image',
-            'office_share_percentage',
+            'office_share_percentage','investment_start_date',
             'errors','source_row',
         ]);
     }
@@ -40,6 +40,7 @@ class InvestorsFailuresFixExport implements FromArray, WithHeadings, ShouldAutoS
                 $vals['id_card_image']?? ($vals['صورة_الهوية'] ?? ''),
                 $vals['contract_image']?? ($vals['صورة_العقد'] ?? ''),
                 $vals['office_share_percentage'] ?? ($vals['نسبة_مشاركة_المكتب'] ?? ''),
+                $vals['investment_start_date'] ?? ($vals['تاريخ_بدء_الاستثمار'] ?? ($vals['start_date'] ?? '')),
                 is_array($msgs) ? implode(' | ', $msgs) : (string)$msgs,
                 (int)($f['row'] ?? 0),
             ];
@@ -49,8 +50,8 @@ class InvestorsFailuresFixExport implements FromArray, WithHeadings, ShouldAutoS
 
     public function styles(Worksheet $sheet)
     {
-        $sheet->getStyle('A1:L1')->getFont()->setBold(true);
-        $sheet->getStyle('K:K')->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A1:M1')->getFont()->setBold(true);
+        $sheet->getStyle('L:L')->getAlignment()->setWrapText(true);
         $sheet->freezePane('A2');
         return [];
     }
