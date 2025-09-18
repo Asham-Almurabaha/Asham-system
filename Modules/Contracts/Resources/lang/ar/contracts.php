@@ -62,6 +62,7 @@ return array (
   'Paid' => 'المدفوع',
   'Paid Percentage' => 'نسبة السداد',
   'Percentage:' => 'النسبة:',
+  'Percentage: :value%' => 'النسبة: :value%',
   'Remaining:' => 'المتبقي:',
   'Remaining to Pay' => 'المتبقي للسداد',
   'Within the Specified Period' => 'ضمن الفترة المحددة',

@@ -62,6 +62,7 @@ return array (
   'Paid' => 'Paid',
   'Paid Percentage' => 'Paid Percentage',
   'Percentage:' => 'Percentage:',
+  'Percentage: :value%' => 'Percentage: :value%',
   'Remaining:' => 'Remaining:',
   'Remaining to Pay' => 'Remaining to Pay',
   'Within the Specified Period' => 'Within the Specified Period',
