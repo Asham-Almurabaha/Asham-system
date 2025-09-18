@@ -102,6 +102,9 @@
       <a href="{{ route('investors.create') }}" class="btn btn-success">
         <i class="bi bi-plus-lg"></i> {{ __('investors::investors.Add Investor') }}
       </a>
+      <a href="{{ route('investors.dashboard') }}" class="btn btn-outline-dark">
+        <i class="bi bi-speedometer2"></i> {{ __('investors::investors.View Dashboard') }}
+      </a>
       @role('admin')
         <a href="{{ route('investors.import.form') }}" class="btn btn-outline-primary">
             <i class="bi bi-upload"></i> {{ __('investors::investors.Import Excel') }}

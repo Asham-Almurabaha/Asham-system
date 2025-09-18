@@ -22,6 +22,9 @@ Route::middleware(['web', 'auth'])->group(function () {
             ->name('import.pending.store-new');
     });
 
+    Route::get('investors/dashboard', [InvestorController::class, 'dashboard'])
+        ->name('investors.dashboard');
+
     Route::resource('investors', InvestorController::class);
     Route::resource('investor-transactions', InvestorTransactionController::class);
 

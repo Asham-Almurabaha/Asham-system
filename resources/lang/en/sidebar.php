@@ -5,6 +5,8 @@ return [
     'Customers' => 'Customers',
     'Guarantors' => 'Guarantors',
     'Investors' => 'Investors',
+    'Investors Dashboard' => 'Investors Dashboard',
+    'Manage Investors' => 'Manage Investors',
     'Contracts' => 'Contracts',
     'Manage Contracts' => 'Manage Contracts',
     'Contracts Dashboard' => 'Contracts Dashboard',

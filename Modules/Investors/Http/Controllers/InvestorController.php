@@ -34,56 +34,9 @@ class InvestorController extends Controller
 
         // كروت عامة (غير متأثرة بالفلاتر)
         $investorsTotalAll = Investor::count();
-
-        // تقدير “نشط” — نفس منطقك السابق إن وُجد investments، وإلا بديل منطقي
-        $endedStatusNames = ['منتهي','منتهى','سداد مبكر','سداد مُبكر','سداد مبكّر','Completed','Early Settlement','Closed','Inactive'];
-
-        $endedStatusIds = [];
-        if (class_exists(InvestmentStatus::class)) {
-            $endedStatusIds = InvestmentStatus::whereIn('name', $endedStatusNames)->pluck('id')->all();
-        } elseif (class_exists(ContractStatus::class)) {
-            $endedStatusIds = ContractStatus::whereIn('name', $endedStatusNames)->pluck('id')->all();
-        }
-
-        if (Schema::hasTable('investments') &&
-            Schema::hasColumn('investments', 'investor_id')) {
-
-            $statusIdCol = null; foreach (['status_id','investment_status_id','state_id'] as $c){ if(Schema::hasColumn('investments',$c)){ $statusIdCol=$c; break; } }
-            $statusNmCol = null; foreach (['status','state'] as $c){ if(Schema::hasColumn('investments',$c)){ $statusNmCol=$c; break; } }
-
-            $activeInvestorsTotalAll = Investor::whereExists(function($sub) use($statusIdCol,$statusNmCol,$endedStatusIds,$endedStatusNames){
-                $sub->from('investments')
-                    ->selectRaw('1')
-                    ->whereColumn('investors.id','investments.investor_id');
-
-                if ($statusIdCol && !empty($endedStatusIds)) {
-                    $sub->whereNotIn($statusIdCol, $endedStatusIds);
-                } elseif ($statusNmCol) {
-                    $sub->whereNotIn($statusNmCol, $endedStatusNames);
-                } elseif (Schema::hasColumn('investments','is_closed')) {
-                    $sub->where('is_closed', 0);
-                } elseif (Schema::hasColumn('investments','closed_at')) {
-                    $sub->whereNull('closed_at');
-                }
-            })->count();
-        } else {
-            $activeInvestorsTotalAll = Investor::query()
-                ->where(function($q){
-                    $added = false;
-                    if (Schema::hasColumn('investors','contract_image')) {
-                        $q->whereNotNull('contract_image')->where('contract_image','!=','');
-                        $added = true;
-                    }
-                    if (Schema::hasColumn('investors','office_share_percentage')) {
-                        $added ? $q->orWhere('office_share_percentage','>',0)
-                            : $q->where('office_share_percentage','>',0);
-                    }
-                })
-                ->count();
-        }
-
-        $newInvestorsThisMonthAll = Investor::whereBetween('created_at',[now()->startOfMonth(), now()])->count();
-        $newInvestorsThisWeekAll  = Investor::whereBetween('created_at',[now()->startOfWeek(),  now()])->count();
+        $activeInvestorsTotalAll = $this->countActiveInvestors();
+        $newInvestorsThisMonthAll = Investor::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
+        $newInvestorsThisWeekAll  = Investor::whereBetween('created_at', [now()->startOfWeek(), now()])->count();
 
         // Per-page aggregates for table columns
         $ids = $investors->pluck('id')->all();
@@ -101,8 +54,7 @@ class InvestorController extends Controller
                 ->pluck('bal', 'investor_id');
 
             // Active contracts per investor + remaining amount
-            $endedStatusIds = ContractStatus::whereIn('name', ['مكتمل','منتهي','سداد مبكر','إلغاء','Closed','Completed','Early Settlement','Inactive'])
-                ->pluck('id')->all();
+            $endedStatusIds = $this->endedContractStatusIds();
 
             $rows = DB::table('contract_investor as ci')
                 ->join('contracts as c', 'c.id', '=', 'ci.contract_id')
@@ -137,6 +89,122 @@ class InvestorController extends Controller
         $nationalities = Nationality::all();
         $titles = Title::all();
         return view('investors::index', compact('investors', 'nationalities', 'titles', 'investorsTotalAll', 'activeInvestorsTotalAll', 'newInvestorsThisMonthAll', 'newInvestorsThisWeekAll', 'liquidityByInvestor', 'activeCountByInvestor', 'remainingByInvestor'));
+    }
+
+    public function dashboard(Request $request)
+    {
+        $investorsTotalAll = Investor::count();
+        $activeInvestorsTotalAll = $this->countActiveInvestors();
+        $inactiveInvestorsTotalAll = max($investorsTotalAll - $activeInvestorsTotalAll, 0);
+
+        $newInvestorsThisMonthAll = Investor::whereBetween('created_at', [now()->startOfMonth(), now()])->count();
+        $newInvestorsThisWeekAll  = Investor::whereBetween('created_at', [now()->startOfWeek(), now()])->count();
+
+        $percentages = [
+            'active'   => $investorsTotalAll > 0 ? round(($activeInvestorsTotalAll / $investorsTotalAll) * 100, 1) : 0.0,
+            'inactive' => $investorsTotalAll > 0 ? round(($inactiveInvestorsTotalAll / $investorsTotalAll) * 100, 1) : 0.0,
+        ];
+
+        $liquidityRow = LedgerEntry::query()
+            ->whereNotNull('investor_id')
+            ->where('is_office', false)
+            ->selectRaw(<<<SQL
+                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in,
+                COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out
+            SQL)
+            ->first();
+
+        $liquidityTotals = [
+            'in'  => round((float) ($liquidityRow->total_in ?? 0), 2),
+            'out' => round((float) ($liquidityRow->total_out ?? 0), 2),
+        ];
+        $liquidityTotals['net'] = round($liquidityTotals['in'] - $liquidityTotals['out'], 2);
+
+        $topLiquidityRaw = LedgerEntry::query()
+            ->whereNotNull('investor_id')
+            ->where('is_office', false)
+            ->groupBy('investor_id')
+            ->selectRaw(<<<SQL
+                investor_id,
+                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in,
+                COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out,
+                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS net_balance
+            SQL)
+            ->orderByDesc('net_balance')
+            ->take(5)
+            ->get();
+
+        $topInvestorIds = $topLiquidityRaw->pluck('investor_id')->all();
+        $investorLookup = Investor::whereIn('id', $topInvestorIds)
+            ->get(['id', 'name'])
+            ->keyBy('id');
+
+        $topLiquidity = $topLiquidityRaw->map(function ($row) use ($investorLookup) {
+            $totalIn = round((float) ($row->total_in ?? 0), 2);
+            $totalOut = round((float) ($row->total_out ?? 0), 2);
+            $net = round($totalIn - $totalOut, 2);
+
+            return [
+                'id'    => (int) $row->investor_id,
+                'name'  => $investorLookup[$row->investor_id]->name ?? ('#' . $row->investor_id),
+                'in'    => $totalIn,
+                'out'   => $totalOut,
+                'net'   => $net,
+            ];
+        })->values();
+
+        $recentInvestors = Investor::query()
+            ->latest()
+            ->withCount('contracts')
+            ->take(5)
+            ->get(['id', 'name', 'created_at', 'investment_start_date', 'office_share_percentage']);
+
+        $investorsWithoutContracts = Investor::doesntHave('contracts')->count();
+        $investorsWithContracts = Investor::has('contracts')->count();
+
+        $avgOfficeShare = (float) Investor::avg('office_share_percentage');
+        $avgOfficeShare = round($avgOfficeShare ?: 0, 2);
+
+        $endedContractStatusIds = $this->endedContractStatusIds();
+        $contractsQuery = DB::table('contract_investor as ci')
+            ->join('contracts as c', 'c.id', '=', 'ci.contract_id');
+
+        if (!empty($endedContractStatusIds)) {
+            $placeholders = implode(',', array_fill(0, count($endedContractStatusIds), '?'));
+            $contractsRow = $contractsQuery
+                ->selectRaw('COUNT(DISTINCT c.id) AS total_contracts')
+                ->selectRaw("COUNT(DISTINCT CASE WHEN c.contract_status_id NOT IN ($placeholders) THEN c.id END) AS active_contracts", $endedContractStatusIds)
+                ->first();
+        } else {
+            $contractsRow = $contractsQuery
+                ->selectRaw('COUNT(DISTINCT c.id) AS total_contracts')
+                ->selectRaw('COUNT(DISTINCT c.id) AS active_contracts')
+                ->first();
+        }
+
+        $contractStats = [
+            'total'   => (int) ($contractsRow->total_contracts ?? 0),
+            'active'  => (int) ($contractsRow->active_contracts ?? 0),
+        ];
+        $contractStats['coverage_pct'] = $contractStats['total'] > 0
+            ? round(($contractStats['active'] / $contractStats['total']) * 100, 1)
+            : 0.0;
+
+        return view('investors::dashboard', [
+            'investorsTotalAll'         => $investorsTotalAll,
+            'activeInvestorsTotalAll'   => $activeInvestorsTotalAll,
+            'inactiveInvestorsTotalAll' => $inactiveInvestorsTotalAll,
+            'newInvestorsThisMonthAll'  => $newInvestorsThisMonthAll,
+            'newInvestorsThisWeekAll'   => $newInvestorsThisWeekAll,
+            'percentages'               => $percentages,
+            'liquidityTotals'           => $liquidityTotals,
+            'topLiquidity'              => $topLiquidity,
+            'recentInvestors'           => $recentInvestors,
+            'investorsWithoutContracts' => $investorsWithoutContracts,
+            'investorsWithContracts'    => $investorsWithContracts,
+            'avgOfficeShare'            => $avgOfficeShare,
+            'contractStats'             => $contractStats,
+        ]);
     }
 
     public function create()
@@ -263,5 +331,94 @@ class InvestorController extends Controller
         $investor->delete();
 
         return redirect()->route('investors.index')->with('success', 'تم حذف المستثمر بنجاح');
+    }
+
+    protected function countActiveInvestors(): int
+    {
+        $endedStatusNames = $this->endedInvestmentStatusNames();
+        $endedStatusIds = $this->resolveEndedInvestmentStatusIds();
+
+        if (Schema::hasTable('investments') && Schema::hasColumn('investments', 'investor_id')) {
+            $statusIdCol = null;
+            foreach (['status_id', 'investment_status_id', 'state_id'] as $column) {
+                if (Schema::hasColumn('investments', $column)) {
+                    $statusIdCol = $column;
+                    break;
+                }
+            }
+
+            $statusNameCol = null;
+            foreach (['status', 'state'] as $column) {
+                if (Schema::hasColumn('investments', $column)) {
+                    $statusNameCol = $column;
+                    break;
+                }
+            }
+
+            return Investor::whereExists(function ($sub) use ($statusIdCol, $statusNameCol, $endedStatusIds, $endedStatusNames) {
+                $sub->from('investments')
+                    ->selectRaw('1')
+                    ->whereColumn('investors.id', 'investments.investor_id');
+
+                if ($statusIdCol && !empty($endedStatusIds)) {
+                    $sub->whereNotIn($statusIdCol, $endedStatusIds);
+                } elseif ($statusNameCol) {
+                    $sub->whereNotIn($statusNameCol, $endedStatusNames);
+                } elseif (Schema::hasColumn('investments', 'is_closed')) {
+                    $sub->where('is_closed', 0);
+                } elseif (Schema::hasColumn('investments', 'closed_at')) {
+                    $sub->whereNull('closed_at');
+                }
+            })->count();
+        }
+
+        return Investor::query()
+            ->where(function ($q) {
+                $added = false;
+                if (Schema::hasColumn('investors', 'contract_image')) {
+                    $q->whereNotNull('contract_image')->where('contract_image', '!=', '');
+                    $added = true;
+                }
+                if (Schema::hasColumn('investors', 'office_share_percentage')) {
+                    $added ? $q->orWhere('office_share_percentage', '>', 0)
+                        : $q->where('office_share_percentage', '>', 0);
+                }
+            })
+            ->count();
+    }
+
+    protected function endedInvestmentStatusNames(): array
+    {
+        return ['منتهي', 'منتهى', 'سداد مبكر', 'سداد مُبكر', 'سداد مبكّر', 'Completed', 'Early Settlement', 'Closed', 'Inactive'];
+    }
+
+    protected function resolveEndedInvestmentStatusIds(): array
+    {
+        $names = $this->endedInvestmentStatusNames();
+        $investmentStatusTable = 'investment_statuses';
+        $investmentStatusClass = '\\Modules\\Lookups\\Entities\\InvestmentStatus';
+
+        if (class_exists($investmentStatusClass) && Schema::hasTable($investmentStatusTable)) {
+            return $investmentStatusClass::whereIn('name', $names)->pluck('id')->all();
+        }
+
+        $contractStatusTable = (new ContractStatus())->getTable();
+        if (Schema::hasTable($contractStatusTable)) {
+            return ContractStatus::whereIn('name', $names)->pluck('id')->all();
+        }
+
+        return [];
+    }
+
+    protected function endedContractStatusIds(): array
+    {
+        $names = ['مكتمل', 'منتهي', 'سداد مبكر', 'إلغاء', 'Closed', 'Completed', 'Early Settlement', 'Inactive'];
+        $contractStatusTable = (new ContractStatus())->getTable();
+
+        if (!Schema::hasTable($contractStatusTable)) {
+            return [];
+        }
+
+        return ContractStatus::whereIn('name', $names)->pluck('id')->all();
     }
 }

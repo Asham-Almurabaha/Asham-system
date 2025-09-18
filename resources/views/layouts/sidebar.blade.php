@@ -29,6 +29,11 @@
       || $isRoute('product_entries.*')
       || $isRoute('users.*');
 
+  // فتح مجموعة المستثمرين؟
+  $investorsOpen = $isRoute('investors.*')
+      || $isRoute('investor-transactions.*')
+      || $isRoute('reports.investors.*');
+
   // فتح مجموعة العقود؟
   $contractsOpen = $isRoute('contracts.*');
 
@@ -64,10 +69,41 @@
 
   {{-- المستثمرين --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('investors.*')) }} {{ $active($isRoute('investors.*')) }}"
-       href="{{ route('investors.index') }}">
-      <i class="bi bi-briefcase"></i><span>@lang('sidebar.Investors')</span>
+    <a class="nav-link {{ $coll($investorsOpen) }}"
+       data-bs-target="#investors-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $investorsOpen ? 'true' : 'false' }}">
+      <i class="bi bi-briefcase"></i><span>@lang('sidebar.Investors')</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
+
+    <ul id="investors-nav" class="nav-content collapse {{ $open($investorsOpen) }}" data-bs-parent="#sidebar-nav">
+      <li>
+        <a class="{{ $active($isRoute('investors.dashboard')) }}" href="{{ route('investors.dashboard') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Investors Dashboard')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute([
+          'investors.index',
+          'investors.create',
+          'investors.store',
+          'investors.show',
+          'investors.edit',
+          'investors.update',
+          'investors.destroy',
+          'investors.import.*',
+          'investors.cash',
+          'investors.liquidity',
+          'investors.statement.*',
+          'investors.withdrawals.*',
+          'investors.deposits.*',
+          'investors.transactions.*',
+          'investor-transactions.*',
+          'reports.investors.*',
+        ])) }}" href="{{ route('investors.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Investors')</span>
+        </a>
+      </li>
+    </ul>
   </li>
 
   {{-- العقود --}}

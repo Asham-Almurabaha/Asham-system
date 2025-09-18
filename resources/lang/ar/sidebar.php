@@ -5,6 +5,8 @@ return array (
   'Customers' => 'العملاء',
   'Guarantors' => 'الكفلاء',
   'Investors' => 'المستثمرين',
+  'Investors Dashboard' => 'لوحة تحكم المستثمرين',
+  'Manage Investors' => 'إدارة المستثمرين',
   'Contracts' => 'العقود',
   'Manage Contracts' => 'إدارة العقود',
   'Contracts Dashboard' => 'لوحة تحكم العقود',
