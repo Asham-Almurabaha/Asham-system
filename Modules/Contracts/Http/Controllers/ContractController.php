@@ -547,7 +547,10 @@ class ContractController extends Controller
             'productType',     // ✅ العلاقة أصبحت productType
             'installmentType',
             'investors',
-            'installments.installmentStatus'
+            'installments.installmentStatus',
+            'claims' => fn ($query) => $query
+                ->orderByDesc('claim_date')
+                ->orderByDesc('id'),
         ]);
 
         $investors = Investor::all();

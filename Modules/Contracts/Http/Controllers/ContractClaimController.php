@@ -58,7 +58,13 @@ class ContractClaimController extends Controller
 
     public function store(StoreContractClaimRequest $request)
     {
-        ContractClaim::create($request->validated());
+        $claim = ContractClaim::create($request->validated());
+
+        if ($request->boolean('return_to_contract')) {
+            return redirect()
+                ->route('contracts.show', $claim->contract_id)
+                ->with('success', __('contracts::claims.created'));
+        }
 
         return redirect()
             ->route('contract-claims.index')

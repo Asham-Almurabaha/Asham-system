@@ -9,6 +9,13 @@
         $customerRole => __('contracts::claims.party_role_customer'),
         $guarantorRole => __('contracts::claims.party_role_guarantor'),
     ];
+    $contractsLookup = $contracts->map(function ($contract) {
+        return [
+            'id' => $contract->id,
+            'customer' => $contract->customer?->name,
+            'guarantor' => $contract->guarantor?->name,
+        ];
+    })->values()->all();
 @endphp
 
 <div class="row g-3">
@@ -75,13 +82,7 @@
                 return;
             }
 
-            const contractsLookup = @json($contracts->map(function ($contract) {
-                return [
-                    'id' => $contract->id,
-                    'customer' => $contract->customer?->name,
-                    'guarantor' => $contract->guarantor?->name,
-                ];
-            })->values()->all());
+            const contractsLookup = @json($contractsLookup);
 
             const placeholderText = @json(__('contracts::claims.choose_filed_party'));
             const roleLabels = @json($partyRoleLabels);

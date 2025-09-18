@@ -58,6 +58,9 @@
 {{-- الأقساط --}}
 @include('contracts::partials.installments', ['contract' => $contract])
 
+{{-- المطالبات --}}
+@include('contracts::partials.claims', ['contract' => $contract])
+
 {{-- الصور --}}
 @include('contracts::partials.images', ['contract' => $contract])
 @endsection
