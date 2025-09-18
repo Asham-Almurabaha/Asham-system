@@ -129,6 +129,37 @@ class ContractClaimController extends Controller
             ->with('success', __('contracts::claims.status_updated'));
     }
 
+    public function reopen(ContractClaim $contractClaim)
+    {
+        $statusId = $this->defaultClaimStatusId();
+
+        if (! $statusId) {
+            return redirect()
+                ->back()
+                ->with('error', __('contracts::claims.under_review_status_missing'));
+        }
+
+        $claim = DB::transaction(function () use ($contractClaim, $statusId) {
+            $contractClaim->update([
+                'claim_status_id' => $statusId,
+            ]);
+
+            $contract = $contractClaim->contract()->first();
+
+            if ($contract) {
+                $this->updateContractStatus($contract);
+            }
+
+            return $contractClaim->fresh();
+        });
+
+        $this->updateRelatedStatuses($claim);
+
+        return redirect()
+            ->route('contract-claims.index')
+            ->with('success', __('contracts::claims.reopened'));
+    }
+
     public function applyDiscount(ApplyContractClaimDiscountRequest $request, ContractClaim $contractClaim)
     {
         $statusId = $this->paidWithDiscountClaimStatusId();

@@ -47,10 +47,13 @@ return [
     'created' => 'Claim created successfully.',
     'updated' => 'Claim updated successfully.',
     'status_updated' => 'Claim status updated successfully.',
+    'reopened' => 'Claim reopened successfully.',
     'discount_applied' => 'Discount applied successfully.',
     'payment_recorded' => 'Claim payment recorded successfully.',
     'deleted' => 'Claim deleted successfully.',
     'validation_missing_customer' => 'The selected contract does not have a customer assigned.',
     'validation_missing_guarantor' => 'The selected contract does not have a guarantor assigned.',
     'paid_with_discount_status_missing' => 'The "Paid with discount" status is not configured yet. Please add it from the lookups screen.',
+    'under_review_status_missing' => 'The "Under review" status is not configured yet. Please add it from the lookups screen.',
+    'reopen_claim' => 'Reopen Claim',
 ];

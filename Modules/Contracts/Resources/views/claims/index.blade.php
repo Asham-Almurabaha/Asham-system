@@ -61,6 +61,7 @@
                         @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
                         @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
                         @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
+                        @php($isRejectedStatus = $currentClaimStatus === 'مرفوض')
                         <td class="text-nowrap">
                             @unless ($isPaidStatus)
                                 <div class="d-flex flex-wrap justify-content-center gap-2">
@@ -74,7 +75,17 @@
                                         </button>
                                     @endif
 
-                                    @unless ($isUnderReviewStatus)
+                                    @if ($isRejectedStatus)
+                                        <form action="{{ route('contract-claims.reopen', $claim) }}" method="post">
+                                            @csrf
+                                            @method('patch')
+                                            <button type="submit" class="btn btn-outline-warning btn-sm">
+                                                {{ __('contracts::claims.reopen_claim') }}
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    @if (! $isUnderReviewStatus && ! $isRejectedStatus)
                                         <button type="button"
                                                 class="btn btn-outline-dark btn-sm"
                                                 data-bs-toggle="modal"
@@ -90,7 +101,7 @@
                                                 @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
                                             {{ __('contracts::claims.pay_with_discount') }}
                                         </button>
-                                    @endunless
+                                    @endif
                                 </div>
                             @endunless
                         </td>

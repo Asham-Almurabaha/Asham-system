@@ -31,6 +31,8 @@ Route::patch('contract-claims/{contractClaim}/status', [ContractClaimController:
     ->name('contract-claims.update-status');
 Route::patch('contract-claims/{contractClaim}/discount', [ContractClaimController::class, 'applyDiscount'])
     ->name('contract-claims.apply-discount');
+Route::patch('contract-claims/{contractClaim}/reopen', [ContractClaimController::class, 'reopen'])
+    ->name('contract-claims.reopen');
 Route::post('contract-claims/{contractClaim}/payments', [ContractClaimController::class, 'storePayment'])
     ->name('contract-claims.payments.store');
 Route::resource('contract-claims', ContractClaimController::class)->except(['show', 'create', 'edit']);
