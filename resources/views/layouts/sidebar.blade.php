@@ -8,16 +8,20 @@
 
   // هل مجموعة الإعدادات مفتوحة؟
   $settingsOpen = $isPath('*/setting*')
-      || $isRoute('settings.*') || $isRoute('nationalities.*') || $isRoute('titles.*')
-      || $isRoute('contract_statuses.*')
-      || $isRoute('claim_first_parties.*')
+      || $isRoute('settings.*')
+      || $isRoute('nationalities.*')
+      || $isRoute('titles.*')
+      || $isRoute('customer_statuses.*')
       || $isRoute('guarantor_statuses.*')
       || $isRoute('contract_statuses.*')
+      || $isRoute('claim_statuses.*')
+      || $isRoute('claim_paying_parties.*')
+      || $isRoute('claim_first_parties.*')
       || $isRoute('installment_statuses.*')
       || $isRoute('installment_types.*')
+      || $isRoute('categories.*')
       || $isRoute('transaction_statuses.*')
       || $isRoute('transaction_types.*')
-      || $isRoute('categories.*')
       || $isRoute('accounts.bank-accounts.*')
       || $isRoute('accounts.safes.*')
       || $isRoute('product_types.*')
@@ -157,110 +161,120 @@
 
     <ul id="settings-nav" class="nav-content collapse {{ $open($settingsOpen) }}" data-bs-parent="#sidebar-nav">
       <li class="nav-heading">@lang('sidebar.General Settings')</li>
-      <li>
-        <a class="{{ $active($isRoute('settings.index')) }}" href="{{ route('settings.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
-        </a>
-      </li>
+      
+        <li>
+          <a class="{{ $active($isRoute('settings.index')) }}" href="{{ route('settings.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('sidebar.General Setting')</span>
+          </a>
+        </li>
 
       <li class="nav-heading">@lang('sidebar.People & Customers')</li>
-      <li>
-        <a class="{{ $active($isRoute('nationalities.*')) }}" href="{{ route('nationalities.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Nationalities')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('titles.*')) }}" href="{{ route('titles.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Titles')</span>
-        </a>
-      </li>
 
-      <li class="nav-heading">@lang('sidebar.Statuses')</li>
-      <li>
-        <a class="{{ $active($isRoute('customer_statuses.*')) }}" href="{{ route('customer_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Customer Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('guarantor_statuses.*')) }}" href="{{ route('guarantor_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Guarantor Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('contract_statuses.*')) }}" href="{{ route('contract_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Contract Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('claim_statuses.*')) }}" href="{{ route('claim_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('claim_paying_parties.*')) }}" href="{{ route('claim_paying_parties.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim Paying Parties')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('claim_first_parties.*')) }}" href="{{ route('claim_first_parties.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim First Parties')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
-        </a>
-      </li>
+        <li>
+          <a class="{{ $active($isRoute('nationalities.*')) }}" href="{{ route('nationalities.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Nationalities')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('titles.*')) }}" href="{{ route('titles.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Titles')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('customer_statuses.*')) }}" href="{{ route('customer_statuses.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Customer Statuses')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('guarantor_statuses.*')) }}" href="{{ route('guarantor_statuses.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Guarantor Statuses')</span>
+          </a>
+        </li>
+
+      <li class="nav-heading">@lang('sidebar.Contracts')</li>
+
+        <li>
+          <a class="{{ $active($isRoute('contract_statuses.*')) }}" href="{{ route('contract_statuses.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Contract Statuses')</span>
+          </a>
+        </li>
+
+      <li class="nav-heading">@lang('sidebar.Claims')</li>
+
+        <li>
+          <a class="{{ $active($isRoute('claim_statuses.*')) }}" href="{{ route('claim_statuses.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim Statuses')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('claim_first_parties.*')) }}" href="{{ route('claim_first_parties.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim First Parties')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('claim_paying_parties.*')) }}" href="{{ route('claim_paying_parties.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim Paying Parties')</span>
+          </a>
+        </li>
+      
 
       <li class="nav-heading">@lang('sidebar.Installments')</li>
-      <li>
-        <a class="{{ $active($isRoute('installment_types.*')) }}" href="{{ route('installment_types.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Types')</span>
-        </a>
-      </li>
+
+        <li>
+          <a class="{{ $active($isRoute('installment_types.*')) }}" href="{{ route('installment_types.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Types')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
+          </a>
+        </li>
 
       <li class="nav-heading">@lang('sidebar.Transactions & Finance')</li>
-      <li>
-        <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('transaction_types.*')) }}" href="{{ route('transaction_types.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Types')</span>
-        </a>
-      </li>
+
+        <li>
+          <a class="{{ $active($isRoute('transaction_types.*')) }}" href="{{ route('transaction_types.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Types')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
+          </a>
+        </li>
 
       <li class="nav-heading">@lang('sidebar.Accounts Group')</li>
-      <li>
-        <a class="{{ $active($isRoute('accounts.bank-accounts.*')) }}" href="{{ route('accounts.bank-accounts.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Bank Accounts')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('accounts.safes.*')) }}" href="{{ route('accounts.safes.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Treasury Accounts')</span>
-        </a>
-      </li>
+
+        <li>
+          <a class="{{ $active($isRoute('accounts.bank-accounts.*')) }}" href="{{ route('accounts.bank-accounts.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('sidebar.Bank Accounts')</span>
+          </a>
+        </li>
+        <li>
+          <a class="{{ $active($isRoute('accounts.safes.*')) }}" href="{{ route('accounts.safes.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('sidebar.Treasury Accounts')</span>
+          </a>
+        </li>
 
       <li class="nav-heading">@lang('sidebar.Products')</li>
-      <li>
-        <a class="{{ $active($isRoute('product_types.*')) }}" href="{{ route('product_types.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Product Types')</span>
-        </a>
-      </li>
+        <li>
+          <a class="{{ $active($isRoute('product_types.*')) }}" href="{{ route('product_types.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Product Types')</span>
+          </a>
+        </li>
 
       <li class="nav-heading">@lang('sidebar.Users and Permissions')</li>
-      <li>
-        <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Assign Roles to Users')</span>
-        </a>
-      </li>
+        <li>
+          <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('sidebar.Assign Roles to Users')</span>
+          </a>
+        </li>
     </ul>
   </li>
   @endrole
