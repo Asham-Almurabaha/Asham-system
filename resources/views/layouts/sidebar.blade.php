@@ -8,19 +8,26 @@
 
   // هل مجموعة الإعدادات مفتوحة؟
   $settingsOpen = $isPath('*/setting*')
-      || $isRoute('settings.*') || $isRoute('nationalities.*') || $isRoute('titles.*')
-      || $isRoute('contract_statuses.*')
+      || $isRoute('settings.*')
+      || $isRoute('nationalities.*')
+      || $isRoute('titles.*')
+      || $isRoute('customer_statuses.*')
       || $isRoute('guarantor_statuses.*')
-      || $isRoute('installment_statuses.*') || $isRoute('installment_types.*')
-      || $isRoute('products.*') || $isRoute('product_entries.*')
-      || $isRoute('bank_cash_accounts.*') || $isRoute('transaction_types.*') || $isRoute('transaction_statuses.*')
-      || $isRoute('categories.*') || $isRoute('product_types.*')
+      || $isRoute('contract_statuses.*')
+      || $isRoute('installment_statuses.*')
+      || $isRoute('installment_types.*')
+      || $isRoute('transaction_statuses.*')
+      || $isRoute('transaction_types.*')
+      || $isRoute('categories.*')
+      || $isRoute('accounts.bank-accounts.*')
+      || $isRoute('accounts.safes.*')
+      || $isRoute('product_types.*')
+      || $isRoute('products.*')
+      || $isRoute('product_entries.*')
       || $isRoute('users.*');
 
   // فتح مجموعة الحسابات؟
-  $accountsOpen = $isRoute('ledger.*')
-      || $isRoute('accounts.bank-accounts.*')
-      || $isRoute('accounts.safes.*');
+  $accountsOpen = $isRoute('ledger.*');
 @endphp
 
 <ul class="sidebar-nav" id="sidebar-nav">
@@ -102,16 +109,6 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
         </a>
       </li>
-      <li>
-        <a class="{{ $active($isRoute('accounts.bank-accounts.*')) }}" href="{{ route('accounts.bank-accounts.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Bank Accounts')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('accounts.safes.*')) }}" href="{{ route('accounts.safes.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Treasury Accounts')</span>
-        </a>
-      </li>
     </ul>
   </li>
 
@@ -145,13 +142,13 @@
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Titles')</span>
         </a>
       </li>
+
+      <li class="nav-heading">@lang('sidebar.Statuses')</li>
       <li>
         <a class="{{ $active($isRoute('customer_statuses.*')) }}" href="{{ route('customer_statuses.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Customer Statuses')</span>
         </a>
       </li>
-
-      <li class="nav-heading">@lang('sidebar.Contracts & Guarantees')</li>
       <li>
         <a class="{{ $active($isRoute('guarantor_statuses.*')) }}" href="{{ route('guarantor_statuses.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Guarantor Statuses')</span>
@@ -162,16 +159,21 @@
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Contract Statuses')</span>
         </a>
       </li>
+      <li>
+        <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+        </a>
+      </li>
 
       <li class="nav-heading">@lang('sidebar.Installments')</li>
       <li>
         <a class="{{ $active($isRoute('installment_types.*')) }}" href="{{ route('installment_types.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Types')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute('installment_statuses.*')) }}" href="{{ route('installment_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Installment Statuses')</span>
         </a>
       </li>
 
@@ -186,9 +188,16 @@
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Types')</span>
         </a>
       </li>
+
+      <li class="nav-heading">@lang('sidebar.Accounts Group')</li>
       <li>
-        <a class="{{ $active($isRoute('transaction_statuses.*')) }}" href="{{ route('transaction_statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Transaction Statuses')</span>
+        <a class="{{ $active($isRoute('accounts.bank-accounts.*')) }}" href="{{ route('accounts.bank-accounts.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Bank Accounts')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('accounts.safes.*')) }}" href="{{ route('accounts.safes.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Treasury Accounts')</span>
         </a>
       </li>
 
