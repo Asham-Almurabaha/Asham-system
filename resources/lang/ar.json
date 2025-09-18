@@ -371,5 +371,16 @@
     "name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image": "name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image",
     "name@email.com": "name@email.com",
     "Internal Transfer": "تحويل داخلي",
-    "Split Entry": "قيد مُجزّأ"
+    "Split Entry": "قيد مُجزّأ",
+    "Contracts Dashboard": "لوحة تحكم العقود",
+    "Review the overall performance of contracts and quickly reach the detailed reports.": "راجع الأداء العام للعقود ووصل سريعًا إلى التقارير التفصيلية.",
+    "Current Investor:": "المستثمر الحالي:",
+    "All Investors": "جميع المستثمرين",
+    "Manage Contracts": "إدارة العقود",
+    "Contracts that are not linked to any investor (from the relationship)": "عقود غير مرتبطة بأي مستثمر (من العلاقة)",
+    "Open detailed reports for contract statuses or office outstanding balances.": "افتح التقارير التفصيلية لحالات العقود أو الأرصدة المستحقة على المكتب.",
+    "Status Reports": "تقارير الحالات",
+    "Office Outstanding Report": "تقرير مستحقات المكتب",
+    "Contracts Without Investor": "عقود بدون مستثمر",
+    "Export Samples": "نماذج التصدير"
 }

@@ -32,6 +32,8 @@ Route::patch('contract-claims/{contractClaim}/status', [ContractClaimController:
 Route::resource('contract-claims', ContractClaimController::class)->except(['show', 'create', 'edit']);
 
 // CRUD العقود
+Route::get('contracts/dashboard', [ContractController::class, 'dashboard'])
+    ->name('contracts.dashboard');
 Route::put('contracts/{contract}/images', [ContractController::class, 'updateImages'])
     ->name('contracts.images.update');
 Route::resource('contracts', ContractController::class);

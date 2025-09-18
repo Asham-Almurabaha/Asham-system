@@ -51,7 +51,7 @@ class ContractController extends Controller
     private const DIR_CONTRACT_CUSTOMERS   = 'contracts/customers';
     private const DIR_CONTRACT_GUARANTORS  = 'contracts/guarantors';
 
-    public function index(Request $request, InstallmentsMonthlyService $installmentsSvc)
+    public function index(Request $request)
     {
         $perPage     = 20;
         $currentPage = max((int) $request->get('page', 1), 1);
@@ -179,35 +179,40 @@ class ContractController extends Controller
         $investors = Investor::orderBy('name')->get(['id', 'name']);
         $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
 
-        // ===== ملخص الأقساط =====
-        $m = $request->integer('m') ?: null;
-        $y = $request->integer('y') ?: null;
-        $exclude = ['مؤجل','معتذر'];
-        $investorIdForMonthly = ($request->filled('investor_id') && $request->investor_id !== '_none')
-            ? (int)$request->investor_id
-            : null;
-
-        try {
-            if ($investorIdForMonthly) {
-                if (method_exists($installmentsSvc, 'buildForInvestor')) {
-                    $investorModel = Investor::find($investorIdForMonthly);
-                    $installmentsMonthly = $installmentsSvc->buildForInvestor($investorModel ?: $investorIdForMonthly, $m, $y, $exclude);
-                } else {
-                    $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude, $investorIdForMonthly);
-                }
-            } else {
-                $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
-            }
-        } catch (\ArgumentCountError $e) {
-            $installmentsMonthly = $installmentsSvc->build($m, $y, $exclude);
-        }
-
         return view('contracts::index', compact(
             'contracts',
             'contractStatuses',
-            'investors',
-            'installmentsMonthly'
+            'investors'
         ));
+    }
+
+
+    public function dashboard(Request $request, InstallmentsMonthlyService $installmentsSvc)
+    {
+        $contractStatuses = ContractStatus::orderBy('name')->get(['id', 'name']);
+        $investors        = Investor::orderBy('name')->get(['id', 'name']);
+
+        $investorIdForMonthly = ($request->filled('investor_id') && $request->investor_id !== '_none')
+            ? (int) $request->investor_id
+            : null;
+
+        $installmentsMonthly = $this->buildInstallmentsMonthly($request, $installmentsSvc, $investorIdForMonthly);
+        $dashboardStats      = $this->buildContractDashboardStats();
+
+        $selectedInvestor = $investorIdForMonthly
+            ? $investors->firstWhere('id', $investorIdForMonthly)
+            : null;
+
+        $currencySymbol = 'ر.س';
+
+        return view('contracts::dashboard', [
+            'contractStatuses'   => $contractStatuses,
+            'investors'          => $investors,
+            'installmentsMonthly'=> $installmentsMonthly,
+            'dashboardStats'     => $dashboardStats,
+            'selectedInvestor'   => $selectedInvestor,
+            'currencySymbol'     => $currencySymbol,
+        ]);
     }
 
 
@@ -829,4 +834,124 @@ class ContractController extends Controller
         ]);
     }
 
+    private function buildInstallmentsMonthly(
+        Request $request,
+        InstallmentsMonthlyService $installmentsSvc,
+        ?int $investorIdForMonthly = null
+    ): array {
+        $m = $request->integer('m') ?: null;
+        $y = $request->integer('y') ?: null;
+        $exclude = ['مؤجل', 'معتذر'];
+
+        try {
+            if ($investorIdForMonthly) {
+                if (method_exists($installmentsSvc, 'buildForInvestor')) {
+                    $investorModel = Investor::find($investorIdForMonthly);
+
+                    return (array) $installmentsSvc->buildForInvestor(
+                        $investorModel ?: $investorIdForMonthly,
+                        $m,
+                        $y,
+                        $exclude
+                    );
+                }
+
+                return (array) $installmentsSvc->build($m, $y, $exclude, $investorIdForMonthly);
+            }
+
+            return (array) $installmentsSvc->build($m, $y, $exclude);
+        } catch (\ArgumentCountError) {
+            return (array) $installmentsSvc->build($m, $y, $exclude);
+        }
+    }
+
+    private function buildContractDashboardStats(): array
+    {
+        $namesEnded   = ['منتهي', 'سداد مبكر'];
+        $namesPending = ['معلق'];
+
+        $statusIdCol = null;
+        foreach (['status_id', 'contract_status_id', 'state_id'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) {
+                $statusIdCol = $col;
+                break;
+            }
+        }
+
+        $statusTextCol = null;
+        foreach (['status', 'state'] as $col) {
+            if (Schema::hasColumn('contracts', $col)) {
+                $statusTextCol = $col;
+                break;
+            }
+        }
+
+        $endedIds = $pendingIds = [];
+        if (class_exists(ContractStatus::class)) {
+            $endedIds   = ContractStatus::whereIn('name', $namesEnded)->pluck('id')->all();
+            $pendingIds = ContractStatus::whereIn('name', $namesPending)->pluck('id')->all();
+        }
+
+        $contractsTotalAll      = (int) Contract::query()->count();
+        $contractsEndedAll      = 0;
+        $contractsPendingAll    = 0;
+        $contractsNoInvestorAll = (int) Contract::query()->doesntHave('investors')->count();
+
+        if ($statusIdCol && !empty($endedIds)) {
+            $contractsEndedAll = (int) Contract::query()->whereIn($statusIdCol, $endedIds)->count();
+        } elseif ($statusTextCol) {
+            $contractsEndedAll = (int) Contract::query()->whereIn($statusTextCol, $namesEnded)->count();
+        }
+
+        if ($statusIdCol && !empty($pendingIds)) {
+            $contractsPendingAll = (int) Contract::query()->whereIn($statusIdCol, $pendingIds)->count();
+        } elseif ($statusTextCol) {
+            $contractsPendingAll = (int) Contract::query()->whereIn($statusTextCol, $namesPending)->count();
+        }
+
+        $contractsActiveAll = $contractsTotalAll;
+        if ($statusIdCol) {
+            $excludeIds = array_filter(array_merge($endedIds, $pendingIds));
+            if (!empty($excludeIds)) {
+                $contractsActiveAll = (int) Contract::query()->whereNotIn($statusIdCol, $excludeIds)->count();
+            }
+        } elseif ($statusTextCol) {
+            $excludeNames = array_filter(array_merge($namesEnded, $namesPending));
+            if (!empty($excludeNames)) {
+                $contractsActiveAll = (int) Contract::query()->whereNotIn($statusTextCol, $excludeNames)->count();
+            }
+        }
+
+        $pct = static function (int $total, int $value): float {
+            if ($total <= 0) {
+                return 0.0;
+            }
+
+            return round(($value / $total) * 100, 1);
+        };
+
+        return [
+            'names' => [
+                'ended'   => $namesEnded,
+                'pending' => $namesPending,
+            ],
+            'labels' => [
+                'ended'   => count($namesEnded) ? implode('، ', $namesEnded) : '—',
+                'pending' => count($namesPending) ? implode('، ', $namesPending) : '—',
+            ],
+            'counts' => [
+                'total'      => $contractsTotalAll,
+                'active'     => $contractsActiveAll,
+                'pending'    => $contractsPendingAll,
+                'noInvestor' => $contractsNoInvestorAll,
+                'ended'      => $contractsEndedAll,
+            ],
+            'percentages' => [
+                'active'     => $pct($contractsTotalAll, $contractsActiveAll),
+                'pending'    => $pct($contractsTotalAll, $contractsPendingAll),
+                'noInvestor' => $pct($contractsTotalAll, $contractsNoInvestorAll),
+                'ended'      => $pct($contractsTotalAll, $contractsEndedAll),
+            ],
+        ];
+    }
 }

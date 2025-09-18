@@ -6,6 +6,8 @@ return [
     'Guarantors' => 'Guarantors',
     'Investors' => 'Investors',
     'Contracts' => 'Contracts',
+    'Manage Contracts' => 'Manage Contracts',
+    'Contracts Dashboard' => 'Contracts Dashboard',
     'Claims' => 'Claims',
     'Ledger' => 'Ledger',
     'Settings' => 'Settings',

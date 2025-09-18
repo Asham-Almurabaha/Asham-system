@@ -6,6 +6,8 @@ return array (
   'Guarantors' => 'الكفلاء',
   'Investors' => 'المستثمرين',
   'Contracts' => 'العقود',
+  'Manage Contracts' => 'إدارة العقود',
+  'Contracts Dashboard' => 'لوحة تحكم العقود',
   'Claims' => 'المطالبات',
   'Ledger' => 'دفتر القيود',
   'Settings' => 'الإعدادات',

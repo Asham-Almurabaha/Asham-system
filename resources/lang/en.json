@@ -254,5 +254,16 @@
     "click here to request another": "click here to request another",
     "name@email.com": "name@email.com",
     "Internal Transfer": "Internal Transfer",
-    "Split Entry": "Split Entry"
+    "Split Entry": "Split Entry",
+    "Contracts Dashboard": "Contracts Dashboard",
+    "Review the overall performance of contracts and quickly reach the detailed reports.": "Review the overall performance of contracts and quickly reach the detailed reports.",
+    "Current Investor:": "Current Investor:",
+    "All Investors": "All Investors",
+    "Manage Contracts": "Manage Contracts",
+    "Contracts that are not linked to any investor (from the relationship)": "Contracts that are not linked to any investor (from the relationship)",
+    "Open detailed reports for contract statuses or office outstanding balances.": "Open detailed reports for contract statuses or office outstanding balances.",
+    "Status Reports": "Status Reports",
+    "Office Outstanding Report": "Office Outstanding Report",
+    "Contracts Without Investor": "Contracts Without Investor",
+    "Export Samples": "Export Samples"
 }

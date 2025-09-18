@@ -25,6 +25,9 @@
       || $isRoute('product_entries.*')
       || $isRoute('users.*');
 
+  // فتح مجموعة العقود؟
+  $contractsOpen = $isRoute('contracts.*');
+
   // فتح مجموعة الحسابات؟
   $accountsOpen = $isRoute('ledger.*');
 @endphp
@@ -65,10 +68,39 @@
 
   {{-- العقود --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('contracts.*')) }} {{ $active($isRoute('contracts.*')) }}"
-       href="{{ route('contracts.index') }}">
-      <i class="bi bi-file-earmark-text"></i><span>@lang('sidebar.Contracts')</span>
+    <a class="nav-link {{ $coll($contractsOpen) }}"
+       data-bs-target="#contracts-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $contractsOpen ? 'true' : 'false' }}">
+      <i class="bi bi-file-earmark-text"></i><span>@lang('sidebar.Contracts')</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
+
+    <ul id="contracts-nav" class="nav-content collapse {{ $open($contractsOpen) }}" data-bs-parent="#sidebar-nav">
+      <li>
+        <a class="{{ $active($isRoute([
+          'contracts.index',
+          'contracts.create',
+          'contracts.store',
+          'contracts.show',
+          'contracts.edit',
+          'contracts.update',
+          'contracts.destroy',
+          'contracts.images.update',
+          'contracts.import.*',
+          'contracts.export.*',
+          'contracts.print',
+          'contracts.closure',
+          'contracts.paid',
+          'contracts.investors.store'
+        ])) }}" href="{{ route('contracts.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Contracts')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('contracts.dashboard')) }}" href="{{ route('contracts.dashboard') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Contracts Dashboard')</span>
+        </a>
+      </li>
+    </ul>
   </li>
 
   {{-- المطالبات --}}
