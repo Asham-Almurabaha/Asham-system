@@ -138,7 +138,14 @@ class ContractClaimController extends Controller
             return;
         }
 
-        $this->updateContractStatus($contract);
+        $hasPreviousClaims = ContractClaim::query()
+            ->where('contract_id', $contract->id)
+            ->where('id', '!=', $claim->id)
+            ->exists();
+
+        if (! $hasPreviousClaims) {
+            $this->updateContractStatus($contract);
+        }
 
         if ($claim->filed_party_role === ContractClaim::FILED_PARTY_CUSTOMER) {
             $this->updateCustomerStatus($contract);
