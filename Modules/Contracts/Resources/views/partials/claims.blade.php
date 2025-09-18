@@ -26,8 +26,8 @@
         $selectedRole = array_key_first($availablePartyOptions);
     }
 
-    $availableFirstParties = collect($claimFirstParties ?? [])->values();
-    $selectedFirstPartyId = old('claim_first_party_id');
+    $availableClaimants = collect($claimants ?? [])->values();
+    $selectedClaimantId = old('claimant_id');
 
     $defaultClaimDate = old('claim_date', now()->toDateString());
     $shouldReopenModal = $errors->has('contract_id')
@@ -35,7 +35,7 @@
         || $errors->has('claim_amount')
         || $errors->has('claim_date')
         || $errors->has('document_number')
-        || $errors->has('claim_first_party_id');
+        || $errors->has('claimant_id');
 @endphp
 
 <div class="card shadow-sm mb-4">
@@ -55,7 +55,7 @@
                             <th>{{ __('contracts::claims.claim_date') }}</th>
                             <th>{{ __('contracts::claims.document_number') }}</th>
                             <th>{{ __('contracts::claims.claim_status') }}</th>
-                            <th>{{ __('contracts::claims.claim_first_party') }}</th>
+                            <th>{{ __('contracts::claims.claimant') }}</th>
                             <th>{{ __('contracts::claims.filed_party_role') }}</th>
                             <th class="text-end">{{ __('contracts::claims.claim_amount') }}</th>
                             <th class="text-center">{{ __('contracts::claims.actions') }}</th>
@@ -68,7 +68,7 @@
                                 <td>{{ optional($claim->claim_date)->format('Y-m-d') ?? '—' }}</td>
                                 <td>{{ $claim->document_number }}</td>
                                 <td>{{ optional($claim->claimStatus)->name ?? '—' }}</td>
-                                <td>{{ optional($claim->claimFirstParty)->name ?? '—' }}</td>
+                                <td>{{ optional($claim->claimant)->name ?? '—' }}</td>
                                 <td>
                                     <div>{{ $claim->filed_party_name ?? '—' }}</div>
                                     <div class="text-muted small">
@@ -117,21 +117,21 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">{{ __('contracts::claims.claim_first_party') }}</label>
-                        <select name="claim_first_party_id" class="form-select" @if ($availableFirstParties->isEmpty()) disabled @endif>
-                            <option value="">{{ __('contracts::claims.choose_claim_first_party') }}</option>
-                            @foreach ($availableFirstParties as $firstParty)
-                                <option value="{{ $firstParty->id }}" @selected((string) $selectedFirstPartyId === (string) $firstParty->id)>
-                                    {{ $firstParty->name }}
+                        <label class="form-label">{{ __('contracts::claims.claimant') }}</label>
+                        <select name="claimant_id" class="form-select" @if ($availableClaimants->isEmpty()) disabled @endif>
+                            <option value="">{{ __('contracts::claims.choose_claimant') }}</option>
+                            @foreach ($availableClaimants as $claimant)
+                                <option value="{{ $claimant->id }}" @selected((string) $selectedClaimantId === (string) $claimant->id)>
+                                    {{ $claimant->name }}
                                 </option>
                             @endforeach
                         </select>
-                        @if ($availableFirstParties->isEmpty())
+                        @if ($availableClaimants->isEmpty())
                             <div class="text-danger small mt-1">
-                                {{ __('contracts::claims.no_claim_first_parties') }}
+                                {{ __('contracts::claims.no_claimants') }}
                             </div>
                         @endif
-                        @error('claim_first_party_id')
+                        @error('claimant_id')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>

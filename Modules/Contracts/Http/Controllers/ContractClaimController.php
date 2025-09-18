@@ -36,7 +36,7 @@ class ContractClaimController extends Controller
                 },
                 'contract.customer:id,name',
                 'contract.guarantor:id,name',
-                'claimFirstParty:id,name',
+                'claimant:id,name',
                 'claimStatus:id,name',
             ]);
 

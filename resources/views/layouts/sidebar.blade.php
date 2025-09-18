@@ -16,7 +16,7 @@
       || $isRoute('contract_statuses.*')
       || $isRoute('claim_statuses.*')
       || $isRoute('claim_paying_parties.*')
-      || $isRoute('claim_first_parties.*')
+      || $isRoute('claimants.*')
       || $isRoute('installment_statuses.*')
       || $isRoute('installment_types.*')
       || $isRoute('categories.*')
@@ -207,8 +207,8 @@
           </a>
         </li>
         <li>
-          <a class="{{ $active($isRoute('claim_first_parties.*')) }}" href="{{ route('claim_first_parties.index') }}">
-            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claim First Parties')</span>
+          <a class="{{ $active($isRoute('claimants.*')) }}" href="{{ route('claimants.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Claimants')</span>
           </a>
         </li>
         <li>

@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('contract_claims', function (Blueprint $table) {
-            $table->foreignId('claim_first_party_id')
+            $table->foreignId('claimant_id')
                 ->nullable()
                 ->after('contract_id')
-                ->constrained('claim_first_parties')
+                ->constrained('claimants')
                 ->nullOnDelete();
 
-            $table->index('claim_first_party_id');
+            $table->index('claimant_id');
         });
     }
 
@@ -28,9 +28,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('contract_claims', function (Blueprint $table) {
-            $table->dropForeign(['claim_first_party_id']);
-            $table->dropIndex(['claim_first_party_id']);
-            $table->dropColumn('claim_first_party_id');
+            $table->dropForeign(['claimant_id']);
+            $table->dropIndex(['claimant_id']);
+            $table->dropColumn('claimant_id');
         });
     }
 };

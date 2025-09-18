@@ -1,21 +1,21 @@
 @extends('layouts.master')
 
-@section('title', __('Claim First Parties List'))
+@section('title', __('Claimants List'))
 
 @section('content')
     <div class="pagetitle">
-      <h1>{{ __('Claim First Parties List') }}</h1>
+      <h1>{{ __('Claimants List') }}</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item">{{ __('Settings') }}</li>
-          <li class="breadcrumb-item active">{{ __('Claim First Parties') }}</li>
+          <li class="breadcrumb-item active">{{ __('Claimants') }}</li>
         </ol>
       </nav>
     </div><!-- End Page Title -->
 
     <div class="card d-inline-block">
         <div class="card-body p-20">
-            <a href="{{ route('claim_first_parties.create') }}" class="btn btn-success">{{ __('Add New Claim First Party') }}</a>
+            <a href="{{ route('claimants.create') }}" class="btn btn-success">{{ __('Add New Claimant') }}</a>
         </div>
     </div>
 
@@ -31,22 +31,22 @@
                 </tr>
                 </thead>
                 <tbody>
-                  @forelse($claimFirstParties as $claimFirstParty)
+                  @forelse($claimants as $claimant)
                         <tr>
                             <th scope="row">{{ $loop->iteration }}</th>
-                            <td class="text-start">{{ $claimFirstParty->name }}</td>
+                            <td class="text-start">{{ $claimant->name }}</td>
                             <td>
-                                <a href="{{ route('claim_first_parties.edit', $claimFirstParty->id) }}" class="btn btn-primary btn-sm me-1">{{ __('Edit') }}</a>
+                                <a href="{{ route('claimants.edit', $claimant->id) }}" class="btn btn-primary btn-sm me-1">{{ __('Edit') }}</a>
 
                                 @include('lookups::components.delete-button', [
-                                    'action' => route('claim_first_parties.destroy', $claimFirstParty->id),
-                                    'confirm' => __('Are you sure to delete this claim first party?'),
+                                    'action' => route('claimants.destroy', $claimant->id),
+                                    'confirm' => __('Are you sure to delete this claimant?'),
                                 ])
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="text-center">{{ __('No claim first parties found.') }}</td>
+                            <td colspan="3" class="text-center">{{ __('No claimants found.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

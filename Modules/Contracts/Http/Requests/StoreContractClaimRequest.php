@@ -18,7 +18,7 @@ class StoreContractClaimRequest extends FormRequest
     {
         return [
             'contract_id' => ['required', 'integer', Rule::exists('contracts', 'id')],
-            'claim_first_party_id' => ['nullable', 'integer', Rule::exists('claim_first_parties', 'id')],
+            'claimant_id' => ['nullable', 'integer', Rule::exists('claimants', 'id')],
             'claim_status_id' => ['nullable', 'integer', Rule::exists('claim_statuses', 'id')],
             'filed_party_role' => ['required', 'string', Rule::in(ContractClaim::FILED_PARTY_ROLES)],
             'claim_amount' => ['required', 'numeric', 'min:0'],
@@ -31,7 +31,7 @@ class StoreContractClaimRequest extends FormRequest
     {
         return [
             'contract_id' => __('contracts::claims.contract'),
-            'claim_first_party_id' => __('contracts::claims.claim_first_party'),
+            'claimant_id' => __('contracts::claims.claimant'),
             'claim_status_id' => __('contracts::claims.claim_status'),
             'filed_party_role' => __('contracts::claims.filed_party_role'),
             'claim_amount' => __('contracts::claims.claim_amount'),

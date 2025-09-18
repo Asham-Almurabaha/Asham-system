@@ -5,7 +5,7 @@ namespace Modules\Lookups\Entities;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ClaimFirstParty extends Model
+class Claimant extends Model
 {
     use HasFactory;
 

@@ -8,7 +8,7 @@ return [
     'Contract Statuses' => 'حالات العقود',
     'Claim Statuses' => 'حالات المطالبات',
     'Claim Paying Parties' => 'الأطراف المسددة للمطالبات',
-    'Claim First Parties' => 'أطراف المطالبات (الطرف الأول)',
+    'Claimants' => 'المطالبون',
     'Customer Statuses' => 'حالات العملاء',
     'Installment Statuses' => 'حالات الأقساط',
     'Installment Types' => 'أنواع الأقساط',

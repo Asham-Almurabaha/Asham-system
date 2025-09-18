@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Modules\Lookups\Entities\ClaimFirstParty;
+use Modules\Lookups\Entities\Claimant;
 use Modules\Lookups\Entities\ClaimStatus;
 
 class ContractClaim extends Model
@@ -17,7 +17,7 @@ class ContractClaim extends Model
 
     protected $fillable = [
         'contract_id',
-        'claim_first_party_id',
+        'claimant_id',
         'filed_party_role',
         'claim_amount',
         'discount_amount',
@@ -45,9 +45,9 @@ class ContractClaim extends Model
         return $this->belongsTo(Contract::class);
     }
 
-    public function claimFirstParty(): BelongsTo
+    public function claimant(): BelongsTo
     {
-        return $this->belongsTo(ClaimFirstParty::class);
+        return $this->belongsTo(Claimant::class);
     }
 
     public function claimStatus(): BelongsTo

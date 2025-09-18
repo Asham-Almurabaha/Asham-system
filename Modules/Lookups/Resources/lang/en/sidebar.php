@@ -8,7 +8,7 @@ return [
     'Contract Statuses' => 'Contract Statuses',
     'Claim Statuses' => 'Claim Statuses',
     'Claim Paying Parties' => 'Claim Paying Parties',
-    'Claim First Parties' => 'Claim First Parties',
+    'Claimants' => 'Claimants',
     'Customer Statuses' => 'Customer Statuses',
     'Installment Statuses' => 'Installment Statuses',
     'Installment Types' => 'Installment Types',

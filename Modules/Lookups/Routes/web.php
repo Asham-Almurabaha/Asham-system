@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Lookups\Http\Controllers\CategoryController;
-use Modules\Lookups\Http\Controllers\ClaimFirstPartyController;
+use Modules\Lookups\Http\Controllers\ClaimantController;
 use Modules\Lookups\Http\Controllers\ClaimPayingPartyController;
 use Modules\Lookups\Http\Controllers\ClaimStatusController;
 use Modules\Lookups\Http\Controllers\CustomerStatusController;
@@ -25,7 +25,7 @@ Route::middleware(['web', 'auth'])->prefix('settings')->group(function () {
     Route::resource('contract_statuses', ContractStatusController::class);
     Route::resource('claim_statuses', ClaimStatusController::class);
     Route::resource('claim_paying_parties', ClaimPayingPartyController::class);
-    Route::resource('claim_first_parties', ClaimFirstPartyController::class);
+    Route::resource('claimants', ClaimantController::class);
     Route::resource('installment_statuses', InstallmentStatusController::class);
     Route::resource('installment_types', InstallmentTypeController::class);
     Route::resource('transaction_statuses', TransactionStatusController::class);

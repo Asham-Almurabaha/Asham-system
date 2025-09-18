@@ -61,7 +61,7 @@
 {{-- المطالبات --}}
 @include('contracts::partials.claims', [
     'contract' => $contract,
-    'claimFirstParties' => $claimFirstParties,
+    'claimants' => $claimants,
     'claimStatuses' => $claimStatuses,
 ])
 

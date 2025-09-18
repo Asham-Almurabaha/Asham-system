@@ -43,10 +43,10 @@ return [
         'protected_edit' => 'This claim paying party is protected and cannot be edited.',
         'protected_delete' => 'This claim paying party is protected and cannot be deleted.',
     ],
-    'claim_first_parties' => [
-        'created' => 'Claim first party added successfully.',
-        'updated' => 'Claim first party updated successfully.',
-        'deleted' => 'Claim first party deleted successfully.',
+    'claimants' => [
+        'created' => 'Claimant added successfully.',
+        'updated' => 'Claimant updated successfully.',
+        'deleted' => 'Claimant deleted successfully.',
     ],
     'customer_statuses' => [
         'created' => 'Customer status added successfully.',

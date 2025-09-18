@@ -9,7 +9,7 @@ use Modules\Customers\Entities\Customer;
 use Modules\Guarantors\Entities\Guarantor;
 use Modules\Lookups\Entities\InstallmentStatus;
 use Modules\Lookups\Entities\InstallmentType;
-use Modules\Lookups\Entities\ClaimFirstParty;
+use Modules\Lookups\Entities\Claimant;
 use Modules\Lookups\Entities\ClaimStatus;
 use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\ProductType;
@@ -565,7 +565,7 @@ class ContractController extends Controller
             'claims' => fn ($query) => $query
                 ->orderByDesc('claim_date')
                 ->orderByDesc('id'),
-            'claims.claimFirstParty:id,name',
+            'claims.claimant:id,name',
             'claims.claimStatus:id,name',
         ]);
 
@@ -574,12 +574,12 @@ class ContractController extends Controller
         $banks = BankAccount::all();
         $safes = Safe::all();
 
-        $claimFirstParties = ClaimFirstParty::orderBy('name')->get(['id', 'name']);
+        $claimants = Claimant::orderBy('name')->get(['id', 'name']);
         $claimStatuses = ClaimStatus::orderBy('name')->get(['id', 'name']);
 
 
 
-        return view('contracts::show', compact('contract', 'investors','banks','safes','claimFirstParties', 'claimStatuses'));
+        return view('contracts::show', compact('contract', 'investors','banks','safes','claimants', 'claimStatuses'));
     }
 
     public function updateImages(Request $request, Contract $contract)

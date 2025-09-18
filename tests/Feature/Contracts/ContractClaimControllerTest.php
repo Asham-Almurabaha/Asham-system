@@ -78,7 +78,7 @@ class ContractClaimControllerTest extends TestCase
 
         ContractClaim::create([
             'contract_id' => $contract->id,
-            'claim_first_party_id' => null,
+            'claimant_id' => null,
             'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
             'claim_amount' => 500,
             'claim_date' => now()->subDays(10)->toDateString(),
@@ -88,7 +88,7 @@ class ContractClaimControllerTest extends TestCase
 
         $response = $this->post(route('contract-claims.store'), [
             'contract_id' => $contract->id,
-            'claim_first_party_id' => null,
+            'claimant_id' => null,
             'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
             'claim_amount' => 250,
             'claim_date' => now()->toDateString(),
@@ -168,7 +168,7 @@ class ContractClaimControllerTest extends TestCase
 
         $claim = ContractClaim::create([
             'contract_id' => $contract->id,
-            'claim_first_party_id' => null,
+            'claimant_id' => null,
             'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
             'claim_amount' => 750,
             'claim_date' => now()->subDays(5)->toDateString(),
@@ -253,7 +253,7 @@ class ContractClaimControllerTest extends TestCase
 
         $claim = ContractClaim::create([
             'contract_id' => $contract->id,
-            'claim_first_party_id' => null,
+            'claimant_id' => null,
             'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
             'claim_amount' => 600,
             'claim_date' => now()->subDays(7)->toDateString(),

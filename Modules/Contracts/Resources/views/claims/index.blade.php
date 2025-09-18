@@ -22,7 +22,7 @@
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('contracts::claims.contract_number') }}</th>
-                        <th>{{ __('contracts::claims.claim_first_party') }}</th>
+                        <th>{{ __('contracts::claims.claimant') }}</th>
                         <th>{{ __('contracts::claims.filed_party_role') }}</th>
                         <th>{{ __('contracts::claims.claim_amount') }}</th>
                         <th>{{ __('contracts::claims.claim_date') }}</th>
@@ -44,7 +44,7 @@
                                 {{ '#' . $claim->contract_id }}
                             @endif
                         </td>
-                        <td class="text-start">{{ optional($claim->claimFirstParty)->name ?? '—' }}</td>
+                        <td class="text-start">{{ optional($claim->claimant)->name ?? '—' }}</td>
                         <td class="text-start">
                             <div>{{ $claim->filed_party_name ?? '—' }}</div>
                             @if ($claim->filed_party_role)
