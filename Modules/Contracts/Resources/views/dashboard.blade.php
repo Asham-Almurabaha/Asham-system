@@ -93,6 +93,8 @@
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
+
+
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
         <p class="text-muted mb-0">{{ __('Review the overall performance of contracts and quickly reach the detailed reports.') }}</p>
@@ -135,101 +137,6 @@
                 </a>
             </li>
         </ul>
-    </div>
-</div>
-
-<div class="card shadow-sm mb-4" dir="rtl">
-    <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
-            <h6 class="mb-1">{{ __('Monthly Installments Summary') }} <span class="text-muted">({{ $monthLabel }})</span></h6>
-            <div class="small text-muted">
-                <i class="bi bi-filter"></i>
-                {{ __('Excludes statuses:') }} {{ $excludedStatusesTx }}
-            </div>
-        </div>
-        <form action="{{ route('contracts.dashboard') }}" method="GET" class="row g-2 align-items-end flex-grow-1 flex-md-grow-0" dir="rtl">
-            <div class="col-12 col-md-auto">
-                <label class="form-label small mb-1" for="investor_id">{{ __('Investor') }}</label>
-                <select name="investor_id" id="investor_id" class="form-select form-select-sm">
-                    <option value="">{{ __('All Investors') }}</option>
-                    @foreach($investors as $investor)
-                        <option value="{{ $investor->id }}" {{ (string) request('investor_id') === (string) $investor->id ? 'selected' : '' }}>
-                            {{ $investor->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6 col-md-auto">
-                <label class="form-label small mb-1" for="month">{{ __('Month') }}</label>
-                <input type="number" name="m" id="month" min="1" max="12" class="form-control form-control-sm" value="{{ request('m', $mVal) }}">
-            </div>
-            <div class="col-6 col-md-auto">
-                <label class="form-label small mb-1" for="year">{{ __('Year') }}</label>
-                <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
-            </div>
-            <div class="col-12 col-md-auto d-flex gap-2">
-                <button class="btn btn-primary btn-sm">{{ __('Update') }}</button>
-                <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-secondary btn-sm">{{ __('Clear') }}</a>
-            </div>
-        </form>
-    </div>
-    <div class="card-body p-20">
-        <div class="row g-3">
-            <div class="col-12 col-md-3">
-                <div class="kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon"><i class="bi bi-journal-check fs-4 text-primary"></i></div>
-                        <div>
-                            <div class="subnote">{{ __('Number of Due Installments') }}</div>
-                            <div class="kpi-value fw-bold">{{ number_format($dueCount) }}</div>
-                            <div class="subnote">{{ __('This Month') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-5">
-                <div class="kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
-                            <div>
-                                <div class="subnote">{{ __('Total Due') }}</div>
-                                <div class="kpi-value fw-bold">
-                                    {{ number_format($dueSum, 2) }}
-                                    <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <div class="subnote">{{ __('Paid') }}</div>
-                            <div class="fw-bold">{{ number_format($paidSum, 2) }}</div>
-                        </div>
-                    </div>
-                    <div class="progress bar-8" title="{{ __('Paid Percentage') }}">
-                        <div class="progress-bar" style="width: {{ $paidPct2 }}%"></div>
-                    </div>
-                    <div class="d-flex justify-content-between subnote mt-1">
-                        <span>{{ __('Percentage:') }} {{ number_format($paidPct2, 1) }}%</span>
-                        <span>{{ __('Remaining:') }} {{ number_format($remainSum, 2) }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-4">
-                <div class="kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
-                        <div>
-                            <div class="subnote">{{ __('Remaining to Pay') }}</div>
-                            <div class="kpi-value fw-bold">
-                                {{ number_format($remainSum, 2) }}
-                                <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
-                            </div>
-                            <div class="subnote">{{ __('Within the Specified Period') }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -335,6 +242,103 @@
         </div>
     </div>
 </div>
+
+<div class="card shadow-sm mb-4" dir="rtl">
+    <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h6 class="mb-1">{{ __('Monthly Installments Summary') }} <span class="text-muted">({{ $monthLabel }})</span></h6>
+            <div class="small text-muted">
+                <i class="bi bi-filter"></i>
+                {{ __('Excludes statuses:') }} {{ $excludedStatusesTx }}
+            </div>
+        </div>
+        <form action="{{ route('contracts.dashboard') }}" method="GET" class="row g-2 align-items-end flex-grow-1 flex-md-grow-0" dir="rtl">
+            <div class="col-12 col-md-auto">
+                <label class="form-label small mb-1" for="investor_id">{{ __('Investor') }}</label>
+                <select name="investor_id" id="investor_id" class="form-select form-select-sm">
+                    <option value="">{{ __('All Investors') }}</option>
+                    @foreach($investors as $investor)
+                        <option value="{{ $investor->id }}" {{ (string) request('investor_id') === (string) $investor->id ? 'selected' : '' }}>
+                            {{ $investor->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-auto">
+                <label class="form-label small mb-1" for="month">{{ __('Month') }}</label>
+                <input type="number" name="m" id="month" min="1" max="12" class="form-control form-control-sm" value="{{ request('m', $mVal) }}">
+            </div>
+            <div class="col-6 col-md-auto">
+                <label class="form-label small mb-1" for="year">{{ __('Year') }}</label>
+                <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
+            </div>
+            <div class="col-12 col-md-auto d-flex gap-2">
+                <button class="btn btn-primary btn-sm">{{ __('Update') }}</button>
+                <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-secondary btn-sm">{{ __('Clear') }}</a>
+            </div>
+        </form>
+    </div>
+    <div class="card-body p-20">
+        <div class="row g-3">
+            <div class="col-12 col-md-3">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-journal-check fs-4 text-primary"></i></div>
+                        <div>
+                            <div class="subnote">{{ __('Number of Due Installments') }}</div>
+                            <div class="kpi-value fw-bold">{{ number_format($dueCount) }}</div>
+                            <div class="subnote">{{ __('This Month') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-5">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                            <div>
+                                <div class="subnote">{{ __('Total Due') }}</div>
+                                <div class="kpi-value fw-bold">
+                                    {{ number_format($dueSum, 2) }}
+                                    <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="subnote">{{ __('Paid') }}</div>
+                            <div class="fw-bold">{{ number_format($paidSum, 2) }}</div>
+                        </div>
+                    </div>
+                    <div class="progress bar-8" title="{{ __('Paid Percentage') }}">
+                        <div class="progress-bar" style="width: {{ $paidPct2 }}%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between subnote mt-1">
+                        <span>{{ __('Percentage:') }} {{ number_format($paidPct2, 1) }}%</span>
+                        <span>{{ __('Remaining:') }} {{ number_format($remainSum, 2) }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
+                        <div>
+                            <div class="subnote">{{ __('Remaining to Pay') }}</div>
+                            <div class="kpi-value fw-bold">
+                                {{ number_format($remainSum, 2) }}
+                                <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                            </div>
+                            <div class="subnote">{{ __('Within the Specified Period') }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 @endsection
 
