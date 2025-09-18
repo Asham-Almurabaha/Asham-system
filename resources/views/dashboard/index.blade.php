@@ -84,7 +84,6 @@
         $officeTotals    = (object) ($officeTotals   ?? ['net' => 0]);
 
         $invByInvestor   = collect($invByInvestor    ?? []);
-        $statuses        = collect($statuses         ?? []);
 
         $timeSeries      = (array)  ($timeSeries     ?? ['labels'=>[], 'in'=>[], 'out'=>[], 'net'=>[]]);
         $monthlySeries   = (array)  ($monthlySeries  ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
@@ -139,9 +138,6 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Total Contracts') }}">
-                    <i class="bi bi-files me-1"></i> {{ __('dashboard.Total Contracts') }}: {{ number_format($contractsTotal ?? 0) }}
-                </span>
                 <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Net = In - Out') }}">
                     <i class="bi bi-people me-1"></i> {{ __('dashboard.Investors Liquidity Net') }}: {{ number_format(($invTotals->net ?? 0), 2) }}
                 </span>
@@ -278,57 +274,6 @@
 
     
     
-    {{-- ====== الحالات + توزيع ====== --}}
-    <div class="row g-3 mt-1">
-        <div class="col-lg-6">
-            <div class="section-card card h-100 border-0">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>{{ __('dashboard.Contract Statuses Distribution') }}</span>
-                    <span class="small text-muted"><i class="bi bi-info-circle" data-bs-toggle="tooltip"
-                        title="{{ __('dashboard.Percentages calculated from current total contracts') }}"></i></span>
-                </div>
-                <div class="card-body p-0">
-                    @if(($statuses->count() ?? 0) > 0)
-                        <div class="list-group list-group-flush">
-                            @foreach($statuses as $s)
-                                <div class="list-group-item status-row">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <div class="fw-semibold">{{ $s['name'] }}</div>
-                                        <div class="d-flex align-items-center gap-3">
-                                            <span class="badge bg-secondary">{{ number_format($s['count']) }}</span>
-                                            <span class="text-muted small">{{ $s['pct'] }}%</span>
-                                        </div>
-                                    </div>
-                                    <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar" role="progressbar" style="width: {{ $s['pct'] }}%"></div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="p-3 text-muted">{{ __('dashboard.No data for statuses.') }}</div>
-                    @endif
-                </div>
-                <div class="card-footer text-end small text-muted">
-                    {{ __('dashboard.Total Statuses') }}: {{ number_format($contractsTotal ?? 0) }}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="section-card card h-100 border-0 chart-card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>{{ __('dashboard.Statuses Chart (Doughnut)') }}</span>
-                    <span class="small text-muted"><i class="bi bi-graph-up" data-bs-toggle="tooltip"
-                        title="{{ __('dashboard.The chart reflects the same distribution shown on the right') }}"></i></span>
-                </div>
-                <div class="card-body">
-                    <canvas id="statusChart" height="220"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {{-- ====== تحليلات إضافية ====== --}}
     @php
         // أفضل الأرصدة (أعلى 7) باستخدام الحقول الجديدة
@@ -614,8 +559,7 @@
         noDailyData: '{{ __("dashboard.No daily data.") }}',
         noMonthlyData: '{{ __("dashboard.No monthly data.") }}',
         noDistributionData: '{{ __("dashboard.No distribution data.") }}',
-        noSufficientBalances: '{{ __("dashboard.No sufficient balances to display.") }}',
-        noDataForChart: '{{ __("dashboard.No data for the chart.") }}'
+        noSufficientBalances: '{{ __("dashboard.No sufficient balances to display.") }}'
     };
 </script>
 <script>
@@ -623,27 +567,6 @@ document.addEventListener('DOMContentLoaded', function(){
     // Tooltips
     const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
-
-    // Doughnut (statuses)
-    (function(){
-        const el = document.getElementById('statusChart');
-        if (!el) return;
-        const labels = @json(($chartLabels ?? collect())->values());
-        const data   = @json(($chartData ?? collect())->values());
-        if (!labels.length || !data.length) {
-            el.parentElement.innerHTML = '<div class="text-muted">' + chartTranslations.noDataForChart + '</div>';
-            return;
-        }
-        new Chart(el, {
-            type: 'doughnut',
-            data: { labels, datasets: [{ data, borderWidth: 1 }] },
-            options: {
-                responsive: true, cutout: '58%',
-                plugins: { legend: { position:'bottom', labels:{ usePointStyle:true, boxWidth:10 } }, tooltip:{ rtl:true } },
-                animation: { animateScale:true, animateRotate:true }
-            }
-        });
-    })();
 
     // Line: Daily cashflow
     (function(){

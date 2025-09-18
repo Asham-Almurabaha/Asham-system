@@ -7,8 +7,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\LedgerEntry;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
-use Modules\Contracts\Entities\Contract;
-use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 
 class DashboardDataService
@@ -21,13 +19,10 @@ class DashboardDataService
 
     public function build(array $filters = []): array
     {
-        // 1) حالات العقود + الرسم
-        [$contractsTotal, $statuses, $chartLabels, $chartData] = $this->buildContractsStatuses();
-
-        // 2) سيولة المستثمرين (غير متأثرة بالتاريخ)
+        // 1) سيولة المستثمرين (غير متأثرة بالتاريخ)
         [$invTotals, $invByInvestor] = $this->investorsLiquidityFromLedger();
 
-        // 3) مؤشرات المكتب (حسب الفلتر لو محتاجها لعرض تفاصيل تانية)
+        // 2) مؤشرات المكتب (حسب الفلتر لو محتاجها لعرض تفاصيل تانية)
         $officeMetrics = $this->officeSvc->build([
             'from'         => $filters['from']         ?? null,
             'to'           => $filters['to']           ?? null,
@@ -47,21 +42,16 @@ class DashboardDataService
         );
         $officeTotals = (object) ['net' => $officeNet];
 
-        // 4) ملخص الحسابات (غير متأثر بالتاريخ)
+        // 3) ملخص الحسابات (غير متأثر بالتاريخ)
         [$banksWithOpen, $safesWithOpen, $distribution] = $this->buildAccountsSection();
 
-        // 5) السلاسل الزمنية + KPIs (تستجيب لفلتر التاريخ)
+        // 4) السلاسل الزمنية + KPIs (تستجيب لفلتر التاريخ)
         [$timeSeries, $monthlySeries, $entriesCount, $avgAmount, $activeInvestors] = $this->buildSeriesAndKpis($filters);
 
-        // 6) عدد البطاقات المتاح (هيتحسب في الكنترولر بدقة، هنا بس بنسيبه صفر افتراضيًا)
+        // 5) عدد البطاقات المتاح (هيتحسب في الكنترولر بدقة، هنا بس بنسيبه صفر افتراضيًا)
         $cardsAvailable = 0;
 
         return [
-            'contractsTotal' => $contractsTotal,
-            'statuses'       => $statuses,
-            'chartLabels'    => $chartLabels,
-            'chartData'      => $chartData,
-
             'invTotals'      => $invTotals,
             'invByInvestor'  => $invByInvestor,
 
@@ -81,29 +71,6 @@ class DashboardDataService
 
             'cardsAvailable' => $cardsAvailable,
         ];
-    }
-
-    private function buildContractsStatuses(): array
-    {
-        $contractsTotal = Contract::count();
-
-        $statusCounts = Contract::select('contract_status_id', DB::raw('COUNT(*) as cnt'))
-            ->groupBy('contract_status_id')
-            ->get();
-
-        $statusNames = ContractStatus::pluck('name', 'id');
-
-        $statuses = $statusCounts->map(function ($row) use ($statusNames, $contractsTotal) {
-            $name = $statusNames[$row->contract_status_id] ?? 'غير محدد';
-            $cnt  = (int) $row->cnt;
-            $pct  = $contractsTotal > 0 ? round(($cnt / $contractsTotal) * 100, 2) : 0.0;
-            return ['id'=>(int)$row->contract_status_id,'name'=>$name,'count'=>$cnt,'pct'=>$pct];
-        })->sortByDesc('count')->values();
-
-        $chartLabels = $statuses->pluck('name')->values();
-        $chartData   = $statuses->pluck('count')->values();
-
-        return [$contractsTotal, $statuses, $chartLabels, $chartData];
     }
 
     /**

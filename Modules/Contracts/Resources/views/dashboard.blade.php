@@ -34,6 +34,13 @@
     $pct    = (array) ($dashboardStats['percentages'] ?? []);
     $labels = (array) ($dashboardStats['labels'] ?? []);
 
+    $statusMetrics      = collect($contractStatusMetrics ?? []);
+    $statusChartLabels  = (array) ($contractStatusChartLabels ?? []);
+    $statusChartData    = (array) ($contractStatusChartData ?? []);
+    $statusTotal        = (int) ($contractStatusTotal ?? ($counts['total'] ?? 0));
+    $raisedCount        = (int) ($raisedContractsCount ?? 0);
+    $requiredCount      = (int) ($requiredContractsCount ?? 0);
+
     $selectedInvestorName = $selectedInvestor->name ?? __('All Investors');
 
     $statusIcon = function ($name) {
@@ -241,6 +248,89 @@
             </div>
         </div>
     </div>
+    <div class="col-12 col-md-2">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-exclamation-octagon fs-4 text-danger"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">{{ __('contracts::contracts.Raised Status Contracts') }}</div>
+                    <div class="kpi-value fw-bold text-danger">{{ number_format($raisedCount) }}</div>
+                    <div class="subnote">{{ __('contracts::contracts.Contracts in Raised Status') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-2">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-exclamation-triangle fs-4 text-warning"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">{{ __('contracts::contracts.Required Status Contracts') }}</div>
+                    <div class="kpi-value fw-bold text-warning">{{ number_format($requiredCount) }}</div>
+                    <div class="subnote">{{ __('contracts::contracts.Contracts in Required Status') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4" dir="rtl">
+    <div class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span>{{ __('contracts::contracts.Contract Statuses Distribution') }}</span>
+                <span class="small text-muted">
+                    <i class="bi bi-info-circle" data-bs-toggle="tooltip"
+                       title="{{ __('contracts::contracts.Percentages calculated from current total contracts') }}"></i>
+                </span>
+            </div>
+            <div class="card-body p-0">
+                @if(($statusMetrics->count() ?? 0) > 0)
+                    <div class="list-group list-group-flush">
+                        @foreach($statusMetrics as $statusRow)
+                            @php
+                                $label = $statusRow['name'] ?? '—';
+                                $count = (int) ($statusRow['count'] ?? 0);
+                                $pct   = (float) ($statusRow['pct'] ?? 0);
+                            @endphp
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-semibold">{{ $label }}</div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="badge bg-secondary">{{ number_format($count) }}</span>
+                                        <span class="text-muted small">{{ number_format($pct, 2) }}%</span>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ $pct }}%"></div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="p-3 text-muted">{{ __('contracts::contracts.No data for statuses.') }}</div>
+                @endif
+            </div>
+            <div class="card-footer bg-white text-end small text-muted">
+                {{ __('contracts::contracts.Total Statuses') }}: {{ number_format($statusTotal) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span>{{ __('contracts::contracts.Statuses Chart (Doughnut)') }}</span>
+                <span class="small text-muted">
+                    <i class="bi bi-graph-up" data-bs-toggle="tooltip"
+                       title="{{ __('contracts::contracts.The chart reflects the same distribution shown on the right') }}"></i>
+                </span>
+            </div>
+            <div class="card-body">
+                <canvas id="contractStatusChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card shadow-sm mb-4" dir="rtl">
@@ -343,10 +433,40 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
+
+        (function () {
+            const el = document.getElementById('contractStatusChart');
+            if (!el) {
+                return;
+            }
+
+            const labels = @json(array_values($statusChartLabels ?? []));
+            const data   = @json(array_values($statusChartData ?? []));
+
+            if (!labels.length || !data.length) {
+                el.parentElement.innerHTML = '<div class="text-muted">{{ __('contracts::contracts.No data for the chart.') }}</div>';
+                return;
+            }
+
+            new Chart(el, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, borderWidth: 1 }] },
+                options: {
+                    responsive: true,
+                    cutout: '58%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 10 } },
+                        tooltip: { rtl: true }
+                    },
+                    animation: { animateScale: true, animateRotate: true }
+                }
+            });
+        })();
     });
 </script>
 @endpush
