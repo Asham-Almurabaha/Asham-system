@@ -63,24 +63,6 @@
       @endif
     </div>
 
-    <div class="btn-group">
-      <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        📊 {{ __('investors::investors.Reports') }}
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end text-end">
-        <li>
-          <a class="dropdown-item" href="{{ route('reports.investors.Allliquidity') }}">
-            📄 {{ __('investors::investors.Investors Liquidity Report') }}
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item" href="{{ route('reports.investors.outstanding') }}">
-            📄 {{ __('investors::investors.Investors Outstanding Report') }}
-          </a>
-        </li>
-      </ul>
-    </div>
-
     <span class="ms-auto small text-muted">
       {{ __('investors::investors.Results') }}: <strong>{{ $investors->total() }}</strong>
     </span>
