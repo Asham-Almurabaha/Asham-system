@@ -3,7 +3,7 @@
 namespace Modules\Investors\DTOs;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\CarbonInterface;
+use Carbon\CarbonInterface;
 use Modules\Investors\Entities\Investor;
 
 final class ZakatDueInvestor implements Arrayable
