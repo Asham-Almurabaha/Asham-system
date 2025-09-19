@@ -15,7 +15,7 @@ return [
     'Invalid amount' => 'amount must be greater than zero.',
     'IDs or names note' => 'For investor, status, bank account, and safe columns you may type either the numeric ID or the display name.',
     'Investor missing' => 'The provided investor (:value) could not be found by ID or name.',
-    'Status missing' => 'The provided status (:value) could not be found by ID or name.',
+    'Status missing' => 'The provided status (:value) is not available within the investor statuses (by ID or name).',
     'Bank account missing' => 'The provided bank account (:value) could not be found by ID or name.',
     'Safe missing' => 'The provided safe (:value) could not be found by ID or name.',
     'Contract missing' => 'The provided contract (:value) could not be found by ID or number.',

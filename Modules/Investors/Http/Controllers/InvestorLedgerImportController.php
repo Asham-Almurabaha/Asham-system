@@ -21,7 +21,10 @@ class InvestorLedgerImportController extends Controller
     {
         $request->validate([
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
-        ], [], [
+        ], [
+            'file.mimes' => __('investors::investor_ledger_import.Unsupported file format. Allowed: xlsx, xls, csv'),
+            'file.max'   => __('investors::investor_ledger_import.File size exceeds 10MB.'),
+        ], [
             'file' => __('investors::investor_ledger_import.File'),
         ]);
 

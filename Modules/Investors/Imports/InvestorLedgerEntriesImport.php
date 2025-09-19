@@ -5,6 +5,8 @@ namespace Modules\Investors\Imports;
 use App\Models\LedgerEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsErrors;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
@@ -56,6 +58,34 @@ class InvestorLedgerEntriesImport implements
 
     protected bool $statusesLoaded = false;
 
+    /** أسماء حالات مستبعدة من استيراد المستثمرين */
+    protected array $statusesDisallowedNames = ['فرق البيع', 'إضافة عقد', 'سداد قسط'];
+
+    /** الفئة الخاصة بالمستثمرين في Pivot الحالات */
+    protected int $categoryInvestorsId = 1;
+
+    /**
+     * @var array<string, array<int, string>>|null
+     */
+    protected ?array $headingAliasMap = null;
+
+    /**
+     * مفاتيح رأس الجدول الإضافية (slug) للملف العربي.
+     * @var array<string, array<int, string>>
+     */
+    protected array $headingManualAliases = [
+        'investor_id'      => ['almstthmr_maarf_ao_asm', 'almstthmr-marf-ao-asm'],
+        'status_id'        => ['alhal_maarf_ao_asm', 'alhal-marf-ao-asm'],
+        'bank_account_id'  => ['alhsab_albnky_maarf_ao_asm', 'alhsab-albnky-marf-ao-asm'],
+        'safe_id'          => ['alkhzn_maarf_ao_asm', 'alkhzn-marf-ao-asm'],
+        'amount'           => ['almblgh'],
+        'transaction_date' => ['tarykh_alaamly', 'tarykh-alamly'],
+        'contract_id'      => ['alaakd_maarf_ao_rkm', 'alaakd-marf-ao-rkm'],
+        'installment_id'   => ['alkst_maarf_ao_rkm', 'alkst-marf-ao-rkm'],
+        'ref'              => ['almrgaa', 'almrga', 'almrjaa'],
+        'notes'            => ['mlahthat'],
+    ];
+
     /** @var array<int, int|null> */
     protected array $bankAccountsById = [];
 
@@ -89,6 +119,8 @@ class InvestorLedgerEntriesImport implements
         $this->rowCount++;
 
         try {
+            $row = $this->normalizeRowKeys($row);
+
             $investorRaw    = Arr::get($row, 'investor_id');
             $statusRaw      = Arr::get($row, 'status_id');
             $bankRaw        = Arr::get($row, 'bank_account_id');
@@ -132,10 +164,6 @@ class InvestorLedgerEntriesImport implements
                 throw new \RuntimeException(__('investors::investor_ledger_import.Safe missing', [
                     'value' => $this->stringifyValue($safeRaw),
                 ]));
-            }
-
-            if (!$bankAccountId && !$safeId) {
-                throw new \RuntimeException(__('investors::investor_ledger_import.Bank or safe rule'));
             }
 
             $contractId = $this->resolveContractId($contractRaw);
@@ -188,7 +216,6 @@ class InvestorLedgerEntriesImport implements
                 'notes'                 => $notes,
             ]);
 
-            $entry->save();
             $this->insertedCount++;
 
             return $entry;
@@ -242,6 +269,11 @@ class InvestorLedgerEntriesImport implements
             '*.ref'              => ['nullable', 'string', 'max:255'],
             '*.notes'            => ['nullable', 'string'],
         ];
+    }
+
+    public function prepareForValidation(array $data, int $index)
+    {
+        return $this->normalizeRowKeys($data);
     }
 
     public function customValidationAttributes()
@@ -364,21 +396,36 @@ class InvestorLedgerEntriesImport implements
 
         TransactionStatus::query()
             ->select('id', 'name', 'transaction_type_id')
+            ->whereIn('id', function ($q) {
+                $q->select('transaction_status_id')
+                    ->from('category_transaction_status')
+                    ->where('category_id', $this->categoryInvestorsId);
+            })
+            ->when(!empty($this->statusesDisallowedNames), function ($query) {
+                $query->whereNotIn('name', $this->statusesDisallowedNames);
+            })
             ->orderBy('id')
             ->chunk(500, function ($chunk) {
                 foreach ($chunk as $status) {
                     $id = (int) $status->getKey();
-                    $this->statusesById[$id] = $status;
-
-                    foreach ($this->nameKeys($status->name) as $key) {
-                        if (!array_key_exists($key, $this->statusesByName)) {
-                            $this->statusesByName[$key] = $status;
-                        }
-                    }
+                    $this->registerStatus($status);
                 }
             });
 
         $this->statusesLoaded = true;
+    }
+
+    protected function registerStatus(TransactionStatus $status): void
+    {
+        $id = (int) $status->getKey();
+
+        $this->statusesById[$id] = $status;
+
+        foreach ($this->nameKeys($status->name) as $key) {
+            if (!array_key_exists($key, $this->statusesByName)) {
+                $this->statusesByName[$key] = $status;
+            }
+        }
     }
 
     protected function resolveBankAccountId($value): ?int
@@ -830,5 +877,153 @@ class InvestorLedgerEntriesImport implements
         }
 
         return null;
+    }
+
+    /**
+     * تطبيع رؤوس الأعمدة إلى المفاتيح الأساسية (investor_id, status_id, ...).
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<string, mixed>
+     */
+    protected function normalizeRowKeys(array $row): array
+    {
+        foreach ($this->headingAliasMap() as $canonical => $aliases) {
+            $hasCanonical = array_key_exists($canonical, $row) && $this->valueIsFilled($row[$canonical]);
+
+            if ($hasCanonical) {
+                continue;
+            }
+
+            foreach ($aliases as $alias) {
+                if ($alias === $canonical) {
+                    continue;
+                }
+
+                if (array_key_exists($alias, $row)) {
+                    $row[$canonical] = $row[$alias];
+                    break;
+                }
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    protected function headingAliasMap(): array
+    {
+        if ($this->headingAliasMap !== null) {
+            return $this->headingAliasMap;
+        }
+
+        $map = [];
+
+        foreach ($this->canonicalHeadingKeys() as $key) {
+            $aliases = [$key];
+            $aliases = array_merge($aliases, $this->headingManualAliases[$key] ?? []);
+
+            foreach ($this->headingTranslations($key) as $translation) {
+                $aliases[] = $translation;
+                $aliases = array_merge($aliases, $this->slugVariants($translation));
+            }
+
+            $aliases = array_merge($aliases, $this->slugVariants($key));
+
+            $map[$key] = $this->uniqueHeadingAliases($aliases);
+        }
+
+        return $this->headingAliasMap = $map;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function canonicalHeadingKeys(): array
+    {
+        return [
+            'investor_id',
+            'status_id',
+            'bank_account_id',
+            'safe_id',
+            'amount',
+            'transaction_date',
+            'contract_id',
+            'installment_id',
+            'ref',
+            'notes',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function headingTranslations(string $key): array
+    {
+        $locales = array_unique(array_filter([
+            app()->getLocale(),
+            config('app.fallback_locale'),
+            'ar',
+            'en',
+        ]));
+
+        $translations = [];
+        $fullKey = 'export.headings.' . $key;
+
+        foreach ($locales as $locale) {
+            if (Lang::has($fullKey, $locale)) {
+                $translations[] = Lang::get($fullKey, [], $locale);
+            }
+        }
+
+        return array_values(array_unique(array_filter($translations, static function ($value) {
+            return is_string($value) && trim($value) !== '';
+        })));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function slugVariants(string $value): array
+    {
+        $variants = [];
+
+        foreach (['-', '_'] as $separator) {
+            $slug = Str::slug($value, $separator);
+
+            if ($slug !== '') {
+                $variants[] = $slug;
+                $variants[] = str_replace('-', '_', $slug);
+            }
+        }
+
+        return array_values(array_unique(array_filter($variants)));
+    }
+
+    /**
+     * @param  array<int, string>  $aliases
+     * @return array<int, string>
+     */
+    protected function uniqueHeadingAliases(array $aliases): array
+    {
+        $clean = [];
+
+        foreach ($aliases as $alias) {
+            if (!is_string($alias)) {
+                continue;
+            }
+
+            $trimmed = trim($alias);
+
+            if ($trimmed === '') {
+                continue;
+            }
+
+            $clean[] = $trimmed;
+            $clean[] = mb_strtolower($trimmed, 'UTF-8');
+        }
+
+        return array_values(array_unique($clean));
     }
 }
