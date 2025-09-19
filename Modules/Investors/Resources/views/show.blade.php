@@ -2,6 +2,47 @@
 
 @section('title', 'عرض بيانات المستثمر')
 
+@push('styles')
+<style>
+    .investor-reports-dropdown .dropdown-submenu + .dropdown-submenu {
+        margin-top: .25rem;
+    }
+
+    .investor-reports-dropdown .report-submenu-toggle {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+    }
+
+    .investor-reports-dropdown .report-submenu-toggle .report-submenu-chevron {
+        transition: transform .2s ease;
+    }
+
+    .investor-reports-dropdown .report-submenu-toggle[aria-expanded="true"] .report-submenu-chevron {
+        transform: rotate(180deg);
+    }
+
+    .investor-reports-dropdown .dropdown-submenu-menu {
+        padding: .25rem 0 .5rem;
+    }
+
+    .investor-reports-dropdown .dropdown-submenu-menu .dropdown-item {
+        font-weight: 500;
+        font-size: .95rem;
+        padding-top: .35rem;
+        padding-bottom: .35rem;
+        padding-inline-start: 1.75rem;
+        padding-inline-end: 1rem;
+    }
+
+    .investor-reports-dropdown .dropdown-divider {
+        margin: .35rem 0;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container py-3" dir="rtl">
 
@@ -121,38 +162,60 @@
                 </a> --}}
                 
                  {{-- ✅ Dropdown للتقارير --}}
-                <div class="btn-group">
+                <div class="btn-group" data-bs-auto-close="outside">
                     <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         📊 التقارير
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end text-end">
+                    <ul class="dropdown-menu dropdown-menu-end text-end investor-reports-dropdown" id="investorReportsDropdown">
                         <li>
                             <a class="dropdown-item" href="{{ route('investors.statement.statement', $investor) }}">
                                 📄 تقرير جرد المستثمر
                             </a>
                         </li>
-                        
-                        <li>
-                            <a class="dropdown-item" href="{{ route('investors.deposits.deposits', $investor) }}">
-                                💰 جرد الإيداعات
-                            </a>
+                        <li><hr class="dropdown-divider"></li>
+                        <li class="dropdown-submenu">
+                            <button
+                                class="dropdown-item report-submenu-toggle"
+                                type="button"
+                                data-report-submenu-toggle="true"
+                                data-bs-target="#investorReportsDeposits"
+                                aria-expanded="false"
+                                aria-controls="investorReportsDeposits"
+                            >
+                                <span>💰 تقارير الإيداعات</span>
+                                <i class="bi bi-chevron-down report-submenu-chevron"></i>
+                            </button>
+                            <div class="collapse dropdown-submenu-menu" id="investorReportsDeposits">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.deposits', $investor) }}">
+                                    💰 جرد الإيداعات
+                                </a>
+                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.installments', $investor) }}">
+                                    💳 جرد إيداعات سداد قسط
+                                </a>
+                            </div>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('investors.deposits.installments', $investor) }}">
-                                💳 جرد إيداعات سداد قسط
-                            </a>
+                        <li class="dropdown-submenu">
+                            <button
+                                class="dropdown-item report-submenu-toggle"
+                                type="button"
+                                data-report-submenu-toggle="true"
+                                data-bs-target="#investorReportsWithdrawals"
+                                aria-expanded="false"
+                                aria-controls="investorReportsWithdrawals"
+                            >
+                                <span>💸 تقارير المسحوبات</span>
+                                <i class="bi bi-chevron-down report-submenu-chevron"></i>
+                            </button>
+                            <div class="collapse dropdown-submenu-menu" id="investorReportsWithdrawals">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
+                                    💸 جرد المسحوبات
+                                </a>
+                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.add-contract', $investor) }}">
+                                    🧾 جرد المسحوبات لحالة إضافة عقد
+                                </a>
+                            </div>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
-                                💸 جرد المسحوبات
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('investors.withdrawals.add-contract', $investor) }}">
-                                🧾 جرد المسحوبات لحالة إضافة عقد
-                            </a>
-                        </li>
-                        
+                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ route('investors.transactions.transactions', $investor) }}">
                                 🔄 جرد إيداعات / مسحوبات
@@ -616,6 +679,67 @@ document.addEventListener('DOMContentLoaded', function () {
             new bootstrap.Tooltip(el, {container: 'body'});
         });
     }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const dropdownMenu = document.getElementById('investorReportsDropdown');
+    if (!dropdownMenu || !window.bootstrap || !bootstrap.Collapse || !bootstrap.Dropdown) {
+        return;
+    }
+
+    dropdownMenu.querySelectorAll('[data-report-submenu-toggle]').forEach(function (toggle) {
+        toggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const targetSelector = toggle.getAttribute('data-bs-target');
+            if (!targetSelector) {
+                return;
+            }
+
+            const target = document.querySelector(targetSelector);
+            if (!target) {
+                return;
+            }
+
+            const collapseInstance = bootstrap.Collapse.getOrCreateInstance(target, { toggle: false });
+            collapseInstance.toggle();
+        });
+    });
+
+    dropdownMenu.querySelectorAll('.dropdown-submenu-menu').forEach(function (submenu) {
+        submenu.addEventListener('shown.bs.collapse', function () {
+            const toggle = dropdownMenu.querySelector('[data-bs-target="#' + submenu.id + '"]');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        submenu.addEventListener('hidden.bs.collapse', function () {
+            const toggle = dropdownMenu.querySelector('[data-bs-target="#' + submenu.id + '"]');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+
+    dropdownMenu.querySelectorAll('a.dropdown-item').forEach(function (link) {
+        link.addEventListener('click', function () {
+            const btnGroup = dropdownMenu.closest('.btn-group');
+            const toggleButton = btnGroup ? btnGroup.querySelector('[data-bs-toggle="dropdown"]') : null;
+
+            if (!toggleButton) {
+                return;
+            }
+
+            let dropdownInstance = bootstrap.Dropdown.getInstance(toggleButton);
+            if (!dropdownInstance) {
+                dropdownInstance = new bootstrap.Dropdown(toggleButton);
+            }
+
+            dropdownInstance.hide();
+        });
+    });
 });
 
 // إخفاء أي alert تلقائياً
