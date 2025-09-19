@@ -6,8 +6,6 @@ window.Alpine = Alpine;
 
 Alpine.start();
 
-const DEFAULT_AUTO_DISMISS_DELAY = 3000;
-
 const scheduleFlashMessageDismissal = () => {
     if (typeof document === 'undefined') {
         return;
@@ -17,10 +15,14 @@ const scheduleFlashMessageDismissal = () => {
 
     flashAlerts.forEach((alert) => {
         const delayAttribute = alert.getAttribute('data-dismiss-delay');
-        const delay = delayAttribute ? Number.parseInt(delayAttribute, 10) : DEFAULT_AUTO_DISMISS_DELAY;
+        let delay = 3000;
 
-        if (!Number.isFinite(delay) || delay < 0) {
-            return;
+        if (delayAttribute !== null) {
+            const parsedDelay = Number.parseInt(delayAttribute, 10);
+
+            if (Number.isFinite(parsedDelay) && parsedDelay >= 0) {
+                delay = parsedDelay;
+            }
         }
 
         window.setTimeout(() => {
