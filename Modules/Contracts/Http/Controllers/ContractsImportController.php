@@ -13,12 +13,15 @@ use Modules\Contracts\Imports\ContractsBasicImport;
 use Modules\Contracts\Imports\ContractInvestorsImport;
 use Modules\Contracts\Imports\ContractPaymentsImport;
 use App\Support\ImportFailureFormatter;
+use App\Support\ResetsImportSessions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ContractsImportController extends Controller
 {
+    use ResetsImportSessions;
+
     /**
      * عرض فورم الاستيراد.
      * ينظّف حالة الجلسة إلا إذا جايين مباشرة بعد عملية استيراد ناجحة (import_just_done)
@@ -30,7 +33,7 @@ class ContractsImportController extends Controller
             'summary',
             'failures_simple',
             'errors_simple',
-        ], $request);
+        ], $request, ['import_just_done']);
 
         return view('contracts::import');
     }
@@ -44,7 +47,7 @@ class ContractsImportController extends Controller
             'summary',
             'failures_simple',
             'errors_simple',
-        ], $request);
+        ], $request, ['import_basic_just_done']);
 
         return view('contracts::import_basic');
     }
@@ -59,7 +62,7 @@ class ContractsImportController extends Controller
             'failures_simple',
             'errors_simple',
             'skipped_simple',
-        ], $request);
+        ], $request, ['import_investors_just_done']);
 
         return view('contracts::import_investors');
     }
@@ -70,33 +73,10 @@ class ContractsImportController extends Controller
             'summary',
             'failures_simple',
             'errors_simple',
-        ], $request);
+            'skipped_simple',
+        ], $request, ['import_payments_just_done']);
 
         return view('contracts::import_payments');
-    }
-
-    private function resetImportSession(string $namespace, array $keys, Request $request): void
-    {
-        $flag = match ($namespace) {
-            'contracts_import' => 'import_just_done',
-            'contracts_basic_import' => 'import_basic_just_done',
-            'contracts_investors_import' => 'import_investors_just_done',
-            'contracts_payments_import' => 'import_payments_just_done',
-            default => null,
-        };
-
-        $keep = ($flag !== null && session()->has($flag)) || $request->boolean('keep', false);
-
-        if ($keep) {
-            return;
-        }
-
-        $namespacedKeys = array_map(
-            fn ($key) => strpos($key, '.') !== false ? $key : "{$namespace}.{$key}",
-            $keys
-        );
-
-        session()->forget($namespacedKeys);
     }
 
     /**

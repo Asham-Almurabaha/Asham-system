@@ -4,6 +4,7 @@ namespace Modules\Investors\Http\Controllers;
 
 use App\Exports\LedgerEntriesFailuresFixExport;
 use App\Http\Controllers\Controller;
+use App\Support\ResetsImportSessions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
@@ -12,8 +13,15 @@ use Modules\Investors\Imports\InvestorLedgerEntriesImport;
 
 class InvestorLedgerImportController extends Controller
 {
-    public function create()
+    use ResetsImportSessions;
+
+    public function create(Request $request)
     {
+        $this->resetImportSession('investors_ledger_import', [
+            'summary',
+            'failures_simple',
+        ], $request, ['investors_ledger_import_just_done', 'investors_ledger_import_action']);
+
         return view('investors::ledger.import');
     }
 
@@ -98,12 +106,13 @@ class InvestorLedgerImportController extends Controller
                 ->with('failures_simple', $failuresSimple)
                 ->with('errors_simple', collect($import->errors() ?? [])->map(fn($e) =>
                     is_object($e) && method_exists($e, 'getMessage') ? (string) $e->getMessage() : (string) $e
-                )->all());
+                )->all())
+                ->with('investors_ledger_import_just_done', true);
         } catch (\Throwable $e) {
             report($e);
             return back()->withErrors(['file' => __('investors::investor_ledger_import.Import failed', [
                 'message' => $e->getMessage(),
-            ])]);
+            ])])->with('investors_ledger_import_action', true);
         }
     }
 
@@ -118,7 +127,8 @@ class InvestorLedgerImportController extends Controller
 
         if (empty($failures) || (is_countable($failures) && count($failures) === 0)) {
             return redirect()->route('investors.ledger.import.form')
-                ->with('info', __('investors::investor_ledger_import.No failures to export'));
+                ->with('info', __('investors::investor_ledger_import.No failures to export'))
+                ->with('investors_ledger_import_action', true);
         }
 
         if ($failures instanceof Collection) {

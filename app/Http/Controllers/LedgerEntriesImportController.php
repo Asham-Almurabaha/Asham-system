@@ -5,14 +5,22 @@ namespace App\Http\Controllers;
 use App\Exports\LedgerEntriesFailuresFixExport;
 use App\Exports\LedgerEntriesTemplateExport;
 use App\Imports\LedgerEntriesImport;
+use App\Support\ResetsImportSessions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 
 class LedgerEntriesImportController extends Controller
 {
-    public function create()
+    use ResetsImportSessions;
+
+    public function create(Request $request)
     {
+        $this->resetImportSession('ledger_import', [
+            'summary',
+            'failures_simple',
+        ], $request, ['ledger_import_just_done', 'ledger_import_action']);
+
         return view('accounts::ledger.import');
     }
 
@@ -94,11 +102,13 @@ class LedgerEntriesImportController extends Controller
                 ->with('failures_simple', $failuresSimple)
                 ->with('errors_simple', collect($import->errors() ?? [])->map(fn($e) =>
                     is_object($e) && method_exists($e, 'getMessage') ? (string)$e->getMessage() : (string)$e
-                )->all());
+                )->all())
+                ->with('ledger_import_just_done', true);
 
         } catch (\Throwable $e) {
             report($e);
-            return back()->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()]);
+            return back()->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()])
+                ->with('ledger_import_action', true);
         }
     }
 
@@ -115,7 +125,8 @@ class LedgerEntriesImportController extends Controller
 
     if (empty($failures) || (is_countable($failures) && count($failures) === 0)) {
         return redirect()->route('ledger.import.form')
-            ->with('info', 'لا توجد أخطاء لتوليد ملف التصحيح.');
+            ->with('info', 'لا توجد أخطاء لتوليد ملف التصحيح.')
+            ->with('ledger_import_action', true);
     }
 
     if ($failures instanceof Collection) {

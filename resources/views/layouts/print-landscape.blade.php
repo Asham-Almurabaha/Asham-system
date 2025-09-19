@@ -23,7 +23,10 @@
 
   <style>
     /* إجبار الطباعة على A4 Landscape دائماً */
-    @page { size: A4 landscape; margin: 0; }
+    @page {
+      size: 297mm 210mm; /* يعادل A4 Landscape ويجبر PDF على نفس الاتجاه */
+      margin: 0;
+    }
 
     html, body {
       background:#fff;
@@ -60,6 +63,7 @@
     tr { page-break-inside: avoid; }
 
     @media print {
+      html, body { width: 297mm; height: 210mm; }
       .no-print { display: none !important; }
       .page { box-shadow:none !important; margin:0; padding:10mm; }
       a[href]:after { content: ""; }

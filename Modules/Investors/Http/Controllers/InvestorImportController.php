@@ -3,6 +3,7 @@
 namespace Modules\Investors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\ResetsImportSessions;
 use Modules\Investors\Entities\Investor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -14,10 +15,18 @@ use Modules\Investors\Imports\InvestorsImport;
 
 class InvestorImportController extends Controller
 {
-    public function create()
+    use ResetsImportSessions;
+
+    public function create(Request $request)
     {
-        // مهم: ما نمسحش السيشن هنا، لأننا عايزين نعرض نتيجة الاستيراد بعد redirect.
-        // البيانات هتختفي لوحدها بعد أول Refresh لأننا هنستخدم flash في store().
+        $this->resetImportSession('investors_import', [
+            'summary',
+            'failures_simple',
+            'errors_simple',
+            'skipped_simple',
+            'pending_updates',
+        ], $request, ['investors_import_just_done', 'investors_import_action']);
+
         return view('investors::import');
     }
 
@@ -120,12 +129,14 @@ class InvestorImportController extends Controller
                 ->with('failures_simple', $failuresSimple)
                 ->with('errors_simple', collect($import->errors() ?? [])->map(fn($e) =>
                     is_object($e) && method_exists($e, 'getMessage') ? (string)$e->getMessage() : (string)$e
-                )->all());
+                )->all())
+                ->with('investors_import_just_done', true);
 
         } catch (\Throwable $e) {
             return redirect()
                 ->route('investors.import.form')
-                ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()]);
+                ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()])
+                ->with('investors_import_action', true);
         }
     }
 
@@ -149,7 +160,8 @@ class InvestorImportController extends Controller
         $noSkipped  = empty($skipped)  || (is_countable($skipped)  && count($skipped)  === 0);
         if ($noFailures && $noSkipped) {
             return redirect()->route('investors.import.form')
-                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد الملف.');
+                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد الملف.')
+                ->with('investors_import_action', true);
         }
 
         if ($failures instanceof Collection) $failures = $failures->all();
@@ -177,7 +189,8 @@ class InvestorImportController extends Controller
 
         if (empty($skipped) || (is_countable($skipped) && count($skipped) === 0)) {
             return redirect()->route('investors.import.form')
-                ->with('info', 'لا توجد بيانات متخطاة لتوليد ملف.');
+                ->with('info', 'لا توجد بيانات متخطاة لتوليد ملف.')
+                ->with('investors_import_action', true);
         }
 
         return Excel::download(new InvestorsSkippedExport($skipped), 'investors_skipped.xlsx');
@@ -189,7 +202,8 @@ class InvestorImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('investors.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('investors_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -203,7 +217,8 @@ class InvestorImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('investors.import.form')
-                ->with('info', 'المستثمر غير موجود، أزيل التعديل من قائمة الانتظار.');
+                ->with('info', 'المستثمر غير موجود، أزيل التعديل من قائمة الانتظار.')
+                ->with('investors_import_action', true);
         }
 
         $updates = $entry['updates'] ?? [];
@@ -212,7 +227,8 @@ class InvestorImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('investors.import.form')
-                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.');
+                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.')
+                ->with('investors_import_action', true);
         }
 
         $fillable = array_flip($investor->getFillable());
@@ -228,7 +244,8 @@ class InvestorImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('investors.import.form')
-                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.');
+                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.')
+                ->with('investors_import_action', true);
         }
 
         $investor->fill($apply);
@@ -244,11 +261,13 @@ class InvestorImportController extends Controller
 
         if ($applied) {
             return redirect()->route('investors.import.form')
-                ->with('success', 'تم تأكيد تعديل المستثمر '.$investor->name.' بنجاح.');
+                ->with('success', 'تم تأكيد تعديل المستثمر '.$investor->name.' بنجاح.')
+                ->with('investors_import_action', true);
         }
 
         return redirect()->route('investors.import.form')
-            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.');
+            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.')
+            ->with('investors_import_action', true);
     }
 
     public function ignorePending(Request $request, string $token)
@@ -257,7 +276,8 @@ class InvestorImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('investors.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('investors_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -269,7 +289,8 @@ class InvestorImportController extends Controller
         $name = $entry['investor_name'] ?? 'المستثمر';
 
         return redirect()->route('investors.import.form')
-            ->with('info', 'تم تجاهل التعديل للمستثمر '.$name.'.');
+            ->with('info', 'تم تجاهل التعديل للمستثمر '.$name.'.')
+            ->with('investors_import_action', true);
     }
 
     public function storePendingAsNew(Request $request, string $token)
@@ -278,7 +299,8 @@ class InvestorImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('investors.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('investors_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -301,7 +323,8 @@ class InvestorImportController extends Controller
 
         if (!is_array($payload) || empty($payload)) {
             return redirect()->route('investors.import.form')
-                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.');
+                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.')
+                ->with('investors_import_action', true);
         }
 
         $investorPrototype = new Investor();
@@ -317,14 +340,16 @@ class InvestorImportController extends Controller
         $nameValue = $data['name'] ?? null;
         if ($nameValue === null || trim((string) $nameValue) === '') {
             return redirect()->route('investors.import.form')
-                ->with('info', 'الاسم مطلوب لإنشاء مستثمر جديد من هذا التعديل.');
+                ->with('info', 'الاسم مطلوب لإنشاء مستثمر جديد من هذا التعديل.')
+                ->with('investors_import_action', true);
         }
 
         try {
             $newInvestor = Investor::create($data);
         } catch (\Throwable $e) {
             return redirect()->route('investors.import.form')
-                ->with('error', 'تعذّر إنشاء مستثمر جديد: '.$e->getMessage());
+                ->with('error', 'تعذّر إنشاء مستثمر جديد: '.$e->getMessage())
+                ->with('investors_import_action', true);
         }
 
         unset($pending[$token]);
@@ -332,7 +357,8 @@ class InvestorImportController extends Controller
         $this->syncPendingSummary($pending, false, true);
 
         return redirect()->route('investors.import.form')
-            ->with('success', 'تم حفظ مستثمر جديد باسم '.$newInvestor->name.'.');
+            ->with('success', 'تم حفظ مستثمر جديد باسم '.$newInvestor->name.'.')
+            ->with('investors_import_action', true);
     }
 
     private function getPendingUpdatesFromSession(): array

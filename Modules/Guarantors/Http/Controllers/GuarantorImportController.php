@@ -3,6 +3,7 @@
 namespace Modules\Guarantors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\ResetsImportSessions;
 use Modules\Guarantors\Entities\Guarantor;
 use Modules\Guarantors\Exports\GuarantorsFailuresFixExport;
 use Modules\Guarantors\Exports\GuarantorsSkippedExport;
@@ -14,9 +15,18 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class GuarantorImportController extends Controller
 {
-    public function create()
+    use ResetsImportSessions;
+
+    public function create(Request $request)
     {
-        // بنسيب السيشن كما هو لعرض نتيجة آخر استيراد بعد الـ redirect
+        $this->resetImportSession('guarantors_import', [
+            'summary',
+            'failures_simple',
+            'errors_simple',
+            'skipped_simple',
+            'pending_updates',
+        ], $request, ['guarantors_import_just_done', 'guarantors_import_action']);
+
         return view('guarantors::import');
     }
 
@@ -113,12 +123,14 @@ class GuarantorImportController extends Controller
                 ->with('failures_simple', $failuresSimple)
                 ->with('errors_simple', collect($import->errors() ?? [])->map(fn($e) =>
                     is_object($e) && method_exists($e, 'getMessage') ? (string)$e->getMessage() : (string)$e
-                )->all());
+                )->all())
+                ->with('guarantors_import_just_done', true);
 
         } catch (\Throwable $e) {
             return redirect()
                 ->route('guarantors.import.form')
-                ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()]);
+                ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()])
+                ->with('guarantors_import_action', true);
         }
     }
 
@@ -136,7 +148,8 @@ class GuarantorImportController extends Controller
         $noSkipped  = empty($skipped)  || (is_countable($skipped)  && count($skipped)  === 0);
         if ($noFailures && $noSkipped) {
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد الملف.');
+                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد الملف.')
+                ->with('guarantors_import_action', true);
         }
 
         if ($failures instanceof Collection) $failures = $failures->all();
@@ -161,7 +174,8 @@ class GuarantorImportController extends Controller
 
         if (empty($skipped) || (is_countable($skipped) && count($skipped) === 0)) {
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'لا توجد بيانات متخطاة لتوليد ملف.');
+                ->with('info', 'لا توجد بيانات متخطاة لتوليد ملف.')
+                ->with('guarantors_import_action', true);
         }
 
         return Excel::download(new GuarantorsSkippedExport($skipped), 'guarantors_skipped.xlsx');
@@ -173,7 +187,8 @@ class GuarantorImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('guarantors_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -187,7 +202,8 @@ class GuarantorImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'الكفيل غير موجود، أزيل التعديل من قائمة الانتظار.');
+                ->with('info', 'الكفيل غير موجود، أزيل التعديل من قائمة الانتظار.')
+                ->with('guarantors_import_action', true);
         }
 
         $updates = $entry['updates'] ?? [];
@@ -196,7 +212,8 @@ class GuarantorImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.');
+                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.')
+                ->with('guarantors_import_action', true);
         }
 
         $fillable = array_flip($guarantor->getFillable());
@@ -212,7 +229,8 @@ class GuarantorImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.');
+                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.')
+                ->with('guarantors_import_action', true);
         }
 
         $guarantor->fill($apply);
@@ -228,11 +246,13 @@ class GuarantorImportController extends Controller
 
         if ($applied) {
             return redirect()->route('guarantors.import.form')
-                ->with('success', 'تم تأكيد تعديل الكفيل '.$guarantor->name.' بنجاح.');
+                ->with('success', 'تم تأكيد تعديل الكفيل '.$guarantor->name.' بنجاح.')
+                ->with('guarantors_import_action', true);
         }
 
         return redirect()->route('guarantors.import.form')
-            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.');
+            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.')
+            ->with('guarantors_import_action', true);
     }
 
     public function ignorePending(Request $request, string $token)
@@ -241,7 +261,8 @@ class GuarantorImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('guarantors_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -253,7 +274,8 @@ class GuarantorImportController extends Controller
         $name = $entry['guarantor_name'] ?? 'الكفيل';
 
         return redirect()->route('guarantors.import.form')
-            ->with('info', 'تم تجاهل التعديل للكفيل '.$name.'.');
+            ->with('info', 'تم تجاهل التعديل للكفيل '.$name.'.')
+            ->with('guarantors_import_action', true);
     }
 
     public function storePendingAsNew(Request $request, string $token)
@@ -262,7 +284,8 @@ class GuarantorImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('guarantors_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -285,7 +308,8 @@ class GuarantorImportController extends Controller
 
         if (!is_array($payload) || empty($payload)) {
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.');
+                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.')
+                ->with('guarantors_import_action', true);
         }
 
         $guarantorPrototype = new Guarantor();
@@ -301,14 +325,16 @@ class GuarantorImportController extends Controller
         $nameValue = $data['name'] ?? null;
         if ($nameValue === null || trim((string) $nameValue) === '') {
             return redirect()->route('guarantors.import.form')
-                ->with('info', 'الاسم مطلوب لإنشاء كفيل جديد من هذا التعديل.');
+                ->with('info', 'الاسم مطلوب لإنشاء كفيل جديد من هذا التعديل.')
+                ->with('guarantors_import_action', true);
         }
 
         try {
             $newGuarantor = Guarantor::create($data);
         } catch (\Throwable $e) {
             return redirect()->route('guarantors.import.form')
-                ->with('error', 'تعذّر إنشاء كفيل جديد: '.$e->getMessage());
+                ->with('error', 'تعذّر إنشاء كفيل جديد: '.$e->getMessage())
+                ->with('guarantors_import_action', true);
         }
 
         unset($pending[$token]);
@@ -316,7 +342,8 @@ class GuarantorImportController extends Controller
         $this->syncPendingSummary($pending, false, true);
 
         return redirect()->route('guarantors.import.form')
-            ->with('success', 'تم حفظ كفيل جديد باسم '.$newGuarantor->name.'.');
+            ->with('success', 'تم حفظ كفيل جديد باسم '.$newGuarantor->name.'.')
+            ->with('guarantors_import_action', true);
     }
 
     private function getPendingUpdatesFromSession(): array

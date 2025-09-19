@@ -22,7 +22,10 @@
 
   <style>
     /* إجبار الطباعة A4 عمودي دائماً */
-    @page { size: A4 portrait; margin: 0; }
+    @page {
+      size: 210mm 297mm; /* يعادل A4 Portrait ويجبر PDF على نفس الاتجاه */
+      margin: 0;
+    }
 
     html, body { background:#fff; margin:0; padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 
@@ -53,6 +56,7 @@
     tr { page-break-inside: avoid; }
 
     @media print {
+      html, body { width: 210mm; height: 297mm; }
       .no-print { display: none !important; }
       .page { box-shadow:none !important; margin:0; padding:10mm; }
       a[href]:after { content: ""; }

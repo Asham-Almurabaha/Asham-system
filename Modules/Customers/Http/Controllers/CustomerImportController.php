@@ -3,6 +3,7 @@
 namespace Modules\Customers\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\ResetsImportSessions;
 use Modules\Customers\Entities\Customer;
 use Modules\Customers\Exports\CustomersFailuresFixExport;
 use Modules\Customers\Exports\CustomersSkippedExport;
@@ -14,9 +15,18 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class CustomerImportController extends Controller
 {
-    public function create()
+    use ResetsImportSessions;
+
+    public function create(Request $request)
     {
-        // ما نمسحش السيشن هنا علشان نعرض نتائج آخر استيراد بعد الـ redirect.
+        $this->resetImportSession('customers_import', [
+            'summary',
+            'failures_simple',
+            'errors_simple',
+            'skipped_simple',
+            'pending_updates',
+        ], $request, ['customers_import_just_done', 'customers_import_action']);
+
         return view('customers::import');
     }
 
@@ -120,12 +130,14 @@ class CustomerImportController extends Controller
                 ->with('failures_simple', $failuresSimple)
                 ->with('errors_simple', collect($import->errors() ?? [])->map(fn($e) =>
                     is_object($e) && method_exists($e, 'getMessage') ? (string)$e->getMessage() : (string)$e
-                )->all());
+                )->all())
+                ->with('customers_import_just_done', true);
 
         } catch (\Throwable $e) {
             return redirect()
                 ->route('customers.import.form')
-                ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()]);
+                ->withErrors(['file' => 'تعذّر الاستيراد: ' . $e->getMessage()])
+                ->with('customers_import_action', true);
         }
     }
 
@@ -143,7 +155,8 @@ class CustomerImportController extends Controller
         $noSkipped  = empty($skipped)  || (is_countable($skipped)  && count($skipped)  === 0);
         if ($noFailures && $noSkipped) {
             return redirect()->route('customers.import.form')
-                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد الملف.');
+                ->with('info', 'لا توجد أخطاء أو صفوف متخطاة لتوليد الملف.')
+                ->with('customers_import_action', true);
         }
 
         if ($failures instanceof Collection) $failures = $failures->all();
@@ -170,7 +183,8 @@ class CustomerImportController extends Controller
 
         if (empty($skipped) || (is_countable($skipped) && count($skipped) === 0)) {
             return redirect()->route('customers.import.form')
-                ->with('info', 'لا توجد بيانات متخطاة لتوليد ملف.');
+                ->with('info', 'لا توجد بيانات متخطاة لتوليد ملف.')
+                ->with('customers_import_action', true);
         }
 
         return Excel::download(new CustomersSkippedExport($skipped), 'customers_skipped.xlsx');
@@ -182,7 +196,8 @@ class CustomerImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('customers.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('customers_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -196,7 +211,8 @@ class CustomerImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('customers.import.form')
-                ->with('info', 'العميل غير موجود، أزيل التعديل من قائمة الانتظار.');
+                ->with('info', 'العميل غير موجود، أزيل التعديل من قائمة الانتظار.')
+                ->with('customers_import_action', true);
         }
 
         $updates = $entry['updates'] ?? [];
@@ -205,7 +221,8 @@ class CustomerImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('customers.import.form')
-                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.');
+                ->with('info', 'لا توجد قيم قابلة للتحديث لهذا التعديل.')
+                ->with('customers_import_action', true);
         }
 
         $fillable = array_flip($customer->getFillable());
@@ -221,7 +238,8 @@ class CustomerImportController extends Controller
             $this->syncPendingSummary($pending, false);
 
             return redirect()->route('customers.import.form')
-                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.');
+                ->with('info', 'الحقول المقترحة غير مسموح بتعديلها، تمت إزالتها من القائمة.')
+                ->with('customers_import_action', true);
         }
 
         $customer->fill($apply);
@@ -237,11 +255,13 @@ class CustomerImportController extends Controller
 
         if ($applied) {
             return redirect()->route('customers.import.form')
-                ->with('success', 'تم تأكيد تعديل العميل '.$customer->name.' بنجاح.');
+                ->with('success', 'تم تأكيد تعديل العميل '.$customer->name.' بنجاح.')
+                ->with('customers_import_action', true);
         }
 
         return redirect()->route('customers.import.form')
-            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.');
+            ->with('info', 'لم يتم تطبيق أي تغييرات لأن البيانات متطابقة سلفًا.')
+            ->with('customers_import_action', true);
     }
 
     public function ignorePending(Request $request, string $token)
@@ -250,7 +270,8 @@ class CustomerImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('customers.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('customers_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -262,7 +283,8 @@ class CustomerImportController extends Controller
         $name = $entry['customer_name'] ?? 'العميل';
 
         return redirect()->route('customers.import.form')
-            ->with('info', 'تم تجاهل التعديل للعميل '.$name.'.');
+            ->with('info', 'تم تجاهل التعديل للعميل '.$name.'.')
+            ->with('customers_import_action', true);
     }
 
     public function storePendingAsNew(Request $request, string $token)
@@ -271,7 +293,8 @@ class CustomerImportController extends Controller
 
         if (!isset($pending[$token])) {
             return redirect()->route('customers.import.form')
-                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.');
+                ->with('info', 'هذا التعديل غير موجود أو تمت معالجته مسبقًا.')
+                ->with('customers_import_action', true);
         }
 
         $entry = $pending[$token];
@@ -294,7 +317,8 @@ class CustomerImportController extends Controller
 
         if (!is_array($payload) || empty($payload)) {
             return redirect()->route('customers.import.form')
-                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.');
+                ->with('info', 'لا توجد بيانات كافية لإنشاء سجل جديد من هذا التعديل.')
+                ->with('customers_import_action', true);
         }
 
         $customerPrototype = new Customer();
@@ -310,14 +334,16 @@ class CustomerImportController extends Controller
         $nameValue = $data['name'] ?? null;
         if ($nameValue === null || trim((string) $nameValue) === '') {
             return redirect()->route('customers.import.form')
-                ->with('info', 'الاسم مطلوب لإنشاء عميل جديد من هذا التعديل.');
+                ->with('info', 'الاسم مطلوب لإنشاء عميل جديد من هذا التعديل.')
+                ->with('customers_import_action', true);
         }
 
         try {
             $newCustomer = Customer::create($data);
         } catch (\Throwable $e) {
             return redirect()->route('customers.import.form')
-                ->with('error', 'تعذّر إنشاء عميل جديد: '.$e->getMessage());
+                ->with('error', 'تعذّر إنشاء عميل جديد: '.$e->getMessage())
+                ->with('customers_import_action', true);
         }
 
         unset($pending[$token]);
@@ -325,7 +351,8 @@ class CustomerImportController extends Controller
         $this->syncPendingSummary($pending, false, true);
 
         return redirect()->route('customers.import.form')
-            ->with('success', 'تم حفظ عميل جديد باسم '.$newCustomer->name.'.');
+            ->with('success', 'تم حفظ عميل جديد باسم '.$newCustomer->name.'.')
+            ->with('customers_import_action', true);
     }
 
     private function getPendingUpdatesFromSession(): array
