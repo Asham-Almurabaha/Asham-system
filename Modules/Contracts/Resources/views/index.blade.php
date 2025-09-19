@@ -23,6 +23,12 @@
             <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-dark">
                 <i class="bi bi-speedometer2"></i> {{ __('contracts::contracts.View Dashboard') }}
             </a>
+            <button type="submit"
+                    form="contracts-refresh-statuses-form"
+                    class="btn btn-outline-primary"
+                    onclick="return confirm('{{ __('contracts::contracts.Confirm Refresh All Statuses') }}');">
+                <i class="bi bi-arrow-clockwise"></i> {{ __('contracts::contracts.Refresh All Statuses') }}
+            </button>
             @role('admin')
             <div class="btn-group">
                 <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -61,6 +67,10 @@
         <span class="ms-auto small text-muted">
             {{ __('Results') }}: <strong>{{ $contracts->total() }}</strong>
         </span>
+
+        <form id="contracts-refresh-statuses-form" action="{{ route('contracts.refresh-statuses') }}" method="POST" class="d-none">
+            @csrf
+        </form>
 
         <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
             {{ __('Advanced Filter') }}

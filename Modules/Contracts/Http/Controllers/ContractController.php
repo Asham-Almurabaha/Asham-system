@@ -29,6 +29,7 @@ use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -186,6 +187,16 @@ class ContractController extends Controller
         ));
     }
 
+
+    public function refreshStatuses(): RedirectResponse
+    {
+        $this->contractStatusRefresher->refresh();
+
+        return back()->with(
+            'success',
+            __('contracts::contracts.All Contract Statuses Refreshed')
+        );
+    }
 
     public function dashboard(Request $request, InstallmentsMonthlyService $installmentsSvc)
     {

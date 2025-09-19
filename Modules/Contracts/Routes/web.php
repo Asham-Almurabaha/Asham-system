@@ -40,6 +40,8 @@ Route::resource('contract-claims', ContractClaimController::class)->except(['sho
 // CRUD العقود
 Route::get('contracts/dashboard', [ContractController::class, 'dashboard'])
     ->name('contracts.dashboard');
+Route::post('contracts/refresh-statuses', [ContractController::class, 'refreshStatuses'])
+    ->name('contracts.refresh-statuses');
 Route::put('contracts/{contract}/images', [ContractController::class, 'updateImages'])
     ->name('contracts.images.update');
 Route::resource('contracts', ContractController::class);
