@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         \App\Console\Commands\CheckTranslations::class,
+        \App\Console\Commands\SendZakatDueNotifications::class,
     ])
     ->withProviders([
         AppServiceProvider::class,

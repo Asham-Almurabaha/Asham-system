@@ -28,10 +28,14 @@ class Investor extends Model
         'contract_image',
         'office_share_percentage',
         'investment_start_date',
+        'zakat_last_notified_at',
+        'zakat_last_notified_due_date',
     ];
 
     protected $casts = [
         'investment_start_date' => 'date',
+        'zakat_last_notified_at' => 'datetime',
+        'zakat_last_notified_due_date' => 'date',
     ];
 
     public function nationality()
