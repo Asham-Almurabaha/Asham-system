@@ -51,12 +51,30 @@
         $zakatBreakdown = is_array($zakatData['base_breakdown'] ?? null) ? $zakatData['base_breakdown'] : [];
         $zakatBreakdown['liquidity'] = (float)($zakatBreakdown['liquidity'] ?? $liquidity);
         $zakatBreakdown['remaining'] = (float)($zakatBreakdown['remaining'] ?? $totalRemainingOnCustomers);
+        $zakatCycleDays = (int)($zakatData['cycle_days'] ?? 354);
         $zakatStartDateFormatted = $zakatStartDate instanceof \Illuminate\Support\Carbon
             ? $zakatStartDate->format('Y-m-d')
             : ($zakatStartDate ? (string) $zakatStartDate : null);
         $zakatLastEntryDateFormatted = $zakatLastEntryDate instanceof \Illuminate\Support\Carbon
             ? $zakatLastEntryDate->format('Y-m-d')
             : ($zakatLastEntryDate ? (string) $zakatLastEntryDate : null);
+        $zakatDueDate = $zakatData['due_date'] ?? null;
+        $zakatDueDateFormatted = $zakatDueDate instanceof \Illuminate\Support\Carbon
+            ? $zakatDueDate->format('Y-m-d')
+            : ($zakatDueDate ? (string) $zakatDueDate : null);
+        $zakatDaysUntilDueRaw = $zakatData['days_until_due'] ?? null;
+        $zakatDaysUntilDueRaw = is_numeric($zakatDaysUntilDueRaw) ? (int) $zakatDaysUntilDueRaw : null;
+        $zakatIsDue = (bool) ($zakatData['is_due'] ?? ($zakatDaysUntilDueRaw !== null && $zakatDaysUntilDueRaw <= 0));
+        $zakatDaysRemaining = (!is_null($zakatDaysUntilDueRaw) && $zakatDaysUntilDueRaw > 0)
+            ? $zakatDaysUntilDueRaw
+            : null;
+        $zakatDaysOverdue = $zakatData['days_overdue'] ?? null;
+        if (!is_null($zakatDaysOverdue)) {
+            $zakatDaysOverdue = is_numeric($zakatDaysOverdue) ? (int) $zakatDaysOverdue : null;
+        }
+        if (is_null($zakatDaysOverdue) && !is_null($zakatDaysUntilDueRaw) && $zakatDaysUntilDueRaw < 0) {
+            $zakatDaysOverdue = abs((int) $zakatDaysUntilDueRaw);
+        }
 
         // ====== ملخص الأقساط الشهري لهذا المستثمر ======
         $monthly   = (array)($installmentsMonthly ?? []);
@@ -315,6 +333,27 @@
                     @endif
                     @if(!is_null($zakatDaysSince))
                         <span class="d-block">عدد الأيام منذ ذلك التاريخ: {{ number_format($zakatDaysSince) }} يوم</span>
+                    @endif
+                    @if($zakatIsDue)
+                        <span class="d-block text-danger fw-bold mt-1">
+                            @if(!is_null($zakatDaysOverdue) && $zakatDaysOverdue > 0)
+                                حان موعد إخراج الزكاة منذ {{ number_format($zakatDaysOverdue) }} يوم
+                            @else
+                                اليوم هو موعد إخراج الزكاة
+                            @endif
+                            @if($zakatDueDateFormatted)
+                                ({{ $zakatDueDateFormatted }})
+                            @endif
+                        </span>
+                    @elseif(!is_null($zakatDaysRemaining))
+                        <span class="d-block mt-1">
+                            المتبقي على موعد الزكاة: {{ number_format($zakatDaysRemaining) }} يوم
+                            @if($zakatDueDateFormatted)
+                                ({{ $zakatDueDateFormatted }})
+                            @endif
+                        </span>
+                    @elseif($zakatDueDateFormatted)
+                        <span class="d-block mt-1">موعد الزكاة القادم: {{ $zakatDueDateFormatted }}</span>
                     @endif
                 </div>
             </div>

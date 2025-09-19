@@ -204,8 +204,18 @@ class InvestorDataService
             $zakatStartSource = 'created_at';
         }
 
-        $zakatDaysSince = $zakatStartDate ? $zakatStartDate->copy()->diffInDays(now()) : null;
+        $now = now();
+
+        $zakatDaysSince = $zakatStartDate ? $zakatStartDate->copy()->diffInDays($now) : null;
         $zakatLastEntryDate = ($lastZakatEntry && $lastZakatEntry->entry_date) ? $lastZakatEntry->entry_date->copy() : null;
+
+        $zakatCycleDays = 354; // طول الحول (سنة قمرية)
+        $zakatDueDate = $zakatStartDate ? $zakatStartDate->copy()->addDays($zakatCycleDays) : null;
+        $zakatDaysUntilDue = $zakatDueDate ? $now->diffInDays($zakatDueDate, false) : null;
+        $zakatIsDue = $zakatDueDate ? $now->greaterThanOrEqualTo($zakatDueDate) : false;
+        $zakatDaysOverdue = ($zakatIsDue && $zakatDueDate)
+            ? $zakatDueDate->diffInDays($now)
+            : null;
 
         $zakatBase = round($liquidity + $totalRemainingOnCustomers, 2);
         $zakatAmount = $zakatBase > 0 ? round($zakatBase * 0.025, 2) : 0.0;
@@ -224,6 +234,11 @@ class InvestorDataService
             'last_entry_date' => $zakatLastEntryDate,
             'last_entry_id' => $lastZakatEntry?->id,
             'days_since' => $zakatDaysSince,
+            'cycle_days' => $zakatCycleDays,
+            'due_date' => $zakatDueDate,
+            'days_until_due' => $zakatDaysUntilDue,
+            'days_overdue' => $zakatDaysOverdue,
+            'is_due' => $zakatIsDue,
         ];
 
         return [
