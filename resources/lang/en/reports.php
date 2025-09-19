@@ -35,10 +35,12 @@ return [
     'Initial Capital' => 'Initial Capital',
     'Current Liquidity' => 'Current Liquidity',
     'Deposits Summary' => 'Deposits Summary',
+    'Installment Deposits Summary' => 'Installment Deposits Summary',
     'Number of Deposits' => 'Number of Deposits',
     'Total Deposits' => 'Total Deposits',
     'No deposits recorded for this investor in the current range.' => 'No deposits recorded for this investor in the current range.',
     'Deposits / Withdrawals Summary' => 'Deposits / Withdrawals Summary',
+    'Add Contract Withdrawals Summary' => 'Add Contract Withdrawals Summary',
     'Total Transactions' => 'Total Transactions',
     'Deposits minus Withdrawals' => 'Deposits minus Withdrawals',
     'No matching transactions in the report.' => 'No matching transactions in the report.',
@@ -55,4 +57,5 @@ return [
     'Total Remaining in Delinquent Contracts' => 'Total Remaining in Delinquent Contracts',
     'Unpaid Installments This Month Count' => 'Unpaid installments due this month (count)',
     'Unpaid Installments This Month Total' => 'Unpaid installments due this month (total)',
+    'Filtered by Status' => 'Filtered by Status',
 ];

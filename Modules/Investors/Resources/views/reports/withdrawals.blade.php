@@ -1,10 +1,9 @@
 @extends('layouts.print-landscape')
 
-@section('title', __('app.Withdrawals Summary'))
-@section('report_title', __('app.Withdrawals Summary'))
-
 @php
   use Illuminate\Support\Carbon;
+
+  $reportTitle = $reportTitle ?? __('app.Withdrawals Summary');
 
   $cs = $currencySymbol ?? ($data['currencySymbol'] ?? 'ر.س');
 
@@ -17,7 +16,11 @@
 
   $from = request('from');
   $to   = request('to');
+  $statusFilterName = $statusFilterName ?? null;
 @endphp
+
+@section('title', $reportTitle)
+@section('report_title', $reportTitle)
 
 @push('styles')
   <style>
@@ -34,6 +37,9 @@
       <strong>{{ $from ? Carbon::parse($from)->format('d-m-Y') : '—' }}</strong>
       @lang('app.to')
       <strong>{{ $to ? Carbon::parse($to)->format('d-m-Y') : '—' }}</strong>
+    @endif
+    @if($statusFilterName)
+      — @lang('reports.Filtered by Status'): <strong>{{ $statusFilterName }}</strong>
     @endif
   </div>
 

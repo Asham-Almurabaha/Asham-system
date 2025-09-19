@@ -48,6 +48,7 @@ class InvestorReportController extends Controller
     public function deposits(Investor $investor)
     {
         $deposits = LedgerEntry::query()
+            ->with(['status:id,name', 'type:id,name'])
             ->where('investor_id', $investor->id)
             ->where('direction', 'in')
             ->latest('entry_date')
@@ -58,9 +59,39 @@ class InvestorReportController extends Controller
         return view('investors::reports.deposits', compact('investor', 'deposits', 'depositsTotal'));
     }
 
+    public function depositsInstallments(Investor $investor)
+    {
+        $status = TransactionStatus::query()
+            ->where('name', 'سداد قسط')
+            ->first(['id', 'name']);
+
+        $deposits = LedgerEntry::query()
+            ->with(['status:id,name', 'type:id,name'])
+            ->where('investor_id', $investor->id)
+            ->where('direction', 'in')
+            ->when(
+                $status?->id,
+                fn($query, $statusId) => $query->where('transaction_status_id', $statusId)
+            )
+            ->latest('entry_date')
+            ->get();
+
+        $depositsTotal = $deposits->sum('amount');
+
+        return view('investors::reports.deposits', [
+            'investor'          => $investor,
+            'deposits'          => $deposits,
+            'depositsTotal'     => $depositsTotal,
+            'depositsCount'     => $deposits->count(),
+            'reportTitle'       => __('reports.Installment Deposits Summary'),
+            'statusFilterName'  => $status?->name ?? 'سداد قسط',
+        ]);
+    }
+
     public function withdrawals(Investor $investor)
     {
         $withdrawals = LedgerEntry::query()
+            ->with(['status:id,name', 'type:id,name'])
             ->where('investor_id', $investor->id)
             ->where('direction', 'out')
             ->latest('entry_date')
@@ -73,6 +104,36 @@ class InvestorReportController extends Controller
             'investors::reports.withdrawals',
             compact('investor', 'withdrawals', 'withdrawalsTotal', 'withdrawalsCount')
         );
+    }
+
+    public function withdrawalsAddContract(Investor $investor)
+    {
+        $status = TransactionStatus::query()
+            ->where('name', 'إضافة عقد')
+            ->first(['id', 'name']);
+
+        $withdrawals = LedgerEntry::query()
+            ->with(['status:id,name', 'type:id,name'])
+            ->where('investor_id', $investor->id)
+            ->where('direction', 'out')
+            ->when(
+                $status?->id,
+                fn($query, $statusId) => $query->where('transaction_status_id', $statusId)
+            )
+            ->latest('entry_date')
+            ->get();
+
+        $withdrawalsTotal = $withdrawals->sum('amount');
+        $withdrawalsCount = $withdrawals->count();
+
+        return view('investors::reports.withdrawals', [
+            'investor'         => $investor,
+            'withdrawals'      => $withdrawals,
+            'withdrawalsTotal' => $withdrawalsTotal,
+            'withdrawalsCount' => $withdrawalsCount,
+            'reportTitle'      => __('reports.Add Contract Withdrawals Summary'),
+            'statusFilterName' => $status?->name ?? 'إضافة عقد',
+        ]);
     }
 
     public function transactions(Investor $investor)

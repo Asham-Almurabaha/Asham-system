@@ -138,8 +138,18 @@
                             </a>
                         </li>
                         <li>
+                            <a class="dropdown-item" href="{{ route('investors.deposits.installments', $investor) }}">
+                                💳 جرد إيداعات سداد قسط
+                            </a>
+                        </li>
+                        <li>
                             <a class="dropdown-item" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
                                 💸 جرد المسحوبات
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('investors.withdrawals.add-contract', $investor) }}">
+                                🧾 جرد المسحوبات لحالة إضافة عقد
                             </a>
                         </li>
                         

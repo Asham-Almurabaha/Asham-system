@@ -35,10 +35,12 @@ return [
     'Initial Capital' => 'رأس المال المبدئي',
     'Current Liquidity' => 'السيولة الحالية',
     'Deposits Summary' => 'جرد الإيداعات',
+    'Installment Deposits Summary' => 'جرد إيداعات سداد قسط',
     'Number of Deposits' => 'عدد الإيداعات',
     'Total Deposits' => 'إجمالي الإيداعات',
     'No deposits recorded for this investor in the current range.' => 'لا توجد إيداعات مسجلة لهذا المستثمر ضمن النطاق الحالي.',
     'Deposits / Withdrawals Summary' => 'جرد الإيداعات / المسحوبات',
+    'Add Contract Withdrawals Summary' => 'جرد المسحوبات لحالة إضافة عقد',
     'Total Transactions' => 'إجمالي عدد الحركات',
     'Deposits minus Withdrawals' => 'الإيداعات − المسحوبات',
     'No matching transactions in the report.' => 'لا توجد حركات مطابقة في التقرير.',
@@ -55,4 +57,5 @@ return [
     'Total Remaining in Delinquent Contracts' => 'اجمالي المتبقي في العقود المتعثرة',
     'Unpaid Installments This Month Count' => 'عدد الأقساط المستحقة هذا الشهر وغير المسددة',
     'Unpaid Installments This Month Total' => 'إجمالي الأقساط غير المسددة هذا الشهر',
+    'Filtered by Status' => 'مصفى حسب الحالة',
 ];
