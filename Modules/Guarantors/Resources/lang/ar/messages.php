@@ -97,7 +97,7 @@ return [
     // Import Page
     'Import Guarantors from Excel' => 'استيراد الكُفلاء من Excel',
     'Import Guarantors' => 'استيراد الكُفلاء',
-    'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, guarantor_status, notes, id_card_image, contract_image — first row is headers.' => 'ارفع ملف Excel/CSV بالمواصفات: name, national_id, phone, email, address, nationality, title, guarantor_status, notes, id_card_image, contract_image — الصف الأول عناوين.',
+    'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.' => 'قم برفع ملف Excel/CSV بالمواصفات التالية: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — الصف الأول مخصّص لعناوين الأعمدة.',
     'Download Template' => 'تنزيل تمبليت',
     'Failed to execute the operation:' => 'تعذّر تنفيذ العملية:',
     'Total Rows' => 'إجمالي الصفوف',
