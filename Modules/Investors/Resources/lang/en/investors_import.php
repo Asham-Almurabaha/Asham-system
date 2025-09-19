@@ -28,6 +28,8 @@ return array (
   'Drag file here or click to choose' => 'Drag file here or click to choose',
   'Excel/CSV only — validation before save' => 'Excel/CSV only — validation before save',
   'Selected file:' => 'Selected file:',
+  'Unsupported file format. Allowed: xlsx, xls, csv' => 'Unsupported file format. Allowed: xlsx, xls, csv',
+  'File size exceeds 10MB.' => 'File size exceeds 10MB.',
   'Import Now' => 'Import Now',
   'Download file to fix rows' => 'Download file to fix rows',
   'Show/Hide' => 'Show/Hide',

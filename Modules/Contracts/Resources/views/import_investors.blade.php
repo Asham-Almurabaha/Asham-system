@@ -1,4 +1,4 @@
-{{-- resources/views/contracts/import_investors.blade.php --}}
+﻿{{-- resources/views/contracts/import_investors.blade.php --}}
 @extends('layouts.master')
 
 @section('title', 'استيراد مستثمري العقود من Excel')
@@ -104,33 +104,22 @@
 
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <form action="{{ route('contracts.import.investors') }}" method="POST" enctype="multipart/form-data" class="row g-3">
-        @csrf
-        <div class="col-12">
-          <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
-            <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
-            <div class="mb-2 fw-semibold">اسحب الملف هنا أو اضغط للاختيار</div>
-            <div class="text-muted small mb-3">Excel/CSV فقط</div>
-            <input id="fileInput" type="file" name="file" class="position-absolute w-100 h-100 top-0 start-0 opacity-0" accept=".xlsx,.xls,.csv" required>
-            <div class="small">
-              <span class="text-secondary">الملف المختار:</span>
-              <span id="fileName" class="fw-semibold">—</span>
-              <span id="fileMeta" class="text-muted"></span>
-            </div>
-            <div id="fileError" class="text-danger small mt-1 d-none"></div>
-          </div>
-        </div>
-        <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
-          <button id="submitBtn" class="btn btn-primary" disabled>
-            <i class="bi bi-upload me-1"></i> استيراد الآن
-          </button>
-          @if ($hasIssues && Route::has('contracts.import.investors.failures.fix'))
-            <a class="btn btn-warning" href="{{ route('contracts.import.investors.failures.fix') }}">
-              <i class="bi bi-download me-1"></i> تنزيل ملف لتصحيح الصفوف
-            </a>
-          @endif
-        </div>
-      </form>
+      <x-import.form
+          :action="route('contracts.import.investors')"
+          drag-text="اسحب الملف هنا أو اضغط للاختيار"
+          help-text="Excel/CSV فقط"
+          submit-text="استيراد الآن"
+          selected-label="الملف المختار:"
+          id-prefix="contracts-import-investors"
+          invalid-format-message="صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv"
+          too-large-message="حجم الملف يتجاوز 10MB."
+      >
+        @if ($hasIssues && Route::has('contracts.import.investors.failures.fix'))
+          <a class="btn btn-warning" href="{{ route('contracts.import.investors.failures.fix') }}">
+            <i class="bi bi-download me-1"></i> تنزيل ملف لتصحيح الصفوف
+          </a>
+        @endif
+      </x-import.form>
     </div>
   </div>
 
@@ -218,74 +207,3 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-(function () {
-  const dropzone  = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
-  const fileName  = document.getElementById('fileName');
-  const fileMeta  = document.getElementById('fileMeta');
-  const fileError = document.getElementById('fileError');
-  const submitBtn = document.getElementById('submitBtn');
-
-  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-  const okExt = ['xlsx','xls','csv'];
-
-  function fmtSize(bytes){
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-    return (bytes/1024/1024).toFixed(1) + ' MB';
-  }
-
-  function validate(file){
-    fileError.classList.add('d-none');
-    fileError.textContent = '';
-    submitBtn.disabled = true;
-    if (!file) return;
-    const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!okExt.includes(ext)) {
-      fileError.textContent = 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv';
-      fileError.classList.remove('d-none');
-      return;
-    }
-    if (file.size > MAX_SIZE) {
-      fileError.textContent = 'حجم الملف يتجاوز 10MB.';
-      fileError.classList.remove('d-none');
-      return;
-    }
-    submitBtn.disabled = false;
-  }
-
-  if (dropzone && fileInput) {
-    ['dragenter','dragover'].forEach(ev =>
-      dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); })
-    );
-    ['dragleave','drop'].forEach(ev =>
-      dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); })
-    );
-
-    dropzone.addEventListener('drop', e => {
-      if (e.dataTransfer?.files?.length) {
-        fileInput.files = e.dataTransfer.files;
-        const f = e.dataTransfer.files[0];
-        fileName.textContent = f.name;
-        fileMeta.textContent = ' (' + fmtSize(f.size) + ')';
-        validate(f);
-      } else {
-        fileInput.value = '';
-        fileName.textContent = '—';
-        fileMeta.textContent = '';
-        validate(null);
-      }
-    });
-
-    fileInput.addEventListener('change', () => {
-      const f = fileInput.files?.[0];
-      fileName.textContent = f?.name || '—';
-      fileMeta.textContent = f ? ' (' + fmtSize(f.size) + ')' : '';
-      validate(f || null);
-    });
-  }
-})();
-</script>
-@endpush

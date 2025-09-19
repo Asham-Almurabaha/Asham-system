@@ -28,6 +28,8 @@ return array (
   'Drag file here or click to choose' => 'اسحب الملف إلى هنا أو اضغط للاختيار',
   'Excel/CSV only — validation before save' => 'ملف Excel/CSV فقط — سيتم التحقق قبل الحفظ',
   'Selected file:' => 'الملف المختار:',
+  'Unsupported file format. Allowed: xlsx, xls, csv' => 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv',
+  'File size exceeds 10MB.' => 'حجم الملف يتجاوز 10MB.',
   'Import Now' => 'استيراد الآن',
   'Download file to fix rows' => 'تنزيل ملف لتصحيح الصفوف',
   'Show/Hide' => 'إظهار/إخفاء',

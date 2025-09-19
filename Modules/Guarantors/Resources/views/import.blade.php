@@ -275,45 +275,29 @@
   {{-- Upload --}}
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <form action="{{ route('guarantors.import') }}" method="POST" enctype="multipart/form-data" class="row g-3">
-        @csrf
-
-        <div class="col-12">
-          <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
-            <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
-            <div class="mb-2 fw-semibold">{{ __('guarantors::messages.Drag the file here or click to select') }}</div>
-            <div class="text-muted small mb-3">{{ __('guarantors::messages.Excel/CSV file only — will be verified before saving') }}</div>
-            <input id="fileInput" type="file" name="file"
-                   class="position-absolute w-100 h-100 top-0 start-0 opacity-0"
-                   accept=".xlsx,.xls,.csv" required>
-            <div class="small">
-              <span class="text-secondary">{{ __('guarantors::messages.Selected File:') }}</span>
-              <span id="fileName" class="fw-semibold">—</span>
-              <span id="fileMeta" class="text-muted"></span>
-            </div>
-            <div id="fileError" class="text-danger small mt-1 d-none"></div>
-          </div>
-        </div>
-
-        <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
-          <button id="submitBtn" class="btn btn-primary" disabled>
-            <i class="bi bi-upload me-1"></i> {{ __('guarantors::messages.Import Now') }}
-          </button>
-
-          @if ($hasIssues && Route::has('guarantors.import.failures.fix'))
-            <a class="btn btn-warning" href="{{ route('guarantors.import.failures.fix') }}">
-              <i class="bi bi-wrench-adjustable me-1"></i>
-              {{ __('guarantors::messages.Download Errors/Skipped File') }}
-              @if($hasFailures)
-                <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
-              @endif
-              @if($skippedCount > 0)
-                <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
-              @endif
-            </a>
-          @endif
-        </div>
-      </form>
+      <x-import.form
+          :action="route('guarantors.import')"
+          :drag-text="__('guarantors::messages.Drag the file here or click to select')"
+          :help-text="__('guarantors::messages.Excel/CSV file only — will be verified before saving')"
+          :submit-text="__('guarantors::messages.Import Now')"
+          :selected-label="__('guarantors::messages.Selected File:')"
+          id-prefix="guarantors-import"
+          :invalid-format-message="__('guarantors::messages.File format not supported. Allowed formats: xlsx, xls, csv')"
+          :too-large-message="__('guarantors::messages.File size exceeds 10MB.')"
+      >
+        @if ($hasIssues && Route::has('guarantors.import.failures.fix'))
+          <a class="btn btn-warning" href="{{ route('guarantors.import.failures.fix') }}">
+            <i class="bi bi-wrench-adjustable me-1"></i>
+            {{ __('guarantors::messages.Download Errors/Skipped File') }}
+            @if($hasFailures)
+              <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+            @endif
+            @if($skippedCount > 0)
+              <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
+            @endif
+          </a>
+        @endif
+      </x-import.form>
     </div>
   </div>
 
@@ -437,63 +421,5 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-@endpush
-
-@push('scripts')
-<script>
-(function () {
-  const dz   = document.getElementById('dropzone');
-  const inp  = document.getElementById('fileInput');
-  const name = document.getElementById('fileName');
-  const meta = document.getElementById('fileMeta');
-  const err  = document.getElementById('fileError');
-  const btn  = document.getElementById('submitBtn');
-
-  const MAX_SIZE = 10 * 1024 * 1024;
-  const okExt = ['xlsx','xls','csv'];
-
-  function fmtSize(bytes){
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-    return (bytes/1024/1024).toFixed(1) + ' MB';
-  }
-
-  function validate(file){
-    if (!err || !btn) return;
-    err.classList.add('d-none'); err.textContent = ''; btn.disabled = true;
-    if (!file) return;
-    const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!okExt.includes(ext)) { err.textContent = '{{ __('guarantors::messages.File format not supported. Allowed formats: xlsx, xls, csv') }}'; err.classList.remove('d-none'); return; }
-    if (file.size > MAX_SIZE) { err.textContent = '{{ __('guarantors::messages.File size exceeds 10MB.') }}'; err.classList.remove('d-none'); return; }
-    btn.disabled = false;
-  }
-
-  if (dz && inp) {
-    ['dragenter','dragover'].forEach(ev =>
-      dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.add('dragover'); })
-    );
-    ['dragleave','drop'].forEach(ev =>
-      dz.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dz.classList.remove('dragover'); })
-    );
-
-    dz.addEventListener('drop', e => {
-      if (e.dataTransfer?.files?.length) {
-        inp.files = e.dataTransfer.files;
-        const f = e.dataTransfer.files[0];
-        if (name) name.textContent = f.name;
-        if (meta) meta.textContent = ' (' + fmtSize(f.size) + ')';
-        validate(f);
-      }
-    });
-
-    inp.addEventListener('change', () => {
-      const f = inp.files?.[0];
-      name.textContent = f?.name || '—';
-      meta.textContent = f ? ' (' + fmtSize(f.size) + ')' : '';
-      validate(f || null);
-    });
-  }
-})();
-</script>
 @endpush
 

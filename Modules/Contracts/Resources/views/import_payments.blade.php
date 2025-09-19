@@ -1,4 +1,4 @@
-{{-- resources/views/contracts/import_payments.blade.php --}}
+﻿{{-- resources/views/contracts/import_payments.blade.php --}}
 @extends('layouts.master')
 
 @section('title', 'استيراد سدادات العقود من Excel')
@@ -105,42 +105,31 @@
 
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-      <form action="{{ route('contracts.import.payments') }}" method="POST" enctype="multipart/form-data" class="row g-3">
-        @csrf
-        <div class="col-12">
-          <div id="dropzone" class="dz border border-2 border-dashed rounded-3 p-4 text-center">
-            <i class="bi bi-file-earmark-arrow-up fs-1 d-block mb-2 text-primary"></i>
-            <div class="mb-2 fw-semibold">اسحب الملف هنا أو اضغط للاختيار</div>
-            <div class="text-muted small mb-3">Excel/CSV فقط — تحقق قبل الحفظ</div>
-            <input id="fileInput" type="file" name="file" class="position-absolute w-100 h-100 top-0 start-0 opacity-0" accept=".xlsx,.xls,.csv" required>
-            <div class="small">
-              <span class="text-secondary">الملف المختار:</span>
-              <span id="fileName" class="fw-semibold">—</span>
-              <span id="fileMeta" class="text-muted"></span>
-            </div>
-            <div id="fileError" class="text-danger small mt-1 d-none"></div>
-          </div>
-        </div>
-        <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
-          <button id="submitBtn" class="btn btn-primary" disabled>
-            <i class="bi bi-upload me-1"></i> ابدأ الاستيراد
-          </button>
-          @if ($hasFailures && Route::has('contracts.import.payments.failures.fix'))
-            <a class="btn btn-warning" href="{{ route('contracts.import.payments.failures.fix') }}">
-              <i class="bi bi-wrench-adjustable me-1"></i>
-              تصدير أخطاء التحقق
-              <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
-            </a>
-          @endif
-          @if ($hasSkipped && Route::has('contracts.import.payments.skipped.export'))
-            <a class="btn btn-outline-warning" href="{{ route('contracts.import.payments.skipped.export') }}">
-              <i class="bi bi-skip-forward-fill me-1"></i>
-              تصدير الصفوف المتخطاة
-              <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
-            </a>
-          @endif
-        </div>
-      </form>
+      <x-import.form
+          :action="route('contracts.import.payments')"
+          drag-text="اسحب الملف هنا أو اضغط للاختيار"
+          help-text="Excel/CSV فقط — تحقق قبل الحفظ"
+          submit-text="ابدأ الاستيراد"
+          selected-label="الملف المختار:"
+          id-prefix="contracts-import-payments"
+          invalid-format-message="صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv"
+          too-large-message="حجم الملف يتجاوز 10MB."
+      >
+        @if ($hasFailures && Route::has('contracts.import.payments.failures.fix'))
+          <a class="btn btn-warning" href="{{ route('contracts.import.payments.failures.fix') }}">
+            <i class="bi bi-wrench-adjustable me-1"></i>
+            تصدير أخطاء التحقق
+            <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
+          </a>
+        @endif
+        @if ($hasSkipped && Route::has('contracts.import.payments.skipped.export'))
+          <a class="btn btn-outline-warning" href="{{ route('contracts.import.payments.skipped.export') }}">
+            <i class="bi bi-skip-forward-fill me-1"></i>
+            تصدير الصفوف المتخطاة
+            <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
+          </a>
+        @endif
+      </x-import.form>
     </div>
   </div>
 
@@ -326,14 +315,3 @@
 </div>
 @endsection
 
-@push('scripts')
-<script>
-(function () {
-    const input = document.getElementById('fileInput');
-    const button = document.getElementById('submitBtn');
-    input.addEventListener('change', () => {
-        button.disabled = input.files.length === 0;
-    });
-})();
-</script>
-@endpush
