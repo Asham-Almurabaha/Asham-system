@@ -67,33 +67,7 @@
                     @endif
                   </div>
 
-                  {{-- فلاش نجاح --}}
-                  @if (session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert" aria-live="polite">
-                      {{ session('success') }}
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
-                    </div>
-                  @endif
-
-                  {{-- فلاش حالة عامة (مثل رابط إعادة تعيين) --}}
-                  @if (session('status'))
-                    <div class="alert alert-info alert-dismissible fade show" role="alert" aria-live="polite">
-                      {{ session('status') }}
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
-                    </div>
-                  @endif
-
-                  {{-- قائمة أخطاء عامة (لو حبيت تظهرها في الأعلى) --}}
-                  @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert" aria-live="polite">
-                      <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                          <li>{{ $error }}</li>
-                        @endforeach
-                      </ul>
-                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
-                    </div>
-                  @endif
+                  <x-flash-messages class="w-100 mb-3" />
 
                   {{-- هنا يتحقن الفورم من الصفحة الفرعية (login/register) --}}
                   @yield('form')

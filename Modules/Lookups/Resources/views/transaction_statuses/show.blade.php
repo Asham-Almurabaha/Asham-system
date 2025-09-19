@@ -14,10 +14,6 @@
     </nav>
 </div>
 
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
 @if ($setting)
     <section class="section profile">
         <div class="card">

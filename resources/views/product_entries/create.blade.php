@@ -15,16 +15,6 @@
         </nav>
     </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8 col-xl-6">
             <div class="card shadow-sm border-0">

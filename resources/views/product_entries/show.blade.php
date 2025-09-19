@@ -14,13 +14,6 @@
         </nav>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></button>
-        </div>
-    @endif
-
     @if ($setting)
         <div class="row justify-content-center">
             <div class="col-12 col-xl-8">

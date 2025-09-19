@@ -21,16 +21,6 @@
     </div>
 
     <div class="card-body">
-      @if ($errors->any())
-        <div class="alert alert-danger">
-          <ul class="mb-0">
-            @foreach ($errors->all() as $e)
-              <li>{{ $e }}</li>
-            @endforeach
-          </ul>
-        </div>
-      @endif
-
       <form method="POST" action="{{ route('users.roles.update', $user) }}">
         @csrf
         @method('PUT')

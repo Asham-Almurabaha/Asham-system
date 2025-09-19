@@ -13,15 +13,6 @@
     </nav>
 </div>
 
-@if ($errors->any())
-<div class="alert alert-danger">
-    <div class="fw-semibold mb-1">تحقّق من الحقول التالية:</div>
-    <ul class="mb-0">
-        @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-    </ul>
-</div>
-@endif
-
 @php
     $oldFrom = old('from_bank_account_id') ? 'bank:'.old('from_bank_account_id') : (old('from_safe_id') ? 'safe:'.old('from_safe_id') : '');
     $oldTo   = old('to_bank_account_id')   ? 'bank:'.old('to_bank_account_id')   : (old('to_safe_id')   ? 'safe:'.old('to_safe_id')   : '');

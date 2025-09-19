@@ -25,15 +25,6 @@
     </nav>
 </div>
 
-@if ($errors->any())
-<div class="alert alert-danger">
-    <div class="fw-semibold mb-1">تحقّق من الحقول التالية:</div>
-    <ul class="mb-0">
-        @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-    </ul>
-</div>
-@endif
-
 @php
     $oldCat = old('party_category', 'investors');
 

@@ -30,33 +30,6 @@
     </div>
   </div>
 
-  {{-- Alerts --}}
-  @if ($errors->any())
-    <div class="alert alert-danger border-0 shadow-sm">
-      <div class="d-flex align-items-start">
-        <i class="bi bi-x-octagon me-2 fs-5"></i>
-        <div>
-          <div class="fw-semibold mb-1">@lang('investors::investor_ledger_import.Operation failed:')</div>
-          <ul class="mb-0">
-            @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
-          </ul>
-        </div>
-      </div>
-    </div>
-  @endif
-
-  @if (session('success'))
-    <div class="alert alert-success border-0 shadow-sm">
-      <i class="bi bi-check2-circle me-2 fs-5"></i>{{ session('success') }}
-    </div>
-  @endif
-
-  @if (session('info'))
-    <div class="alert alert-info border-0 shadow-sm">
-      <i class="bi bi-info-circle me-2 fs-5"></i>{{ session('info') }}
-    </div>
-  @endif
-
   @php
     $summary      = session('summary') ?: session('investors_ledger_import.summary') ?: [];
     $failuresBag  = session('failures') ?? session('failures_simple') ?? session('investors_ledger_import.failures_simple') ?? [];
