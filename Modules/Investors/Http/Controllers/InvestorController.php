@@ -7,7 +7,7 @@ use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use App\Services\InstallmentsMonthlyService;
-use Illuminate\Contracts\Validation\Rule;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -224,17 +224,17 @@ class InvestorController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:investors,name,',
-            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,',
-            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:investors,phone,',
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-            'nationality_id' => 'nullable|exists:nationalities,id',
-            'title_id' => 'nullable|exists:titles,id',
-            'id_card_image' => 'nullable|image|max:2048',
-            'contract_image' => 'nullable|image|max:2048',
-            'office_share_percentage' => 'required|numeric|between:0,100',
-            'investment_start_date' => 'nullable|date',
+            'name' => ['required', 'string', 'max:255', Rule::unique('investors', 'name')],
+            'national_id' => ['nullable', 'digits:10', 'regex:/^[12]\d{9}$/', Rule::unique('investors', 'national_id')],
+            'phone' => ['nullable', 'regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/', Rule::unique('investors', 'phone')],
+            'email' => ['nullable', 'email', 'max:255'],
+            'address' => ['nullable', 'string'],
+            'nationality_id' => ['nullable', 'exists:nationalities,id'],
+            'title_id' => ['nullable', 'exists:titles,id'],
+            'id_card_image' => ['nullable', 'image', 'max:2048'],
+            'contract_image' => ['nullable', 'image', 'max:2048'],
+            'office_share_percentage' => ['required', 'numeric', 'between:0,100'],
+            'investment_start_date' => ['nullable', 'date'],
         ]);
 
         if ($request->hasFile('id_card_image')) {
@@ -294,17 +294,31 @@ class InvestorController extends Controller
     public function update(Request $request, Investor $investor)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:investors,name,' . $investor->id,
-            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:investors,national_id,' . $investor->id,
-            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:investors,phone,' . $investor->id,
-            'email' => 'nullable|email|max:255',
-            'address' => 'nullable|string',
-            'nationality_id' => 'nullable|exists:nationalities,id',
-            'title_id' => 'nullable|exists:titles,id',
-            'id_card_image' => 'nullable|image|max:2048',
-            'contract_image' => 'nullable|image|max:2048',
-            'office_share_percentage' => 'required|numeric|between:0,100',
-            'investment_start_date' => 'nullable|date',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('investors', 'name')->ignore($investor->id),
+            ],
+            'national_id' => [
+                'nullable',
+                'digits:10',
+                'regex:/^[12]\d{9}$/',
+                Rule::unique('investors', 'national_id')->ignore($investor->id),
+            ],
+            'phone' => [
+                'nullable',
+                'regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/',
+                Rule::unique('investors', 'phone')->ignore($investor->id),
+            ],
+            'email' => ['nullable', 'email', 'max:255'],
+            'address' => ['nullable', 'string'],
+            'nationality_id' => ['nullable', 'exists:nationalities,id'],
+            'title_id' => ['nullable', 'exists:titles,id'],
+            'id_card_image' => ['nullable', 'image', 'max:2048'],
+            'contract_image' => ['nullable', 'image', 'max:2048'],
+            'office_share_percentage' => ['required', 'numeric', 'between:0,100'],
+            'investment_start_date' => ['nullable', 'date'],
         ]);
 
         if ($request->hasFile('id_card_image')) {

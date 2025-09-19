@@ -40,6 +40,24 @@
         $contractBreakdown = $contractBreakdown ?? [];
         $liquidity         = isset($liquidity) ? (float)$liquidity : 0.0;
 
+        $zakatData = is_array($zakat ?? null) ? $zakat : [];
+        $zakatAmount = (float)($zakatData['amount'] ?? 0);
+        $zakatBase = isset($zakatData['base']) ? (float)$zakatData['base'] : ($liquidity + $totalRemainingOnCustomers);
+        $zakatRatePct = isset($zakatData['rate_pct']) ? (float)$zakatData['rate_pct'] : 2.5;
+        $zakatStartDate = $zakatData['start_date'] ?? null;
+        $zakatLastEntryDate = $zakatData['last_entry_date'] ?? null;
+        $zakatDaysSince = $zakatData['days_since'] ?? null;
+        $zakatStartSource = $zakatData['start_source'] ?? null;
+        $zakatBreakdown = is_array($zakatData['base_breakdown'] ?? null) ? $zakatData['base_breakdown'] : [];
+        $zakatBreakdown['liquidity'] = (float)($zakatBreakdown['liquidity'] ?? $liquidity);
+        $zakatBreakdown['remaining'] = (float)($zakatBreakdown['remaining'] ?? $totalRemainingOnCustomers);
+        $zakatStartDateFormatted = $zakatStartDate instanceof \Illuminate\Support\Carbon
+            ? $zakatStartDate->format('Y-m-d')
+            : ($zakatStartDate ? (string) $zakatStartDate : null);
+        $zakatLastEntryDateFormatted = $zakatLastEntryDate instanceof \Illuminate\Support\Carbon
+            ? $zakatLastEntryDate->format('Y-m-d')
+            : ($zakatLastEntryDate ? (string) $zakatLastEntryDate : null);
+
         // ====== ملخص الأقساط الشهري لهذا المستثمر ======
         $monthly   = (array)($installmentsMonthly ?? []);
         $totals    = (array)($monthly['totals'] ?? []);
@@ -263,6 +281,41 @@
                 <div class="stat-sub">
                     = رأس المال + (ربح المستثمر − نصيب المكتب) −
                     <span title="نصيب المستثمر من مدفوعات العميل تناسبياً">المدفوع</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ====== بطاقة زكاة المال ====== --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-6 col-xl-5">
+            <div class="kpi-card p-3 h-100">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-moon-stars fs-5 text-info"></i></div>
+                    <div class="fw-bold text-muted">زكاة المال التقديرية ({{ number_format($zakatRatePct, 2) }}%)</div>
+                </div>
+                <div class="fs-2 fw-bold text-primary">
+                    {{ number_format($zakatAmount, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                </div>
+                <div class="stat-sub">
+                    الأصول الخاضعة للزكاة = {{ number_format($zakatBreakdown['liquidity'], 2) }} + {{ number_format($zakatBreakdown['remaining'], 2) }} = {{ number_format($zakatBase, 2) }} {{ $currencySymbol }}
+                </div>
+                <div class="small text-muted mt-2">نسبة الزكاة المطبقة: {{ number_format($zakatRatePct, 2) }}%</div>
+                <div class="small text-muted mt-3">
+                    @if($zakatStartSource === 'ledger' && $zakatLastEntryDateFormatted)
+                        آخر قيد زكاة المال: {{ $zakatLastEntryDateFormatted }}
+                    @elseif($zakatStartSource === 'investment_start' && $zakatStartDateFormatted)
+                        لم تُسجل قيود زكاة بعد — يُحتسب من بدء الاستثمار {{ $zakatStartDateFormatted }}
+                    @elseif($zakatStartSource === 'created_at' && $zakatStartDateFormatted)
+                        لم تُسجل قيود زكاة بعد — يُحتسب من تاريخ إنشاء المستثمر {{ $zakatStartDateFormatted }}
+                    @elseif($zakatStartDateFormatted)
+                        يُحتسب اعتباراً من {{ $zakatStartDateFormatted }}
+                    @else
+                        لا تتوفر بيانات تاريخ لاحتساب الزكاة.
+                    @endif
+                    @if(!is_null($zakatDaysSince))
+                        <span class="d-block">عدد الأيام منذ ذلك التاريخ: {{ number_format($zakatDaysSince) }} يوم</span>
+                    @endif
                 </div>
             </div>
         </div>

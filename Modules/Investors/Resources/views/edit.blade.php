@@ -211,7 +211,7 @@
                             type="date"
                             name="investment_start_date"
                             id="investment_start_date"
-                            class="form-control @error('investment_start_date') is-invalid @enderror"
+                            class="form-control js-date @error('investment_start_date') is-invalid @enderror"
                             value="{{ old('investment_start_date', optional($investor->investment_start_date)->format('Y-m-d')) }}"
                             dir="ltr">
                         @error('investment_start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror

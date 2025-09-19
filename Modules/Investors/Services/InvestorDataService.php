@@ -181,6 +181,51 @@ class InvestorDataService
             $liquidity = round($liquidity, 2);
         }
 
+        // ===== زكاة المال =====
+        $lastZakatEntry = LedgerEntry::query()
+            ->where('investor_id', $investor->id)
+            ->where('is_office', false)
+            ->whereHas('status', fn ($q) => $q->where('name', 'زكاة المال'))
+            ->orderByDesc('entry_date')
+            ->orderByDesc('id')
+            ->first();
+
+        $zakatStartDate = null;
+        $zakatStartSource = null;
+
+        if ($lastZakatEntry && $lastZakatEntry->entry_date) {
+            $zakatStartDate = $lastZakatEntry->entry_date->copy();
+            $zakatStartSource = 'ledger';
+        } elseif ($investor->investment_start_date) {
+            $zakatStartDate = $investor->investment_start_date->copy();
+            $zakatStartSource = 'investment_start';
+        } elseif ($investor->created_at) {
+            $zakatStartDate = $investor->created_at->copy();
+            $zakatStartSource = 'created_at';
+        }
+
+        $zakatDaysSince = $zakatStartDate ? $zakatStartDate->copy()->diffInDays(now()) : null;
+        $zakatLastEntryDate = ($lastZakatEntry && $lastZakatEntry->entry_date) ? $lastZakatEntry->entry_date->copy() : null;
+
+        $zakatBase = round($liquidity + $totalRemainingOnCustomers, 2);
+        $zakatAmount = $zakatBase > 0 ? round($zakatBase * 0.025, 2) : 0.0;
+
+        $zakatData = [
+            'base' => $zakatBase,
+            'amount' => $zakatAmount,
+            'rate' => 0.025,
+            'rate_pct' => 2.5,
+            'base_breakdown' => [
+                'liquidity' => $liquidity,
+                'remaining' => $totalRemainingOnCustomers,
+            ],
+            'start_date' => $zakatStartDate ? $zakatStartDate->copy() : null,
+            'start_source' => $zakatStartSource,
+            'last_entry_date' => $zakatLastEntryDate,
+            'last_entry_id' => $lastZakatEntry?->id,
+            'days_since' => $zakatDaysSince,
+        ];
+
         return [
             'currencySymbol'            => $currencySymbol,
             'contractsTotal'            => $contractsTotal,
@@ -198,6 +243,7 @@ class InvestorDataService
             'totalProfitNet'            => $totalProfitNet,
             'totalPaidPortionToInvestor'=> $totalPaidPortionToInvestor,
             'totalRemainingOnCustomers' => $totalRemainingOnCustomers,
+            'zakat'                     => $zakatData,
             'contractBreakdown'         => $contractBreakdown,
             'totals' => [
                 'capital_share_all' => $totalCapitalShareAll,
