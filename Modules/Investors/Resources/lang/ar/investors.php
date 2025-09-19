@@ -11,6 +11,7 @@ return array (
   'Investors List' => 'قائمة المستثمرين',
   'Add New Investor' => 'إضافة مستثمر جديد',
   'Import Excel' => 'استيراد Excel',
+  'Import Investor Ledger' => 'استيراد قيود المستثمرين (Excel)',
   'Export Failures' => 'تصدير الإخفاقات',
   'Reports' => 'التقارير',
   'Investors Liquidity Report' => 'تقرير سيولة المستثمرين',

@@ -39,6 +39,14 @@
               <i class="bi bi-columns-gap"></i> قيد مُجزّأ
             </a>
           </li>
+          @role('admin')
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <a class="dropdown-item" href="{{ route('investors.ledger.import.form') }}">
+                <i class="bi bi-cloud-arrow-up"></i> {{ __('investors::investors.Import Investor Ledger') }}
+              </a>
+            </li>
+          @endrole
         </ul>
       </div>
       @role('admin')

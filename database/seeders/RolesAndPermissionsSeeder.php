@@ -45,6 +45,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'investors.index','investors.create','investors.store','investors.show','investors.edit','investors.update','investors.destroy',
             // Investors Import
             'investors.import.form','investors.import','investors.import.template','investors.import.failures.fix',
+            // Investors Ledger Import
+            'investors.ledger.import.form','investors.ledger.import','investors.ledger.import.template','investors.ledger.import.failures.fix',
             // Investor Transactions (resource)
             'investor-transactions.index','investor-transactions.create','investor-transactions.store','investor-transactions.show','investor-transactions.edit','investor-transactions.update','investor-transactions.destroy',
             // Investor Reports

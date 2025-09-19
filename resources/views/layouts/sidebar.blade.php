@@ -91,6 +91,7 @@
           'investors.update',
           'investors.destroy',
           'investors.import.*',
+          'investors.ledger.import.*',
           'investors.cash',
           'investors.liquidity',
           'investors.statement.*',

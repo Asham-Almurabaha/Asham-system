@@ -7,6 +7,7 @@ return array (
   'Edit Investor' => 'Edit Investor',
   'View Investor Data' => 'View Investor Data',
   'Import Excel' => 'Import Excel',
+  'Import Investor Ledger' => 'Import investor ledger (Excel)',
   'Add Investor' => 'Add Investor',
   'Export Failures' => 'Export Failures',
   'Reports' => 'Reports',

@@ -8,6 +8,7 @@ use Modules\Investors\Http\Controllers\InvestorController;
 use Modules\Investors\Http\Controllers\InvestorReportController;
 use Modules\Investors\Http\Controllers\InvestorStatementController;
 use Modules\Investors\Http\Controllers\InvestorLedgerController;
+use Modules\Investors\Http\Controllers\InvestorLedgerImportController;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('investors/import')->name('investors.')->group(function () {
@@ -32,6 +33,10 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('investors/ledger')->name('investors.ledger.')->group(function () {
         Route::get('/create', [InvestorLedgerController::class, 'create'])->name('create');
         Route::get('/split/create', [InvestorLedgerController::class, 'split'])->name('split.create');
+        Route::get('/import', [InvestorLedgerImportController::class, 'create'])->name('import.form');
+        Route::post('/import', [InvestorLedgerImportController::class, 'store'])->name('import');
+        Route::get('/import/template', [InvestorLedgerImportController::class, 'template'])->name('import.template');
+        Route::get('/import/failures/fix', [InvestorLedgerImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
     });
 
     Route::get('/investors/{investor}/cash', [AjaxInvestorController::class, 'liquidity'])
