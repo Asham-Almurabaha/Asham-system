@@ -23,34 +23,46 @@ class ZakatDueNotifier
 
     public function execute(bool $force = false): ZakatNotificationReport
     {
+        $report = $this->preview($force);
+
+        if ($report->entries->isEmpty()) {
+            return $report;
+        }
+
+        if ($report->userRecipients->isEmpty() && $report->emailRecipients->isEmpty()) {
+            Log::warning('Zakat due notification skipped because no recipients were found.');
+
+            return $report;
+        }
+
+        $dispatchedAt = Carbon::now();
+        $notification = new ZakatDueNotification($report->entries, $dispatchedAt);
+
+        if ($report->userRecipients->isNotEmpty()) {
+            Notification::send($report->userRecipients, $notification);
+        }
+
+        foreach ($report->emailRecipients as $email) {
+            Notification::route('mail', $email)->notify($notification);
+        }
+
+        $this->markInvestorsAsNotified($report->entries, $dispatchedAt);
+
+        return new ZakatNotificationReport(
+            $report->entries,
+            $report->userRecipients,
+            $report->emailRecipients,
+            $dispatchedAt,
+        );
+    }
+
+    public function preview(bool $force = false): ZakatNotificationReport
+    {
         $dueInvestors = $this->gatherDueInvestors($force);
         $adminRecipients = $this->adminRecipients();
         $emailRecipients = $this->emailRecipients($adminRecipients);
 
-        if ($dueInvestors->isEmpty()) {
-            return new ZakatNotificationReport($dueInvestors, $adminRecipients, $emailRecipients, null);
-        }
-
-        if ($adminRecipients->isEmpty() && $emailRecipients->isEmpty()) {
-            Log::warning('Zakat due notification skipped because no recipients were found.');
-
-            return new ZakatNotificationReport($dueInvestors, $adminRecipients, $emailRecipients, null);
-        }
-
-        $dispatchedAt = Carbon::now();
-        $notification = new ZakatDueNotification($dueInvestors, $dispatchedAt);
-
-        if ($adminRecipients->isNotEmpty()) {
-            Notification::send($adminRecipients, $notification);
-        }
-
-        foreach ($emailRecipients as $email) {
-            Notification::route('mail', $email)->notify($notification);
-        }
-
-        $this->markInvestorsAsNotified($dueInvestors, $dispatchedAt);
-
-        return new ZakatNotificationReport($dueInvestors, $adminRecipients, $emailRecipients, $dispatchedAt);
+        return new ZakatNotificationReport($dueInvestors, $adminRecipients, $emailRecipients, null);
     }
 
     private function gatherDueInvestors(bool $force = false): Collection
