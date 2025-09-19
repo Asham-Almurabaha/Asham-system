@@ -47,10 +47,14 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('investors.statement.statement');
     Route::get('investors/{investor}/withdrawals', [InvestorReportController::class, 'withdrawals'])
         ->name('investors.withdrawals.withdrawals');
+    Route::get('investors/{investor}/withdrawals/ledger', [InvestorReportController::class, 'withdrawalsLedger'])
+        ->name('investors.withdrawals.ledger');
     Route::get('investors/{investor}/withdrawals/add-contract', [InvestorReportController::class, 'withdrawalsAddContract'])
         ->name('investors.withdrawals.add-contract');
     Route::get('investors/{investor}/deposits', [InvestorReportController::class, 'deposits'])
         ->name('investors.deposits.deposits');
+    Route::get('investors/{investor}/deposits/ledger', [InvestorReportController::class, 'depositsLedger'])
+        ->name('investors.deposits.ledger');
     Route::get('investors/{investor}/deposits/installments', [InvestorReportController::class, 'depositsInstallments'])
         ->name('investors.deposits.installments');
     Route::get('investors/{investor}/transactions', [InvestorReportController::class, 'transactions'])

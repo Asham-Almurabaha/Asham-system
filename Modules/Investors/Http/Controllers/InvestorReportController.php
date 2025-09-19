@@ -7,8 +7,10 @@ use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
+use Modules\Lookups\Entities\Category;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\TransactionStatus;
+use Modules\Lookups\Entities\TransactionType;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Services\InvestorDataService;
 
@@ -88,6 +90,23 @@ class InvestorReportController extends Controller
         ]);
     }
 
+    public function depositsLedger(Request $request, Investor $investor)
+    {
+        $statusData = $this->investorStatusesByTransactionType('إيداع', ['سداد قسط']);
+        $deposits = $this->buildLedgerEntryCollection($request, $investor, 'in', $statusData['ids']);
+
+        $depositsTotal = $deposits->sum('amount');
+
+        return view('investors::reports.deposits', [
+            'investor'          => $investor,
+            'deposits'          => $deposits,
+            'depositsTotal'     => $depositsTotal,
+            'depositsCount'     => $deposits->count(),
+            'reportTitle'       => __('reports.Investor Ledger Deposits Summary'),
+            'statusFilterName'  => $this->formatStatusList($statusData['names']),
+        ]);
+    }
+
     public function withdrawals(Investor $investor)
     {
         $withdrawals = LedgerEntry::query()
@@ -104,6 +123,24 @@ class InvestorReportController extends Controller
             'investors::reports.withdrawals',
             compact('investor', 'withdrawals', 'withdrawalsTotal', 'withdrawalsCount')
         );
+    }
+
+    public function withdrawalsLedger(Request $request, Investor $investor)
+    {
+        $statusData = $this->investorStatusesByTransactionType('سحب', ['إضافة عقد']);
+        $withdrawals = $this->buildLedgerEntryCollection($request, $investor, 'out', $statusData['ids']);
+
+        $withdrawalsTotal = $withdrawals->sum('amount');
+        $withdrawalsCount = $withdrawals->count();
+
+        return view('investors::reports.withdrawals', [
+            'investor'         => $investor,
+            'withdrawals'      => $withdrawals,
+            'withdrawalsTotal' => $withdrawalsTotal,
+            'withdrawalsCount' => $withdrawalsCount,
+            'reportTitle'      => __('reports.Investor Ledger Withdrawals Summary'),
+            'statusFilterName' => $this->formatStatusList($statusData['names']),
+        ]);
     }
 
     public function withdrawalsAddContract(Investor $investor)
@@ -455,5 +492,68 @@ class InvestorReportController extends Controller
             'filters'        => $filters,
             'currencySymbol' => $currencySymbol,
         ]);
+    }
+
+    private function buildLedgerEntryCollection(Request $request, Investor $investor, string $direction, array $statusIds = [])
+    {
+        return LedgerEntry::query()
+            ->with(['status:id,name', 'type:id,name'])
+            ->where('investor_id', $investor->id)
+            ->where('direction', $direction)
+            ->when(!empty($statusIds), fn ($query) => $query->whereIn('transaction_status_id', $statusIds))
+            ->when($request->filled('from'), fn ($query) => $query->whereDate('entry_date', '>=', $request->query('from')))
+            ->when($request->filled('to'), fn ($query) => $query->whereDate('entry_date', '<=', $request->query('to')))
+            ->latest('entry_date')
+            ->get();
+    }
+
+    private function investorStatusesByTransactionType(string $typeName, array $excludeNames = []): array
+    {
+        static $cache = [];
+
+        $cacheKey = $typeName . '|' . implode('|', $excludeNames);
+        if (array_key_exists($cacheKey, $cache)) {
+            return $cache[$cacheKey];
+        }
+
+        $type = TransactionType::query()
+            ->where('name', $typeName)
+            ->first(['id']);
+
+        if (!$type) {
+            return $cache[$cacheKey] = ['ids' => [], 'names' => []];
+        }
+
+        $category = Category::query()
+            ->where('name', 'المستثمرين')
+            ->first(['id']);
+
+        $statuses = TransactionStatus::query()
+            ->select(['id', 'name'])
+            ->where('transaction_type_id', $type->id)
+            ->when($category, function ($query) use ($category) {
+                $query->whereHas('categories', fn ($cat) => $cat->where('categories.id', $category->id));
+            })
+            ->when(!empty($excludeNames), fn ($query) => $query->whereNotIn('name', $excludeNames))
+            ->orderBy('name')
+            ->get();
+
+        return $cache[$cacheKey] = [
+            'ids'   => $statuses->pluck('id')->all(),
+            'names' => $statuses->pluck('name')->all(),
+        ];
+    }
+
+    private function formatStatusList(array $names): ?string
+    {
+        $filtered = array_values(array_filter($names, fn ($name) => !is_null($name) && $name !== ''));
+
+        if (empty($filtered)) {
+            return null;
+        }
+
+        $separator = app()->getLocale() === 'ar' ? '، ' : ', ';
+
+        return implode($separator, $filtered);
     }
 }

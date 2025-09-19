@@ -189,6 +189,9 @@
                                 <a class="dropdown-item ps-4" href="{{ route('investors.deposits.deposits', $investor) }}">
                                     💰 جرد الإيداعات
                                 </a>
+                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.ledger', $investor) }}">
+                                    📥 جرد الإيداعات (قيود المستثمر)
+                                </a>
                                 <a class="dropdown-item ps-4" href="{{ route('investors.deposits.installments', $investor) }}">
                                     💳 جرد إيداعات سداد قسط
                                 </a>
@@ -209,6 +212,9 @@
                             <div class="collapse dropdown-submenu-menu" id="investorReportsWithdrawals">
                                 <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
                                     💸 جرد المسحوبات
+                                </a>
+                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.ledger', $investor) }}">
+                                    🏧 جرد المسحوبات (قيود المستثمر)
                                 </a>
                                 <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.add-contract', $investor) }}">
                                     🧾 جرد المسحوبات لحالة إضافة عقد
