@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractInvestor;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Services\InvestorDataService;
@@ -356,6 +358,54 @@ class InvestorController extends Controller
 
     protected function countActiveInvestors(): int
     {
+        $contractInvestorTable = (new ContractInvestor())->getTable();
+        $contractsTable = (new Contract())->getTable();
+        $investorsTable = (new Investor())->getTable();
+
+        if (Schema::hasTable($contractInvestorTable) && Schema::hasTable($contractsTable)) {
+            $query = DB::table($contractInvestorTable . ' as ci')
+                ->join($contractsTable . ' as c', 'c.id', '=', 'ci.contract_id');
+
+            if (Schema::hasTable($investorsTable)) {
+                $query->join($investorsTable . ' as i', 'i.id', '=', 'ci.investor_id');
+            }
+
+            if (Schema::hasColumn($contractInvestorTable, 'deleted_at')) {
+                $query->whereNull('ci.deleted_at');
+            }
+
+            if (Schema::hasColumn($contractsTable, 'deleted_at')) {
+                $query->whereNull('c.deleted_at');
+            }
+
+            $statusIdColumn = Schema::hasColumn($contractsTable, 'contract_status_id') ? 'contract_status_id' : null;
+
+            if ($statusIdColumn) {
+                $endedStatusIds = $this->endedContractStatusIds();
+                if (!empty($endedStatusIds)) {
+                    $query->whereNotIn('c.' . $statusIdColumn, $endedStatusIds);
+                }
+            } else {
+                $statusNameColumn = null;
+                foreach (['status', 'state'] as $column) {
+                    if (Schema::hasColumn($contractsTable, $column)) {
+                        $statusNameColumn = $column;
+                        break;
+                    }
+                }
+
+                if ($statusNameColumn) {
+                    $query->whereNotIn('c.' . $statusNameColumn, $this->endedContractStatusNames());
+                }
+            }
+
+            $aggregate = $query
+                ->selectRaw('COUNT(DISTINCT ci.investor_id) AS aggregate')
+                ->value('aggregate');
+
+            return (int) ($aggregate ?? 0);
+        }
+
         $endedStatusNames = $this->endedInvestmentStatusNames();
         $endedStatusIds = $this->resolveEndedInvestmentStatusIds();
 
@@ -410,7 +460,22 @@ class InvestorController extends Controller
 
     protected function endedInvestmentStatusNames(): array
     {
-        return ['منتهي', 'منتهى', 'سداد مبكر', 'سداد مُبكر', 'سداد مبكّر', 'Completed', 'Early Settlement', 'Closed', 'Inactive'];
+        return [
+            'منتهي',
+            'منتهى',
+            'منتهي بمطالبة',
+            'منتهى بمطالبة',
+            'سداد مبكر',
+            'سداد مُبكر',
+            'سداد مبكّر',
+            'Completed',
+            'Early Settlement',
+            'Closed',
+            'Inactive',
+            'Ended with claim',
+            'Ended With Claim',
+            'Claim closed',
+        ];
     }
 
     protected function resolveEndedInvestmentStatusIds(): array
@@ -433,7 +498,7 @@ class InvestorController extends Controller
 
     protected function endedContractStatusIds(): array
     {
-        $names = ['مكتمل', 'منتهي', 'سداد مبكر', 'إلغاء', 'Closed', 'Completed', 'Early Settlement', 'Inactive'];
+        $names = $this->endedContractStatusNames();
         $contractStatusTable = (new ContractStatus())->getTable();
 
         if (!Schema::hasTable($contractStatusTable)) {
@@ -441,5 +506,27 @@ class InvestorController extends Controller
         }
 
         return ContractStatus::whereIn('name', $names)->pluck('id')->all();
+    }
+
+    protected function endedContractStatusNames(): array
+    {
+        return [
+            'مكتمل',
+            'منتهي',
+            'منتهى',
+            'منتهي بمطالبة',
+            'منتهى بمطالبة',
+            'سداد مبكر',
+            'سداد مُبكر',
+            'سداد مبكّر',
+            'إلغاء',
+            'Closed',
+            'Completed',
+            'Early Settlement',
+            'Inactive',
+            'Ended with claim',
+            'Ended With Claim',
+            'Claim closed',
+        ];
     }
 }
