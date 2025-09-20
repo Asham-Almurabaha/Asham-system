@@ -71,6 +71,7 @@
                         <th class="text-center">{{ __('contracts::claims.actions') }}</th>
                     </tr>
                 </x-slot>
+
                 @foreach ($claimsCollection as $index => $claim)
                     @php($payments = collect($claim->payments ?? [])->values())
                     @php($totalPaid = (float) ($claim->paid_amount ?? $payments->sum('amount')))
@@ -82,7 +83,13 @@
                     @php($paymentsRowId = 'claim-payments-contract-' . $contract->id . '-' . $claim->id)
                     @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
                     @php($isPartialPaidStatus = in_array($currentClaimStatus, $partialPaidStatusNames, true))
-                    @php($isPaidStatus = ! $isPartialPaidStatus && (str_contains($currentClaimStatus, 'مدفوع') || str_contains($currentClaimStatus, 'مسدد')))
+                    @php(
+                        $isPaidStatus = ! $isPartialPaidStatus
+                            && (
+                                str_contains($currentClaimStatus, 'مدفوع')
+                                || str_contains($currentClaimStatus, 'مسدد')
+                            )
+                    )
                     @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
                     @php($isRejectedStatus = $currentClaimStatus === 'مرفوض')
                     <tr>
@@ -107,14 +114,14 @@
                                 <x-button.action type="button" variant="secondary" :outline="true" size="sm" class="collapsed" data-bs-toggle="collapse" data-bs-target="#{{ $paymentsRowId }}" aria-expanded="false" aria-controls="{{ $paymentsRowId }}">
                                     {{ __('contracts::claims.view_payments') }}
                                 </x-button.action>
-                
+
                                 @unless ($isPaidStatus)
                                     @if ($isUnderReviewStatus)
                                         <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @disabled($changeStatusOptionsCollection->isEmpty())>
                                             {{ __('contracts::claims.change_status') }}
                                         </x-button.action>
                                     @endif
-                
+
                                     @if ($isRejectedStatus)
                                         <form action="{{ route('contract-claims.reopen', $claim) }}" method="post">
                                             @csrf
@@ -125,12 +132,12 @@
                                             </x-button.action>
                                         </form>
                                     @endif
-                
+
                                     @if (! $isUnderReviewStatus && ! $isRejectedStatus)
                                         <x-button.action type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @disabled($claimPayersCollection->isEmpty() || $remainingAmount <= 0)>
                                             {{ __('contracts::claims.record_payment') }}
                                         </x-button.action>
-                
+
                                         <x-button.action type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @disabled(empty($paidWithDiscountClaimStatusId))>
                                             {{ __('contracts::claims.pay_with_discount') }}
                                         </x-button.action>
@@ -154,6 +161,7 @@
                                             <span class="badge {{ $remainingAmount > 0 ? 'bg-warning text-dark' : 'bg-success' }}">{{ __('contracts::claims.claim_remaining_amount') }}: {{ number_format($remainingAmount, 2) }}</span>
                                         </div>
                                     </div>
+
                                     @if ($payments->isNotEmpty())
                                         <x-table small bordered head-class="table-secondary">
                                             <x-slot name="head">
@@ -175,16 +183,14 @@
                                             @endforeach
                                         </x-table>
                                     @else
-                                                <div class="text-muted small">{{ __('contracts::claims.no_payments') }}</div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                        <div class="text-muted small">{{ __('contracts::claims.no_payments') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </x-table>
         @else
             <div class="p-3 text-muted">{{ __('contracts::claims.no_results') }}</div>
         @endif
@@ -298,6 +304,7 @@
             });
         </script>
     @endif
+
     @if ($changeStatusOptionsCollection->isNotEmpty())
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -313,13 +320,12 @@
             });
         </script>
     @endif
+
     @if ($oldPaymentClaimId)
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 var claimId = "{{ $oldPaymentClaimId }}";
-                if (!claimId) {
-                    return;
-                }
+                if (!claimId) return;
 
                 var modalElement = document.getElementById('recordClaimPaymentModal-contract-{{ $contract->id }}-' + claimId);
                 if (modalElement) {
@@ -329,13 +335,12 @@
             });
         </script>
     @endif
+
     @if ($oldDiscountClaimId)
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 var claimId = "{{ $oldDiscountClaimId }}";
-                if (!claimId) {
-                    return;
-                }
+                if (!claimId) return;
 
                 var modalElement = document.getElementById('applyClaimDiscountModal-contract-{{ $contract->id }}-' + claimId);
                 if (modalElement) {
@@ -345,6 +350,7 @@
             });
         </script>
     @endif
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var pickers = document.querySelectorAll('[data-claim-account-picker]');
@@ -358,14 +364,10 @@
                     if (safeInput) safeInput.value = '';
 
                     var value = picker.value || '';
-                    if (!value) {
-                        return;
-                    }
+                    if (!value) return;
 
                     var parts = value.split(':');
-                    if (parts.length !== 2) {
-                        return;
-                    }
+                    if (parts.length !== 2) return;
 
                     if (parts[0] === 'bank' && bankInput) {
                         bankInput.value = parts[1];
@@ -387,7 +389,13 @@
     @foreach ($claimsCollection as $claim)
         @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
         @php($isPartialPaidStatus = in_array($currentClaimStatus, $partialPaidStatusNames, true))
-        @php($isPaidStatus = ! $isPartialPaidStatus && (str_contains($currentClaimStatus, 'مدفوع') || str_contains($currentClaimStatus, 'مسدد')))
+        @php(
+            $isPaidStatus = ! $isPartialPaidStatus
+                && (
+                    str_contains($currentClaimStatus, 'مدفوع')
+                    || str_contains($currentClaimStatus, 'مسدد')
+                )
+        )
         @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
         @if ($isPaidStatus || ! $isUnderReviewStatus)
             @continue
