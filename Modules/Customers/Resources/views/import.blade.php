@@ -22,9 +22,9 @@
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <x-button href="{{ route('customers.import.template') }}" variant="secondary" :outline="true" size="sm">
+        <x-button.action href="{{ route('customers.import.template') }}" variant="secondary" :outline="true" size="sm">
           <i class="bi bi-filetype-xlsx me-1"></i> @lang('customers::customers_import.Download template')
-        </x-button>
+        </x-button.action>
       </div>
     </div>
   </div>
@@ -234,21 +234,21 @@
                   <div class="d-flex flex-column flex-lg-row gap-2">
                     <form method="POST" action="{{ route('customers.import.pending.confirm', $token) }}">
                       @csrf
-                      <x-button type="submit" variant="success" :outline="true" size="sm" class="w-100">
+                      <x-button.action type="submit" variant="success" :outline="true" size="sm" class="w-100">
                         <i class="bi bi-check2-circle me-1"></i> @lang('customers::customers_import.Confirm Update')
-                      </x-button>
+                      </x-button.action>
                     </form>
                     <form method="POST" action="{{ route('customers.import.pending.store-new', $token) }}">
                       @csrf
-                      <x-button type="submit" variant="primary" :outline="true" size="sm" class="w-100">
+                      <x-button.action type="submit" variant="primary" :outline="true" size="sm" class="w-100">
                         <i class="bi bi-plus-circle me-1"></i> @lang('customers::customers_import.Save as new record')
-                      </x-button>
+                      </x-button.action>
                     </form>
                     <form method="POST" action="{{ route('customers.import.pending.ignore', $token) }}">
                       @csrf
-                      <x-button type="submit" variant="secondary" :outline="true" size="sm" class="w-100">
+                      <x-button.action type="submit" variant="secondary" :outline="true" size="sm" class="w-100">
                         <i class="bi bi-x-circle me-1"></i> @lang('customers::customers_import.Ignore')
-                      </x-button>
+                      </x-button.action>
                     </form>
                   </div>
                 </td>
@@ -286,7 +286,7 @@
           :too-large-message="__('customers::customers_import.File size exceeds 10MB.')"
       >
         @if ($hasIssues && Route::has('customers.import.failures.fix'))
-          <x-button href="{{ route('customers.import.failures.fix') }}" variant="warning">
+          <x-button.action href="{{ route('customers.import.failures.fix') }}" variant="warning">
             <i class="bi bi-wrench-adjustable me-1"></i>
             @lang('customers::customers_import.Download file to fix rows')
             @if($hasFailures)
@@ -295,7 +295,7 @@
             @if($skippedCount > 0)
               <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
             @endif
-          </x-button>
+          </x-button.action>
         @endif
       </x-import.form>
     </div>
@@ -308,9 +308,9 @@
         <i class="bi bi-list-check me-2"></i>
         <span>@lang('customers::customers_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
-        <x-button type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
+        <x-button.action type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
           @lang('customers::customers_import.Show/Hide')
-        </x-button>
+        </x-button.action>
       </div>
 
       <div id="failuresTable" class="collapse show">
@@ -365,9 +365,9 @@
         <i class="bi bi-skip-forward-fill me-2"></i>
         <span>@lang('customers::customers_import.Skipped')</span>
         <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
-        <x-button type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
+        <x-button.action type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
           @lang('customers::customers_import.Show/Hide')
-        </x-button>
+        </x-button.action>
       </div>
 
       <div id="skippedTable" class="collapse show">

@@ -27,9 +27,9 @@
 
                         <div class="row mb-0">
                             <div class="col-md-6 offset-md-4">
-                                <x-button type="submit" variant="primary">
+                                <x-button.action type="submit" variant="primary">
                                     {{ __('Send Password Reset Link') }}
-                                </x-button>
+                                </x-button.action>
                             </div>
                         </div>
                     </form>

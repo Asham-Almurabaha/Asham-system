@@ -16,9 +16,9 @@
             <h1 class="h4 mb-0">{{ __('Product Types List') }}</h1>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
-            <x-button href="{{ route('product_types.create') }}" variant="success">
+            <x-button.action href="{{ route('product_types.create') }}" variant="success">
                 <i class="bi bi-plus-lg me-1"></i>{{ __('Add New Product Type') }}
-            </x-button>
+            </x-button.action>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
                     <td class="fw-semibold text-start">{{ $productType->name }}</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <x-button href="{{ route('product_types.edit', $productType) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button>
+                            <x-button.action href="{{ route('product_types.edit', $productType) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button.action>
                             @include('lookups::components.delete-button', [
                                 'action' => route('product_types.destroy', $productType),
                                 'confirm' => __('Are you sure to delete this product type?'),

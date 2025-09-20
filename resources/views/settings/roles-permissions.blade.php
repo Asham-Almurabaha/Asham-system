@@ -272,12 +272,12 @@
                 <p class="text-muted small mb-0">@lang('permissions.Permissions Panel Description')</p>
               </div>
               <div class="d-flex flex-wrap align-items-center gap-2">
-                <x-button type="button" variant="primary" :outline="true" size="sm" data-action="expand-all">
+                <x-button.action type="button" variant="primary" :outline="true" size="sm" data-action="expand-all">
                   <i class="bi bi-arrows-fullscreen me-1"></i>@lang('permissions.Expand All')
-                </x-button>
-                <x-button type="button" variant="secondary" :outline="true" size="sm" data-action="collapse-all">
+                </x-button.action>
+                <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-action="collapse-all">
                   <i class="bi bi-arrows-collapse me-1"></i>@lang('permissions.Collapse All')
-                </x-button>
+                </x-button.action>
               </div>
             </div>
           </div>
@@ -297,9 +297,9 @@
                     <div class="input-group search-input-group">
                       <span class="input-group-text bg-body"><i class="bi bi-search"></i></span>
                       <input type="search" id="permission-search" class="form-control" placeholder="@lang('permissions.Permission Search Placeholder')" aria-label="@lang('permissions.Filter Permissions')">
-                      <x-button type="button" variant="secondary" :outline="true" id="permission-search-clear">
+                      <x-button.action type="button" variant="secondary" :outline="true" id="permission-search-clear">
                         <i class="bi bi-x-circle me-1"></i>@lang('permissions.Clear Search')
-                      </x-button>
+                      </x-button.action>
                     </div>
                     <div class="form-text">@lang('permissions.Permission Search Help')</div>
                   </div>
@@ -316,22 +316,22 @@
                   @foreach($permissionGroups as $index => $group)
                     <div class="accordion-item border-0 mb-3 shadow-sm rounded-3 overflow-hidden">
                       <h2 class="accordion-header" id="permission-group-heading-{{ $index }}">
-                        <x-button type="button" :unstyled="true" class="accordion-button {{ $index === 0 ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#permission-group-body-{{ $index }}" aria-expanded="{{ $index === 0 ? 'true' : 'false' }}" aria-controls="permission-group-body-{{ $index }}">
+                        <x-button.action type="button" :unstyled="true" class="accordion-button {{ $index === 0 ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#permission-group-body-{{ $index }}" aria-expanded="{{ $index === 0 ? 'true' : 'false' }}" aria-controls="permission-group-body-{{ $index }}">
                           <span class="fw-semibold">{{ $group['label'] }}</span>
                           <span class="badge bg-primary-subtle text-primary ms-2">{{ $group['permissions']->count() }}</span>
-                        </x-button>
+                        </x-button.action>
                       </h2>
                       <div id="permission-group-body-{{ $index }}" class="accordion-collapse collapse {{ $index === 0 ? 'show' : '' }}" data-bs-parent="#rolePermissionsAccordion">
                         <div class="accordion-body" data-permission-group-container="{{ $index }}">
                           <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                             <p class="text-muted small mb-0">@lang('permissions.Permission Tools Description')</p>
                             <div class="btn-group btn-group-sm" role="group" aria-label="@lang('permissions.Group Actions Hint')">
-                              <x-button type="button" variant="primary" :outline="true" size="sm" data-select-group="{{ $index }}">
+                              <x-button.action type="button" variant="primary" :outline="true" size="sm" data-select-group="{{ $index }}">
                                 <i class="bi bi-check2-all me-1"></i>@lang('permissions.Select Group')
-                              </x-button>
-                              <x-button type="button" variant="secondary" :outline="true" size="sm" data-deselect-group="{{ $index }}">
+                              </x-button.action>
+                              <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-deselect-group="{{ $index }}">
                                 <i class="bi bi-eraser me-1"></i>@lang('permissions.Deselect Group')
-                              </x-button>
+                              </x-button.action>
                             </div>
                           </div>
                           <div class="row g-3">

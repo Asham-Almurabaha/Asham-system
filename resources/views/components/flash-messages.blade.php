@@ -126,7 +126,7 @@
                 </div>
 
                 @if ($dismissibleMessage)
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="alert" aria-label="{{ __('Close') }}"></x-button.action>
                 @endif
             </div>
         @endforeach

@@ -357,15 +357,15 @@
         <span class="badge bg-light text-dark">{{ __('Current Investor:') }} {{ $selectedInvestorName }}</span>
     </div>
     <div class="btn-group" role="group">
-        <x-button href="{{ route('contracts.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
+        <x-button.action href="{{ route('contracts.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
             <i class="bi bi-table"></i>
             <span>{{ __('Manage Contracts') }}</span>
-        </x-button>
+        </x-button.action>
 
-        <x-button type="button" variant="dark" :outline="true" class="dropdown-toggle d-inline-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+        <x-button.action type="button" variant="dark" :outline="true" class="dropdown-toggle d-inline-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <span class="fs-5">📊</span>
             <span>{{ __('Reports') }}</span>
-        </x-button>
+        </x-button.action>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.office_outstanding') }}">
@@ -436,10 +436,10 @@
                 <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
             </div>
             <div class="col-12 col-md-auto d-flex gap-2">
-                <x-button type="submit" variant="primary" :outline="true" size="sm">
+                <x-button.action type="submit" variant="primary" :outline="true" size="sm">
                     <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
-                </x-button>
-                <x-button href="{{ route('contracts.dashboard') }}" variant="secondary" :outline="true" size="sm">{{ __('Clear') }}</x-button>
+                </x-button.action>
+                <x-button.action href="{{ route('contracts.dashboard') }}" variant="secondary" :outline="true" size="sm">{{ __('Clear') }}</x-button.action>
             </div>
         </form>
     </div>

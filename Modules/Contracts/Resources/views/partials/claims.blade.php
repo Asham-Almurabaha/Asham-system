@@ -50,9 +50,9 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
         <strong>{{ __('contracts::claims.claims') }}</strong>
-        <x-button variant="dark" size="sm" class="text-light" data-bs-toggle="modal" data-bs-target="#addClaimModal">
+        <x-button.action variant="dark" size="sm" class="text-light" data-bs-toggle="modal" data-bs-target="#addClaimModal">
             <i class="bi bi-plus-lg"></i> {{ __('contracts::claims.add_claim') }}
-        </x-button>
+        </x-button.action>
     </div>
     <div class="card-body p-0">
         @if ($claimsCollection->isNotEmpty())
@@ -104,15 +104,15 @@
                         <td class="text-end">{{ number_format($remainingAmount, 2) }}</td>
                         <td class="text-center">
                             <div class="d-flex flex-wrap justify-content-center gap-2">
-                                <x-button type="button" variant="secondary" :outline="true" size="sm" class="collapsed" data-bs-toggle="collapse" data-bs-target="#{{ $paymentsRowId }}" aria-expanded="false" aria-controls="{{ $paymentsRowId }}">
+                                <x-button.action type="button" variant="secondary" :outline="true" size="sm" class="collapsed" data-bs-toggle="collapse" data-bs-target="#{{ $paymentsRowId }}" aria-expanded="false" aria-controls="{{ $paymentsRowId }}">
                                     {{ __('contracts::claims.view_payments') }}
-                                </x-button>
+                                </x-button.action>
                 
                                 @unless ($isPaidStatus)
                                     @if ($isUnderReviewStatus)
-                                        <x-button type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @if ($changeStatusOptionsCollection->isEmpty()) disabled @endif>
+                                        <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @if ($changeStatusOptionsCollection->isEmpty()) disabled @endif>
                                             {{ __('contracts::claims.change_status') }}
-                                        </x-button>
+                                        </x-button.action>
                                     @endif
                 
                                     @if ($isRejectedStatus)
@@ -120,20 +120,20 @@
                                             @csrf
                                             @method('patch')
                                             <input type="hidden" name="return_to_contract" value="1">
-                                            <x-button type="submit" variant="warning" :outline="true" size="sm">
+                                            <x-button.action type="submit" variant="warning" :outline="true" size="sm">
                                                 {{ __('contracts::claims.reopen_claim') }}
-                                            </x-button>
+                                            </x-button.action>
                                         </form>
                                     @endif
                 
                                     @if (! $isUnderReviewStatus && ! $isRejectedStatus)
-                                        <x-button type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>
+                                        <x-button.action type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>
                                             {{ __('contracts::claims.record_payment') }}
-                                        </x-button>
+                                        </x-button.action>
                 
-                                        <x-button type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
+                                        <x-button.action type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
                                             {{ __('contracts::claims.pay_with_discount') }}
-                                        </x-button>
+                                        </x-button.action>
                                     @endif
                                 @endunless
                             </div>
@@ -201,7 +201,7 @@
 
                 <div class="modal-header">
                     <h5 class="modal-title" id="addClaimModalLabel">{{ __('contracts::claims.add_claim') }}</h5>
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
                 </div>
 
                 <div class="modal-body">
@@ -276,10 +276,10 @@
                 </div>
 
                 <div class="modal-footer">
-                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
-                    <x-button type="submit" variant="success" :outline="true">
+                    <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button.action>
+                    <x-button.action type="submit" variant="success" :outline="true">
                         <i class="bi bi-check2-circle me-1"></i> {{ __('contracts::claims.save') }}
-                    </x-button>
+                    </x-button.action>
                 </div>
             </form>
         </div>
@@ -402,7 +402,7 @@
                     <input type="hidden" name="return_to_contract" value="1">
                     <div class="modal-header">
                         <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
-                        <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
+                        <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3 text-start">
@@ -416,10 +416,10 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
-                        <x-button type="submit" variant="primary" :outline="true">
+                        <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button.action>
+                        <x-button.action type="submit" variant="primary" :outline="true">
                             <i class="bi bi-save2 me-1"></i> {{ __('contracts::claims.update_status') }}
-                        </x-button>
+                        </x-button.action>
                     </div>
                 </form>
             </div>
@@ -447,7 +447,7 @@
                 <input type="hidden" name="payment_claim_id" value="{{ $claim->id }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="{{ $paymentLabelId }}">{{ __('contracts::claims.record_payment') }}</h5>
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3 text-start">
@@ -552,8 +552,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
-                    <x-button type="submit" variant="dark" :outline="true" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</x-button>
+                    <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button.action>
+                    <x-button.action type="submit" variant="dark" :outline="true" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</x-button.action>
                 </div>
             </form>
         </div>
@@ -579,7 +579,7 @@
                 <input type="hidden" name="discount_claim_id" value="{{ $claim->id }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="{{ $discountLabelId }}">{{ __('contracts::claims.apply_discount') }}</h5>
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3 text-start">
@@ -678,8 +678,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
-                    <x-button type="submit" variant="success">{{ __('contracts::claims.apply_discount') }}</x-button>
+                    <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button.action>
+                    <x-button.action type="submit" variant="success">{{ __('contracts::claims.apply_discount') }}</x-button.action>
                 </div>
             </form>
         </div>

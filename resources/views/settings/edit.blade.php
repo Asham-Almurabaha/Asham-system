@@ -8,9 +8,9 @@
       <div class="card shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <h5 class="mb-0">@lang('sidebar.Edit Settings')</h5>
-          <x-button href="{{ route('settings.index') }}" variant="secondary" :outline="true" size="sm">
+          <x-button.action href="{{ route('settings.index') }}" variant="secondary" :outline="true" size="sm">
             <i class="bi bi-arrow-right-circle me-1"></i>@lang('sidebar.Back')
-          </x-button>
+          </x-button.action>
         </div>
 
         <div class="card-body">

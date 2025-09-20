@@ -90,10 +90,10 @@
 </div>
 
 <div class="d-flex gap-2 mt-4">
-    <x-button type="submit" variant="{{ $submitVariant }}" :outline="true">
+    <x-button.action type="submit" variant="{{ $submitVariant }}" :outline="true">
         <i class="{{ $submitIcon }} me-1"></i> {{ $submitLabel }}
-    </x-button>
-    <x-button href="{{ $cancelRoute }}" variant="secondary" :outline="true">
+    </x-button.action>
+    <x-button.action href="{{ $cancelRoute }}" variant="secondary" :outline="true">
         @lang('accounts::accounts.shared.cancel')
-    </x-button>
+    </x-button.action>
 </div>

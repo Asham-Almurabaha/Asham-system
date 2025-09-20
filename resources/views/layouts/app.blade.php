@@ -34,20 +34,20 @@
                 <div class="ms-2">
                   @php $isAr = app()->getLocale() === 'ar'; @endphp
                   <div class="btn-group btn-group-sm" role="group" aria-label="{{ __('Switch language') }}">
-                    <x-button href="{{ route('lang.switch', 'ar') }}"
+                    <x-button.action href="{{ route('lang.switch', 'ar') }}"
                               variant="primary"
                               :outline="true"
                               size="sm"
                               class="{{ $isAr ? 'active disabled' : '' }}"
                               aria-disabled="{{ $isAr ? 'true' : 'false' }}"
-                              title="{{ __('Arabic') }}">AR</x-button>
-                    <x-button href="{{ route('lang.switch', 'en') }}"
+                              title="{{ __('Arabic') }}">AR</x-button.action>
+                    <x-button.action href="{{ route('lang.switch', 'en') }}"
                               variant="primary"
                               :outline="true"
                               size="sm"
                               class="{{ !$isAr ? 'active disabled' : '' }}"
                               aria-disabled="{{ !$isAr ? 'true' : 'false' }}"
-                              title="{{ __('English') }}">EN</x-button>
+                              title="{{ __('English') }}">EN</x-button.action>
                   </div>
                 </div>
               </div>

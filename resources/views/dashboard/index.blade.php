@@ -36,18 +36,18 @@
     <div class="dr-toolbar p-3 mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <x-button href="{{ $buildUrl($todayFrom,$todayTo) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isToday ? 'active' : '' }}">
+                <x-button.action href="{{ $buildUrl($todayFrom,$todayTo) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isToday ? 'active' : '' }}">
                     <i class="bi bi-calendar-day me-1"></i> {{ __('dashboard.Today') }} {!! $isToday ? '<span class="dot"></span>' : '' !!}
-                </x-button>
-                <x-button href="{{ $buildUrl($monthFrom,$monthTo) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isMonth ? 'active' : '' }}">
+                </x-button.action>
+                <x-button.action href="{{ $buildUrl($monthFrom,$monthTo) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isMonth ? 'active' : '' }}">
                     <i class="bi bi-calendar3 me-1"></i> {{ __('dashboard.This Month') }} {!! $isMonth ? '<span class="dot"></span>' : '' !!}
-                </x-button>
-                <x-button href="{{ $buildUrl($yearFrom,$yearTo) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isYear ? 'active' : '' }}">
+                </x-button.action>
+                <x-button.action href="{{ $buildUrl($yearFrom,$yearTo) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isYear ? 'active' : '' }}">
                     <i class="bi bi-calendar2-week me-1"></i> {{ __('dashboard.This Year') }} {!! $isYear ? '<span class="dot"></span>' : '' !!}
-                </x-button>
-                <x-button href="{{ $buildUrl(null,null) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isAll ? 'active' : '' }}">
+                </x-button.action>
+                <x-button.action href="{{ $buildUrl(null,null) }}" variant="secondary" :outline="true" size="sm" class="btn-range {{ $isAll ? 'active' : '' }}">
                     <i class="bi bi-infinity me-1"></i> {{ __('dashboard.All') }} {!! $isAll ? '<span class="dot"></span>' : '' !!}
-                </x-button>
+                </x-button.action>
             </div>
 
             <div class="sep mx-2 d-none d-md-block"></div>
@@ -65,8 +65,8 @@
                 <div class="label">{{ __('dashboard.Custom') }}:</div>
                 <div><label class="form-label mb-1 small">{{ __('dashboard.From') }}</label><input type="date" class="form-control form-control-sm js-date" name="from" value="{{ e($rFrom) }}"></div>
                 <div><label class="form-label mb-1 small">{{ __('dashboard.To') }}</label><input type="date" class="form-control form-control-sm js-date" name="to" value="{{ e($rTo) }}"></div>
-                <x-button type="submit" variant="primary" size="sm"><i class="bi bi-funnel me-1"></i> {{ __('dashboard.Apply') }}</x-button>
-                <x-button href="{{ url()->current() }}" variant="secondary" :outline="true" size="sm"><i class="bi bi-x-circle me-1"></i> {{ __('dashboard.Clear') }}</x-button>
+                <x-button.action type="submit" variant="primary" size="sm"><i class="bi bi-funnel me-1"></i> {{ __('dashboard.Apply') }}</x-button.action>
+                <x-button.action href="{{ url()->current() }}" variant="secondary" :outline="true" size="sm"><i class="bi bi-x-circle me-1"></i> {{ __('dashboard.Clear') }}</x-button.action>
             </form>
 
             <div class="ms-auto d-flex align-items-center gap-2">

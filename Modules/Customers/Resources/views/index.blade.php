@@ -97,16 +97,16 @@
   <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
 
     <div class="btn-group" role="group" aria-label="Actions">
-      <x-button href="{{ route('customers.create') }}" variant="success">
+      <x-button.action href="{{ route('customers.create') }}" variant="success">
         <i class="bi bi-plus-lg"></i> {{ __('Add Customer') }}
-      </x-button>
-      <x-button href="{{ route('customers.dashboard') }}" variant="dark" :outline="true">
+      </x-button.action>
+      <x-button.action href="{{ route('customers.dashboard') }}" variant="dark" :outline="true">
         <i class="bi bi-speedometer2"></i> {{ __('customers::messages.View Dashboard') }}
-      </x-button>
+      </x-button.action>
       @role('admin')
-        <x-button href="{{ route('customers.import.form') }}" variant="primary" :outline="true">
+        <x-button.action href="{{ route('customers.import.form') }}" variant="primary" :outline="true">
             <i class="bi bi-upload"></i> {{ __('Import Excel') }}
-        </x-button>
+        </x-button.action>
       @endrole
 
       {{-- Template button removed as requested --}}
@@ -116,9 +116,9 @@
       {{ __('Results') }}: <strong>{{ $customers->total() }}</strong>
     </span>
 
-    <x-button type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
+    <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
       {{ __('Filter') }}
-    </x-button>
+    </x-button.action>
   </div>
 
   <div class="collapse @if(request()->hasAny(['customer_q','national_id','phone'])) show @endif border-top" id="filterBar">
@@ -147,7 +147,7 @@
         </div>
 
         <div class="col-12 col-md-2">
-          <x-button href="{{ route('customers.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('Clear') }}</x-button>
+          <x-button.action href="{{ route('customers.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('Clear') }}</x-button.action>
         </div>
       </form>
     </div>
@@ -198,9 +198,9 @@
                                 <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>
                             </div>
                             <div class="mt-3">
-                                <x-button href="{{ route('customers.create') }}" variant="success" size="sm">
+                                <x-button.action href="{{ route('customers.create') }}" variant="success" size="sm">
                                     + {{ __('Add First Customer') }}
-                                </x-button>
+                                </x-button.action>
                             </div>
                         </td>
                     </tr>

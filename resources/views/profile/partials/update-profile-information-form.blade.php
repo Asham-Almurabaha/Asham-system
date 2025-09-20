@@ -33,9 +33,9 @@
                     <p class="text-sm mt-2 text-gray-800">
                         {{ __('Your email address is unverified.') }}
 
-                        <x-button form="send-verification" variant="link" class="p-0 align-baseline">
+                        <x-button.action form="send-verification" variant="link" class="p-0 align-baseline">
                             {{ __('Click here to re-send the verification email.') }}
-                        </x-button>
+                        </x-button.action>
                     </p>
 
                     @if (session('status') === 'verification-link-sent')

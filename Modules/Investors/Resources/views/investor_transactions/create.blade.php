@@ -76,10 +76,10 @@
             </div>
 
             <div class="mt-3">
-                <x-button type="submit" variant="success" :outline="true" {{ $statuses->count() ? '' : 'disabled' }}>
+                <x-button.action type="submit" variant="success" :outline="true" {{ $statuses->count() ? '' : 'disabled' }}>
                     <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
-                </x-button>
-                <x-button href="{{ route('investor-transactions.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
+                </x-button.action>
+                <x-button.action href="{{ route('investor-transactions.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button.action>
             </div>
         </form>
     </div>

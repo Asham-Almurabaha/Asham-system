@@ -113,6 +113,6 @@
 @endsection
 
 @section('actions')
-  <x-button href="{{ route('contracts.index') }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button>
+  <x-button.action href="{{ route('contracts.index') }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button.action>
   <x-refresh-button :href="url()->current()" />
 @endsection

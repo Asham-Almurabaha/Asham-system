@@ -317,15 +317,15 @@
                 </div>
             </div>
             <div class="mini-actions d-flex flex-wrap gap-2">
-                {{-- <x-button href="{{ route('investors.edit', $investor) }}" variant="primary">
+                {{-- <x-button.action href="{{ route('investors.edit', $investor) }}" variant="primary">
                     <i class="bi bi-pencil-square me-1"></i> تعديل
-                </x-button> --}}
+                </x-button.action> --}}
                 
                  {{-- ✅ Dropdown للتقارير --}}
                 <div class="btn-group" data-bs-auto-close="outside">
-                    <x-button type="button" variant="dark" :outline="true" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <x-button.action type="button" variant="dark" :outline="true" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         📊 التقارير
-                    </x-button>
+                    </x-button.action>
                     <ul class="dropdown-menu dropdown-menu-end text-end investor-reports-dropdown" id="investorReportsDropdown">
                         <li>
                             <a class="dropdown-item" href="{{ route('investors.statement.statement', $investor) }}">
@@ -334,7 +334,7 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li class="dropdown-submenu">
-                            <x-button
+                            <x-button.action
                                 type="button"
                                 :unstyled="true"
                                 class="dropdown-item report-submenu-toggle"
@@ -345,7 +345,7 @@
                             >
                                 <span>💰 تقارير الإيداعات</span>
                                 <i class="bi bi-chevron-down report-submenu-chevron"></i>
-                            </x-button>
+                            </x-button.action>
                             <div class="collapse dropdown-submenu-menu" id="investorReportsDeposits">
                                 <a class="dropdown-item ps-4" href="{{ route('investors.deposits.deposits', $investor) }}">
                                     💰 جرد الإيداعات
@@ -359,7 +359,7 @@
                             </div>
                         </li>
                         <li class="dropdown-submenu">
-                            <x-button
+                            <x-button.action
                                 type="button"
                                 :unstyled="true"
                                 class="dropdown-item report-submenu-toggle"
@@ -370,7 +370,7 @@
                             >
                                 <span>💸 تقارير المسحوبات</span>
                                 <i class="bi bi-chevron-down report-submenu-chevron"></i>
-                            </x-button>
+                            </x-button.action>
                             <div class="collapse dropdown-submenu-menu" id="investorReportsWithdrawals">
                                 <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
                                     💸 جرد المسحوبات
@@ -392,9 +392,9 @@
                     </ul>
                 </div>
 
-                <x-button href="{{ route('investors.index') }}" variant="secondary" :outline="true">
+                <x-button.action href="{{ route('investors.index') }}" variant="secondary" :outline="true">
                     <i class="bi bi-arrow-right-circle me-1"></i> العودة للقائمة
-                </x-button>
+                </x-button.action>
 
             </div>
         </div>
@@ -478,7 +478,7 @@
                 @endforeach
                 <input type="number" name="m" min="1" max="12" class="form-control form-control-sm" style="width:86px" value="{{ request('m', $mVal) }}" placeholder="شهر">
                 <input type="number" name="y" min="2000" max="2100" class="form-control form-control-sm" style="width:92px" value="{{ request('y', $yVal) }}" placeholder="سنة">
-                <x-button type="submit" variant="primary" :outline="true" size="sm">تحديث</x-button>
+                <x-button.action type="submit" variant="primary" :outline="true" size="sm">تحديث</x-button.action>
             </form>
         </div>
         <div class="card-body">
@@ -763,7 +763,7 @@
                         <div class="col-7 value-col">
                             @if($investor->national_id)
                                 <span dir="ltr">{{ $investor->national_id }}</span>
-                                <x-button type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">national_id }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button>
+                                <x-button.action type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">national_id }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button.action>
                             @else <span class="text-muted">—</span> @endif
                         </div>
                     </div>
@@ -787,7 +787,7 @@
                         <div class="col-7 value-col">
                             @if($investor->phone)
                                 <a href="tel:{{ $investor->phone }}" class="text-decoration-none text-dark"><i class="bi bi-telephone me-1"></i>{{ $investor->phone }}</a>
-                                <x-button type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">phone }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button>
+                                <x-button.action type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">phone }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button.action>
                             @else <span class="text-muted">—</span> @endif
                         </div>
                     </div>

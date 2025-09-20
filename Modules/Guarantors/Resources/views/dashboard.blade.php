@@ -115,14 +115,14 @@
         <span class="badge bg-light text-dark">{{ __('guarantors::messages.Total Guarantors') }}: {{ number_format($totals['total'] ?? 0) }}</span>
     </div>
     <div class="btn-group" role="group">
-        <x-button href="{{ route('guarantors.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
+        <x-button.action href="{{ route('guarantors.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
             <i class="bi bi-table"></i>
             <span>{{ __('sidebar.Manage Guarantors') }}</span>
-        </x-button>
-        <x-button type="button" variant="dark" :outline="true" class="dropdown-toggle d-inline-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+        </x-button.action>
+        <x-button.action type="button" variant="dark" :outline="true" class="dropdown-toggle d-inline-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <span class="fs-5">📊</span>
             <span>{{ __('guarantors::messages.Reports') }}</span>
-        </x-button>
+        </x-button.action>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('guarantors.index', ['report' => 'overdue']) }}">

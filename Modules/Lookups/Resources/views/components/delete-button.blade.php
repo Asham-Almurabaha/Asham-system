@@ -8,7 +8,7 @@
 <form action="{{ $action }}" method="POST" class="{{ $formClass }}" onsubmit='return confirm(@json($confirm));'>
     @csrf
     @method('DELETE')
-    <x-button type="submit" variant="danger" :outline="true" size="sm" class="{{ $buttonClass }}">
+    <x-button.action type="submit" variant="danger" :outline="true" size="sm" class="{{ $buttonClass }}">
         <i class="bi bi-trash me-1"></i> {{ $label }}
-    </x-button>
+    </x-button.action>
 </form>

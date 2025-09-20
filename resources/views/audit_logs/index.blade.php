@@ -68,7 +68,7 @@
                     <input type="text" name="q" class="form-control form-control-sm" value="{{ request('q') }}" placeholder="{{ __('Search') }}">
                 </div>
                 <div class="col-12 col-md-4 d-flex gap-2">
-                    <x-button type="submit" variant="primary" size="sm" :block="true">{{ __('Search') }}</x-button>
+                    <x-button.action type="submit" variant="primary" size="sm" :block="true">{{ __('Search') }}</x-button.action>
                     <x-button.secondary href="{{ route('audit.logs') }}" size="sm" :block="true">{{ __('Clear') }}</x-button.secondary>
                 </div>
             </form>

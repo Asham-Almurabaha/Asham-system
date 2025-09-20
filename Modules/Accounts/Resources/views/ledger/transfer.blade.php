@@ -54,7 +54,7 @@
 
             {{-- زر تبديل --}}
             <div class="col-md-2 d-flex align-items-center justify-content-center">
-                <x-button type="button" variant="secondary" :outline="true" id="btnSwap" title="تبديل المصدر والوجهة">⇄</x-button>
+                <x-button.action type="button" variant="secondary" :outline="true" id="btnSwap" title="تبديل المصدر والوجهة">⇄</x-button.action>
             </div>
 
             {{-- إلى (وجهة) --}}
@@ -105,15 +105,15 @@
             </div>
 
             <div class="col-12 d-flex gap-2 mt-2">
-                <x-button type="submit" variant="primary" id="btnTransfer">
+                <x-button.action type="submit" variant="primary" id="btnTransfer">
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                     تنفيذ التحويل
-                </x-button>
-                <x-button href="{{ route('ledger.index') }}" variant="secondary">@lang('app.Cancel')</x-button>
+                </x-button.action>
+                <x-button.action href="{{ route('ledger.index') }}" variant="secondary">@lang('app.Cancel')</x-button.action>
 
                 <div class="ms-auto d-flex gap-2">
-                    <x-button href="{{ route('ledger.create') }}" variant="success" :outline="true">إضافة قيد</x-button>
-                    <x-button href="{{ route('ledger.split.create') }}" variant="secondary" :outline="true">قيد مُجزّأ</x-button>
+                    <x-button.action href="{{ route('ledger.create') }}" variant="success" :outline="true">إضافة قيد</x-button.action>
+                    <x-button.action href="{{ route('ledger.split.create') }}" variant="secondary" :outline="true">قيد مُجزّأ</x-button.action>
                 </div>
             </div>
         </form>

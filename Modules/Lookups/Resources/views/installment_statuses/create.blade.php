@@ -25,10 +25,10 @@
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
                 </div>
 
-                <x-button type="submit" variant="success" :outline="true">
+                <x-button.action type="submit" variant="success" :outline="true">
                     <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
-                </x-button>
-                <x-button href="{{ route('installment_statuses.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
+                </x-button.action>
+                <x-button.action href="{{ route('installment_statuses.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button.action>
             </form>
         </div>
     </div>

@@ -50,8 +50,8 @@
         </select>
       </div>
       <div class="col-6 col-md-4 d-flex gap-2">
-        <x-button type="submit" variant="primary" class="flex-fill"><i class="bi bi-search"></i> {{ __('Search') }}</x-button>
-        <x-button href="{{ url()->current() }}" variant="secondary" :outline="true" class="flex-fill">{{ __('Clear') }}</x-button>
+        <x-button.action type="submit" variant="primary" class="flex-fill"><i class="bi bi-search"></i> {{ __('Search') }}</x-button.action>
+        <x-button.action href="{{ url()->current() }}" variant="secondary" :outline="true" class="flex-fill">{{ __('Clear') }}</x-button.action>
       </div>
     </form>
   </div>
@@ -129,7 +129,7 @@
                   </td>
                   <td class="no-print">
                     @if(Route::has('investors.show'))
-                      <x-button href="{{ route('investors.show', $r->id) }}" variant="primary" :outline="true" size="sm">@lang('pages.Details')</x-button>
+                      <x-button.action href="{{ route('investors.show', $r->id) }}" variant="primary" :outline="true" size="sm">@lang('pages.Details')</x-button.action>
                     @endif
                   </td>
                 </tr>
@@ -151,7 +151,7 @@
 @endsection
 
 @section('actions')
-  <x-button href="{{ route('investors.index') }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button>
+  <x-button.action href="{{ route('investors.index') }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button.action>
   <x-refresh-button :href="url()->current()" />
 @endsection
 

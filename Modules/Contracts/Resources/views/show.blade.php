@@ -15,8 +15,8 @@
 
 <!-- أزرار الإجراءات -->
 <div class="d-flex flex-wrap gap-2 mb-3">
-    <x-button href="{{ route('contracts.index') }}" variant="secondary" :outline="true">
-                    <i class="bi bi-arrow-right-circle me-1"></i> {{ __('Back to List') }}</x-button>
+    <x-button.action href="{{ route('contracts.index') }}" variant="secondary" :outline="true">
+                    <i class="bi bi-arrow-right-circle me-1"></i> {{ __('Back to List') }}</x-button.action>
 
     @php
         $paidTotal = $contract->installments->sum('payment_amount');
@@ -24,27 +24,27 @@
 
     <!-- طباعة العقد -->
     @if($paidTotal == 0)
-        <x-button href="{{ route('contracts.print', $contract->id) }}" variant="primary">
-            <i class="bi bi-printer me-1"></i> {{ __('Print Contract') }}</x-button>
+        <x-button.action href="{{ route('contracts.print', $contract->id) }}" variant="primary">
+            <i class="bi bi-printer me-1"></i> {{ __('Print Contract') }}</x-button.action>
     @endif
 
     <!-- طباعة السدادات -->
     @if($paidTotal <= $contract->total_value - $contract->discount_amount)
-        <x-button href="{{ route('contracts.paid', $contract->id) }}" variant="success" :outline="true">
-            <i class="bi bi-receipt me-1"></i> {{ __('Paid Report') }}</x-button>
+        <x-button.action href="{{ route('contracts.paid', $contract->id) }}" variant="success" :outline="true">
+            <i class="bi bi-receipt me-1"></i> {{ __('Paid Report') }}</x-button.action>
     @endif
 
     <!-- طباعة المخالصة -->
     @if($paidTotal >= $contract->total_value - $contract->discount_amount )
-        <x-button href="{{ route('contracts.closure', $contract->id) }}" variant="primary" :outline="true">
-            <i class="bi bi-file-earmark-check me-1"></i> {{ __('Closure Report') }}</x-button>
+        <x-button.action href="{{ route('contracts.closure', $contract->id) }}" variant="primary" :outline="true">
+            <i class="bi bi-file-earmark-check me-1"></i> {{ __('Closure Report') }}</x-button.action>
     @endif
     {{--
     <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="ms-auto"
           onsubmit="return confirm('هل أنت متأكد من حذف هذا العقد؟');">
         @csrf
         @method('DELETE')
-        <x-button type="submit" variant="danger">حذف</x-button>
+        <x-button.action type="submit" variant="danger">حذف</x-button.action>
     </form>
     --}}
 </div>

@@ -101,16 +101,16 @@
   <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
 
     <div class="btn-group" role="group" aria-label="Actions">
-      <x-button href="{{ route('guarantors.create') }}" variant="success">
+      <x-button.action href="{{ route('guarantors.create') }}" variant="success">
         <i class="bi bi-plus-lg"></i> {{ __('guarantors::messages.Add Guarantor') }}
-      </x-button>
-      <x-button href="{{ route('guarantors.dashboard') }}" variant="dark" :outline="true">
+      </x-button.action>
+      <x-button.action href="{{ route('guarantors.dashboard') }}" variant="dark" :outline="true">
         <i class="bi bi-speedometer2"></i> {{ __('guarantors::messages.View Dashboard') }}
-      </x-button>
+      </x-button.action>
       @role('admin')
-        <x-button href="{{ route('guarantors.import.form') }}" variant="primary" :outline="true">
+        <x-button.action href="{{ route('guarantors.import.form') }}" variant="primary" :outline="true">
             <i class="bi bi-upload"></i> {{ __('guarantors::messages.Import Excel') }}
-        </x-button>
+        </x-button.action>
     @endrole
 
       {{-- 🔥 شيلنا زر "تمبليت" زى العملاء --}}
@@ -130,9 +130,9 @@
       {{ __('guarantors::messages.Results') }}: <strong>{{ $guarantors->total() }}</strong>
     </span>
 
-    <x-button type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
+    <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
       {{ __('guarantors::messages.Filter') }}
-    </x-button>
+    </x-button.action>
   </div>
 
   <div class="collapse @if(request()->hasAny(['guarantor_q','national_id','phone'])) show @endif border-top" id="filterBar">
@@ -163,7 +163,7 @@
         </div>
 
         <div class="col-12 col-md-2">
-          <x-button href="{{ route('guarantors.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('guarantors::messages.Clear') }}</x-button>
+          <x-button.action href="{{ route('guarantors.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('guarantors::messages.Clear') }}</x-button.action>
         </div>
       </form>
     </div>
@@ -209,9 +209,9 @@
                             <a href="{{ route('guarantors.index') }}" class="ms-1">{{ __('guarantors::messages.Show All') }}</a>
                         </div>
                         <div class="mt-3">
-                            <x-button href="{{ route('guarantors.create') }}" variant="success" size="sm">
+                            <x-button.action href="{{ route('guarantors.create') }}" variant="success" size="sm">
                                 + {{ __('guarantors::messages.Add First Guarantor') }}
-                            </x-button>
+                            </x-button.action>
                         </div>
                     </td>
                 </tr>

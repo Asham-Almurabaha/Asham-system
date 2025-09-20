@@ -65,12 +65,12 @@
         <div class="p-3">
             {{-- إظهار الأزرار الرئيسية فقط إذا لم تكن حالة العقد "سداد مبكر" --}}
             @if($remainingContract > 0 && !$isEarlySettlement && (float)$discountAmount <= 0)
-                <x-button type="submit" variant="success" data-bs-toggle="modal" data-bs-target="#payContractModal">
+                <x-button.action type="submit" variant="success" data-bs-toggle="modal" data-bs-target="#payContractModal">
                     💰 سداد
-                </x-button>
-                <x-button type="submit" variant="warning" :outline="true" data-bs-toggle="modal" data-bs-target="#earlySettleModal">
+                </x-button.action>
+                <x-button.action type="submit" variant="warning" :outline="true" data-bs-toggle="modal" data-bs-target="#earlySettleModal">
                     ⚡ سداد مبكر
-                </x-button>
+                </x-button.action>
             @endif
         </div>
     </div>
@@ -139,9 +139,9 @@
                         @unless($isEarlySettlement)
                             {{-- زر التأجيل --}}
                             @if($isThisMonth && $inst->payment_amount < $inst->due_amount && $statusName !== 'مؤجل' && $statusName !== 'معتذر')
-                                <x-button type="button" variant="warning" :outline="true" size="sm" class="defer-btn" data-id="{{ $inst-">id }}">
+                                <x-button.action type="button" variant="warning" :outline="true" size="sm" class="defer-btn" data-id="{{ $inst-">id }}">
                                     ⏳ تأجيل
-                                </x-button>
+                                </x-button.action>
                             @endif
             
                             {{-- زر المعتذر --}}
@@ -153,9 +153,9 @@
                                 $statusName !== 'معتذر' &&
                                 $daysDiff >= -15
                             )
-                                <x-button type="button" variant="secondary" :outline="true" size="sm" class="excuse-btn" data-id="{{ $inst-">id }}">
+                                <x-button.action type="button" variant="secondary" :outline="true" size="sm" class="excuse-btn" data-id="{{ $inst-">id }}">
                                     🙏 معتذر
-                                </x-button>
+                                </x-button.action>
                             @endif
                         @endunless
                     </td>
@@ -176,7 +176,7 @@
                 <input type="hidden" name="contract_id" value="{{ $contract->id }}">
                 <div class="modal-header">
                     <h5 class="modal-title">💰 سداد العقد</h5>
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button.action>
                 </div>
                 <div class="modal-body">
                     @if(($banks->count() === 0) && ($safes->count() === 0))
@@ -226,10 +226,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <x-button type="submit" variant="success">
+                    <x-button.action type="submit" variant="success">
                         <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
-                    </x-button>
-                    <x-button type="button" variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button>
+                    </x-button.action>
+                    <x-button.action type="button" variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button.action>
                 </div>
             </form>
         </div>
@@ -244,7 +244,7 @@
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">⚡ سداد مبكر</h5>
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button.action>
                 </div>
 
                 <div class="modal-body">
@@ -280,10 +280,10 @@
                 </div>
 
                 <div class="modal-footer">
-                    <x-button type="submit" variant="warning">
+                    <x-button.action type="submit" variant="warning">
                         <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
-                    </x-button>
-                    <x-button type="button" variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button>
+                    </x-button.action>
+                    <x-button.action type="button" variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button.action>
                 </div>
             </form>
         </div>

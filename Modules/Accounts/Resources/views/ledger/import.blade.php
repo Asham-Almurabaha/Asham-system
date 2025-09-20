@@ -21,9 +21,9 @@
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <x-button href="{{ route('ledger.import.template') }}" variant="secondary" :outline="true" size="sm">
+        <x-button.action href="{{ route('ledger.import.template') }}" variant="secondary" :outline="true" size="sm">
           <i class="bi bi-filetype-xlsx me-1"></i> @lang('accounts::ledger_import.Download template')
-        </x-button>
+        </x-button.action>
       </div>
     </div>
   </div>
@@ -133,9 +133,9 @@
           :too-large-message="__('accounts::ledger_import.File size exceeds 10MB.')"
       >
         @if ($hasFailures && Route::has('ledger.import.failures.fix'))
-          <x-button href="{{ route('ledger.import.failures.fix') }}" variant="warning">
+          <x-button.action href="{{ route('ledger.import.failures.fix') }}" variant="warning">
             <i class="bi bi-wrench-adjustable me-1"></i> @lang('accounts::ledger_import.Download file to fix rows')
-          </x-button>
+          </x-button.action>
         @endif
       </x-import.form>
     </div>
@@ -147,9 +147,9 @@
         <i class="bi bi-list-check me-2"></i>
         <span>@lang('accounts::ledger_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
-        <x-button type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
+        <x-button.action type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
           @lang('accounts::ledger_import.Show/Hide')
-        </x-button>
+        </x-button.action>
       </div>
 
       <div id="failuresTable" class="collapse show">

@@ -21,9 +21,9 @@
     <span class="d-none d-lg-block ms-2 fw-semibold">{{ $locale === 'ar' ? ($setting->name_ar ?? $name) : ($setting->name_en ?? $name) }}</span>
   </a>
 
-  <x-button type="button" variant="link" class="p-0 border-0 bg-transparent text-dark" aria-label="{{ __('Toggle sidebar') }}">
+  <x-button.action type="button" variant="link" class="p-0 border-0 bg-transparent text-dark" aria-label="{{ __('Toggle sidebar') }}">
     <i class="bi bi-list toggle-sidebar-btn fs-4"></i>
-  </x-button>
+  </x-button.action>
 </div>
 
 <nav class="header-nav ms-auto ps-3">

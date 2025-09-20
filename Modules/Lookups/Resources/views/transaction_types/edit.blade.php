@@ -31,10 +31,10 @@
                     <textarea name="description" id="description" class="form-control">{{ old('description', $transactionType->description) }}</textarea>
                 </div>
 
-                <x-button type="submit" variant="primary" :outline="true">
+                <x-button.action type="submit" variant="primary" :outline="true">
                     <i class="bi bi-save2 me-1"></i> @lang('lookups::transaction_types.Update')
-                </x-button>
-                <x-button href="{{ route('transaction_types.index') }}" variant="secondary" :outline="true">@lang('lookups::transaction_types.Cancel')</x-button>
+                </x-button.action>
+                <x-button.action href="{{ route('transaction_types.index') }}" variant="secondary" :outline="true">@lang('lookups::transaction_types.Cancel')</x-button.action>
             </form>
         </div>
     </div>

@@ -25,10 +25,10 @@
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $claimant->name) }}" required autofocus>
                     </div>
 
-                    <x-button type="submit" variant="primary" :outline="true">
+                    <x-button.action type="submit" variant="primary" :outline="true">
                         <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
-                    </x-button>
-                    <x-button href="{{ route('claimants.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button>
+                    </x-button.action>
+                    <x-button.action href="{{ route('claimants.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button.action>
                 </form>
             </div>
         </div>

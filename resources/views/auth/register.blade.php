@@ -88,14 +88,14 @@
                 autocomplete="new-password"
                 minlength="8"
                 aria-describedby="togglePassword pwdHelp">
-        <x-button type="button"
+        <x-button.action type="button"
                   variant="secondary"
                   :outline="true"
                   id="togglePassword"
                   tabindex="-1"
                   aria-label="{{ __('Show/Hide password') }}">
           <i class="bi bi-eye"></i>
-        </x-button>
+        </x-button.action>
         @error('password')
           <div class="invalid-feedback d-block" id="pwdHelp" aria-live="polite"><strong>{{ $message }}</strong></div>
         @else
@@ -115,21 +115,21 @@
                 required
                 autocomplete="new-password"
                 aria-describedby="togglePasswordConfirm confirmFeedback">
-        <x-button type="button"
+        <x-button.action type="button"
                   variant="secondary"
                   :outline="true"
                   id="togglePasswordConfirm"
                   tabindex="-1"
                   aria-label="{{ __('Show/Hide password') }}">
           <i class="bi bi-eye"></i>
-        </x-button>
+        </x-button.action>
         <div class="invalid-feedback" id="confirmFeedback">{{ __('Passwords do not match.') }}</div>
       </div>
     </div>
 
     {{-- Actions --}}
     <div class="col-12 d-flex flex-column gap-2">
-      <x-button type="submit" variant="primary" :outline="true" :block="true">{{ __('Register') }}</x-button>
+      <x-button.action type="submit" variant="primary" :outline="true" :block="true">{{ __('Register') }}</x-button.action>
       <p class="small mb-0 text-center">
         {{ __('Already have an account?') }}
         <a href="{{ route('login') }}">{{ __('Log in') }}</a>

@@ -207,7 +207,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
-                        <x-button type="button" variant="primary" :outline="true" size="sm" id="btnAddProduct">إضافة نوع</x-button>
+                        <x-button.action type="button" variant="primary" :outline="true" size="sm" id="btnAddProduct">إضافة نوع</x-button.action>
                     </div>
                     <div class="card-body" id="products_wrapper">
                         @if(!empty($oldProducts))
@@ -232,7 +232,7 @@
                                         </label>
                                         <div class="input-group">
                                             <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
-                                            <x-button type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button>
+                                            <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
                                         </div>
                                     </div>
                                 </div>
@@ -255,7 +255,7 @@
                                     </label>
                                     <div class="input-group">
                                         <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
-                                        <x-button type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button>
+                                        <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
                                     </div>
                                 </div>
                             </div>
@@ -274,19 +274,19 @@
             </div>
 
             <div class="col-12 d-flex gap-2 mt-2">
-                <x-button type="submit" variant="success" :outline="true" id="btnSubmit">
+                <x-button.action type="submit" variant="success" :outline="true" id="btnSubmit">
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                     <span class="d-inline-flex align-items-center gap-1">
                         <i class="bi bi-check2-circle"></i>
                         <span>حفظ</span>
                     </span>
-                </x-button>
-                <x-button href="{{ $cancelUrl }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
+                </x-button.action>
+                <x-button.action href="{{ $cancelUrl }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button.action>
 
                 @if($showLedgerLinks)
                     <div class="ms-auto d-flex gap-2">
-                        <x-button href="{{ route('ledger.create') }}" variant="success" :outline="true">إضافة قيد</x-button>
-                        <x-button href="{{ route('ledger.transfer.create') }}" variant="primary" :outline="true">تحويل داخلي</x-button>
+                        <x-button.action href="{{ route('ledger.create') }}" variant="success" :outline="true">إضافة قيد</x-button.action>
+                        <x-button.action href="{{ route('ledger.transfer.create') }}" variant="primary" :outline="true">تحويل داخلي</x-button.action>
                     </div>
                 @endif
             </div>
@@ -313,7 +313,7 @@
             </label>
             <div class="input-group">
                 <input type="number" min="1" class="form-control js-qty-input" placeholder="0">
-                <x-button type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button>
+                <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
             </div>
         </div>
     </div>

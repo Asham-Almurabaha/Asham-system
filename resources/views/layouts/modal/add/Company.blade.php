@@ -8,7 +8,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add Company</h5>
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></x-button.action>
                 </div>
                 <div class="modal-body">
                     <div id="add_error_list"></div>

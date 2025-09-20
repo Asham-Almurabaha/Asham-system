@@ -52,16 +52,16 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <x-button href="{{ route('settings.edit', $setting->id) }}" variant="warning">
+                    <x-button.action href="{{ route('settings.edit', $setting->id) }}" variant="warning">
                         @lang('pages.Update')
-                    </x-button>
+                    </x-button.action>
 
                     <form action="{{ route('settings.destroy', $setting->id) }}" method="POST" onsubmit="return confirm('@lang('app.Confirm Delete')');">
                         @csrf
                         @method('DELETE')
-                        <x-button type="submit" variant="danger">
+                        <x-button.action type="submit" variant="danger">
                             @lang('pages.Delete')
-                        </x-button>
+                        </x-button.action>
                     </form>
                 </div>
 
@@ -73,9 +73,9 @@
         لا توجد إعدادات بعد، يرجى إضافة إعداد جديد.
     </div>
 
-    <x-button href="{{ route('settings.create') }}" variant="success">
+    <x-button.action href="{{ route('settings.create') }}" variant="success">
         @lang('pages.Add')
-    </x-button>
+    </x-button.action>
 @endif
 
 @section('js')

@@ -57,12 +57,12 @@
     </div>
 
     <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
-        <x-button id="{{ $submitId }}" type="submit" variant="primary" :disabled="true">
+        <x-button.action id="{{ $submitId }}" type="submit" variant="primary" :disabled="true">
             @if (!empty($buttonIcon))
                 <i class="bi {{ $buttonIcon }} me-1"></i>
             @endif
             {{ $submitText }}
-        </x-button>
+        </x-button.action>
 
         {{ $slot }}
     </div>

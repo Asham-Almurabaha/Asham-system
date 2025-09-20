@@ -49,14 +49,14 @@
                 required
                 autocomplete="current-password"
                 aria-describedby="togglePassword pwdHelp">
-        <x-button type="button"
+        <x-button.action type="button"
                   variant="secondary"
                   :outline="true"
                   id="togglePassword"
                   tabindex="-1"
                   aria-label="{{ __('Show/Hide password') }}">
           <i class="bi bi-eye"></i>
-        </x-button>
+        </x-button.action>
         @error('password')
           <div class="invalid-feedback d-block" id="pwdHelp" aria-live="polite">
             <strong>{{ $message }}</strong>
@@ -81,7 +81,7 @@
 
     {{-- Actions --}}
     <div class="col-12 d-flex flex-column gap-2">
-      <x-button type="submit" variant="primary" :outline="true" :block="true">{{ __('Login') }}</x-button>
+      <x-button.action type="submit" variant="primary" :outline="true" :block="true">{{ __('Login') }}</x-button.action>
 
       <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
         @if (Route::has('password.request'))

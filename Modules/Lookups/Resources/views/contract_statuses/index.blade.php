@@ -16,9 +16,9 @@
             <h1 class="h4 mb-0">{{ __('Contract Statuses List') }}</h1>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
-            <x-button href="{{ route('contract_statuses.create') }}" variant="success">
+            <x-button.action href="{{ route('contract_statuses.create') }}" variant="success">
                 <i class="bi bi-plus-lg me-1"></i>{{ __('Add New Contract Status') }}
-            </x-button>
+            </x-button.action>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
                     <td class="fw-semibold text-start">{{ $status->name }}</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <x-button href="{{ route('contract_statuses.edit', $status->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button>
+                            <x-button.action href="{{ route('contract_statuses.edit', $status->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button.action>
                             @include('lookups::components.delete-button', [
                                 'action' => route('contract_statuses.destroy', $status->id),
                                 'confirm' => __('Are you sure to delete this contract status?'),

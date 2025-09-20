@@ -2,10 +2,10 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
         <strong class="mb-0">{{ __('Images') }}</strong>
-        <x-button type="button" variant="light" size="sm" data-bs-toggle="modal" data-bs-target="#contract-images-modal">
+        <x-button.action type="button" variant="light" size="sm" data-bs-toggle="modal" data-bs-target="#contract-images-modal">
             <i class="bi bi-plus-circle me-1"></i>
             {{ __('Add Images') }}
-        </x-button>
+        </x-button.action>
     </div>
     <div class="card-body p-0">
         <div class="row p-3 g-3 justify-content-center">
@@ -46,7 +46,7 @@
 
                 <div class="modal-header">
                     <h5 class="modal-title" id="contract-images-modal-label">{{ __('Update Contract Images') }}</h5>
-                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
                 </div>
 
                 <div class="modal-body">
@@ -73,10 +73,10 @@
                                     <img data-preview-for="contract_image" src="#" alt="{{ __('Image Preview') }}" class="img-fluid rounded d-none">
                                     <div class="text-muted small" data-placeholder-for="contract_image">{{ __('Preview will appear here after selecting a file.') }}</div>
                                 </div>
-                                <x-button type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_image">
+                                <x-button.action type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_image">
                                     <i class="bi bi-x-circle me-1"></i>
                                     {{ __('Remove Selected Image') }}
-                                </x-button>
+                                </x-button.action>
                             </div>
                         </div>
 
@@ -97,10 +97,10 @@
                                     <img data-preview-for="contract_customer_image" src="#" alt="{{ __('Image Preview') }}" class="img-fluid rounded d-none">
                                     <div class="text-muted small" data-placeholder-for="contract_customer_image">{{ __('Preview will appear here after selecting a file.') }}</div>
                                 </div>
-                                <x-button type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_customer_image">
+                                <x-button.action type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_customer_image">
                                     <i class="bi bi-x-circle me-1"></i>
                                     {{ __('Remove Selected Image') }}
-                                </x-button>
+                                </x-button.action>
                             </div>
                         </div>
 
@@ -121,20 +121,20 @@
                                     <img data-preview-for="contract_guarantor_image" src="#" alt="{{ __('Image Preview') }}" class="img-fluid rounded d-none">
                                     <div class="text-muted small" data-placeholder-for="contract_guarantor_image">{{ __('Preview will appear here after selecting a file.') }}</div>
                                 </div>
-                                <x-button type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_guarantor_image">
+                                <x-button.action type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_guarantor_image">
                                     <i class="bi bi-x-circle me-1"></i>
                                     {{ __('Remove Selected Image') }}
-                                </x-button>
+                                </x-button.action>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('Cancel') }}</x-button>
-                    <x-button type="submit" variant="primary" :outline="true">
+                    <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('Cancel') }}</x-button.action>
+                    <x-button.action type="submit" variant="primary" :outline="true">
                         <i class="bi bi-save2 me-1"></i> {{ __('Save') }}
-                    </x-button>
+                    </x-button.action>
                 </div>
             </form>
         </div>

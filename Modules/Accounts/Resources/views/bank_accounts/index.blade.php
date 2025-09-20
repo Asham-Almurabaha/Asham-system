@@ -17,9 +17,9 @@
             </div>
 
             <div class="ms-auto d-flex flex-wrap gap-2">
-                <x-button href="{{ route('accounts.bank-accounts.create') }}" variant="success">
+                <x-button.action href="{{ route('accounts.bank-accounts.create') }}" variant="success">
                     <i class="bi bi-plus-lg me-1"></i>@lang('accounts::accounts.bank_accounts.actions.create')
-                </x-button>
+                </x-button.action>
             </div>
         </div>
 
@@ -56,9 +56,9 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
-                                <x-button href="{{ route('accounts.bank-accounts.edit', $bankAccount) }}" variant="primary" :outline="true" size="sm">
+                                <x-button.action href="{{ route('accounts.bank-accounts.edit', $bankAccount) }}" variant="primary" :outline="true" size="sm">
                                     @lang('accounts::accounts.shared.edit')
-                                </x-button>
+                                </x-button.action>
                                 @include('lookups::components.delete-button', [
                                     'action' => route('accounts.bank-accounts.destroy', $bankAccount),
                                     'confirm' => __('accounts::accounts.bank_accounts.confirm_delete'),

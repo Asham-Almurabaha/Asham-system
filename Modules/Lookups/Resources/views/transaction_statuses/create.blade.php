@@ -37,10 +37,10 @@
                     </select>
                 </div>
 
-                <x-button type="submit" variant="success" :outline="true">
+                <x-button.action type="submit" variant="success" :outline="true">
                     <i class="bi bi-check2-circle me-1"></i> {{ __('Save') }}
-                </x-button>
-                <x-button href="{{ route('transaction_statuses.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button>
+                </x-button.action>
+                <x-button.action href="{{ route('transaction_statuses.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button.action>
             </form>
         </div>
     </div>

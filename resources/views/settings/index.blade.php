@@ -26,9 +26,9 @@
 
     <div class="d-flex gap-2">
       @if($setting)
-        <x-button href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true">
+        <x-button.action href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true">
           <i class="bi bi-eye me-1"></i>@lang('sidebar.View')
-        </x-button>
+        </x-button.action>
         <x-button.edit href="{{ route('settings.edit', $setting) }}">
           @lang('sidebar.Edit')
         </x-button.edit>
@@ -132,9 +132,9 @@
             </div>
 
             <div class="mt-3 d-flex gap-2">
-              <x-button href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true" size="sm">
+              <x-button.action href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true" size="sm">
                 <i class="bi bi-eye me-1"></i>@lang('sidebar.View Details')
-              </x-button>
+              </x-button.action>
               <x-button.edit href="{{ route('settings.edit', $setting) }}" size="sm">
                 @lang('sidebar.Edit')
               </x-button.edit>

@@ -22,10 +22,10 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ route('home') }}">{{ $companyName }}</a>
-            <x-button type="button" :unstyled="true" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            <x-button.action type="button" :unstyled="true" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="@lang('app.Toggle navigation')">
                 <span class="navbar-toggler-icon"></span>
-            </x-button>
+            </x-button.action>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="{{ route('customers.index') }}">@lang('app.Customers')</a></li>
@@ -51,7 +51,7 @@
                         <li class="nav-item">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <x-button type="submit" variant="link" class="nav-link p-0" style="display:inline;">@lang('app.Logout')</x-button>
+                                <x-button.action type="submit" variant="link" class="nav-link p-0" style="display:inline;">@lang('app.Logout')</x-button.action>
                             </form>
                         </li>
                     @else

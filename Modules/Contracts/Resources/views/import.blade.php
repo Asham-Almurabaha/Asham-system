@@ -29,9 +29,9 @@
       </div>
       <div class="ms-auto d-none d-md-block">
         @if (Route::has('contracts.import.template'))
-          <x-button href="{{ route('contracts.import.template') }}" variant="secondary" :outline="true" size="sm">
+          <x-button.action href="{{ route('contracts.import.template') }}" variant="secondary" :outline="true" size="sm">
             <i class="bi bi-filetype-xlsx me-1"></i> @lang('contracts::contracts_import.Download template')
-          </x-button>
+          </x-button.action>
         @endif
       </div>
     </div>
@@ -160,7 +160,7 @@
           too-large-message="حجم الملف يتجاوز 10MB."
       >
         @if ($hasIssues && Route::has('contracts.import.failures.fix'))
-          <x-button href="{{ route('contracts.import.failures.fix') }}" variant="warning">
+          <x-button.action href="{{ route('contracts.import.failures.fix') }}" variant="warning">
             <i class="bi bi-wrench-adjustable me-1"></i>
             تنزيل ملف لتصحيح الصفوف
             @if($hasFailures)
@@ -169,7 +169,7 @@
             @if($skipped > 0)
               <span class="badge text-bg-warning ms-1">{{ $skipped }}</span>
             @endif
-          </x-button>
+          </x-button.action>
         @endif
       </x-import.form>
     </div>
@@ -182,9 +182,9 @@
         <i class="bi bi-list-check me-2"></i>
         <span>@lang('contracts::contracts_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
-        <x-button type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
+        <x-button.action type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
           @lang('contracts::contracts_import.Show/Hide')
-        </x-button>
+        </x-button.action>
       </div>
 
       <div id="failuresTable" class="collapse show">

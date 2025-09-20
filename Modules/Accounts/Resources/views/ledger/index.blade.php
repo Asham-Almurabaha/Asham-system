@@ -16,22 +16,22 @@
 {{-- شريط أدوات سريع --}}
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <x-button href="{{ route('ledger.create') }}" variant="success" :outline="true">+ إضافة قيد</x-button>
-        <x-button href="{{ route('ledger.transfer.create') }}" variant="primary" :outline="true">تحويل داخلي (مكتب)</x-button>
-        <x-button href="{{ route('ledger.split.create') }}" variant="secondary" :outline="true">قيد مُجزّأ (بنك + خزنة)</x-button>
+        <x-button.action href="{{ route('ledger.create') }}" variant="success" :outline="true">+ إضافة قيد</x-button.action>
+        <x-button.action href="{{ route('ledger.transfer.create') }}" variant="primary" :outline="true">تحويل داخلي (مكتب)</x-button.action>
+        <x-button.action href="{{ route('ledger.split.create') }}" variant="secondary" :outline="true">قيد مُجزّأ (بنك + خزنة)</x-button.action>
         @role('admin')
-            <x-button href="{{ route('ledger.import.form') }}" variant="primary" :outline="true">
+            <x-button.action href="{{ route('ledger.import.form') }}" variant="primary" :outline="true">
                 <i class="bi bi-upload"></i> استيراد Excel
-            </x-button>
+            </x-button.action>
         @endrole
 
         <span class="ms-auto small text-muted">
             النتائج: <strong>{{ $entries->total() }}</strong>
         </span>
 
-        <x-button type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false">
+        <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false">
             تصفية متقدمة
-        </x-button>
+        </x-button.action>
     </div>
 
     <div class="collapse @if(($filters['party_category'] ?? '') || ($filters['investor_id'] ?? '') || ($filters['status_id'] ?? '') || ($filters['account_type'] ?? '') || ($filters['from'] ?? '') || ($filters['to'] ?? '')) show @endif border-top" id="filterBar">
@@ -98,7 +98,7 @@
                 </div>
 
                 <div class="col-12 col-md-2 d-flex gap-2">
-                    <x-button href="{{ route('ledger.index') }}" variant="secondary" :outline="true" size="sm" id="btnClear">مسح</x-button>
+                    <x-button.action href="{{ route('ledger.index') }}" variant="secondary" :outline="true" size="sm" id="btnClear">مسح</x-button.action>
                 </div>
             </form>
         </div>

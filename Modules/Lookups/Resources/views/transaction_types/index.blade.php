@@ -16,9 +16,9 @@
             <h1 class="h4 mb-0">@lang('lookups::transaction_types.List of Transaction Types')</h1>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
-            <x-button href="{{ route('transaction_types.create') }}" variant="success">
+            <x-button.action href="{{ route('transaction_types.create') }}" variant="success">
                 <i class="bi bi-plus-lg me-1"></i>@lang('lookups::transaction_types.Add New Transaction Type')
-            </x-button>
+            </x-button.action>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
                     <td class="fw-semibold text-start">{{ $type->name }}</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <x-button href="{{ route('transaction_types.edit', $type->id) }}" variant="primary" :outline="true" size="sm">@lang('lookups::transaction_types.Edit')</x-button>
+                            <x-button.action href="{{ route('transaction_types.edit', $type->id) }}" variant="primary" :outline="true" size="sm">@lang('lookups::transaction_types.Edit')</x-button.action>
                             @include('lookups::components.delete-button', [
                                 'action' => route('transaction_types.destroy', $type->id),
                                 'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
