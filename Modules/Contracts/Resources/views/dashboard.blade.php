@@ -44,57 +44,86 @@
     $selectedInvestorName = $selectedInvestor->name ?? __('All Investors');
 
     $statusIcon = function ($name) {
-        $normalize = fn($arr) => array_map(fn($s) => mb_strtolower(trim((string) $s), 'UTF-8'), $arr);
-        $n = mb_strtolower(trim((string) $name), 'UTF-8');
+        $normalize = fn($value) => mb_strtolower(trim((string) $value), 'UTF-8');
+        $normalizedName = $normalize($name);
 
-        $groups = [
-            'active'            => ['نشط','active','open','ساري','جاري','effective'],
-            'pending'           => ['معلق','pending','قيد الانتظار','قيد الإنتظار','on hold','paused','موقوف مؤقتاً','موقوف'],
-            'ended'             => ['منتهي','انتهى','مغلق','closed','ended','complete','completed','تم الانتهاء'],
-            'canceled'          => ['ملغي','مرفوض','canceled','cancelled','rejected','void','باطل'],
-            'late'              => ['متأخر','متاخر','late','overdue','delinquent'],
-            'review'            => ['قيد المراجعة','under review','review','verification','مراجعة'],
-            'draft'             => ['مسودة','draft'],
-            'early_settlement'  => ['سداد مبكر','early settlement','paid off','مقفلة بالسداد'],
-            'rescheduled'       => ['معاد جدولته','rescheduled','جدولة','إعادة جدولة'],
-            'suspended'         => ['موقوف','suspended','حظر'],
-            'renewed'           => ['مجدد','renewed','تم التجديد'],
-            'in_progress'       => ['قيد التنفيذ','in progress','processing','جار العمل','جاري التنفيذ'],
-            'archived'          => ['مؤرشف','archived'],
-            'deferred'          => ['مؤجل','deferred','تأجيل'],
-            'apologized'        => ['معتذر','apologized','اعتذار'],
-            'collection'        => ['تحصيل','collection','under collection'],
-            'dispute'           => ['نزاع','dispute','متنازع'],
-            'partial'           => ['مدفوع جزئياً','partial','partial paid','جزئي'],
-        ];
+        static $normalizedStatusMap = null;
+        static $aliasMap = null;
 
-        foreach ($groups as $key => $values) {
-            if (in_array($n, $normalize($values), true)) {
-                return match ($key) {
-                    'active'           => ['bi-check2-circle',        'text-success'],
-                    'pending'          => ['bi-hourglass-split',      'text-warning'],
-                    'ended'            => ['bi-flag-fill',            'text-secondary'],
-                    'canceled'         => ['bi-slash-circle',         'text-danger'],
-                    'late'             => ['bi-exclamation-triangle', 'text-danger'],
-                    'review'           => ['bi-eye',                  'text-info'],
-                    'draft'            => ['bi-file-earmark',         'text-muted'],
-                    'early_settlement' => ['bi-cash-coin',            'text-success'],
-                    'rescheduled'      => ['bi-arrow-repeat',         'text-primary'],
-                    'suspended'        => ['bi-pause-circle',         'text-warning'],
-                    'renewed'          => ['bi-arrow-clockwise',      'text-primary'],
-                    'in_progress'      => ['bi-gear-wide-connected',  'text-primary'],
-                    'archived'         => ['bi-archive',              'text-muted'],
-                    'deferred'         => ['bi-calendar-minus',       'text-warning'],
-                    'apologized'       => ['bi-emoji-neutral',        'text-muted'],
-                    'collection'       => ['bi-piggy-bank',           'text-info'],
-                    'dispute'          => ['bi-exclamation-octagon',  'text-danger'],
-                    'partial'          => ['bi-pie-chart',            'text-info'],
-                    default            => ['bi-circle',               'text-primary'],
-                };
+        if ($normalizedStatusMap === null) {
+            $statusMap = [
+                'بدون مستثمر'    => ['bi-person-dash',             'text-secondary'],
+                'معلق'           => ['bi-hourglass-split',         'text-warning'],
+                'جديد'           => ['bi-stars',                   'text-primary'],
+                'منتهي'          => ['bi-flag-fill',               'text-secondary'],
+                'سداد مبكر'      => ['bi-cash-stack',              'text-success'],
+                'مطلوب'          => ['bi-exclamation-diamond',     'text-danger'],
+                'منتظم'          => ['bi-check2-circle',           'text-success'],
+                'غير منتظم'      => ['bi-slash-circle',            'text-warning'],
+                'متأخر'          => ['bi-clock-history',           'text-warning'],
+                'متعثر'          => ['bi-exclamation-triangle',    'text-danger'],
+                'مرفوع فيه'      => ['bi-exclamation-octagon',     'text-danger'],
+                'منتهي بمطالبة'  => ['bi-file-earmark-exclamation', 'text-danger'],
+            ];
+
+            $normalizedStatusMap = [];
+            foreach ($statusMap as $label => $iconData) {
+                $normalizedStatusMap[$normalize($label)] = $iconData;
+            }
+
+            $aliases = [
+                'without investor'   => 'بدون مستثمر',
+                'no investor'        => 'بدون مستثمر',
+                'pending'            => 'معلق',
+                'on hold'            => 'معلق',
+                'waiting'            => 'معلق',
+                'new'                => 'جديد',
+                'fresh'              => 'جديد',
+                'ended'              => 'منتهي',
+                'closed'             => 'منتهي',
+                'complete'           => 'منتهي',
+                'completed'          => 'منتهي',
+                'early settlement'   => 'سداد مبكر',
+                'paid off'           => 'سداد مبكر',
+                'required'           => 'مطلوب',
+                'demand'             => 'مطلوب',
+                'active'             => 'منتظم',
+                'regular'            => 'منتظم',
+                'irregular'          => 'غير منتظم',
+                'non-regular'        => 'غير منتظم',
+                'late'               => 'متأخر',
+                'overdue'            => 'متأخر',
+                'delayed'            => 'متأخر',
+                'delinquent'         => 'متعثر',
+                'defaulted'          => 'متعثر',
+                'raised'             => 'مرفوع فيه',
+                'ended with claim'   => 'منتهي بمطالبة',
+                'under claim'        => 'منتهي بمطالبة',
+                'claim closed'       => 'منتهي بمطالبة',
+            ];
+
+            $aliasMap = [];
+            foreach ($aliases as $alias => $canonical) {
+                $canonicalKey = $normalize($canonical);
+                if (isset($normalizedStatusMap[$canonicalKey])) {
+                    $aliasMap[$normalize($alias)] = $canonicalKey;
+                }
             }
         }
 
-        return ['bi-circle', 'text-primary'];
+        if (isset($normalizedStatusMap[$normalizedName])) {
+            return $normalizedStatusMap[$normalizedName];
+        }
+
+        if (isset($aliasMap[$normalizedName])) {
+            return $normalizedStatusMap[$aliasMap[$normalizedName]];
+        }
+
+        if ($normalizedName !== '') {
+            logger()->warning('Unknown contract status icon mapping', ['status' => $name]);
+        }
+
+        return ['bi-question-circle', 'text-muted'];
     };
 
     $topKpiCards = [
