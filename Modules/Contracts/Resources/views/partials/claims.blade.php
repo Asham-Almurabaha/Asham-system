@@ -177,8 +177,8 @@
                                             @endforeach
                                         </x-table>
                                     @else
-                                                <div class="text-muted small">{{ __('contracts::claims.no_payments') }}</div>
-                                            @endif
+                                        <div class="text-muted small">{{ __('contracts::claims.no_payments') }}</div>
+                                    @endif
                                         </div>
                                     </div>
                                 </td>
