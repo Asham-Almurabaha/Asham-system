@@ -39,19 +39,35 @@
       });
 
       // إخفاء رسائل الفلاش تلقائياً
-      const flashMessages = document.querySelectorAll('[id^="flash-"]');
+      const flashMessages = document.querySelectorAll('.flash-message-stack .alert');
       flashMessages.forEach(flashMessage => {
-        if (flashMessage) {
-          setTimeout(() => {
-            flashMessage.style.transition = 'opacity .5s ease';
-            flashMessage.style.opacity = '0';
-            setTimeout(() => {
-              if (flashMessage.parentNode) {
-                flashMessage.parentNode.removeChild(flashMessage);
-              }
-            }, 500);
-          }, 5000);
+        const delayAttribute = flashMessage.getAttribute('data-dismiss-delay');
+        let delay = 3000;
+
+        if (delayAttribute !== null) {
+          const parsedDelay = Number.parseInt(delayAttribute, 10);
+
+          if (Number.isFinite(parsedDelay) && parsedDelay >= 0) {
+            delay = parsedDelay;
+          }
         }
+
+        window.setTimeout(() => {
+          if (!flashMessage.isConnected) {
+            return;
+          }
+
+          const removeAlert = () => {
+            flashMessage.remove();
+          };
+
+          if (flashMessage.classList.contains('fade')) {
+            flashMessage.addEventListener('transitionend', removeAlert, { once: true });
+            flashMessage.classList.remove('show');
+          } else {
+            removeAlert();
+          }
+        }, delay);
       });
     });
   })();
