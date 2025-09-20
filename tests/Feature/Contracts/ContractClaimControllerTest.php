@@ -218,6 +218,7 @@ class ContractClaimControllerTest extends TestCase
         $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
         $claimReviewStatus = ClaimStatus::where('name', 'قيد المراجعة')->firstOrFail();
         $paidWithDiscountStatus = ClaimStatus::where('name', 'مدفوع بخصم')->firstOrFail();
+        $finishedWithClaimStatus = ContractStatus::where('name', 'منتهي بمطالبة')->firstOrFail();
         $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
         $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
         $productType = ProductType::query()->firstOrFail();
@@ -482,6 +483,7 @@ class ContractClaimControllerTest extends TestCase
         $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
         $claimReviewStatus = ClaimStatus::where('name', 'قيد المراجعة')->firstOrFail();
         $paidInFullStatus = ClaimStatus::where('name', 'مدفوع كامل')->firstOrFail();
+        $finishedWithClaimStatus = ContractStatus::where('name', 'منتهي بمطالبة')->firstOrFail();
         $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
         $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
         $productType = ProductType::query()->firstOrFail();
@@ -556,6 +558,12 @@ class ContractClaimControllerTest extends TestCase
         );
 
         $this->assertEqualsWithDelta(0.0, $updatedClaim->remaining_amount, 0.01);
+
+        $this->assertSame(
+            $finishedWithClaimStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Full settlement should move the contract to the finished-with-claim status.'
+        );
     }
 
     public function test_discounted_claim_payment_keeps_discount_status_after_payment(): void
@@ -639,6 +647,12 @@ class ContractClaimControllerTest extends TestCase
             'Applying a discount should set the claim status to paid with discount.'
         );
 
+        $this->assertSame(
+            $finishedWithClaimStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Settling a claim with a discount should move the contract to the finished-with-claim status.'
+        );
+
         $paymentResponse = $this->post(route('contract-claims.payments.store', $claim), [
             'claim_payer_id' => $claimPayer->id,
             'amount' => 100,
@@ -651,6 +665,12 @@ class ContractClaimControllerTest extends TestCase
             $paidWithDiscountStatus->id,
             $claim->fresh()->claim_status_id,
             'Discounted claims should retain the paid-with-discount status after additional payments.'
+        );
+
+        $this->assertSame(
+            $finishedWithClaimStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Additional payments should keep the contract in the finished-with-claim status.'
         );
     }
 

@@ -34,6 +34,7 @@ class ContractClaimController extends Controller
     private ?int $partialPaidClaimStatusId = null;
     private ?int $paidInFullClaimStatusId = null;
     private ?int $raisedContractStatusId = null;
+    private ?int $finishedWithClaimContractStatusId = null;
 
     public function __construct(private ClaimPaymentDistributionService $claimPaymentDistribution)
     {
@@ -323,13 +324,19 @@ class ContractClaimController extends Controller
 
     private function updateRelatedStatuses(ContractClaim $claim): void
     {
-        $contract = $claim->contract()->with(['customer', 'guarantor'])->first();
+        $contract = $claim->contract()->with([
+            'customer',
+            'guarantor',
+            'claims.payments',
+        ])->first();
 
         if (! $contract) {
             return;
         }
 
-        if ($this->isClaimAccepted($claim)) {
+        if ($this->isClaimSettled($claim) && ! $this->contractHasOutstandingClaims($contract)) {
+            $this->updateContractStatusToFinishedWithClaim($contract);
+        } elseif ($this->isClaimAccepted($claim)) {
             $this->updateContractStatusToRaised($contract);
         } else {
             $hasPreviousClaims = ContractClaim::query()
@@ -399,6 +406,18 @@ class ContractClaimController extends Controller
         $contract->save();
     }
 
+    private function updateContractStatusToFinishedWithClaim(Contract $contract): void
+    {
+        $statusId = $this->finishedWithClaimContractStatusId();
+
+        if (! $statusId || $contract->contract_status_id === $statusId) {
+            return;
+        }
+
+        $contract->contract_status_id = $statusId;
+        $contract->save();
+    }
+
     private function isClaimAccepted(ContractClaim $claim): bool
     {
         $statusId = $this->acceptedClaimStatusId();
@@ -444,6 +463,16 @@ class ContractClaimController extends Controller
         }
 
         return $this->raisedContractStatusId ?: null;
+    }
+
+    private function finishedWithClaimContractStatusId(): ?int
+    {
+        if ($this->finishedWithClaimContractStatusId === null) {
+            $id = ContractStatus::where('name', 'منتهي بمطالبة')->value('id');
+            $this->finishedWithClaimContractStatusId = $id ? (int) $id : 0;
+        }
+
+        return $this->finishedWithClaimContractStatusId ?: null;
     }
 
     private function acceptedClaimStatusId(): ?int
@@ -502,6 +531,42 @@ class ContractClaimController extends Controller
         }
 
         return $this->defaultClaimStatusId ?: null;
+    }
+
+    private function contractHasOutstandingClaims(Contract $contract): bool
+    {
+        $contract->loadMissing(['claims.payments']);
+
+        foreach ($contract->claims as $contractClaim) {
+            if (round((float) $contractClaim->remaining_amount, 2) > 0.009) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function isClaimSettled(ContractClaim $claim): bool
+    {
+        $settledStatusIds = array_filter([
+            $this->paidWithDiscountClaimStatusId(),
+            $this->paidInFullClaimStatusId(),
+        ]);
+
+        if (empty($settledStatusIds) || ! in_array((int) $claim->claim_status_id, $settledStatusIds, true)) {
+            return false;
+        }
+
+        $remainingAmount = round((float) $claim->remaining_amount, 2);
+
+        if ($remainingAmount > 0.009) {
+            return false;
+        }
+
+        $paidAmount = round((float) $claim->paid_amount, 2);
+        $discountAmount = round((float) $claim->discount_amount, 2);
+
+        return $paidAmount > 0 || $discountAmount > 0;
     }
 
     private function resolveClaimStatusId(array $names): int
