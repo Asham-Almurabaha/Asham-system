@@ -1,0 +1,58 @@
+/* Source: C:\xampp\htdocs\Almurabaha-system\resources\views\dashboard\index.blade.php */
+       :root {
+            --card-radius: 1.2rem;
+            --soft-shadow: 0 6px 18px rgba(0,0,0,.06);
+            --soft-shadow-hover: 0 10px 24px rgba(0,0,0,.08);
+        }
+        .dashboard-hero {
+            border-radius: var(--card-radius);
+            background: linear-gradient(135deg, #e9f5ff 0%, #f7faff 100%);
+            padding: 1.25rem 1.5rem;
+            border: 1px solid #eef2f7;
+        }
+        .kpi-card {
+            border: 1px solid #eef2f7;
+            border-radius: var(--card-radius);
+            box-shadow: var(--soft-shadow);
+            transition: .2s ease;
+            height: 100%;
+        }
+        .kpi-card:hover { box-shadow: var(--soft-shadow-hover); transform: translateY(-2px); }
+        .kpi-icon {
+            width: 48px; height: 48px;
+            border-radius: .85rem;
+            display: grid; place-items: center;
+            background: #f4f6fb;
+        }
+        .kpi-value { font-size: 2rem; line-height: 1; }
+        .section-card {
+            border: 1px solid #eef2f7;
+            border-radius: var(--card-radius);
+            box-shadow: var(--soft-shadow);
+            overflow: hidden;
+        }
+        .section-card .card-header {
+            background: #fbfcfe; border-bottom: 1px solid #eef2f7;
+            font-weight: 700;
+        }
+        .status-row + .status-row { border-top: 1px dashed #eef2f7; }
+        .badge-chip {
+            background: #f1f4f9; color: #3c4a5d; border-radius: 999px; padding: .35rem .7rem; font-weight: 600;
+        }
+        .text-pos { color: #16a34a !important; }
+        .text-neg { color: #dc2626 !important; }
+        .help-item { margin-bottom: .35rem; }
+        .help-item i { width: 1.2rem; display: inline-block; }
+        .table thead th { position: sticky; top: 0; background: #f8f9fb; z-index: 1; }
+        .chart-card canvas { max-height: 280px; }
+
+        /* ===== ���� ������ ������ ��������� ===== */
+        .dr-toolbar{border:1px solid #eef2f7;border-radius:1.1rem;box-shadow:var(--soft-shadow);background:#fff}
+        .dr-toolbar .btn-range{border-radius:999px}
+        .dr-toolbar .btn-range.active{background:#0d6efd;color:#fff;border-color:#0d6efd}
+        .dr-toolbar .btn-range .dot{display:inline-block;width:.5rem;height:.5rem;border-radius:50%;margin-inline-start:.4rem;background:currentColor;opacity:.6}
+        .dr-toolbar .chip{background:#f1f4f9;border-radius:999px;padding:.35rem .7rem;font-weight:600;color:#475569}
+        .dr-toolbar .label{font-size:.9rem;color:#6b7280}
+        .dr-toolbar .sep{width:1px;background:#eef2f7;height:32px}
+    
+

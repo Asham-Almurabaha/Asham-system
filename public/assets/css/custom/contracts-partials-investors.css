@@ -1,0 +1,6 @@
+/* Source: C:\xampp\htdocs\Almurabaha-system\resources\views\contracts\partials\investors.blade.php */
+ .liq-box { background:#f8f9fa; border:1px solid #e9ecef; border-radius:.5rem; }
+  .liq-box .progress { background-color:#e9ecef; height:6px; }
+  .liq-box .progress-bar { transition: width .35s ease; }
+
+

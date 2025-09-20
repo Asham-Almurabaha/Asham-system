@@ -1,0 +1,27 @@
+/* Source: C:\xampp\htdocs\Almurabaha-system\resources\views\investors\show.blade.php */
+       :root{
+            --card-r:1rem; --soft:0 8px 22px rgba(16,24,40,.06); --soft-2:0 12px 28px rgba(16,24,40,.10);
+            --muted:#6b7280; --muted-2:#4b5563; --line:#eef2f7;
+        }
+        .profile-hero{ border:1px solid var(--line); border-radius:var(--card-r); background:linear-gradient(135deg,#f8fbff 0%,#fff 60%); padding:1.25rem 1rem; box-shadow:var(--soft); }
+        .avatar{ width:64px; height:64px; border-radius:50%; display:grid; place-items:center; background:#e8f0fe; color:#1e40af; font-weight:800; font-size:1.25rem; }
+        .mini-actions .btn{ border-radius:.65rem }
+        .kpi-card{ border:1px solid var(--line); border-radius:1rem; box-shadow:var(--soft); transition:.18s; height:100%; }
+        .kpi-card:hover{ box-shadow:var(--soft-2); transform:translateY(-2px); }
+        .kpi-icon{ width:48px; height:48px; border-radius:.85rem; display:grid; place-items:center; background:#f4f6fb; }
+        .chip{ background:#f1f4f9; color:#3c4a5d; border-radius:999px; padding:.35rem .6rem; font-weight:600; }
+        .label-col{ color:var(--muted); font-weight:600; }
+        .value-col{ font-weight:600; }
+        .text-pos{ color:#16a34a !important; }
+        .text-neg{ color:#dc2626 !important; }
+        .text-muted-2{ color:var(--muted) !important; }
+        .img-thumb{ max-width:170px; max-height:120px; object-fit:cover; border-radius:.6rem; border:1px solid var(--line); }
+        .bar-8{ height:8px; }
+        .section-title{ font-weight:700; color:#334155; font-size:1rem; }
+        .table thead th{ font-weight:700; }
+        .table > :not(caption) > * > * { vertical-align: middle; }
+        .table tbody tr:hover{ background: #fafcff; }
+        .stat-sub{ font-size:.85rem; color:var(--muted); }
+        .shadow-soft{ box-shadow:var(--soft); }
+    
+
