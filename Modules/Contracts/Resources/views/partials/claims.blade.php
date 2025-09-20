@@ -201,7 +201,7 @@
 
                 <div class="modal-header">
                     <h5 class="modal-title" id="addClaimModalLabel">{{ __('contracts::claims.add_claim') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
                 </div>
 
                 <div class="modal-body">
@@ -402,7 +402,7 @@
                     <input type="hidden" name="return_to_contract" value="1">
                     <div class="modal-header">
                         <h5 class="modal-title" id="{{ $labelId }}">{{ __('contracts::claims.change_status') }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                        <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3 text-start">
@@ -447,7 +447,7 @@
                 <input type="hidden" name="payment_claim_id" value="{{ $claim->id }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="{{ $paymentLabelId }}">{{ __('contracts::claims.record_payment') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3 text-start">
@@ -579,7 +579,7 @@
                 <input type="hidden" name="discount_claim_id" value="{{ $claim->id }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="{{ $discountLabelId }}">{{ __('contracts::claims.apply_discount') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3 text-start">

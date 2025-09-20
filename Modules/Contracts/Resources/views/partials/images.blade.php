@@ -46,7 +46,7 @@
 
                 <div class="modal-header">
                     <h5 class="modal-title" id="contract-images-modal-label">{{ __('Update Contract Images') }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button>
                 </div>
 
                 <div class="modal-body">

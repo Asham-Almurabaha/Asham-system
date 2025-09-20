@@ -176,7 +176,7 @@
                 <input type="hidden" name="contract_id" value="{{ $contract->id }}">
                 <div class="modal-header">
                     <h5 class="modal-title">💰 سداد العقد</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button>
                 </div>
                 <div class="modal-body">
                     @if(($banks->count() === 0) && ($safes->count() === 0))
@@ -244,7 +244,7 @@
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title">⚡ سداد مبكر</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button>
                 </div>
 
                 <div class="modal-body">

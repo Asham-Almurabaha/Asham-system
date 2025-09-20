@@ -45,7 +45,7 @@
 
         <div class="modal-header">
           <h5 class="modal-title">➕ إضافة مستثمر للعقد</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <x-button type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button>
         </div>
 
         <div class="modal-body">

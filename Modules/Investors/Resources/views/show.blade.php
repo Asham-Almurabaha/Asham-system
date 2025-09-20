@@ -334,9 +334,10 @@
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li class="dropdown-submenu">
-                            <button
-                                class="dropdown-item report-submenu-toggle"
+                            <x-button
                                 type="button"
+                                :unstyled="true"
+                                class="dropdown-item report-submenu-toggle"
                                 data-report-submenu-toggle="true"
                                 data-bs-target="#investorReportsDeposits"
                                 aria-expanded="false"
@@ -344,7 +345,7 @@
                             >
                                 <span>💰 تقارير الإيداعات</span>
                                 <i class="bi bi-chevron-down report-submenu-chevron"></i>
-                            </button>
+                            </x-button>
                             <div class="collapse dropdown-submenu-menu" id="investorReportsDeposits">
                                 <a class="dropdown-item ps-4" href="{{ route('investors.deposits.deposits', $investor) }}">
                                     💰 جرد الإيداعات
@@ -358,9 +359,10 @@
                             </div>
                         </li>
                         <li class="dropdown-submenu">
-                            <button
-                                class="dropdown-item report-submenu-toggle"
+                            <x-button
                                 type="button"
+                                :unstyled="true"
+                                class="dropdown-item report-submenu-toggle"
                                 data-report-submenu-toggle="true"
                                 data-bs-target="#investorReportsWithdrawals"
                                 aria-expanded="false"
@@ -368,7 +370,7 @@
                             >
                                 <span>💸 تقارير المسحوبات</span>
                                 <i class="bi bi-chevron-down report-submenu-chevron"></i>
-                            </button>
+                            </x-button>
                             <div class="collapse dropdown-submenu-menu" id="investorReportsWithdrawals">
                                 <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
                                     💸 جرد المسحوبات

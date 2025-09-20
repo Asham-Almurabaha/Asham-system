@@ -5,6 +5,7 @@
     'outline' => false,
     'block' => false,
     'tag' => null,
+    'unstyled' => false,
 ])
 
 @php
@@ -16,50 +17,58 @@
     $block = filter_var($block, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     $block = $block ?? false;
 
-    $variants = [
-        'primary' => 'primary',
-        'secondary' => 'secondary',
-        'success' => 'success',
-        'danger' => 'danger',
-        'warning' => 'warning',
-        'info' => 'info',
-        'light' => 'light',
-        'dark' => 'dark',
-        'link' => 'link',
-    ];
+    $unstyled = filter_var($unstyled, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+    $unstyled = $unstyled ?? false;
 
-    $selectedVariant = $variants[$variant] ?? $variants['primary'];
-
-    $sizeClasses = [
-        'sm' => 'btn-sm',
-        'lg' => 'btn-lg',
-    ];
-
-    $classes = ['btn', 'fw-semibold'];
-
-    $isLinkStyle = $selectedVariant === 'link';
-
-    if ($isLinkStyle) {
-        $classes[] = 'btn-link';
-        $classes[] = 'text-decoration-none';
+    if ($unstyled) {
+        $classString = trim($attributes->get('class', '')) ?: null;
+        $attributes = $attributes->except('class');
     } else {
-        $classes[] = 'd-inline-flex';
-        $classes[] = 'align-items-center';
-        $classes[] = 'justify-content-center';
-        $classes[] = 'gap-2';
-        $classes[] = $outline ? 'btn-outline-' . $selectedVariant : 'btn-' . $selectedVariant;
-        $classes[] = 'shadow-sm';
-    }
+        $variants = [
+            'primary' => 'primary',
+            'secondary' => 'secondary',
+            'success' => 'success',
+            'danger' => 'danger',
+            'warning' => 'warning',
+            'info' => 'info',
+            'light' => 'light',
+            'dark' => 'dark',
+            'link' => 'link',
+        ];
 
-    if ($size && isset($sizeClasses[$size])) {
-        $classes[] = $sizeClasses[$size];
-    }
+        $selectedVariant = $variants[$variant] ?? $variants['primary'];
 
-    if ($block) {
-        $classes[] = 'w-100';
-    }
+        $sizeClasses = [
+            'sm' => 'btn-sm',
+            'lg' => 'btn-lg',
+        ];
 
-    $classString = implode(' ', array_filter($classes));
+        $classes = ['btn', 'fw-semibold'];
+
+        $isLinkStyle = $selectedVariant === 'link';
+
+        if ($isLinkStyle) {
+            $classes[] = 'btn-link';
+            $classes[] = 'text-decoration-none';
+        } else {
+            $classes[] = 'd-inline-flex';
+            $classes[] = 'align-items-center';
+            $classes[] = 'justify-content-center';
+            $classes[] = 'gap-2';
+            $classes[] = $outline ? 'btn-outline-' . $selectedVariant : 'btn-' . $selectedVariant;
+            $classes[] = 'shadow-sm';
+        }
+
+        if ($size && isset($sizeClasses[$size])) {
+            $classes[] = $sizeClasses[$size];
+        }
+
+        if ($block) {
+            $classes[] = 'w-100';
+        }
+
+        $classString = implode(' ', array_filter($classes));
+    }
 
     $tag = $tag ?? ($attributes->has('href') ? 'a' : 'button');
 @endphp

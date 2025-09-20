@@ -316,10 +316,10 @@
                   @foreach($permissionGroups as $index => $group)
                     <div class="accordion-item border-0 mb-3 shadow-sm rounded-3 overflow-hidden">
                       <h2 class="accordion-header" id="permission-group-heading-{{ $index }}">
-                        <button class="accordion-button {{ $index === 0 ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#permission-group-body-{{ $index }}" aria-expanded="{{ $index === 0 ? 'true' : 'false' }}" aria-controls="permission-group-body-{{ $index }}">
+                        <x-button type="button" :unstyled="true" class="accordion-button {{ $index === 0 ? '' : 'collapsed' }}" data-bs-toggle="collapse" data-bs-target="#permission-group-body-{{ $index }}" aria-expanded="{{ $index === 0 ? 'true' : 'false' }}" aria-controls="permission-group-body-{{ $index }}">
                           <span class="fw-semibold">{{ $group['label'] }}</span>
                           <span class="badge bg-primary-subtle text-primary ms-2">{{ $group['permissions']->count() }}</span>
-                        </button>
+                        </x-button>
                       </h2>
                       <div id="permission-group-body-{{ $index }}" class="accordion-collapse collapse {{ $index === 0 ? 'show' : '' }}" data-bs-parent="#rolePermissionsAccordion">
                         <div class="accordion-body" data-permission-group-container="{{ $index }}">
