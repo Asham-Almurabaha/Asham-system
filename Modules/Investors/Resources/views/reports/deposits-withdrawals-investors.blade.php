@@ -148,15 +148,11 @@
                     {{ number_format((float) ($pageTotals['net'] ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span>
                 </td>
             </tr>
-            @if($isPaginated)
-                <tr>
-                    <th colspan="5" class="bg-white">
-                        <div class="no-print d-flex justify-content-center p-2">
-                            {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}
-                        </div>
-                    </th>
-                </tr>
-            @endif
         </x-slot>
     </x-table>
+    @if ($isPaginated)
+        <div class="no-print d-flex justify-content-center p-2 mt-2">
+            {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}
+        </div>
+    @endif
 @endsection
