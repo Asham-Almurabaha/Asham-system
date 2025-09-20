@@ -9,6 +9,7 @@
     $safesCollection = collect($safes ?? [])->values();
     $changeStatusOptionsCollection = collect($changeStatusOptions ?? [])->values();
     $paidWithDiscountClaimStatusId = $paidWithDiscountClaimStatusId ? (int) $paidWithDiscountClaimStatusId : null;
+    $partialPaidStatusNames = ['مدفوع جزئي', 'مدفوع جزئياً', 'مدفوع جزئيا'];
 
     $availablePartyOptions = [];
 
@@ -83,7 +84,8 @@
                             @php($discountModalId = 'applyClaimDiscountModal-contract-' . $contract->id . '-' . $claim->id)
                             @php($paymentsRowId = 'claim-payments-contract-' . $contract->id . '-' . $claim->id)
                             @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
-                            @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
+                            @php($isPartialPaidStatus = in_array($currentClaimStatus, $partialPaidStatusNames, true))
+                            @php($isPaidStatus = ! $isPartialPaidStatus && (str_contains($currentClaimStatus, 'مدفوع') || str_contains($currentClaimStatus, 'مسدد')))
                             @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
                             @php($isRejectedStatus = $currentClaimStatus === 'مرفوض')
                             <tr>
@@ -405,7 +407,8 @@
 @if ($changeStatusOptionsCollection->isNotEmpty())
     @foreach ($claimsCollection as $claim)
         @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
-        @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
+        @php($isPartialPaidStatus = in_array($currentClaimStatus, $partialPaidStatusNames, true))
+        @php($isPaidStatus = ! $isPartialPaidStatus && (str_contains($currentClaimStatus, 'مدفوع') || str_contains($currentClaimStatus, 'مسدد')))
         @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
         @if ($isPaidStatus || ! $isUnderReviewStatus)
             @continue
