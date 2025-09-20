@@ -116,7 +116,7 @@
     </div>
     <div class="btn-group" role="group">
         <a href="{{ route('customers.index') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3">
-            <i class="bi bi-people"></i>
+            <i class="bi bi-table"></i>
             <span>{{ __('sidebar.Manage Customers') }}</span>
         </a>
 
