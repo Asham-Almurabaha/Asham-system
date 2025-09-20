@@ -338,29 +338,10 @@
             <span>{{ __('Status Reports') }}</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
-            @foreach($contractStatuses as $status)
-                @php
-                    $name = (string) ($status->name ?? '-');
-                    [$ic, $cls] = $statusIcon($name);
-                @endphp
-                <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.status', $status->id) }}">
-                        <i class="bi {{ $ic }} {{ $cls }}"></i>
-                        <span>{{ $name }}</span>
-                    </a>
-                </li>
-            @endforeach
-            <li><hr class="dropdown-divider"></li>
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.office_outstanding') }}">
                     <i class="bi bi-cash-coin text-warning"></i>
                     <span>{{ __('Office Outstanding Report') }}</span>
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.without_investor') }}">
-                    <i class="bi bi-people text-danger"></i>
-                    <span>{{ __('Contracts Without Investor') }}</span>
                 </a>
             </li>
         </ul>
