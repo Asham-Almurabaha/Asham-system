@@ -10,7 +10,7 @@
 
   @if (Auth::check())
     <!-- Header -->
-    <header id="header" class="header fixed-top d-flex align-items-center">
+    <header id="header" class="header fixed-top d-flex align-items-center pl-20">
       @include('layouts.header')
     </header>
 
