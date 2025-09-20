@@ -86,40 +86,37 @@
         </div>
       </div>
       <div class="card-body p-2">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th style="width:70px">#</th>
-                <th>@lang('users.Name')</th>
-                <th>@lang('users.Email')</th>
-                <th>@lang('users.Roles')</th>
-                <th class="text-end">@lang('users.Actions')</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach ($users as $u)
-                <tr>
-                  <td>{{ $u->id }}</td>
-                  <td>{{ $u->name }}</td>
-                  <td>{{ $u->email }}</td>
-                  <td>
-                    @forelse ($u->roles as $r)
-                      <span class="badge text-bg-secondary me-1">{{ $r->name }}</span>
-                    @empty
-                      <span class="text-muted">—</span>
-                    @endforelse
-                  </td>
-                  <td class="text-end">
-                    <x-button href="{{ route('users.roles.edit', $u) }}" variant="primary" :outline="true" size="sm">
-                      @lang('users.Manage Roles')
-                    </x-button>
-                  </td>
-                </tr>
-              @endforeach
-            </tbody>
-          </table>
-        </div>
+        <x-table head-class="table-light">
+          <x-slot name="head">
+            <tr>
+              <th style="width:70px">#</th>
+              <th>@lang('users.Name')</th>
+              <th>@lang('users.Email')</th>
+              <th>@lang('users.Roles')</th>
+              <th class="text-end">@lang('users.Actions')</th>
+            </tr>
+          </x-slot>
+
+          @foreach ($users as $u)
+            <tr>
+              <td>{{ $u->id }}</td>
+              <td>{{ $u->name }}</td>
+              <td>{{ $u->email }}</td>
+              <td>
+                @forelse ($u->roles as $r)
+                  <span class="badge text-bg-secondary me-1">{{ $r->name }}</span>
+                @empty
+                  <span class="text-muted">—</span>
+                @endforelse
+              </td>
+              <td class="text-end">
+                <a href="{{ route('users.roles.edit', $u) }}" class="btn btn-sm btn-outline-primary">
+                  @lang('users.Manage Roles')
+                </a>
+              </td>
+            </tr>
+          @endforeach
+        </x-table>
       </div>
       @if ($users->hasPages())
         <div class="card-footer bg-white border-0">

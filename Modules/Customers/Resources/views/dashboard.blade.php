@@ -310,32 +310,28 @@
             </div>
             <div class="card-body p-0">
                 @if($topContractCustomers->isNotEmpty())
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:50px;">#</th>
-                                    <th>{{ __('Name') }}</th>
-                                    <th>{{ __('customers::messages.Customer Status') }}</th>
-                                    <th>{{ __('Active Contracts') }}</th>
-                                    <th>{{ __('Total Contracts') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($topContractCustomers as $index => $item)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td class="text-start">
-                                            <a href="{{ route('customers.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
-                                        </td>
-                                        <td>{{ $item['status'] ?? __('customers::messages.Undefined') }}</td>
-                                        <td>{{ number_format($item['active_contracts'] ?? 0) }}</td>
-                                        <td>{{ number_format($item['total_contracts'] ?? 0) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-table head-class="table-light" small>
+                        <x-slot name="head">
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('customers::messages.Customer Status') }}</th>
+                                <th>{{ __('Active Contracts') }}</th>
+                                <th>{{ __('Total Contracts') }}</th>
+                            </tr>
+                        </x-slot>
+                        @foreach($topContractCustomers as $index => $item)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td class="text-start">
+                                    <a href="{{ route('customers.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
+                                </td>
+                                <td>{{ $item['status'] ?? __('customers::messages.Undefined') }}</td>
+                                <td>{{ number_format($item['active_contracts'] ?? 0) }}</td>
+                                <td>{{ number_format($item['total_contracts'] ?? 0) }}</td>
+                            </tr>
+                        @endforeach
+                    </x-table>
                 @else
                     <div class="p-3 text-muted">{{ __('customers::messages.No data available') }}</div>
                 @endif
@@ -350,32 +346,28 @@
             </div>
             <div class="card-body p-0">
                 @if($topOutstanding->isNotEmpty())
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:50px;">#</th>
-                                    <th>{{ __('Name') }}</th>
-                                    <th>{{ __('customers::messages.Outstanding Amount') }}</th>
-                                    <th>{{ __('customers::messages.Overdue Amount') }}</th>
-                                    <th>{{ __('customers::messages.Due This Month') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($topOutstanding as $index => $item)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td class="text-start">
-                                            <a href="{{ route('customers.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
-                                        </td>
-                                        <td>{{ number_format($item['unpaid_total'] ?? 0, 2) }}</td>
-                                        <td>{{ number_format($item['overdue_total'] ?? 0, 2) }}</td>
-                                        <td>{{ number_format($item['due_this_month_total'] ?? 0, 2) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-table head-class="table-light" small>
+                        <x-slot name="head">
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('customers::messages.Outstanding Amount') }}</th>
+                                <th>{{ __('customers::messages.Overdue Amount') }}</th>
+                                <th>{{ __('customers::messages.Due This Month') }}</th>
+                            </tr>
+                        </x-slot>
+                        @foreach($topOutstanding as $index => $item)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td class="text-start">
+                                    <a href="{{ route('customers.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
+                                </td>
+                                <td>{{ number_format($item['unpaid_total'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($item['overdue_total'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($item['due_this_month_total'] ?? 0, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </x-table>
                 @else
                     <div class="p-3 text-muted">{{ __('customers::messages.No data available') }}</div>
                 @endif

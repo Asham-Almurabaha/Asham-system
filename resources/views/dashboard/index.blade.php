@@ -352,44 +352,41 @@
                     </span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr class="text-center">
-                                    <th class="text-start">{{ __('dashboard.Account') }}</th>
-                                    <th>{{ __('dashboard.Opening') }}</th>
-                                    <th>{{ __('dashboard.In') }}</th>
-                                    <th>{{ __('dashboard.Out') }}</th>
-                                    <th>{{ __('dashboard.Movement Net') }}</th>
-                                    <th>{{ __('dashboard.Estimated Balance') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            @php $banks = ($banksWithOpen ?? collect())->map(fn($b) => (object)$b); @endphp
-                            @forelse($banks as $b)
-                                @php
-                                    $opening = (float)($b->opening_balance ?? 0);
-                                    $in      = (float)($b->in ?? 0);
-                                    $out     = (float)($b->out ?? 0);
-                                    $net     = $in - $out;
-                                    $bal     = $opening + $net;
-                                    $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
-                                    $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
-                                @endphp
-                                <tr class="text-center">
-                                    <td class="text-start"><i class="bi bi-bank"></i> {{ $b->name ?? ('#'.$b->id) }}</td>
-                                    <td>{{ number_format($opening, 2) }}</td>
-                                    <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
-                                    <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
-                                    <td class="fw-bold {{ $netClass }}">{{ number_format($net, 2) }}</td>
-                                    <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="6" class="text-muted text-center py-4">{{ __('dashboard.No bank accounts.') }}</td></tr>
-                            @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-table>
+                        <x-slot name="head">
+                            <tr class="text-center">
+                                <th class="text-start">{{ __('dashboard.Account') }}</th>
+                                <th>{{ __('dashboard.Opening') }}</th>
+                                <th>{{ __('dashboard.In') }}</th>
+                                <th>{{ __('dashboard.Out') }}</th>
+                                <th>{{ __('dashboard.Movement Net') }}</th>
+                                <th>{{ __('dashboard.Estimated Balance') }}</th>
+                            </tr>
+                        </x-slot>
+
+                        @php $banks = ($banksWithOpen ?? collect())->map(fn($b) => (object)$b); @endphp
+                        @forelse($banks as $b)
+                            @php
+                                $opening = (float)($b->opening_balance ?? 0);
+                                $in      = (float)($b->in ?? 0);
+                                $out     = (float)($b->out ?? 0);
+                                $net     = $in - $out;
+                                $bal     = $opening + $net;
+                                $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
+                                $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
+                            @endphp
+                            <tr class="text-center">
+                                <td class="text-start"><i class="bi bi-bank"></i> {{ $b->name ?? ('#'.$b->id) }}</td>
+                                <td>{{ number_format($opening, 2) }}</td>
+                                <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
+                                <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
+                                <td class="fw-bold {{ $netClass }}">{{ number_format($net, 2) }}</td>
+                                <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="text-muted text-center py-4">{{ __('dashboard.No bank accounts.') }}</td></tr>
+                        @endforelse
+                    </x-table>
                 </div>
                 <div class="card-footer small text-muted">
                     {{ __('dashboard.The numbers are calculated from the ledger, and include internal transfers according to their direction (in/out).') }}
@@ -407,44 +404,41 @@
                     </span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr class="text-center">
-                                    <th class="text-start">{{ __('dashboard.Safe') }}</th>
-                                    <th>{{ __('dashboard.Opening') }}</th>
-                                    <th>{{ __('dashboard.In') }}</th>
-                                    <th>{{ __('dashboard.Out') }}</th>
-                                    <th>{{ __('dashboard.Movement Net') }}</th>
-                                    <th>{{ __('dashboard.Estimated Balance') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            @php $safes = ($safesWithOpen ?? collect())->map(fn($s) => (object)$s); @endphp
-                            @forelse($safes as $s)
-                                @php
-                                    $opening = (float)($s->opening_balance ?? 0);
-                                    $in      = (float)($s->in ?? 0);
-                                    $out     = (float)($s->out ?? 0);
-                                    $net     = $in - $out;
-                                    $bal     = $opening + $net;
-                                    $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
-                                    $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
-                                @endphp
-                                <tr class="text-center">
-                                    <td class="text-start"><i class="bi bi-safe2"></i> {{ $s->name ?? ('#'.$s->id) }}</td>
-                                    <td>{{ number_format($opening, 2) }}</td>
-                                    <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
-                                    <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
-                                    <td class="fw-bold {{ $netClass }}">{{ number_format($net, 2) }}</td>
-                                    <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="6" class="text-muted text-center py-4">{{ __('dashboard.No safes.') }}</td></tr>
-                            @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-table>
+                        <x-slot name="head">
+                            <tr class="text-center">
+                                <th class="text-start">{{ __('dashboard.Safe') }}</th>
+                                <th>{{ __('dashboard.Opening') }}</th>
+                                <th>{{ __('dashboard.In') }}</th>
+                                <th>{{ __('dashboard.Out') }}</th>
+                                <th>{{ __('dashboard.Movement Net') }}</th>
+                                <th>{{ __('dashboard.Estimated Balance') }}</th>
+                            </tr>
+                        </x-slot>
+
+                        @php $safes = ($safesWithOpen ?? collect())->map(fn($s) => (object)$s); @endphp
+                        @forelse($safes as $s)
+                            @php
+                                $opening = (float)($s->opening_balance ?? 0);
+                                $in      = (float)($s->in ?? 0);
+                                $out     = (float)($s->out ?? 0);
+                                $net     = $in - $out;
+                                $bal     = $opening + $net;
+                                $netClass = $net >= 0 ? 'text-pos' : 'text-neg';
+                                $balClass = $bal >= 0 ? 'text-pos' : 'text-neg';
+                            @endphp
+                            <tr class="text-center">
+                                <td class="text-start"><i class="bi bi-safe2"></i> {{ $s->name ?? ('#'.$s->id) }}</td>
+                                <td>{{ number_format($opening, 2) }}</td>
+                                <td class="text-pos fw-semibold">{{ number_format($in, 2) }}</td>
+                                <td class="text-neg fw-semibold">{{ number_format($out, 2) }}</td>
+                                <td class="fw-bold {{ $netClass }}">{{ number_format($net, 2) }}</td>
+                                <td class="fw-bold {{ $balClass }}">{{ number_format($bal, 2) }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="6" class="text-muted text-center py-4">{{ __('dashboard.No safes.') }}</td></tr>
+                        @endforelse
+                    </x-table>
                 </div>
                 <div class="card-footer small text-muted">
                     {{ __('dashboard.The numbers are calculated from the ledger, and include internal transfers according to their direction (in/out).') }}

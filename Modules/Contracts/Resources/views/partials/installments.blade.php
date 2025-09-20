@@ -76,8 +76,8 @@
     </div>
 
     @if($contract->installments->count())
-        <table class="table table-bordered table-striped mb-0 text-center align-middle">
-            <thead class="table-light">
+        <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+            <x-slot name="head">
                 <tr>
                     <th>#</th>
                     <th>تاريخ الاستحقاق</th>
@@ -87,83 +87,81 @@
                     <th>الحالة</th>
                     <th>إجراءات</th>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach($contract->installments as $i => $inst)
-                    @php
-                        $dueDate     = \Carbon\Carbon::parse($inst->due_date);
-                        $isThisMonth = $dueDate->isSameMonth(now());
-                        $statusName  = $inst->installmentStatus->name ?? '';
-                    @endphp
-                    <tr>
-                        <td>{{ $i + 1 }}</td>
-                        <td>{{ $dueDate->format('Y-m-d') }}</td>
-                        <td>{{ number_format($inst->due_amount, 2) }}</td>
-
-                        {{-- تاريخ الدفع --}}
-                        <td>
-                            @if($inst->payment_amount > 0 && $inst->payment_date)
-                                {{ \Carbon\Carbon::parse($inst->payment_date)->format('Y-m-d') }}
-                            @else
-                                —
-                            @endif
-                        </td>
-
-                        {{-- المبلغ المدفوع --}}
-                        <td>
-                            @if($inst->notes)
-                                <span data-bs-toggle="tooltip" data-bs-placement="top"
-                                      data-bs-custom-class="wide-tooltip"
-                                      title="{{ $inst->notes }}">
-                                    {{ number_format($inst->payment_amount, 2) }}
-                                </span>
-                            @else
+            </x-slot>
+            @foreach($contract->installments as $i => $inst)
+                @php
+                    $dueDate     = \Carbon\Carbon::parse($inst->due_date);
+                    $isThisMonth = $dueDate->isSameMonth(now());
+                    $statusName  = $inst->installmentStatus->name ?? '';
+                @endphp
+                <tr>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $dueDate->format('Y-m-d') }}</td>
+                    <td>{{ number_format($inst->due_amount, 2) }}</td>
+            
+                    {{-- تاريخ الدفع --}}
+                    <td>
+                        @if($inst->payment_amount > 0 && $inst->payment_date)
+                            {{ \Carbon\Carbon::parse($inst->payment_date)->format('Y-m-d') }}
+                        @else
+                            —
+                        @endif
+                    </td>
+            
+                    {{-- المبلغ المدفوع --}}
+                    <td>
+                        @if($inst->notes)
+                            <span data-bs-toggle="tooltip" data-bs-placement="top"
+                                  data-bs-custom-class="wide-tooltip"
+                                  title="{{ $inst->notes }}">
                                 {{ number_format($inst->payment_amount, 2) }}
+                            </span>
+                        @else
+                            {{ number_format($inst->payment_amount, 2) }}
+                        @endif
+                    </td>
+            
+                    {{-- الحالة --}}
+                    <td>
+                        @php
+                            $b = 'secondary';
+                            if ($statusName === 'مدفوع كامل' || $statusName === 'مدفوع مبكر') $b = 'success';
+                            elseif ($statusName === 'مطلوب') $b = 'info';
+                            elseif ($statusName === 'مؤجل' || $statusName === 'مدفوع جزئي') $b = 'warning';
+                            elseif ($statusName === 'معلق') $b = 'primary';
+                            elseif ($statusName === 'متعثر' || $statusName === 'متأخر') $b = 'danger';
+                        @endphp
+                        <span class="badge bg-{{ $b }}">{{ $statusName ?: '—' }}</span>
+                    </td>
+            
+                    {{-- الإجراءات --}}
+                    <td>
+                        @unless($isEarlySettlement)
+                            {{-- زر التأجيل --}}
+                            @if($isThisMonth && $inst->payment_amount < $inst->due_amount && $statusName !== 'مؤجل' && $statusName !== 'معتذر')
+                                <button type="button" class="btn btn-sm btn-outline-warning defer-btn" data-id="{{ $inst->id }}">
+                                    ⏳ تأجيل
+                                </button>
                             @endif
-                        </td>
-
-                        {{-- الحالة --}}
-                        <td>
+            
+                            {{-- زر المعتذر --}}
                             @php
-                                $b = 'secondary';
-                                if ($statusName === 'مدفوع كامل' || $statusName === 'مدفوع مبكر') $b = 'success';
-                                elseif ($statusName === 'مطلوب') $b = 'info';
-                                elseif ($statusName === 'مؤجل' || $statusName === 'مدفوع جزئي') $b = 'warning';
-                                elseif ($statusName === 'معلق') $b = 'primary';
-                                elseif ($statusName === 'متعثر' || $statusName === 'متأخر') $b = 'danger';
+                                $daysDiff = now()->diffInDays($dueDate, false);
                             @endphp
-                            <span class="badge bg-{{ $b }}">{{ $statusName ?: '—' }}</span>
-                        </td>
-
-                        {{-- الإجراءات --}}
-                        <td>
-                            @unless($isEarlySettlement)
-                                {{-- زر التأجيل --}}
-                                @if($isThisMonth && $inst->payment_amount < $inst->due_amount && $statusName !== 'مؤجل' && $statusName !== 'معتذر')
-                                    <button type="button" class="btn btn-sm btn-outline-warning defer-btn" data-id="{{ $inst->id }}">
-                                        ⏳ تأجيل
-                                    </button>
-                                @endif
-
-                                {{-- زر المعتذر --}}
-                                @php
-                                    $daysDiff = now()->diffInDays($dueDate, false);
-                                @endphp
-                                @if(
-                                    $inst->payment_amount < $inst->due_amount &&
-                                    $statusName !== 'معتذر' &&
-                                    $daysDiff >= -15
-                                )
-                                    <button type="button" class="btn btn-sm btn-outline-secondary excuse-btn" data-id="{{ $inst->id }}">
-                                        🙏 معتذر
-                                    </button>
-                                @endif
-                            @endunless
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                            @if(
+                                $inst->payment_amount < $inst->due_amount &&
+                                $statusName !== 'معتذر' &&
+                                $daysDiff >= -15
+                            )
+                                <button type="button" class="btn btn-sm btn-outline-secondary excuse-btn" data-id="{{ $inst->id }}">
+                                    🙏 معتذر
+                                </button>
+                            @endif
+                        @endunless
+                    </td>
+                </tr>
+            @endforeach
+        </x-table>
     @else
         <div class="p-3 text-muted">لا توجد أقساط مسجلة.</div>
     @endif

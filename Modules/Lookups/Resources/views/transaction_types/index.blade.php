@@ -23,39 +23,35 @@
     </div>
 
     <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col" style="width:80px" class="text-center">#</th>
-                        <th scope="col">@lang('lookups::transaction_types.Name')</th>
-                        <th scope="col" class="text-end" style="width:180px">@lang('lookups::transaction_types.Actions')</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($types as $type)
-                        <tr>
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td class="fw-semibold text-start">{{ $type->name }}</td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <a href="{{ route('transaction_types.edit', $type->id) }}" class="btn btn-sm btn-outline-primary">@lang('lookups::transaction_types.Edit')</a>
-                                    @include('lookups::components.delete-button', [
-                                        'action' => route('transaction_types.destroy', $type->id),
-                                        'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
-                                        'label' => __('lookups::transaction_types.Delete'),
-                                    ])
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">@lang('lookups::transaction_types.No transaction types yet.')</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-table head-class="table-light">
+            <x-slot name="head">
+                <tr>
+                    <th scope="col" style="width:80px" class="text-center">#</th>
+                    <th scope="col">@lang('lookups::transaction_types.Name')</th>
+                    <th scope="col" class="text-end" style="width:180px">@lang('lookups::transaction_types.Actions')</th>
+                </tr>
+            </x-slot>
+            @forelse($types as $type)
+                <tr>
+                    <td class="text-center">{{ $loop->iteration }}</td>
+                    <td class="fw-semibold text-start">{{ $type->name }}</td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{{ route('transaction_types.edit', $type->id) }}" class="btn btn-sm btn-outline-primary">@lang('lookups::transaction_types.Edit')</a>
+                            @include('lookups::components.delete-button', [
+                                'action' => route('transaction_types.destroy', $type->id),
+                                'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
+                                'label' => __('lookups::transaction_types.Delete'),
+                            ])
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-4">@lang('lookups::transaction_types.No transaction types yet.')</td>
+                </tr>
+            @endforelse
+        </x-table>
     </div>
 </div>
 @endsection

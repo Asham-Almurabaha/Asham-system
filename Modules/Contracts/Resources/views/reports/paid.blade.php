@@ -84,41 +84,37 @@
   </div>
 
   {{-- Table --}}
-  <div class="table-responsive mb-3">
-    <table class="table table-striped table-bordered align-middle text-center">
-      <thead class="table-light">
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
+          <tr>
+            <th style="width:56px">#</th>
+            <th>تاريخ الاستحقاق</th>
+            <th>قيمة القسط ({{ $currency }})</th>
+            <th>تاريخ السداد</th>
+            <th>المسدد ({{ $currency }})</th>
+            <th>المتبقي على القسط ({{ $currency }})</th>
+          </tr>
+      </x-slot>
+      @forelse ($rows as $idx => $ins)
+        @php
+          $amount = (float) $get($ins, 'amount', 0);
+          $paid   = (float) $get($ins, 'paid_amount', 0);
+          $still  = max(0.0, $amount - $paid);
+        @endphp
         <tr>
-          <th style="width:56px">#</th>
-          <th>تاريخ الاستحقاق</th>
-          <th>قيمة القسط ({{ $currency }})</th>
-          <th>تاريخ السداد</th>
-          <th>المسدد ({{ $currency }})</th>
-          <th>المتبقي على القسط ({{ $currency }})</th>
+          <td>{{ $idx + 1 }}</td>
+          <td>{{ $fmtDate($get($ins, 'due_date')) }}</td>
+          <td class="text-end">{{ $fmtNum($amount) }}</td>
+          <td>{{ $fmtDate($get($ins, 'paid_at')) }}</td>
+          <td class="text-end">{{ $fmtNum($paid) }}</td>
+          <td class="text-end">{{ $fmtNum($still) }}</td>
         </tr>
-      </thead>
-      <tbody>
-        @forelse ($rows as $idx => $ins)
-          @php
-            $amount = (float) $get($ins, 'amount', 0);
-            $paid   = (float) $get($ins, 'paid_amount', 0);
-            $still  = max(0.0, $amount - $paid);
-          @endphp
-          <tr>
-            <td>{{ $idx + 1 }}</td>
-            <td>{{ $fmtDate($get($ins, 'due_date')) }}</td>
-            <td class="text-end">{{ $fmtNum($amount) }}</td>
-            <td>{{ $fmtDate($get($ins, 'paid_at')) }}</td>
-            <td class="text-end">{{ $fmtNum($paid) }}</td>
-            <td class="text-end">{{ $fmtNum($still) }}</td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="py-5 text-muted">@lang('reports.No data available.')</td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
+      @empty
+        <tr>
+          <td colspan="6" class="py-5 text-muted">@lang('reports.No data available.')</td>
+        </tr>
+      @endforelse
+  </x-table>
 @endsection
 
 @section('actions')

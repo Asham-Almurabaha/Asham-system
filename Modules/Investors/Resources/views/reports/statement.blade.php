@@ -99,49 +99,45 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered align-middle text-center">
-      <thead class="table-light">
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
+          <tr>
+            <th style="width:56px">#</th>
+            <th class="text-start">@lang('app.Contract')</th>
+            <th>@lang('app.Status')</th>
+            <th class="text-start">{{ __('Customer') }}</th>
+            <th>@lang('reports.Share %')</th>
+            <th>@lang('reports.Capital')</th>
+            <th>@lang('reports.Net Profit')</th>
+            <th>{{ __('Paid to Investor from Customer') }}</th>
+            <th>{{ __('Remaining on Customers') }}</th>
+          </tr>
+      </x-slot>
+      @forelse($rows as $i => $row)
+        @php
+          $statusTxt = $statusMap[$row['contract_id']] ?? '—';
+          $badge = 'bg-secondary';
+          $s = (string)$statusTxt;
+          if (str_contains($s,'نشط') || str_contains($s,'Active')) $badge = 'bg-success';
+          if (str_contains($s,'منتهي') || str_contains(strtolower($s),'closed')) $badge = 'bg-danger';
+        @endphp
         <tr>
-          <th style="width:56px">#</th>
-          <th class="text-start">@lang('app.Contract')</th>
-          <th>@lang('app.Status')</th>
-          <th class="text-start">{{ __('Customer') }}</th>
-          <th>@lang('reports.Share %')</th>
-          <th>@lang('reports.Capital')</th>
-          <th>@lang('reports.Net Profit')</th>
-          <th>{{ __('Paid to Investor from Customer') }}</th>
-          <th>{{ __('Remaining on Customers') }}</th>
+          <td>{{ $i+1 }}</td>
+          <td class="text-start">#{{ $row['contract_id'] }}</td>
+          <td><span class="badge {{ $badge }} badge-status">{{ $statusTxt }}</span></td>
+          <td class="text-start">{{ $row['customer'] }}</td>
+          <td>{{ number_format($row['share_pct'] ?? 0, 2) }}</td>
+          <td>{{ number_format($row['share_value'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
+          <td>{{ number_format($row['profit_net'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
+          <td>{{ number_format($row['paid_to_investor_from_customer'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
+          <td>{{ number_format(max(0, $row['remaining_on_customers'] ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span></td>
         </tr>
-      </thead>
-      <tbody>
-        @forelse($rows as $i => $row)
-          @php
-            $statusTxt = $statusMap[$row['contract_id']] ?? '—';
-            $badge = 'bg-secondary';
-            $s = (string)$statusTxt;
-            if (str_contains($s,'نشط') || str_contains($s,'Active')) $badge = 'bg-success';
-            if (str_contains($s,'منتهي') || str_contains(strtolower($s),'closed')) $badge = 'bg-danger';
-          @endphp
-          <tr>
-            <td>{{ $i+1 }}</td>
-            <td class="text-start">#{{ $row['contract_id'] }}</td>
-            <td><span class="badge {{ $badge }} badge-status">{{ $statusTxt }}</span></td>
-            <td class="text-start">{{ $row['customer'] }}</td>
-            <td>{{ number_format($row['share_pct'] ?? 0, 2) }}</td>
-            <td>{{ number_format($row['share_value'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
-            <td>{{ number_format($row['profit_net'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
-            <td>{{ number_format($row['paid_to_investor_from_customer'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
-            <td>{{ number_format(max(0, $row['remaining_on_customers'] ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span></td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="9" class="py-5 text-muted">{{ __('No active contracts linked to this investor.') }}</td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
+      @empty
+        <tr>
+          <td colspan="9" class="py-5 text-muted">{{ __('No active contracts linked to this investor.') }}</td>
+        </tr>
+      @endforelse
+  </x-table>
 @endsection
 
 @section('actions')

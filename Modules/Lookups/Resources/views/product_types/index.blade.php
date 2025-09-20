@@ -23,38 +23,34 @@
     </div>
 
     <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col" style="width:80px" class="text-center">#</th>
-                        <th scope="col">{{ __('Product Type Name') }}</th>
-                        <th scope="col" class="text-end" style="width:180px">{{ __('Actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($productTypes as $productType)
-                        <tr>
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td class="fw-semibold text-start">{{ $productType->name }}</td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <a href="{{ route('product_types.edit', $productType) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
-                                    @include('lookups::components.delete-button', [
-                                        'action' => route('product_types.destroy', $productType),
-                                        'confirm' => __('Are you sure to delete this product type?'),
-                                    ])
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="3" class="text-center text-muted py-4">{{ __('No product types found.') }}</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-table head-class="table-light">
+            <x-slot name="head">
+                <tr>
+                    <th scope="col" style="width:80px" class="text-center">#</th>
+                    <th scope="col">{{ __('Product Type Name') }}</th>
+                    <th scope="col" class="text-end" style="width:180px">{{ __('Actions') }}</th>
+                </tr>
+            </x-slot>
+            @forelse($productTypes as $productType)
+                <tr>
+                    <td class="text-center">{{ $loop->iteration }}</td>
+                    <td class="fw-semibold text-start">{{ $productType->name }}</td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{{ route('product_types.edit', $productType) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
+                            @include('lookups::components.delete-button', [
+                                'action' => route('product_types.destroy', $productType),
+                                'confirm' => __('Are you sure to delete this product type?'),
+                            ])
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-4">{{ __('No product types found.') }}</td>
+                </tr>
+            @endforelse
+        </x-table>
     </div>
 </div>
 @endsection

@@ -260,65 +260,61 @@
 
         <div class="card-body p-0">
             @if($activeList->isNotEmpty())
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:140px">{{ __('Contract Number') }}</th>
-                                <th style="width:120px">{{ __('Start Date') }}</th>
-                                <th>{{ __('Product Type') }}</th>
-                                <th class="text-end" style="width:140px">{{ __('Total Due') }}</th>
-                                <th class="text-end" style="width:140px">{{ __('Paid') }}</th>
-                                <th class="text-end" style="width:140px">{{ __('Remaining') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($activeList as $row)
-                                @php
-                                    $isObj   = is_object($row);
-                                    $cid     = $isObj ? ($row->id ?? null) : ($row['id'] ?? null);
-                                    $cno     = $isObj ? ($row->contract_number ?? '') : ($row['contract_number'] ?? '');
-                                    $sdate   = $isObj ? ($row->start_date ?? null)     : ($row['start_date'] ?? null);
-                                    $ptype   = $isObj
-                                                ? ($row->product_type_name ?? ($row->product_type->name ?? null))
-                                                : ($row['product_type_name'] ?? ($row['product_type']['name'] ?? null));
-
-                                    // Reading values whether they are direct properties or within installments[]
-                                    $due     = $isObj ? ($row->due_sum ?? 0)     : ($row['due_sum'] ?? ($row['installments']['due_sum'] ?? 0));
-                                    $paid    = $isObj ? ($row->paid_sum ?? 0)    : ($row['paid_sum'] ?? ($row['installments']['paid_sum'] ?? 0));
-                                    $remain  = $isObj ? ($row->remaining_amount ?? $row->unpaid_sum ?? 0)
-                                                      : ($row['remaining_amount'] ?? ($row['unpaid_sum'] ?? ($row['installments']['unpaid_sum'] ?? 0)));
-
-                                    $totDue   += (float)$due;
-                                    $totPaid  += (float)$paid;
-                                    $totRemain+= (float)$remain;
-                                @endphp
-                                <tr>
-                                    <td class="fw-semibold">
-                                        @if(!empty($cid))
-                                            <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none text-dark hover-primary fw-bold">{{ $cno }}</a>
-                                        @else
-                                            {{ $cno }}
-                                        @endif
-                                    </td>
-                                    <td>{{ $sdate ? \Carbon\Carbon::parse($sdate)->format('Y-m-d') : '—' }}</td>
-                                    <td class="text-truncate" style="max-width:240px">{{ $ptype ?? '—' }}</td>
-                                    <td class="text-end">{{ $nf($due) }}</td>
-                                    <td class="text-end text-success">{{ $nf($paid) }}</td>
-                                    <td class="text-end {{ ($remain ?? 0)>0 ? 'text-danger' : 'text-muted' }}">{{ $nf($remain) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <th colspan="3" class="text-end">{{ __('Total') }}</th>
-                                <th class="text-end">{{ $nf($totDue) }}</th>
-                                <th class="text-end text-success">{{ $nf($totPaid) }}</th>
-                                <th class="text-end {{ $totRemain>0 ? 'text-danger' : 'text-muted' }}">{{ $nf($totRemain) }}</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                <x-table head-class="table-light" foot-class="table-light">
+                    <x-slot name="head">
+                        <tr>
+                            <th style="width:140px">{{ __('Contract Number') }}</th>
+                            <th style="width:120px">{{ __('Start Date') }}</th>
+                            <th>{{ __('Product Type') }}</th>
+                            <th class="text-end" style="width:140px">{{ __('Total Due') }}</th>
+                            <th class="text-end" style="width:140px">{{ __('Paid') }}</th>
+                            <th class="text-end" style="width:140px">{{ __('Remaining') }}</th>
+                        </tr>
+                    </x-slot>
+                    @foreach($activeList as $row)
+                        @php
+                            $isObj   = is_object($row);
+                            $cid     = $isObj ? ($row->id ?? null) : ($row['id'] ?? null);
+                            $cno     = $isObj ? ($row->contract_number ?? '') : ($row['contract_number'] ?? '');
+                            $sdate   = $isObj ? ($row->start_date ?? null)     : ($row['start_date'] ?? null);
+                            $ptype   = $isObj
+                                        ? ($row->product_type_name ?? ($row->product_type->name ?? null))
+                                        : ($row['product_type_name'] ?? ($row['product_type']['name'] ?? null));
+                    
+                            // Reading values whether they are direct properties or within installments[]
+                            $due     = $isObj ? ($row->due_sum ?? 0)     : ($row['due_sum'] ?? ($row['installments']['due_sum'] ?? 0));
+                            $paid    = $isObj ? ($row->paid_sum ?? 0)    : ($row['paid_sum'] ?? ($row['installments']['paid_sum'] ?? 0));
+                            $remain  = $isObj ? ($row->remaining_amount ?? $row->unpaid_sum ?? 0)
+                                              : ($row['remaining_amount'] ?? ($row['unpaid_sum'] ?? ($row['installments']['unpaid_sum'] ?? 0)));
+                    
+                            $totDue   += (float)$due;
+                            $totPaid  += (float)$paid;
+                            $totRemain+= (float)$remain;
+                        @endphp
+                        <tr>
+                            <td class="fw-semibold">
+                                @if(!empty($cid))
+                                    <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none text-dark hover-primary fw-bold">{{ $cno }}</a>
+                                @else
+                                    {{ $cno }}
+                                @endif
+                            </td>
+                            <td>{{ $sdate ? \Carbon\Carbon::parse($sdate)->format('Y-m-d') : '—' }}</td>
+                            <td class="text-truncate" style="max-width:240px">{{ $ptype ?? '—' }}</td>
+                            <td class="text-end">{{ $nf($due) }}</td>
+                            <td class="text-end text-success">{{ $nf($paid) }}</td>
+                            <td class="text-end {{ ($remain ?? 0)>0 ? 'text-danger' : 'text-muted' }}">{{ $nf($remain) }}</td>
+                        </tr>
+                    @endforeach
+                    <x-slot name="footer">
+                        <tr>
+                            <th colspan="3" class="text-end">{{ __('Total') }}</th>
+                            <th class="text-end">{{ $nf($totDue) }}</th>
+                            <th class="text-end text-success">{{ $nf($totPaid) }}</th>
+                            <th class="text-end {{ $totRemain>0 ? 'text-danger' : 'text-muted' }}">{{ $nf($totRemain) }}</th>
+                        </tr>
+                    </x-slot>
+                </x-table>
             @else
                 <div class="p-3 text-muted">{{ __('No active contracts to display.') }}</div>
             @endif

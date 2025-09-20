@@ -171,94 +171,90 @@
         <span class="badge rounded-pill text-bg-warning ms-2">{{ $pendingCount }}</span>
       </div>
       <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-sm table-striped table-hover align-middle mb-0">
-            <thead class="table-light">
-              <tr>
-                <th style="width:110px">@lang('customers::customers_import.Row Number')</th>
-                <th style="width:220px">@lang('customers::customers_import.Customer')</th>
-                <th>@lang('customers::customers_import.Changes')</th>
-                <th style="width:220px">@lang('customers::customers_import.Actions')</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach ($pendingUpdates as $tokenKey => $pendingItem)
-                @php
-                  $token = is_string($tokenKey) ? $tokenKey : ($pendingItem['token'] ?? $tokenKey);
-                @endphp
-                @if (empty($token))
-                  @continue
-                @endif
-                @php
-                  $diff        = $pendingItem['diff'] ?? [];
-                  $identifiers = $pendingItem['identifiers'] ?? [];
-                  $customerRow = $pendingItem['row'] ?? '—';
-                  $customerName = $pendingItem['customer_name'] ?? '—';
-                @endphp
+        <x-table head-class="table-light" striped small>
+            <x-slot name="head">
                 <tr>
-                  <td class="fw-semibold">{{ $customerRow }}</td>
-                  <td>
-                    <div class="fw-semibold">{{ $customerName }}</div>
-                    <div class="text-muted small">
-                      @if (!empty($identifiers['national_id']))
-                        <span class="d-inline-flex align-items-center me-2">
-                          <i class="bi bi-person-vcard me-1"></i>
-                          {{ $formatPendingValue($identifiers['national_id']) }}
-                        </span>
-                      @endif
-                      @if (!empty($identifiers['phone']))
-                        <span class="d-inline-flex align-items-center">
-                          <i class="bi bi-telephone me-1"></i>
-                          {{ $formatPendingValue($identifiers['phone']) }}
-                        </span>
-                      @endif
-                    </div>
-                  </td>
-                  <td>
-                    @if (!empty($diff))
-                      <div class="d-flex flex-column gap-2">
-                        @foreach ($diff as $field => $change)
-                          <div class="border rounded-3 p-2">
-                            <div class="fw-semibold small text-secondary">{{ $fieldLabels[$field] ?? $field }}</div>
-                            <div class="d-flex align-items-center gap-2">
-                              <span class="badge text-bg-light">{{ $formatPendingValue($change['old'] ?? null) }}</span>
-                              <i class="bi bi-arrow-left-right text-muted"></i>
-                              <span class="badge text-bg-primary">{{ $formatPendingValue($change['new'] ?? null) }}</span>
-                            </div>
-                          </div>
-                        @endforeach
-                      </div>
-                    @else
-                      <span class="text-muted small">@lang('customers::customers_import.No differences found')</span>
-                    @endif
-                  </td>
-                  <td>
-                    <div class="d-flex flex-column flex-lg-row gap-2">
-                      <form method="POST" action="{{ route('customers.import.pending.confirm', $token) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-success btn-sm w-100">
-                          <i class="bi bi-check2-circle me-1"></i> @lang('customers::customers_import.Confirm Update')
-                        </button>
-                      </form>
-                      <form method="POST" action="{{ route('customers.import.pending.store-new', $token) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">
-                          <i class="bi bi-plus-circle me-1"></i> @lang('customers::customers_import.Save as new record')
-                        </button>
-                      </form>
-                      <form method="POST" action="{{ route('customers.import.pending.ignore', $token) }}">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
-                          <i class="bi bi-x-circle me-1"></i> @lang('customers::customers_import.Ignore')
-                        </button>
-                      </form>
-                    </div>
-                  </td>
+                  <th style="width:110px">@lang('customers::customers_import.Row Number')</th>
+                  <th style="width:220px">@lang('customers::customers_import.Customer')</th>
+                  <th>@lang('customers::customers_import.Changes')</th>
+                  <th style="width:220px">@lang('customers::customers_import.Actions')</th>
                 </tr>
-              @endforeach
-            </tbody>
-          </table>
-        </div>
+            </x-slot>
+            @foreach ($pendingUpdates as $tokenKey => $pendingItem)
+              @php
+                $token = is_string($tokenKey) ? $tokenKey : ($pendingItem['token'] ?? $tokenKey);
+              @endphp
+              @if (empty($token))
+                @continue
+              @endif
+              @php
+                $diff        = $pendingItem['diff'] ?? [];
+                $identifiers = $pendingItem['identifiers'] ?? [];
+                $customerRow = $pendingItem['row'] ?? '—';
+                $customerName = $pendingItem['customer_name'] ?? '—';
+              @endphp
+              <tr>
+                <td class="fw-semibold">{{ $customerRow }}</td>
+                <td>
+                  <div class="fw-semibold">{{ $customerName }}</div>
+                  <div class="text-muted small">
+                    @if (!empty($identifiers['national_id']))
+                      <span class="d-inline-flex align-items-center me-2">
+                        <i class="bi bi-person-vcard me-1"></i>
+                        {{ $formatPendingValue($identifiers['national_id']) }}
+                      </span>
+                    @endif
+                    @if (!empty($identifiers['phone']))
+                      <span class="d-inline-flex align-items-center">
+                        <i class="bi bi-telephone me-1"></i>
+                        {{ $formatPendingValue($identifiers['phone']) }}
+                      </span>
+                    @endif
+                  </div>
+                </td>
+                <td>
+                  @if (!empty($diff))
+                    <div class="d-flex flex-column gap-2">
+                      @foreach ($diff as $field => $change)
+                        <div class="border rounded-3 p-2">
+                          <div class="fw-semibold small text-secondary">{{ $fieldLabels[$field] ?? $field }}</div>
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="badge text-bg-light">{{ $formatPendingValue($change['old'] ?? null) }}</span>
+                            <i class="bi bi-arrow-left-right text-muted"></i>
+                            <span class="badge text-bg-primary">{{ $formatPendingValue($change['new'] ?? null) }}</span>
+                          </div>
+                        </div>
+                      @endforeach
+                    </div>
+                  @else
+                    <span class="text-muted small">@lang('customers::customers_import.No differences found')</span>
+                  @endif
+                </td>
+                <td>
+                  <div class="d-flex flex-column flex-lg-row gap-2">
+                    <form method="POST" action="{{ route('customers.import.pending.confirm', $token) }}">
+                      @csrf
+                      <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                        <i class="bi bi-check2-circle me-1"></i> @lang('customers::customers_import.Confirm Update')
+                      </button>
+                    </form>
+                    <form method="POST" action="{{ route('customers.import.pending.store-new', $token) }}">
+                      @csrf
+                      <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-plus-circle me-1"></i> @lang('customers::customers_import.Save as new record')
+                      </button>
+                    </form>
+                    <form method="POST" action="{{ route('customers.import.pending.ignore', $token) }}">
+                      @csrf
+                      <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-x-circle me-1"></i> @lang('customers::customers_import.Ignore')
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            @endforeach
+        </x-table>
       </div>
     </div>
   @endif
@@ -320,44 +316,40 @@
 
       <div id="failuresTable" class="collapse show">
         <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="width:110px">@lang('customers::customers_import.Row Number')</th>
-                  <th style="width:220px">@lang('customers::customers_import.Field')</th>
-                  <th>@lang('customers::customers_import.Messages')</th>
-                  <th style="min-width:260px">@lang('customers::customers_import.Values')</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($failuresBag as $failure)
-                  @php
-                    $rowNum = is_object($failure) && method_exists($failure, 'row') ? (int)$failure->row() : (int)($failure['row'] ?? 0);
-                    $attr   = is_object($failure) && method_exists($failure, 'attribute') ? $failure->attribute() : ($failure['attribute'] ?? '');
-                    $msgs   = is_object($failure) && method_exists($failure, 'errors') ? (array)$failure->errors() : (array)($failure['messages'] ?? $failure['errors'] ?? []);
-                    $vals   = is_object($failure) && method_exists($failure, 'values') ? $failure->values() : ($failure['values'] ?? []);
-                  @endphp
+          <x-table head-class="table-light sticky-top" striped small>
+              <x-slot name="head">
                   <tr>
-                    <td class="text-muted">{{ $rowNum }}</td>
-                    <td>{{ is_array($attr) ? implode(', ', $attr) : (string)$attr }}</td>
-                    <td>
-                      @if (count($msgs))
-                        <ul class="mb-0 ps-3">@foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach</ul>
-                      @else
-                        <span class="text-muted">—</span>
-                      @endif
-                    </td>
-                    <td class="text-break">
-                      <code class="small" style="white-space: pre-wrap; word-break: break-word;">
-                        {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
-                      </code>
-                    </td>
+                    <th style="width:110px">@lang('customers::customers_import.Row Number')</th>
+                    <th style="width:220px">@lang('customers::customers_import.Field')</th>
+                    <th>@lang('customers::customers_import.Messages')</th>
+                    <th style="min-width:260px">@lang('customers::customers_import.Values')</th>
                   </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
+              </x-slot>
+              @foreach ($failuresBag as $failure)
+                @php
+                  $rowNum = is_object($failure) && method_exists($failure, 'row') ? (int)$failure->row() : (int)($failure['row'] ?? 0);
+                  $attr   = is_object($failure) && method_exists($failure, 'attribute') ? $failure->attribute() : ($failure['attribute'] ?? '');
+                  $msgs   = is_object($failure) && method_exists($failure, 'errors') ? (array)$failure->errors() : (array)($failure['messages'] ?? $failure['errors'] ?? []);
+                  $vals   = is_object($failure) && method_exists($failure, 'values') ? $failure->values() : ($failure['values'] ?? []);
+                @endphp
+                <tr>
+                  <td class="text-muted">{{ $rowNum }}</td>
+                  <td>{{ is_array($attr) ? implode(', ', $attr) : (string)$attr }}</td>
+                  <td>
+                    @if (count($msgs))
+                      <ul class="mb-0 ps-3">@foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach</ul>
+                    @else
+                      <span class="text-muted">—</span>
+                    @endif
+                  </td>
+                  <td class="text-break">
+                    <code class="small" style="white-space: pre-wrap; word-break: break-word;">
+                      {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
+                    </code>
+                  </td>
+                </tr>
+              @endforeach
+          </x-table>
           <div class="p-3 text-muted small">
             @lang('customers::customers_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')
           </div>
@@ -382,35 +374,31 @@
 
       <div id="skippedTable" class="collapse show">
         <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="width:110px">@lang('customers::customers_import.Row Number')</th>
-                  <th style="width:260px">@lang('customers::customers_import.Reason')</th>
-                  <th style="min-width:260px">@lang('customers::customers_import.Values')</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($skippedBag as $r)
-                  @php
-                    $rowNum = (int)($r['row'] ?? 0);
-                    $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
-                    $vals   = $r['values'] ?? [];
-                  @endphp
+          <x-table head-class="table-light sticky-top" striped small>
+              <x-slot name="head">
                   <tr>
-                    <td class="text-muted">{{ $rowNum }}</td>
-                    <td>{{ $reason !== '' ? $reason : '—' }}</td>
-                    <td class="text-break">
-                      <code class="small" style="white-space: pre-wrap; word-break: break-word;">
-                        {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
-                      </code>
-                    </td>
+                    <th style="width:110px">@lang('customers::customers_import.Row Number')</th>
+                    <th style="width:260px">@lang('customers::customers_import.Reason')</th>
+                    <th style="min-width:260px">@lang('customers::customers_import.Values')</th>
                   </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
+              </x-slot>
+              @foreach ($skippedBag as $r)
+                @php
+                  $rowNum = (int)($r['row'] ?? 0);
+                  $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
+                  $vals   = $r['values'] ?? [];
+                @endphp
+                <tr>
+                  <td class="text-muted">{{ $rowNum }}</td>
+                  <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                  <td class="text-break">
+                    <code class="small" style="white-space: pre-wrap; word-break: break-word;">
+                      {{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}
+                    </code>
+                  </td>
+                </tr>
+              @endforeach
+          </x-table>
           <div class="p-3 text-muted small">
             @lang('customers::customers_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')
           </div>

@@ -95,8 +95,8 @@
 <div class="card shadow-sm">
     <div class="card-body p-0">
         <div>
-            <table class="table table-hover align-middle text-center mb-0">
-                <thead class="table-light position-sticky top-0" style="z-index: 1;">
+            <x-table head-class="table-light position-sticky top-0" class="text-center">
+                <x-slot name="head">
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('investors::investors.Name') }}</th>
@@ -104,40 +104,38 @@
                         <th>{{ __('Current Liquidity') }}</th>
                         <th>{{ __('investors::investors.Active Contracts') }}</th>
                         <th>{{ __('Remaining In Active') }}</th>
-                        
+                    
                     </tr>
-                </thead>
-                <tbody>
-                    @forelse ($investors as $investor)
-                        <tr>
-                            <td class="text-muted">{{ $loop->iteration + ($investors->currentPage() - 1) * $investors->perPage() }}</td>
-                            <td class="text-start">
-                                <a href="{{ route('investors.show', $investor) }}" class="text-decoration-none fw-bold text-dark hover-primary">
-                                    {{ $investor->name }}
-                                </a>
-                            </td>
-                            <td>
-                                @if($investor->investment_start_date)
-                                    <span dir="ltr">{{ $investor->investment_start_date->format('Y-m-d') }}</span>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </td>
-                            <td>{{ number_format((float)($liquidityByInvestor[$investor->id] ?? 0), 2) }}</td>
-                            <td>{{ number_format((int)($activeCountByInvestor[$investor->id] ?? 0)) }}</td>
-                            <td>{{ number_format((float)($remainingByInvestor[$investor->id] ?? 0), 2) }}</td>
-
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="py-5">
-                                <div class="text-muted">{{ __('investors::investors.No matching results.') }} <a href="{{ route('investors.index') }}" class="ms-1">{{ __('investors::investors.Show All') }}</a></div>
-                                <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ {{ __('investors::investors.Add First Investor') }}</a></div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                </x-slot>
+                @forelse ($investors as $investor)
+                    <tr>
+                        <td class="text-muted">{{ $loop->iteration + ($investors->currentPage() - 1) * $investors->perPage() }}</td>
+                        <td class="text-start">
+                            <a href="{{ route('investors.show', $investor) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                                {{ $investor->name }}
+                            </a>
+                        </td>
+                        <td>
+                            @if($investor->investment_start_date)
+                                <span dir="ltr">{{ $investor->investment_start_date->format('Y-m-d') }}</span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+                        <td>{{ number_format((float)($liquidityByInvestor[$investor->id] ?? 0), 2) }}</td>
+                        <td>{{ number_format((int)($activeCountByInvestor[$investor->id] ?? 0)) }}</td>
+                        <td>{{ number_format((float)($remainingByInvestor[$investor->id] ?? 0), 2) }}</td>
+                
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="py-5">
+                            <div class="text-muted">{{ __('investors::investors.No matching results.') }} <a href="{{ route('investors.index') }}" class="ms-1">{{ __('investors::investors.Show All') }}</a></div>
+                            <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ {{ __('investors::investors.Add First Investor') }}</a></div>
+                        </td>
+                    </tr>
+                @endforelse
+            </x-table>
         </div>
     </div>
 

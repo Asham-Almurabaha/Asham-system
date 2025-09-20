@@ -60,42 +60,42 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered text-center align-middle">
-      <thead class="table-light">
-        <tr>
-          <th style="width:56px">#</th>
-          <th>@lang('app.Date')</th>
-          <th>@lang('app.Amount')</th>
-          <th>@lang('app.Type')</th>
-          <th>@lang('app.Status')</th>
-          <th>@lang('app.Notes')</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($deposits as $i => $d)
-          @php
-            $statusName = optional($d->status)->name ?? optional($d->transactionStatus)->name ?? '—';
-            $typeName   = optional($d->type)->name   ?? optional($d->transactionType)->name   ?? '—';
-          @endphp
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
           <tr>
-            <td>{{ $i + 1 }}</td>
-            <td>{{ Carbon::parse($d->entry_date)->format('d-m-Y') }}</td>
-            <td class="text-success fw-semibold">
-              {{ number_format($d->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-            <td>{{ $typeName }}</td>
-            <td>{{ $statusName }}</td>
-            <td class="text-start">{{ $d->notes ?? '—' }}</td>
+            <th style="width:56px">#</th>
+            <th>@lang('app.Date')</th>
+            <th>@lang('app.Amount')</th>
+            <th>@lang('app.Type')</th>
+            <th>@lang('app.Status')</th>
+            <th>@lang('app.Notes')</th>
           </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="py-5 text-muted">@lang('reports.No deposits recorded for this investor in the current range.')</td>
-          </tr>
-        @endforelse
-      </tbody>
+      </x-slot>
       @if($deposits instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        <tfoot>
+      
+            @endif
+      
+              @forelse($deposits as $i => $d)
+                @php
+                  $statusName = optional($d->status)->name ?? optional($d->transactionStatus)->name ?? '—';
+                  $typeName   = optional($d->type)->name   ?? optional($d->transactionType)->name   ?? '—';
+                @endphp
+                <tr>
+                  <td>{{ $i + 1 }}</td>
+                  <td>{{ Carbon::parse($d->entry_date)->format('d-m-Y') }}</td>
+                  <td class="text-success fw-semibold">
+                    {{ number_format($d->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
+                  </td>
+                  <td>{{ $typeName }}</td>
+                  <td>{{ $statusName }}</td>
+                  <td class="text-start">{{ $d->notes ?? '—' }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="6" class="py-5 text-muted">@lang('reports.No deposits recorded for this investor in the current range.')</td>
+                </tr>
+              @endforelse
+      <x-slot name="footer">
           <tr>
             <th colspan="6" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
@@ -103,10 +103,8 @@
               </div>
             </th>
           </tr>
-        </tfoot>
-      @endif
-    </table>
-  </div>
+      </x-slot>
+  </x-table>
 @endsection
 
 @section('actions')

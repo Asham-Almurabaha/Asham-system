@@ -67,38 +67,34 @@
               <span class="badge bg-success-subtle text-success border">@lang('sidebar.Active')</span>
             </div>
 
-            <div class="table-responsive">
-              <table class="table table-sm align-middle mb-0">
-                <tbody>
-                  <tr>
-                    <th style="width:220px">@lang('sidebar.Owner Name')</th>
-                    <td class="fw-medium">{{ $setting->owner_name }}</td>
-                  </tr>
-                  <tr>
-                    <th>@lang('sidebar.Name (EN)')</th>
-                    <td class="fw-medium">{{ $setting->name }}</td>
-                  </tr>
-                  <tr>
-                    <th>@lang('sidebar.Name (AR)')</th>
-                    <td class="fw-medium">{{ $setting->name_ar }}</td>
-                  </tr>
-                  <tr>
-                    <th>@lang('sidebar.Created At')</th>
-                    <td>
-                      {{ $setting->created_at?->format('Y-m-d H:i') }}
-                      <span class="text-muted">— {{ $setting->created_at?->diffForHumans() }}</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <th>@lang('sidebar.Last Updated')</th>
-                    <td>
-                      {{ $setting->updated_at?->format('Y-m-d H:i') }}
-                      <span class="text-muted">— {{ $setting->updated_at?->diffForHumans() }}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <x-table small :hover="false">
+                <tr>
+                  <th style="width:220px">@lang('sidebar.Owner Name')</th>
+                  <td class="fw-medium">{{ $setting->owner_name }}</td>
+                </tr>
+                <tr>
+                  <th>@lang('sidebar.Name (EN)')</th>
+                  <td class="fw-medium">{{ $setting->name }}</td>
+                </tr>
+                <tr>
+                  <th>@lang('sidebar.Name (AR)')</th>
+                  <td class="fw-medium">{{ $setting->name_ar }}</td>
+                </tr>
+                <tr>
+                  <th>@lang('sidebar.Created At')</th>
+                  <td>
+                    {{ $setting->created_at?->format('Y-m-d H:i') }}
+                    <span class="text-muted">— {{ $setting->created_at?->diffForHumans() }}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>@lang('sidebar.Last Updated')</th>
+                  <td>
+                    {{ $setting->updated_at?->format('Y-m-d H:i') }}
+                    <span class="text-muted">— {{ $setting->updated_at?->diffForHumans() }}</span>
+                  </td>
+                </tr>
+            </x-table>
 
           </div>
         </div>

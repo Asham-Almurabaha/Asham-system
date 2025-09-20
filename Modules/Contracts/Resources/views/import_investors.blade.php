@@ -135,28 +135,24 @@
       </div>
       <div id="failuresTable" class="collapse show">
         <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="width:110px">رقم الصف</th>
-                  <th style="width:220px">الحقل</th>
-                  <th>الرسائل</th>
-                  <th style="min-width:260px">القيم</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($failuresBag as $f)
+          <x-table head-class="table-light sticky-top" striped small>
+              <x-slot name="head">
                   <tr>
-                    <td>{{ $f['row'] }}</td>
-                    <td>{{ $f['attribute'] }}</td>
-                    <td>{{ is_array($f['messages']) ? implode(', ', $f['messages']) : $f['messages'] }}</td>
-                    <td><code>{{ implode(', ', array_map(fn($k,$v)=>"$k=$v", array_keys($f['values']), $f['values'])) }}</code></td>
+                    <th style="width:110px">رقم الصف</th>
+                    <th style="width:220px">الحقل</th>
+                    <th>الرسائل</th>
+                    <th style="min-width:260px">القيم</th>
                   </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
+              </x-slot>
+              @foreach ($failuresBag as $f)
+                <tr>
+                  <td>{{ $f['row'] }}</td>
+                  <td>{{ $f['attribute'] }}</td>
+                  <td>{{ is_array($f['messages']) ? implode(', ', $f['messages']) : $f['messages'] }}</td>
+                  <td><code>{{ implode(', ', array_map(fn($k,$v)=>"$k=$v", array_keys($f['values']), $f['values'])) }}</code></td>
+                </tr>
+              @endforeach
+          </x-table>
         </div>
       </div>
     </div>
@@ -174,31 +170,27 @@
       </div>
       <div id="skippedTable" class="collapse show">
         <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="width:110px">رقم الصف</th>
-                  <th style="width:260px">السبب</th>
-                  <th style="min-width:260px">القيم</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($skippedBag as $r)
-                  @php
-                    $rowNum = (int)($r['row'] ?? 0);
-                    $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
-                    $vals   = $r['values'] ?? [];
-                  @endphp
+          <x-table head-class="table-light sticky-top" striped small>
+              <x-slot name="head">
                   <tr>
-                    <td class="text-muted">{{ $rowNum }}</td>
-                    <td>{{ $reason !== '' ? $reason : '—' }}</td>
-                    <td class="text-break"><code>{{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}</code></td>
+                    <th style="width:110px">رقم الصف</th>
+                    <th style="width:260px">السبب</th>
+                    <th style="min-width:260px">القيم</th>
                   </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
+              </x-slot>
+              @foreach ($skippedBag as $r)
+                @php
+                  $rowNum = (int)($r['row'] ?? 0);
+                  $reason = (string)($r['reason'] ?? ($r['messages'] ?? ''));
+                  $vals   = $r['values'] ?? [];
+                @endphp
+                <tr>
+                  <td class="text-muted">{{ $rowNum }}</td>
+                  <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                  <td class="text-break"><code>{{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}</code></td>
+                </tr>
+              @endforeach
+          </x-table>
         </div>
       </div>
     </div>

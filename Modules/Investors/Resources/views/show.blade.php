@@ -677,9 +677,9 @@
     @if(!empty($contractBreakdown))
         <div class="card border-0 shadow-soft">
             <div class="card-header bg-white fw-bold">تفصيل العقود النشطة</div>
-            <div class="card-body table-responsive p-0">
-                <table class="table table-hover text-center mb-0">
-                    <thead class="table-light position-sticky top-0" style="z-index:1;">
+            <div class="card-body p-0">
+                <x-table head-class="table-light position-sticky top-0" foot-class="table-light" class="text-center">
+                    <x-slot name="head">
                         <tr>
                             <th style="width:60px">#</th>
                             <th>رقم/مُعرّف العقد</th>
@@ -692,47 +692,45 @@
                             <th title="نصيب المستثمر من مدفوعات العميل تناسبياً">المدفوع</th>
                             <th>المتبقي على العملاء</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($contractBreakdown as $i => $r)
-                            <tr>
-                                <td class="text-muted">{{ $i+1 }}</td>
-                                <td>
-                                    @php
-                                        $cid = $r['contract_id'] ?? null;
-                                        $cno = $r['contract_number'] ?? null;
-                                    @endphp
-                                    @if(!empty($cid))
-                                        <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none text-dark hover-primary fw-bold">
-                                            {{ $cno ?: ('#'.$cid) }}
-                                        </a>
-                                    @else
-                                        {{ $cno ?: '?' }}
-                                    @endif
-                                </td>
-                                <td class="text-start">
-                                    @php $custId = $r['customer_id'] ?? null; @endphp
-                                    @if(!empty($custId))
-                                        <a href="{{ route('customers.show', $custId) }}" class="text-decoration-none text-dark hover-primary">
-                                            {{ $r['customer'] ?? '?' }}
-                                        </a>
-                                    @else
+                    </x-slot>
+                    @foreach($contractBreakdown as $i => $r)
+                        <tr>
+                            <td class="text-muted">{{ $i+1 }}</td>
+                            <td>
+                                @php
+                                    $cid = $r['contract_id'] ?? null;
+                                    $cno = $r['contract_number'] ?? null;
+                                @endphp
+                                @if(!empty($cid))
+                                    <a href="{{ route('contracts.show', $cid) }}" class="text-decoration-none text-dark hover-primary fw-bold">
+                                        {{ $cno ?: ('#'.$cid) }}
+                                    </a>
+                                @else
+                                    {{ $cno ?: '?' }}
+                                @endif
+                            </td>
+                            <td class="text-start">
+                                @php $custId = $r['customer_id'] ?? null; @endphp
+                                @if(!empty($custId))
+                                    <a href="{{ route('customers.show', $custId) }}" class="text-decoration-none text-dark hover-primary">
                                         {{ $r['customer'] ?? '?' }}
-                                    @endif
-                                </td>
-                                <td dir="ltr">{{ number_format($r['share_percentage'] ?? 0,2) }}</td>
-                                <td dir="ltr">{{ number_format($r['share_value'],2) }}</td>
-                                <td dir="ltr">{{ number_format($r['profit_gross'],2) }}</td>
-                                <td class="text-neg" dir="ltr">{{ number_format($r['office_cut'],2) }}</td>
-                                <td dir="ltr">{{ number_format($r['profit_net'],2) }}</td>
-                                <td dir="ltr">{{ number_format($r['paid_to_investor_from_customer'] ?? 0,2) }}</td>
-                                <td class="fw-semibold {{ ($r['remaining_on_customers'] ?? 0) >= 0 ? 'text-pos' : 'text-neg' }}" dir="ltr">
-                                    {{ number_format($r['remaining_on_customers'] ?? 0,2) }}
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="table-light">
+                                    </a>
+                                @else
+                                    {{ $r['customer'] ?? '?' }}
+                                @endif
+                            </td>
+                            <td dir="ltr">{{ number_format($r['share_percentage'] ?? 0,2) }}</td>
+                            <td dir="ltr">{{ number_format($r['share_value'],2) }}</td>
+                            <td dir="ltr">{{ number_format($r['profit_gross'],2) }}</td>
+                            <td class="text-neg" dir="ltr">{{ number_format($r['office_cut'],2) }}</td>
+                            <td dir="ltr">{{ number_format($r['profit_net'],2) }}</td>
+                            <td dir="ltr">{{ number_format($r['paid_to_investor_from_customer'] ?? 0,2) }}</td>
+                            <td class="fw-semibold {{ ($r['remaining_on_customers'] ?? 0) >= 0 ? 'text-pos' : 'text-neg' }}" dir="ltr">
+                                {{ number_format($r['remaining_on_customers'] ?? 0,2) }}
+                            </td>
+                        </tr>
+                    @endforeach
+                    <x-slot name="footer">
                         <tr>
                             <th colspan="4" class="text-end">الإجماليات:</th>
                             <th dir="ltr">{{ number_format($totalCapitalShare,2) }}</th>
@@ -744,8 +742,8 @@
                                 {{ number_format($totalRemainingOnCustomers,2) }}
                             </th>
                         </tr>
-                    </tfoot>
-                </table>
+                    </x-slot>
+                </x-table>
             </div>
         </div>
     @endif

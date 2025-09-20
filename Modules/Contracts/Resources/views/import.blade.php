@@ -189,44 +189,40 @@
 
       <div id="failuresTable" class="collapse show">
         <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="width:110px">@lang('contracts::contracts_import.Row Number')</th>
-                  <th style="width:220px">@lang('contracts::contracts_import.Field')</th>
-                  <th>@lang('contracts::contracts_import.Messages')</th>
-                  <th style="min-width:260px">@lang('contracts::contracts_import.Values')</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($failuresBag as $failure)
-                  @php
-                    // يدعم array أو objects (كائن Failure أو صف مبسّط)
-                    $isObj = is_object($failure);
-                    $rowNum = $isObj && method_exists($failure, 'row') ? (int)$failure->row() : (int)($failure['row'] ?? 0);
-                    $attr   = $isObj && method_exists($failure, 'attribute') ? $failure->attribute() : ($failure['attribute'] ?? '');
-                    $msgs   = $isObj && method_exists($failure, 'errors') ? (array)$failure->errors() : (array)($failure['messages'] ?? $failure['errors'] ?? []);
-                    $vals   = $isObj && method_exists($failure, 'values') ? (array)$failure->values() : (array)($failure['values'] ?? []);
-                  @endphp
+          <x-table head-class="table-light sticky-top" striped small>
+              <x-slot name="head">
                   <tr>
-                    <td class="text-muted">{{ $rowNum }}</td>
-                    <td>{{ is_array($attr) ? implode(', ', $attr) : (string)$attr }}</td>
-                    <td>
-                      @if (count($msgs))
-                        <ul class="mb-0 ps-3">@foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach</ul>
-                      @else
-                        <span class="text-muted">—</span>
-                      @endif
-                    </td>
-                    <td class="text-break">
-                      <code class="small code-wrap">{{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}</code>
-                    </td>
+                    <th style="width:110px">@lang('contracts::contracts_import.Row Number')</th>
+                    <th style="width:220px">@lang('contracts::contracts_import.Field')</th>
+                    <th>@lang('contracts::contracts_import.Messages')</th>
+                    <th style="min-width:260px">@lang('contracts::contracts_import.Values')</th>
                   </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
+              </x-slot>
+              @foreach ($failuresBag as $failure)
+                @php
+                  // يدعم array أو objects (كائن Failure أو صف مبسّط)
+                  $isObj = is_object($failure);
+                  $rowNum = $isObj && method_exists($failure, 'row') ? (int)$failure->row() : (int)($failure['row'] ?? 0);
+                  $attr   = $isObj && method_exists($failure, 'attribute') ? $failure->attribute() : ($failure['attribute'] ?? '');
+                  $msgs   = $isObj && method_exists($failure, 'errors') ? (array)$failure->errors() : (array)($failure['messages'] ?? $failure['errors'] ?? []);
+                  $vals   = $isObj && method_exists($failure, 'values') ? (array)$failure->values() : (array)($failure['values'] ?? []);
+                @endphp
+                <tr>
+                  <td class="text-muted">{{ $rowNum }}</td>
+                  <td>{{ is_array($attr) ? implode(', ', $attr) : (string)$attr }}</td>
+                  <td>
+                    @if (count($msgs))
+                      <ul class="mb-0 ps-3">@foreach ($msgs as $m) <li>{{ $m }}</li> @endforeach</ul>
+                    @else
+                      <span class="text-muted">—</span>
+                    @endif
+                  </td>
+                  <td class="text-break">
+                    <code class="small code-wrap">{{ json_encode($vals, JSON_UNESCAPED_UNICODE) }}</code>
+                  </td>
+                </tr>
+              @endforeach
+          </x-table>
           <div class="p-3 text-muted small">
             صحّح الصفوف ثم أعد الرفع. يُفضّل استخدام زر “تنزيل ملف لتصحيح الصفوف”.
           </div>

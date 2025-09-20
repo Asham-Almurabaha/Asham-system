@@ -67,46 +67,42 @@
 
 <div class="card shadow-sm">
     <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle text-center mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:60px">#</th>
-                        <th>المستثمر</th>
-                        <th>الحالة</th>
-                        <th>المبلغ</th>
-                        <th>تاريخ العملية</th>
-                        <th>ملاحظات</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($transactions as $transaction)
-                        <tr>
-                            <td class="text-muted">{{ $loop->iteration + ($transactions->currentPage() - 1) * $transactions->perPage() }}</td>
-                            <td>{{ $transaction->investor->name ?? '-' }}</td>
-                            <td>{{ $transaction->status->name ?? '-' }}</td>
-                            <td>{{ number_format($transaction->amount, 2) }}</td>
-                            <td>{{ $transaction->transaction_date }}</td>
-                            <td>{{ $transaction->notes }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="py-5">
-                                <div class="text-muted">
-                                    لا توجد عمليات مطابقة لبحثك.
-                                    <a href="{{ route('investor-transactions.index') }}" class="ms-1">عرض الكل</a>
-                                </div>
-                                <div class="mt-3">
-                                    <a href="{{ route('investor-transactions.create') }}" class="btn btn-sm btn-success">
-                                        + إضافة أول عملية
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-table head-class="table-light" class="text-center">
+            <x-slot name="head">
+                <tr>
+                    <th style="width:60px">#</th>
+                    <th>المستثمر</th>
+                    <th>الحالة</th>
+                    <th>المبلغ</th>
+                    <th>تاريخ العملية</th>
+                    <th>ملاحظات</th>
+                </tr>
+            </x-slot>
+            @forelse($transactions as $transaction)
+                <tr>
+                    <td class="text-muted">{{ $loop->iteration + ($transactions->currentPage() - 1) * $transactions->perPage() }}</td>
+                    <td>{{ $transaction->investor->name ?? '-' }}</td>
+                    <td>{{ $transaction->status->name ?? '-' }}</td>
+                    <td>{{ number_format($transaction->amount, 2) }}</td>
+                    <td>{{ $transaction->transaction_date }}</td>
+                    <td>{{ $transaction->notes }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="6" class="py-5">
+                        <div class="text-muted">
+                            لا توجد عمليات مطابقة لبحثك.
+                            <a href="{{ route('investor-transactions.index') }}" class="ms-1">عرض الكل</a>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('investor-transactions.create') }}" class="btn btn-sm btn-success">
+                                + إضافة أول عملية
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            @endforelse
+        </x-table>
     </div>
     @if($transactions->hasPages())
     <div class="card-footer bg-white">

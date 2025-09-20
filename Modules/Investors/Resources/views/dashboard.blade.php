@@ -217,42 +217,38 @@
                 </div>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle text-center mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:60px">#</th>
-                                <th>{{ __('investors::investors.Name') }}</th>
-                                <th>{{ __('investors::investors.Total Deposits') }}</th>
-                                <th>{{ __('investors::investors.Total Withdrawals') }}</th>
-                                <th>{{ __('investors::investors.Net Liquidity') }}</th>
-                                <th>{{ __('investors::investors.Actions') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($topLiquidityCollection as $index => $row)
-                                <tr>
-                                    <td class="text-muted">{{ $index + 1 }}</td>
-                                    <td class="text-start">
-                                        <a href="{{ route('investors.show', $row['id']) }}" class="text-decoration-none fw-bold text-dark hover-primary">
-                                            {{ $row['name'] }}
-                                        </a>
-                                    </td>
-                                    <td>{{ number_format($row['in'] ?? 0, 2) }}</td>
-                                    <td>{{ number_format($row['out'] ?? 0, 2) }}</td>
-                                    <td>{{ number_format($row['net'] ?? 0, 2) }}</td>
-                                    <td>
-                                        <a href="{{ route('investors.show', $row['id']) }}" class="btn btn-sm btn-outline-primary">{{ __('investors::investors.View') }}</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="py-4 text-muted">{{ __('investors::investors.No data available') }}</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                <x-table head-class="table-light" class="text-center">
+                    <x-slot name="head">
+                        <tr>
+                            <th style="width:60px">#</th>
+                            <th>{{ __('investors::investors.Name') }}</th>
+                            <th>{{ __('investors::investors.Total Deposits') }}</th>
+                            <th>{{ __('investors::investors.Total Withdrawals') }}</th>
+                            <th>{{ __('investors::investors.Net Liquidity') }}</th>
+                            <th>{{ __('investors::investors.Actions') }}</th>
+                        </tr>
+                    </x-slot>
+                    @forelse($topLiquidityCollection as $index => $row)
+                        <tr>
+                            <td class="text-muted">{{ $index + 1 }}</td>
+                            <td class="text-start">
+                                <a href="{{ route('investors.show', $row['id']) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                                    {{ $row['name'] }}
+                                </a>
+                            </td>
+                            <td>{{ number_format($row['in'] ?? 0, 2) }}</td>
+                            <td>{{ number_format($row['out'] ?? 0, 2) }}</td>
+                            <td>{{ number_format($row['net'] ?? 0, 2) }}</td>
+                            <td>
+                                <a href="{{ route('investors.show', $row['id']) }}" class="btn btn-sm btn-outline-primary">{{ __('investors::investors.View') }}</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-4 text-muted">{{ __('investors::investors.No data available') }}</td>
+                        </tr>
+                    @endforelse
+                </x-table>
             </div>
             @if($topLiquidityCollection->count() > 0)
                 <div class="card-footer small text-muted">
@@ -269,48 +265,44 @@
                 <span class="badge bg-light text-dark">{{ __('investors::investors.Results') }}: {{ number_format(($recentInvestors ?? collect())->count()) }}</span>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle text-center mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th style="width:60px">#</th>
-                                <th>{{ __('investors::investors.Name') }}</th>
-                                <th>{{ __('investors::investors.Created At') }}</th>
-                                <th>{{ __('investors::investors.Investment Start Date') }}</th>
-                                <th>{{ __('investors::investors.Contracts Count') }}</th>
-                                <th>{{ __('investors::investors.Office Share %') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse(($recentInvestors ?? collect()) as $index => $investor)
-                                <tr>
-                                    <td class="text-muted">{{ $index + 1 }}</td>
-                                    <td class="text-start">
-                                        <a href="{{ route('investors.show', $investor) }}" class="text-decoration-none fw-bold text-dark hover-primary">
-                                            {{ $investor->name }}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <span dir="ltr">{{ optional($investor->created_at)->format('Y-m-d') }}</span>
-                                    </td>
-                                    <td>
-                                        @if($investor->investment_start_date)
-                                            <span dir="ltr">{{ $investor->investment_start_date->format('Y-m-d') }}</span>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ number_format($investor->contracts_count ?? 0) }}</td>
-                                    <td>{{ number_format((float) ($investor->office_share_percentage ?? 0), 2) }}%</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="py-4 text-muted">{{ __('investors::investors.No data available') }}</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                <x-table head-class="table-light" class="text-center">
+                    <x-slot name="head">
+                        <tr>
+                            <th style="width:60px">#</th>
+                            <th>{{ __('investors::investors.Name') }}</th>
+                            <th>{{ __('investors::investors.Created At') }}</th>
+                            <th>{{ __('investors::investors.Investment Start Date') }}</th>
+                            <th>{{ __('investors::investors.Contracts Count') }}</th>
+                            <th>{{ __('investors::investors.Office Share %') }}</th>
+                        </tr>
+                    </x-slot>
+                    @forelse(($recentInvestors ?? collect()) as $index => $investor)
+                        <tr>
+                            <td class="text-muted">{{ $index + 1 }}</td>
+                            <td class="text-start">
+                                <a href="{{ route('investors.show', $investor) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                                    {{ $investor->name }}
+                                </a>
+                            </td>
+                            <td>
+                                <span dir="ltr">{{ optional($investor->created_at)->format('Y-m-d') }}</span>
+                            </td>
+                            <td>
+                                @if($investor->investment_start_date)
+                                    <span dir="ltr">{{ $investor->investment_start_date->format('Y-m-d') }}</span>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
+                            <td>{{ number_format($investor->contracts_count ?? 0) }}</td>
+                            <td>{{ number_format((float) ($investor->office_share_percentage ?? 0), 2) }}%</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="py-4 text-muted">{{ __('investors::investors.No data available') }}</td>
+                        </tr>
+                    @endforelse
+                </x-table>
             </div>
         </div>
     </div>

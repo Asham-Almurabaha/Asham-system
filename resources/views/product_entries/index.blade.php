@@ -26,50 +26,47 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col" class="text-nowrap">{{ __('#') }}</th>
-                                    <th scope="col">{{ __('Product') }}</th>
-                                    <th scope="col" class="text-nowrap">{{ __('Quantity') }}</th>
-                                    <th scope="col" class="text-nowrap">{{ __('Purchase Price') }}</th>
-                                    <th scope="col" class="text-nowrap">{{ __('Entry Date') }}</th>
-                                    <th scope="col" class="text-end text-nowrap">{{ __('Actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($entries as $entry)
-                                    <tr>
-                                        <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $entry->product->name }}</td>
-                                        <td>{{ $entry->quantity }}</td>
-                                        <td>{{ number_format($entry->purchase_price, 2) }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($entry->entry_date)->format('Y-m-d') }}</td>
-                                        <td class="text-end">
-                                            <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-end">
-                                                <x-button href="{{ route('product_entries.edit', $entry->id) }}" variant="primary" size="sm">
-                                                    {{ __('Edit') }}
-                                                </x-button>
-                                                <form action="{{ route('product_entries.destroy', $entry->id) }}" method="POST" class="m-0"
-                                                      onsubmit="return confirm('{{ __('Are you sure to delete this entry?') }}');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <x-button type="submit" variant="danger" size="sm">
-                                                        {{ __('Delete') }}
-                                                    </x-button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">{{ __('No entries found.') }}</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-table striped>
+                        <x-slot name="head">
+                            <tr>
+                                <th scope="col" class="text-nowrap">{{ __('#') }}</th>
+                                <th scope="col">{{ __('Product') }}</th>
+                                <th scope="col" class="text-nowrap">{{ __('Quantity') }}</th>
+                                <th scope="col" class="text-nowrap">{{ __('Purchase Price') }}</th>
+                                <th scope="col" class="text-nowrap">{{ __('Entry Date') }}</th>
+                                <th scope="col" class="text-end text-nowrap">{{ __('Actions') }}</th>
+                            </tr>
+                        </x-slot>
+
+                        @forelse($entries as $entry)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td>{{ $entry->product->name }}</td>
+                                <td>{{ $entry->quantity }}</td>
+                                <td>{{ number_format($entry->purchase_price, 2) }}</td>
+                                <td>{{ \Carbon\Carbon::parse($entry->entry_date)->format('Y-m-d') }}</td>
+                                <td class="text-end">
+                                    <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-end">
+                                        <a href="{{ route('product_entries.edit', $entry->id) }}" class="btn btn-primary btn-sm">
+                                            {{ __('Edit') }}
+                                        </a>
+                                        <form action="{{ route('product_entries.destroy', $entry->id) }}" method="POST" class="m-0"
+                                              onsubmit="return confirm('{{ __('Are you sure to delete this entry?') }}')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                {{ __('Delete') }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">{{ __('No entries found.') }}</td>
+                            </tr>
+                        @endforelse
+                    </x-table>
                 </div>
                 @if(method_exists($entries, 'hasPages') && $entries->hasPages())
                     <div class="card-footer bg-white border-0">

@@ -96,51 +96,47 @@
     </div> --}}
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered text-center align-middle">
-      <thead class="table-light">
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
+          <tr>
+            <th style="width:56px">#</th>
+            <th class="text-start">@lang('app.Investor')</th>
+            <th>@lang('reports.Remaining (Including Office Share)')</th>
+            <th>@lang('reports.Office Share Portion')</th>
+            <th>@lang('reports.Remaining (Excluding Office Share)')</th>
+          </tr>
+      </x-slot>
+      @forelse($items as $i => $r)
+        @php
+          $withOffice = (float) ($r->remaining_with_office ?? 0);
+          $withoutOffice = (float) ($r->remaining_without_office ?? 0);
+          $officeShare = (float) ($r->remaining_office_share ?? max(0, $withOffice - $withoutOffice));
+        @endphp
         <tr>
-          <th style="width:56px">#</th>
-          <th class="text-start">@lang('app.Investor')</th>
-          <th>@lang('reports.Remaining (Including Office Share)')</th>
-          <th>@lang('reports.Office Share Portion')</th>
-          <th>@lang('reports.Remaining (Excluding Office Share)')</th>
+          <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
+          <td class="text-start">
+            @if(Route::has('investors.show'))
+              <a href="{{ route('investors.show', $r->id) }}" class="fw-bold link-dark text-decoration-none">{{ $r->name }}</a>
+            @else
+              <span class="fw-bold text-dark">{{ $r->name }}</span>
+            @endif
+          </td>
+          <td class="fw-semibold text-danger">
+            {{ number_format($withOffice, 2) }} <span class="small-muted">{{ $cs }}</span>
+          </td>
+          <td class="fw-semibold text-warning">
+            {{ number_format($officeShare, 2) }} <span class="small-muted">{{ $cs }}</span>
+          </td>
+          <td class="fw-semibold text-primary">
+            {{ number_format($withoutOffice, 2) }} <span class="small-muted">{{ $cs }}</span>
+          </td>
         </tr>
-      </thead>
-      <tbody>
-        @forelse($items as $i => $r)
-          @php
-            $withOffice = (float) ($r->remaining_with_office ?? 0);
-            $withoutOffice = (float) ($r->remaining_without_office ?? 0);
-            $officeShare = (float) ($r->remaining_office_share ?? max(0, $withOffice - $withoutOffice));
-          @endphp
-          <tr>
-            <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
-            <td class="text-start">
-              @if(Route::has('investors.show'))
-                <a href="{{ route('investors.show', $r->id) }}" class="fw-bold link-dark text-decoration-none">{{ $r->name }}</a>
-              @else
-                <span class="fw-bold text-dark">{{ $r->name }}</span>
-              @endif
-            </td>
-            <td class="fw-semibold text-danger">
-              {{ number_format($withOffice, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-            <td class="fw-semibold text-warning">
-              {{ number_format($officeShare, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-            <td class="fw-semibold text-primary">
-              {{ number_format($withoutOffice, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="5" class="py-5 text-muted">@lang('reports.No matching data.')</td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
+      @empty
+        <tr>
+          <td colspan="5" class="py-5 text-muted">@lang('reports.No matching data.')</td>
+        </tr>
+      @endforelse
+  </x-table>
   @if($isPaginated)
     <div class="no-print d-flex justify-content-center p-2">
       {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}

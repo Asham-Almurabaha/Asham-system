@@ -87,59 +87,58 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered text-center align-middle">
-      <thead class="table-light">
-        <tr>
-          <th style="width:56px">#</th>
-          <th class="text-start">@lang('app.Investor')</th>
-          <th>@lang('reports.Contracts (Active/Total)')</th>
-          <th>@lang('reports.Initial Capital')</th>
-          <th>@lang('reports.Current Liquidity')</th>
-          <th class="no-print" style="width:120px">{{ __('Actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($items as $i => $r)
-          @php
-            $liq  = (float) ($r->liquidity ?? 0);
-            $init = (float) ($r->initial_capital ?? 0);
-            $act  = (int)   ($r->contracts_active ?? 0);
-            $tot  = (int)   ($r->contracts_total  ?? 0);
-          @endphp
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
           <tr>
-            <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
-            <td class="text-start">
-              <div class="fw-semibold">
-                @if(Route::has('investors.show'))
-                  <a href="{{ route('investors.show', $r->id) }}">{{ $r->name }}</a>
-                @else
-                  {{ $r->name }}
-                @endif
-              </div>
-            </td>
-            <td class="fw-semibold">{{ $act }} / {{ $tot }}</td>
-            <td class="text-primary fw-semibold">
-              {{ number_format($init, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-            <td class="fw-bold {{ $liq>=0 ? 'text-success' : 'text-danger' }}">
-              {{ number_format($liq, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-            <td class="no-print">
-              @if(Route::has('investors.show'))
-                <a href="{{ route('investors.show', $r->id) }}" class="btn btn-sm btn-outline-primary">@lang('pages.Details')</a>
-              @endif
-            </td>
+            <th style="width:56px">#</th>
+            <th class="text-start">@lang('app.Investor')</th>
+            <th>@lang('reports.Contracts (Active/Total)')</th>
+            <th>@lang('reports.Initial Capital')</th>
+            <th>@lang('reports.Current Liquidity')</th>
+            <th class="no-print" style="width:120px">{{ __('Actions') }}</th>
           </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="py-5 text-muted">@lang('reports.No matching data.')</td>
-          </tr>
-        @endforelse
-      </tbody>
-
+      </x-slot>
       @if($isPaginated)
-        <tfoot>
+      
+            @endif
+      
+              @forelse($items as $i => $r)
+                @php
+                  $liq  = (float) ($r->liquidity ?? 0);
+                  $init = (float) ($r->initial_capital ?? 0);
+                  $act  = (int)   ($r->contracts_active ?? 0);
+                  $tot  = (int)   ($r->contracts_total  ?? 0);
+                @endphp
+                <tr>
+                  <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
+                  <td class="text-start">
+                    <div class="fw-semibold">
+                      @if(Route::has('investors.show'))
+                        <a href="{{ route('investors.show', $r->id) }}">{{ $r->name }}</a>
+                      @else
+                        {{ $r->name }}
+                      @endif
+                    </div>
+                  </td>
+                  <td class="fw-semibold">{{ $act }} / {{ $tot }}</td>
+                  <td class="text-primary fw-semibold">
+                    {{ number_format($init, 2) }} <span class="small-muted">{{ $cs }}</span>
+                  </td>
+                  <td class="fw-bold {{ $liq>=0 ? 'text-success' : 'text-danger' }}">
+                    {{ number_format($liq, 2) }} <span class="small-muted">{{ $cs }}</span>
+                  </td>
+                  <td class="no-print">
+                    @if(Route::has('investors.show'))
+                      <a href="{{ route('investors.show', $r->id) }}" class="btn btn-sm btn-outline-primary">@lang('pages.Details')</a>
+                    @endif
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="6" class="py-5 text-muted">@lang('reports.No matching data.')</td>
+                </tr>
+              @endforelse
+      <x-slot name="footer">
           <tr>
             <th colspan="6" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
@@ -147,10 +146,8 @@
               </div>
             </th>
           </tr>
-        </tfoot>
-      @endif
-    </table>
-  </div>
+      </x-slot>
+  </x-table>
 @endsection
 
 @section('actions')

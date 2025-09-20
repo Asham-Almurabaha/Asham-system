@@ -32,53 +32,49 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered text-center align-middle">
-      <thead class="table-light">
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
+          <tr>
+            <th style="width:56px">#</th>
+            <th>{{ __('Contract Number') }}</th>
+            <th class="text-start">{{ __('Customer') }}</th>
+            <th>{{ __('Total Contract') }}</th>
+            <th>{{ __('contracts::contracts.Remaining Contract Amount') }}</th>
+            <th>{{ __('Start Date') }}</th>
+          </tr>
+      </x-slot>
+      @forelse($rows as $i => $c)
         <tr>
-          <th style="width:56px">#</th>
-          <th>{{ __('Contract Number') }}</th>
-          <th class="text-start">{{ __('Customer') }}</th>
-          <th>{{ __('Total Contract') }}</th>
-          <th>{{ __('contracts::contracts.Remaining Contract Amount') }}</th>
-          <th>{{ __('Start Date') }}</th>
+          <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
+          <td>
+            @php($contractNumber = $c->contract_number ?? $c->id ?? null)
+            @if($contractNumber !== null && $contractNumber !== '')
+              <a href="{{ route('contracts.show', $c) }}" class="text-decoration-none fw-bold text-dark">
+                {{ $contractNumber }}
+              </a>
+            @else
+              -
+            @endif
+          </td>
+          <td class="text-start">
+            @php($customer = $c->customer)
+            @if($customer)
+              <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold text-dark">
+                {{ $customer->name ?? '-' }}
+              </a>
+            @else
+              -
+            @endif
+          </td>
+          <td>{{ number_format((float)($c->total_value ?? 0), 2) }}</td>
+          <td>{{ number_format((float)($c->remaining_amount ?? 0), 2) }}</td>
+          <td>{{ optional($c->start_date)->format('Y-m-d') ?? ($c->start_date ? \Carbon\Carbon::parse($c->start_date)->format('Y-m-d') : '-') }}</td>
         </tr>
-      </thead>
-      <tbody>
-        @forelse($rows as $i => $c)
-          <tr>
-            <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
-            <td>
-              @php($contractNumber = $c->contract_number ?? $c->id ?? null)
-              @if($contractNumber !== null && $contractNumber !== '')
-                <a href="{{ route('contracts.show', $c) }}" class="text-decoration-none fw-bold text-dark">
-                  {{ $contractNumber }}
-                </a>
-              @else
-                -
-              @endif
-            </td>
-            <td class="text-start">
-              @php($customer = $c->customer)
-              @if($customer)
-                <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold text-dark">
-                  {{ $customer->name ?? '-' }}
-                </a>
-              @else
-                -
-              @endif
-            </td>
-            <td>{{ number_format((float)($c->total_value ?? 0), 2) }}</td>
-            <td>{{ number_format((float)($c->remaining_amount ?? 0), 2) }}</td>
-            <td>{{ optional($c->start_date)->format('Y-m-d') ?? ($c->start_date ? \Carbon\Carbon::parse($c->start_date)->format('Y-m-d') : '-') }}</td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="py-5 text-muted">{{ __('reports.No data available.') }}</td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
+      @empty
+        <tr>
+          <td colspan="6" class="py-5 text-muted">{{ __('reports.No data available.') }}</td>
+        </tr>
+      @endforelse
+  </x-table>
 @endsection
 

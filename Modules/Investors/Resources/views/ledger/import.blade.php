@@ -149,55 +149,51 @@
 
       <div id="failuresTable" class="collapse show">
         <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-sm table-striped table-hover align-middle mb-0">
-              <thead class="table-light sticky-top">
-                <tr>
-                  <th style="width:110px">@lang('investors::investors_import.Row Number')</th>
-                  <th style="width:220px">@lang('investors::investors_import.Field')</th>
-                  <th>@lang('investors::investors_import.Messages')</th>
-                  <th style="min-width:260px">@lang('investors::investors_import.Values')</th>
-                </tr>
-              </thead>
-              <tbody>
-                @foreach ($failuresBag as $failure)
-                  @php
-                    $rowNum = is_object($failure) && method_exists($failure, 'row') ? (int) $failure->row() : (int) ($failure['row'] ?? 0);
-                    $attrRaw = is_object($failure) && method_exists($failure, 'attribute') ? $failure->attribute() : ($failure['attribute'] ?? '');
-                    $messages = is_object($failure) && method_exists($failure, 'errors') ? (array) $failure->errors() : (array) ($failure['messages'] ?? $failure['errors'] ?? []);
-                    $values = is_object($failure) && method_exists($failure, 'values') ? $failure->values() : ($failure['values'] ?? []);
-
-                    $attrLabel = function ($attr) {
-                      if (is_array($attr)) {
-                        return collect($attr)->map(fn($item) => \App\Support\ExcelHeadingLocalizer::translate($item))->implode(', ');
-                      }
-
-                      $attr = (string) $attr;
-                      return $attr !== ''
-                        ? \App\Support\ExcelHeadingLocalizer::translate($attr)
-                        : '—';
-                    };
-                  @endphp
+          <x-table head-class="table-light sticky-top" striped small>
+              <x-slot name="head">
                   <tr>
-                    <td class="text-muted">{{ $rowNum }}</td>
-                    <td>{{ $attrLabel($attrRaw) }}</td>
-                    <td>
-                      @if (count($messages))
-                        <ul class="mb-0 ps-3">
-                          @foreach ($messages as $m) <li>{{ $m }}</li> @endforeach
-                        </ul>
-                      @else
-                        <span class="text-muted">—</span>
-                      @endif
-                    </td>
-                    <td class="text-break">
-                      <code class="small code-wrap">{{ json_encode($values, JSON_UNESCAPED_UNICODE) }}</code>
-                    </td>
+                    <th style="width:110px">@lang('investors::investors_import.Row Number')</th>
+                    <th style="width:220px">@lang('investors::investors_import.Field')</th>
+                    <th>@lang('investors::investors_import.Messages')</th>
+                    <th style="min-width:260px">@lang('investors::investors_import.Values')</th>
                   </tr>
-                @endforeach
-              </tbody>
-            </table>
-          </div>
+              </x-slot>
+              @foreach ($failuresBag as $failure)
+                @php
+                  $rowNum = is_object($failure) && method_exists($failure, 'row') ? (int) $failure->row() : (int) ($failure['row'] ?? 0);
+                  $attrRaw = is_object($failure) && method_exists($failure, 'attribute') ? $failure->attribute() : ($failure['attribute'] ?? '');
+                  $messages = is_object($failure) && method_exists($failure, 'errors') ? (array) $failure->errors() : (array) ($failure['messages'] ?? $failure['errors'] ?? []);
+                  $values = is_object($failure) && method_exists($failure, 'values') ? $failure->values() : ($failure['values'] ?? []);
+              
+                  $attrLabel = function ($attr) {
+                    if (is_array($attr)) {
+                      return collect($attr)->map(fn($item) => \App\Support\ExcelHeadingLocalizer::translate($item))->implode(', ');
+                    }
+              
+                    $attr = (string) $attr;
+                    return $attr !== ''
+                      ? \App\Support\ExcelHeadingLocalizer::translate($attr)
+                      : '—';
+                  };
+                @endphp
+                <tr>
+                  <td class="text-muted">{{ $rowNum }}</td>
+                  <td>{{ $attrLabel($attrRaw) }}</td>
+                  <td>
+                    @if (count($messages))
+                      <ul class="mb-0 ps-3">
+                        @foreach ($messages as $m) <li>{{ $m }}</li> @endforeach
+                      </ul>
+                    @else
+                      <span class="text-muted">—</span>
+                    @endif
+                  </td>
+                  <td class="text-break">
+                    <code class="small code-wrap">{{ json_encode($values, JSON_UNESCAPED_UNICODE) }}</code>
+                  </td>
+                </tr>
+              @endforeach
+          </x-table>
           <div class="p-3 text-muted small">
             @lang('investors::investors_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')
           </div>

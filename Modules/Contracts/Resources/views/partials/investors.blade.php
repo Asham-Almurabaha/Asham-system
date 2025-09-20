@@ -53,16 +53,15 @@
             <span id="helper-remaining" class="badge bg-info text-dark">المتبقي: —%</span>
           </div>
 
-          <table class="table table-bordered text-center align-middle">
-            <thead>
-              <tr>
-                <th style="width:40%">المستثمر / السيولة</th>
-                <th style="width:20%">النسبة (%)</th>
-                <th style="width:25%">القيمة</th>
-                <th style="width:15%">إجراء</th>
-              </tr>
-            </thead>
-            <tbody id="investors-table-body">
+          <x-table bordered class="text-center" :hover="false">
+              <x-slot name="head">
+                  <tr>
+                    <th style="width:40%">المستثمر / السيولة</th>
+                    <th style="width:20%">النسبة (%)</th>
+                    <th style="width:25%">القيمة</th>
+                    <th style="width:15%">إجراء</th>
+                  </tr>
+              </x-slot>
               {{-- المستثمرون الحاليون (Disabled) --}}
               @foreach($contract->investors as $inv)
               <tr class="existing-row">
@@ -86,8 +85,7 @@
                 <td><button type="button" class="btn btn-danger btn-sm" disabled>حذف</button></td>
               </tr>
               @endforeach
-            </tbody>
-          </table>
+          </x-table>
 
           <div class="d-flex gap-2">
             <button type="button" id="add-investor-row" class="btn btn-outline-primary btn-sm">+ إضافة مستثمر آخر</button>

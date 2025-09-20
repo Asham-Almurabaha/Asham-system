@@ -74,45 +74,44 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered text-center align-middle">
-      <thead class="table-light">
-        <tr>
-          <th style="width:56px">#</th>
-          <th>@lang('app.Date')</th>
-          <th>@lang('app.Amount')</th>
-          <th>@lang('app.Type')</th>
-          <th>@lang('app.Status')</th>
-          <th class="text-start">@lang('app.Notes')</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($items as $i => $e)
-          @php
-            $statusName = optional($e->status)->name ?? optional($e->transactionStatus)->name ?? '—';
-            $typeName   = optional($e->type)->name   ?? optional($e->transactionType)->name   ?? '—';
-            $isDeposit  = (string)$e->direction === 'in';
-            $amountCls  = $isDeposit ? 'text-success' : 'text-danger';
-          @endphp
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
           <tr>
-            <td>{{ $i + 1 }}</td>
-            <td>{{ Carbon::parse($e->entry_date)->format('d-m-Y') }}</td>
-            <td class="fw-semibold {{ $amountCls }}">
-              {{ number_format($e->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-            <td>{{ $typeName }}</td>
-            <td>{{ $statusName }}</td>
-            <td class="text-start">{{ $e->notes ?? '—' }}</td>
+            <th style="width:56px">#</th>
+            <th>@lang('app.Date')</th>
+            <th>@lang('app.Amount')</th>
+            <th>@lang('app.Type')</th>
+            <th>@lang('app.Status')</th>
+            <th class="text-start">@lang('app.Notes')</th>
           </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="py-5 text-muted">@lang('reports.No matching transactions in the report.')</td>
-          </tr>
-        @endforelse
-      </tbody>
-
+      </x-slot>
       @if($transactions instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        <tfoot>
+      
+            @endif
+      
+              @forelse($items as $i => $e)
+                @php
+                  $statusName = optional($e->status)->name ?? optional($e->transactionStatus)->name ?? '—';
+                  $typeName   = optional($e->type)->name   ?? optional($e->transactionType)->name   ?? '—';
+                  $isDeposit  = (string)$e->direction === 'in';
+                  $amountCls  = $isDeposit ? 'text-success' : 'text-danger';
+                @endphp
+                <tr>
+                  <td>{{ $i + 1 }}</td>
+                  <td>{{ Carbon::parse($e->entry_date)->format('d-m-Y') }}</td>
+                  <td class="fw-semibold {{ $amountCls }}">
+                    {{ number_format($e->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
+                  </td>
+                  <td>{{ $typeName }}</td>
+                  <td>{{ $statusName }}</td>
+                  <td class="text-start">{{ $e->notes ?? '—' }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="6" class="py-5 text-muted">@lang('reports.No matching transactions in the report.')</td>
+                </tr>
+              @endforelse
+      <x-slot name="footer">
           <tr>
             <th colspan="6" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
@@ -120,10 +119,8 @@
               </div>
             </th>
           </tr>
-        </tfoot>
-      @endif
-    </table>
-  </div>
+      </x-slot>
+  </x-table>
 @endsection
 
 @section('actions')

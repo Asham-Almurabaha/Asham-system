@@ -175,64 +175,50 @@
 {{-- ====== الجدول ====== --}}
 <div class="card shadow-sm">
     <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle text-center mb-0">
-                <thead class="table-light position-sticky top-0" style="z-index: 1;">
-                    <tr>
-                        <th style="width:60px">{{ __('guarantors::messages.#') }}</th>
-                        <th>{{ __('guarantors::messages.Name') }}</th>
-                        <th>{{ __('guarantors::messages.Guarantor Status') }}</th>
-                        <th>{{ __('guarantors::messages.National ID') }}</th>
-                        <th>{{ __('guarantors::messages.Phone') }}</th>
-                        <th>{{ __('guarantors::messages.Contracts Count') }}</th>
-                        <th>{{ __('guarantors::messages.Customers Count') }}</th>
-                        @if($showInstallmentMetrics)
-                            <th>{{ __('guarantors::messages.Outstanding Amount') }}</th>
-                            <th>{{ __('guarantors::messages.Overdue Amount') }}</th>
-                            <th>{{ __('guarantors::messages.Due This Month') }}</th>
-                        @endif
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($guarantors as $g)
-                        <tr>
-                            <td class="text-muted">
-                                {{ $loop->iteration + ($guarantors->currentPage() - 1) * $guarantors->perPage() }}
-                            </td>
-                            <td class="text-start">
-                                <a href="{{ route('guarantors.show', $g) }}" class="text-decoration-none fw-bold text-dark hover-primary">
-                                    {{ $g->name }}
-                                </a>
-                            </td>
-                            <td>{{ optional($g->guarantorStatus)->name ?? '—' }}</td>
-                            <td dir="ltr">{{ $g->national_id ?? '—' }}</td>
-                            <td dir="ltr">{{ $g->phone ?? '—' }}</td>
-                            <td>{{ number_format($g->contracts_count ?? 0) }}</td>
-                            <td>{{ number_format($g->customers_count ?? 0) }}</td>
-                            @if($showInstallmentMetrics)
-                                <td>{{ number_format((float) ($g->unpaid_total ?? 0), 2) }}</td>
-                                <td>{{ number_format((float) ($g->overdue_total ?? 0), 2) }}</td>
-                                <td>{{ number_format((float) ($g->due_this_month_total ?? 0), 2) }}</td>
-                            @endif
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="py-5">
-                                <div class="text-muted">
-                                    {{ __('guarantors::messages.No matching results for your search.') }}
-                                    <a href="{{ route('guarantors.index') }}" class="ms-1">{{ __('guarantors::messages.Show All') }}</a>
-                                </div>
-                                <div class="mt-3">
-                                    <a href="{{ route('guarantors.create') }}" class="btn btn-sm btn-success">
-                                        + {{ __('guarantors::messages.Add First Guarantor') }}
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-table head-class="table-light position-sticky top-0" class="text-center">
+            <x-slot name="head">
+                <tr>
+                    <th style="width:60px">{{ __('guarantors::messages.#') }}</th>
+                    <th>{{ __('guarantors::messages.Name') }}</th>
+                    <th>{{ __('guarantors::messages.Guarantor Status') }}</th>
+                    <th>{{ __('guarantors::messages.National ID') }}</th>
+                    <th>{{ __('guarantors::messages.Phone') }}</th>
+                    <th>{{ __('guarantors::messages.Contracts Count') }}</th>
+                    <th>{{ __('guarantors::messages.Customers Count') }}</th>
+                </tr>
+            </x-slot>
+            @forelse ($guarantors as $g)
+                <tr>
+                    <td class="text-muted">
+                        {{ $loop->iteration + ($guarantors->currentPage() - 1) * $guarantors->perPage() }}
+                    </td>
+                    <td class="text-start">
+                        <a href="{{ route('guarantors.show', $g) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                            {{ $g->name }}
+                        </a>
+                    </td>
+                    <td>{{ optional($g->guarantorStatus)->name ?? '—' }}</td>
+                    <td dir="ltr">{{ $g->national_id ?? '—' }}</td>
+                    <td dir="ltr">{{ $g->phone ?? '—' }}</td>
+                    <td>{{ number_format($g->contracts_count ?? 0) }}</td>
+                    <td>{{ number_format($g->customers_count ?? 0) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" class="py-5">
+                        <div class="text-muted">
+                            {{ __('guarantors::messages.No matching results for your search.') }}
+                            <a href="{{ route('guarantors.index') }}" class="ms-1">{{ __('guarantors::messages.Show All') }}</a>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('guarantors.create') }}" class="btn btn-sm btn-success">
+                                + {{ __('guarantors::messages.Add First Guarantor') }}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            @endforelse
+        </x-table>
     </div>
 
     @if($guarantors->hasPages())

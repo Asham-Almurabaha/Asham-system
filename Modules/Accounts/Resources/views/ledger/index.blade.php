@@ -234,45 +234,41 @@
                 </div>
 
                 @if($bankAgg->isNotEmpty())
-                    <div class="table-responsive nice-scroll">
-                        <table class="table table-sm align-middle mb-0 table-hover">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th>الحساب</th>
-                                    <th style="width:34%"></th>
-                                    <th class="text-end" style="width:12%">داخل</th>
-                                    <th class="text-end" style="width:12%">خارج</th>
-                                    <th class="text-end" style="width:12%">صافي</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($bankAgg as $b)
-                                    <tr>
-                                        <td class="text-truncate" style="max-width:220px">
-                                            <i class="bi bi-building-fill-check text-success me-1"></i>{{ $b['name'] }}
-                                        </td>
-                                        <td>
-                                            <div class="stacked-bar" title="داخل {{ $b['in_pct'] }}% / خارج {{ $b['out_pct'] }}%">
-                                                <span class="in"  style="width: {{ $b['in_pct'] }}%"></span>
-                                                <span class="out" style="width: {{ $b['out_pct'] }}%"></span>
-                                            </div>
-                                        </td>
-                                        <td class="text-end text-success">{{ number_format($b['in'],2) }}</td>
-                                        <td class="text-end text-danger">{{ number_format($b['out'],2) }}</td>
-                                        <td class="text-end fw-semibold {{ ($b['net']??0)>=0?'text-success':'text-danger' }}">{{ number_format($b['net']??0,2) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <th colspan="2" class="text-end">الإجمالي</th>
-                                    <th class="text-end text-success">{{ number_format($bankTotalIn,2) }}</th>
-                                    <th class="text-end text-danger">{{ number_format($bankTotalOut,2) }}</th>
-                                    <th class="text-end fw-semibold {{ $bankNet>=0?'text-success':'text-danger' }}">{{ number_format($bankNet,2) }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+                    <x-table head-class="table-light sticky-top" foot-class="table-light" small>
+                        <x-slot name="head">
+                            <tr>
+                                <th>الحساب</th>
+                                <th style="width:34%"></th>
+                                <th class="text-end" style="width:12%">داخل</th>
+                                <th class="text-end" style="width:12%">خارج</th>
+                                <th class="text-end" style="width:12%">صافي</th>
+                            </tr>
+                        </x-slot>
+                        @foreach($bankAgg as $b)
+                            <tr>
+                                <td class="text-truncate" style="max-width:220px">
+                                    <i class="bi bi-building-fill-check text-success me-1"></i>{{ $b['name'] }}
+                                </td>
+                                <td>
+                                    <div class="stacked-bar" title="داخل {{ $b['in_pct'] }}% / خارج {{ $b['out_pct'] }}%">
+                                        <span class="in"  style="width: {{ $b['in_pct'] }}%"></span>
+                                        <span class="out" style="width: {{ $b['out_pct'] }}%"></span>
+                                    </div>
+                                </td>
+                                <td class="text-end text-success">{{ number_format($b['in'],2) }}</td>
+                                <td class="text-end text-danger">{{ number_format($b['out'],2) }}</td>
+                                <td class="text-end fw-semibold {{ ($b['net']??0)>=0?'text-success':'text-danger' }}">{{ number_format($b['net']??0,2) }}</td>
+                            </tr>
+                        @endforeach
+                        <x-slot name="footer">
+                            <tr>
+                                <th colspan="2" class="text-end">الإجمالي</th>
+                                <th class="text-end text-success">{{ number_format($bankTotalIn,2) }}</th>
+                                <th class="text-end text-danger">{{ number_format($bankTotalOut,2) }}</th>
+                                <th class="text-end fw-semibold {{ $bankNet>=0?'text-success':'text-danger' }}">{{ number_format($bankNet,2) }}</th>
+                            </tr>
+                        </x-slot>
+                    </x-table>
                 @else
                     <div class="text-muted mini">لا توجد حركات بنكية ضمن النتائج.</div>
                 @endif
@@ -305,45 +301,41 @@
                 </div>
 
                 @if($safeAgg->isNotEmpty())
-                    <div class="table-responsive nice-scroll">
-                        <table class="table table-sm align-middle mb-0 table-hover">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th>الخزنة</th>
-                                    <th style="width:34%"></th>
-                                    <th class="text-end" style="width:12%">داخل</th>
-                                    <th class="text-end" style="width:12%">خارج</th>
-                                    <th class="text-end" style="width:12%">صافي</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($safeAgg as $s)
-                                    <tr>
-                                        <td class="text-truncate" style="max-width:220px">
-                                            <i class="bi bi-archive-fill text-warning me-1"></i>{{ $s['name'] }}
-                                        </td>
-                                        <td>
-                                            <div class="stacked-bar" title="داخل {{ $s['in_pct'] }}% / خارج {{ $s['out_pct'] }}%">
-                                                <span class="in"  style="width: {{ $s['in_pct'] }}%"></span>
-                                                <span class="out" style="width: {{ $s['out_pct'] }}%"></span>
-                                            </div>
-                                        </td>
-                                        <td class="text-end text-success">{{ number_format($s['in'],2) }}</td>
-                                        <td class="text-end text-danger">{{ number_format($s['out'],2) }}</td>
-                                        <td class="text-end fw-semibold {{ ($s['net']??0)>=0?'text-success':'text-danger' }}">{{ number_format($s['net']??0,2) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <th colspan="2" class="text-end">الإجمالي</th>
-                                    <th class="text-end text-success">{{ number_format($safeTotalIn,2) }}</th>
-                                    <th class="text-end text-danger">{{ number_format($safeTotalOut,2) }}</th>
-                                    <th class="text-end fw-semibold {{ $safeNet>=0?'text-success':'text-danger' }}">{{ number_format($safeNet,2) }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
+                    <x-table head-class="table-light sticky-top" foot-class="table-light" small>
+                        <x-slot name="head">
+                            <tr>
+                                <th>الخزنة</th>
+                                <th style="width:34%"></th>
+                                <th class="text-end" style="width:12%">داخل</th>
+                                <th class="text-end" style="width:12%">خارج</th>
+                                <th class="text-end" style="width:12%">صافي</th>
+                            </tr>
+                        </x-slot>
+                        @foreach($safeAgg as $s)
+                            <tr>
+                                <td class="text-truncate" style="max-width:220px">
+                                    <i class="bi bi-archive-fill text-warning me-1"></i>{{ $s['name'] }}
+                                </td>
+                                <td>
+                                    <div class="stacked-bar" title="داخل {{ $s['in_pct'] }}% / خارج {{ $s['out_pct'] }}%">
+                                        <span class="in"  style="width: {{ $s['in_pct'] }}%"></span>
+                                        <span class="out" style="width: {{ $s['out_pct'] }}%"></span>
+                                    </div>
+                                </td>
+                                <td class="text-end text-success">{{ number_format($s['in'],2) }}</td>
+                                <td class="text-end text-danger">{{ number_format($s['out'],2) }}</td>
+                                <td class="text-end fw-semibold {{ ($s['net']??0)>=0?'text-success':'text-danger' }}">{{ number_format($s['net']??0,2) }}</td>
+                            </tr>
+                        @endforeach
+                        <x-slot name="footer">
+                            <tr>
+                                <th colspan="2" class="text-end">الإجمالي</th>
+                                <th class="text-end text-success">{{ number_format($safeTotalIn,2) }}</th>
+                                <th class="text-end text-danger">{{ number_format($safeTotalOut,2) }}</th>
+                                <th class="text-end fw-semibold {{ $safeNet>=0?'text-success':'text-danger' }}">{{ number_format($safeNet,2) }}</th>
+                            </tr>
+                        </x-slot>
+                    </x-table>
                 @else
                     <div class="text-muted mini">لا توجد حركات خزنة ضمن النتائج.</div>
                 @endif
@@ -454,9 +446,9 @@
 
 {{-- الجدول --}}
 <div class="card shadow-sm">
-    <div class="card-body table-responsive p-0">
-        <table class="table table-hover align-middle text-center mb-0">
-            <thead class="table-light" style="position: sticky; top: 0; z-index: 2;">
+    <div class="card-body p-0">
+        <x-table head-class="table-light" class="text-center">
+            <x-slot name="head">
                 <tr>
                     <th style="width:120px">التاريخ</th>
                     <th>الجهة</th>
@@ -466,62 +458,60 @@
                     <th class="text-end">المبلغ</th>
                     <th>الحساب</th>
                 </tr>
-            </thead>
-            <tbody>
-                @php
-                    $isOffice = function($e){
-                        return (($e->is_office ?? null) === 1) || (($e->is_office ?? null) === true);
-                    };
-                @endphp
-                @forelse($entries as $e)
-                    <tr>
-                        <td>{{ $e->entry_date?->format('Y-m-d') }}</td>
-                        <td>
-                            @if($isOffice($e))
-                                <span class="badge bg-secondary">المكتب</span>
-                            @else
-                                {{ $e->investor->name ?? '-' }}
-                            @endif
-                        </td>
-                        <td>
-                            @php $statusText = $e->status->name ?? '-'; @endphp
-                            @if(!empty($e->notes))
-                                <span data-bs-toggle="tooltip" data-bs-container="body" data-bs-placement="top" title="{{ $e->notes }}">
-                                    {{ $statusText }}
-                                </span>
-                            @else
+            </x-slot>
+            @php
+                $isOffice = function($e){
+                    return (($e->is_office ?? null) === 1) || (($e->is_office ?? null) === true);
+                };
+            @endphp
+            @forelse($entries as $e)
+                <tr>
+                    <td>{{ $e->entry_date?->format('Y-m-d') }}</td>
+                    <td>
+                        @if($isOffice($e))
+                            <span class="badge bg-secondary">المكتب</span>
+                        @else
+                            {{ $e->investor->name ?? '-' }}
+                        @endif
+                    </td>
+                    <td>
+                        @php $statusText = $e->status->name ?? '-'; @endphp
+                        @if(!empty($e->notes))
+                            <span data-bs-toggle="tooltip" data-bs-container="body" data-bs-placement="top" title="{{ $e->notes }}">
                                 {{ $statusText }}
-                            @endif
-                        </td>
-                        <td>{{ $e->type->name ?? '-' }}</td>
-                        <td>
-                            @if($e->direction === 'in')
-                                <span class="badge bg-success">داخل</span>
-                            @else
-                                <span class="badge bg-danger">خارج</span>
-                            @endif
-                        </td>
-                        <td class="text-end fw-semibold">
-                            @if($e->direction === 'out') - @endif
-                            {{ number_format($e->amount, 2) }}
-                        </td>
-                        <td>
-                            @if($e->bankAccount)
-                                <i class="bi bi-bank"></i> {{ $e->bankAccount->name }}
-                            @elseif($e->safe)
-                                <i class="bi bi-safe2"></i> {{ $e->safe->name }}
-                            @else
-                                -
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="py-5 text-muted">لا توجد قيود مطابقة للبحث.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+                            </span>
+                        @else
+                            {{ $statusText }}
+                        @endif
+                    </td>
+                    <td>{{ $e->type->name ?? '-' }}</td>
+                    <td>
+                        @if($e->direction === 'in')
+                            <span class="badge bg-success">داخل</span>
+                        @else
+                            <span class="badge bg-danger">خارج</span>
+                        @endif
+                    </td>
+                    <td class="text-end fw-semibold">
+                        @if($e->direction === 'out') - @endif
+                        {{ number_format($e->amount, 2) }}
+                    </td>
+                    <td>
+                        @if($e->bankAccount)
+                            <i class="bi bi-bank"></i> {{ $e->bankAccount->name }}
+                        @elseif($e->safe)
+                            <i class="bi bi-safe2"></i> {{ $e->safe->name }}
+                        @else
+                            -
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="7" class="py-5 text-muted">لا توجد قيود مطابقة للبحث.</td>
+                </tr>
+            @endforelse
+        </x-table>
 
         @if($entries->hasPages())
         <div class="mt-3 p-3">

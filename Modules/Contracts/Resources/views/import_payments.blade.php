@@ -137,8 +137,7 @@
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
         <h5 class="card-title mb-3">أخطاء التحقق ({{ $failuresCount }})</h5>
-        <div class="table-responsive">
-          @php
+        @php
             $normalizeFailureValue = function ($value, string $separator = ' | ') {
                 if ($value instanceof \Illuminate\Support\Collection) {
                     $value = $value->all();
@@ -192,16 +191,15 @@
                 return $encoded === false ? '' : $encoded;
             };
           @endphp
-          <table class="table table-sm table-bordered mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>الصف</th>
-                <th>الحقل</th>
-                <th>الرسائل</th>
-                <th>القيم</th>
-              </tr>
-            </thead>
-            <tbody>
+          <x-table head-class="table-light" bordered small :hover="false">
+              <x-slot name="head">
+                  <tr>
+                    <th>الصف</th>
+                    <th>الحقل</th>
+                    <th>الرسائل</th>
+                    <th>القيم</th>
+                  </tr>
+              </x-slot>
               @foreach ($failuresBag as $f)
                 @php
                   $rowRaw = is_array($f)
@@ -209,13 +207,13 @@
                       : (method_exists($f, 'row')
                           ? $f->row()
                           : ($f->row ?? null));
-
+              
                   $attributeRaw = is_array($f)
                       ? ($f['attribute'] ?? null)
                       : (method_exists($f, 'attribute')
                           ? $f->attribute()
                           : ($f->attribute ?? null));
-
+              
                   $messagesRaw = null;
                   if (is_array($f)) {
                       $messagesRaw = $f['messages'] ?? ($f['errors'] ?? null);
@@ -228,13 +226,13 @@
                           $messagesRaw = $f->messages ?? ($f->errors ?? null);
                       }
                   }
-
+              
                   $valuesRaw = is_array($f)
                       ? ($f['values'] ?? null)
                       : (method_exists($f, 'values')
                           ? $f->values()
                           : ($f->values ?? null));
-
+              
                   $rowValue = $normalizeFailureValue($rowRaw, ', ');
                   $attributeValue = $normalizeFailureValue($attributeRaw, ', ');
                   $messagesValue = $normalizeFailureValue($messagesRaw, ' | ');
@@ -247,9 +245,7 @@
                   <td>{{ $valuesValue }}</td>
                 </tr>
               @endforeach
-            </tbody>
-          </table>
-        </div>
+          </x-table>
       </div>
     </div>
   @endif
@@ -258,56 +254,52 @@
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
         <h5 class="card-title mb-3">الصفوف المتخطّاة ({{ $skippedCount }})</h5>
-        <div class="table-responsive">
-          <table class="table table-sm table-bordered mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>الصف</th>
-                <th>السبب</th>
-                <th>القيم</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach ($skippedBag as $row)
-                @php
-                  $rowNumber = (int) ($row['row'] ?? 0);
-                  $reasonRaw = $row['reason'] ?? ($row['messages'] ?? '');
-                  if (is_array($reasonRaw)) {
-                      $reason = implode(' | ', $reasonRaw);
-                  } else {
-                      $reason = (string) $reasonRaw;
-                  }
-
-                  $valuesRaw = $row['values'] ?? [];
-                  if ($valuesRaw instanceof \Illuminate\Support\Collection) {
-                      $valuesRaw = $valuesRaw->all();
-                  }
-
-                  if (is_array($valuesRaw)) {
-                      $valuesText = json_encode($valuesRaw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                      if ($valuesText === false) {
-                          $valuesText = '';
-                      }
-                  } elseif ($valuesRaw instanceof \Stringable || (is_object($valuesRaw) && method_exists($valuesRaw, '__toString'))) {
-                      $valuesText = (string) $valuesRaw;
-                  } elseif (is_scalar($valuesRaw)) {
-                      $valuesText = (string) $valuesRaw;
-                  } elseif ($valuesRaw === null) {
-                      $valuesText = '';
-                  } else {
-                      $encoded = json_encode($valuesRaw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                      $valuesText = $encoded === false ? '' : $encoded;
-                  }
-                @endphp
+        <x-table head-class="table-light" bordered small :hover="false">
+            <x-slot name="head">
                 <tr>
-                  <td>{{ $rowNumber }}</td>
-                  <td>{{ $reason !== '' ? $reason : '—' }}</td>
-                  <td class="text-break"><code>{{ $valuesText }}</code></td>
+                  <th>الصف</th>
+                  <th>السبب</th>
+                  <th>القيم</th>
                 </tr>
-              @endforeach
-            </tbody>
-          </table>
-        </div>
+            </x-slot>
+            @foreach ($skippedBag as $row)
+              @php
+                $rowNumber = (int) ($row['row'] ?? 0);
+                $reasonRaw = $row['reason'] ?? ($row['messages'] ?? '');
+                if (is_array($reasonRaw)) {
+                    $reason = implode(' | ', $reasonRaw);
+                } else {
+                    $reason = (string) $reasonRaw;
+                }
+            
+                $valuesRaw = $row['values'] ?? [];
+                if ($valuesRaw instanceof \Illuminate\Support\Collection) {
+                    $valuesRaw = $valuesRaw->all();
+                }
+            
+                if (is_array($valuesRaw)) {
+                    $valuesText = json_encode($valuesRaw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    if ($valuesText === false) {
+                        $valuesText = '';
+                    }
+                } elseif ($valuesRaw instanceof \Stringable || (is_object($valuesRaw) && method_exists($valuesRaw, '__toString'))) {
+                    $valuesText = (string) $valuesRaw;
+                } elseif (is_scalar($valuesRaw)) {
+                    $valuesText = (string) $valuesRaw;
+                } elseif ($valuesRaw === null) {
+                    $valuesText = '';
+                } else {
+                    $encoded = json_encode($valuesRaw, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    $valuesText = $encoded === false ? '' : $encoded;
+                }
+              @endphp
+              <tr>
+                <td>{{ $rowNumber }}</td>
+                <td>{{ $reason !== '' ? $reason : '—' }}</td>
+                <td class="text-break"><code>{{ $valuesText }}</code></td>
+              </tr>
+            @endforeach
+        </x-table>
       </div>
     </div>
   @endif

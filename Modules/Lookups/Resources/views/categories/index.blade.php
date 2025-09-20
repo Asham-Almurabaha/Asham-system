@@ -23,46 +23,42 @@
     </div>
 
     <div class="card border-0 shadow-sm">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col" style="width:70px" class="text-center">#</th>
-                        <th scope="col" style="width:240px">{{ __('Name') }}</th>
-                        <th scope="col">{{ __('Related Transaction Statuses') }}</th>
-                        <th scope="col" class="text-end" style="width:160px">{{ __('Actions') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($categories as $category)
-                        <tr>
-                            <td class="text-center">{{ $loop->iteration }}</td>
-                            <td class="fw-semibold">{{ $category->name }}</td>
-                            <td>
-                                @forelse($category->transactionStatuses as $status)
-                                    <span class="badge bg-info text-dark me-1 mb-1">{{ $status->name }}</span>
-                                @empty
-                                    <span class="text-muted">—</span>
-                                @endforelse
-                            </td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-2">
-                                    <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
-                                    @include('lookups::components.delete-button', [
-                                        'action' => route('categories.destroy', $category->id),
-                                        'confirm' => __('Are you sure to delete this category?'),
-                                    ])
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="text-center text-muted py-4">{{ __('No categories found.') }}</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-table head-class="table-light">
+            <x-slot name="head">
+                <tr>
+                    <th scope="col" style="width:70px" class="text-center">#</th>
+                    <th scope="col" style="width:240px">{{ __('Name') }}</th>
+                    <th scope="col">{{ __('Related Transaction Statuses') }}</th>
+                    <th scope="col" class="text-end" style="width:160px">{{ __('Actions') }}</th>
+                </tr>
+            </x-slot>
+            @forelse($categories as $category)
+                <tr>
+                    <td class="text-center">{{ $loop->iteration }}</td>
+                    <td class="fw-semibold">{{ $category->name }}</td>
+                    <td>
+                        @forelse($category->transactionStatuses as $status)
+                            <span class="badge bg-info text-dark me-1 mb-1">{{ $status->name }}</span>
+                        @empty
+                            <span class="text-muted">—</span>
+                        @endforelse
+                    </td>
+                    <td class="text-end">
+                        <div class="d-inline-flex gap-2">
+                            <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
+                            @include('lookups::components.delete-button', [
+                                'action' => route('categories.destroy', $category->id),
+                                'confirm' => __('Are you sure to delete this category?'),
+                            ])
+                        </div>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">{{ __('No categories found.') }}</td>
+                </tr>
+            @endforelse
+        </x-table>
     </div>
 </div>
 @endsection

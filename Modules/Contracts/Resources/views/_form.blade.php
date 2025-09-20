@@ -210,20 +210,19 @@
   {{-- المستثمرون --}}
   <div class="col-md-12">
     <h6 class="form-label">المستثمرون</h6>
-    <table class="table table-bordered text-center align-middle">
-      <thead>
-        <tr>
-          <th style="width:40%">المستثمر / السيولة</th>
-          <th style="width:20%">النسبة (%)</th>
-          <th style="width:25%">القيمة</th>
-          <th style="width:15%">إجراء</th>
-        </tr>
-      </thead>
-      <tbody id="investors-table-body">
+    <x-table bordered class="text-center" :hover="false">
+        <x-slot name="head">
+            <tr>
+              <th style="width:40%">المستثمر / السيولة</th>
+              <th style="width:20%">النسبة (%)</th>
+              <th style="width:25%">القيمة</th>
+              <th style="width:15%">إجراء</th>
+            </tr>
+        </x-slot>
         @php
           $oldInvestors = old('investors');
           $rows = [];
-
+        
           if (is_array($oldInvestors)) {
             $rows = $oldInvestors;
           } else {
@@ -237,12 +236,12 @@
               }
             }
           }
-
+        
           if (empty($rows)) {
             $rows[] = ['id' => '', 'share_percentage' => '', 'share_value' => ''];
           }
         @endphp
-
+        
         @foreach($rows as $i => $row)
           <tr>
             <td>
@@ -255,7 +254,7 @@
                     </option>
                   @endforeach
                 </select>
-
+        
                 {{-- ويدجت السيولة --}}
                 <div class="liq-box p-2 rounded border position-relative">
                   <div class="d-flex align-items-center gap-2">
@@ -280,27 +279,26 @@
                 </div>
               </div>
             </td>
-
+        
             <td>
               <input type="number" step="0.01" min="0" max="100"
                      name="investors[{{ $i }}][share_percentage]"
                      class="form-control" inputmode="decimal" autocomplete="off"
                      value="{{ $row['share_percentage'] ?? '' }}" aria-label="نسبة المستثمر (%)">
             </td>
-
+        
             <td>
               <input type="number" step="0.01" name="investors[{{ $i }}][share_value]"
                      class="form-control" inputmode="decimal" autocomplete="off"
                      value="{{ $row['share_value'] ?? '' }}" aria-label="قيمة المستثمر">
             </td>
-
+        
             <td>
               <button type="button" class="btn btn-danger btn-sm remove-investor">حذف</button>
             </td>
           </tr>
         @endforeach
-      </tbody>
-    </table>
+    </x-table>
 
     <button type="button" id="add-investor" class="btn btn-outline-primary btn-sm">+ إضافة مستثمر</button>
   </div>

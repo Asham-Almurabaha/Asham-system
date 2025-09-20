@@ -28,36 +28,32 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered text-center align-middle">
-      <thead class="table-light">
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
+          <tr>
+            <th style="width:56px">#</th>
+            <th class="text-start">{{ __('Customer') }}</th>
+            <th>{{ __('Phone') }}</th>
+            <th>{{ __('Active Contracts') }}</th>
+            <th>{{ __('reports.Total Remaining in Active Contracts') }}</th>
+          </tr>
+      </x-slot>
+      @forelse($rows as $i => $c)
         <tr>
-          <th style="width:56px">#</th>
-          <th class="text-start">{{ __('Customer') }}</th>
-          <th>{{ __('Phone') }}</th>
-          <th>{{ __('Active Contracts') }}</th>
-          <th>{{ __('reports.Total Remaining in Active Contracts') }}</th>
+          <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
+          <td class="text-start">
+            <a href="{{ route('customers.show', $c) }}" class="text-decoration-none fw-bold text-dark hover-primary">{{ $c->name }}</a>
+          </td>
+          <td>{{ $c->phone }}</td>
+          <td>{{ $c->active_contracts ?? 1 }}</td>
+          <td>{{ number_format($c->active_remaining_total ?? 0, 2) }}</td>
         </tr>
-      </thead>
-      <tbody>
-        @forelse($rows as $i => $c)
-          <tr>
-            <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
-            <td class="text-start">
-              <a href="{{ route('customers.show', $c) }}" class="text-decoration-none fw-bold text-dark hover-primary">{{ $c->name }}</a>
-            </td>
-            <td>{{ $c->phone }}</td>
-            <td>{{ $c->active_contracts ?? 1 }}</td>
-            <td>{{ number_format($c->active_remaining_total ?? 0, 2) }}</td>
-          </tr>
-        @empty
-          <tr>
-            <td colspan="5" class="py-5 text-muted">@lang('reports.No data available.')</td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
-  </div>
+      @empty
+        <tr>
+          <td colspan="5" class="py-5 text-muted">@lang('reports.No data available.')</td>
+        </tr>
+      @endforelse
+  </x-table>
 @endsection
 
 @section('actions')

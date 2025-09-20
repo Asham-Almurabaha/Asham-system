@@ -133,89 +133,85 @@
 
 <div class="card shadow-sm">
     <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle text-center mb-0">
-                <thead class="table-light position-sticky top-0">
-                    <tr>
-                        <th style="width:60px">#</th>
-                        <th>{{ __('Contract Number') }}</th>
-                        <th>{{ __('Customer') }}</th>
-                        <th>{{ __('Guarantor') }}</th>
-                        <th>{{ __('Product Type') }}</th>
-                        <th>{{ __('Status') }}</th>
-                        <th>{{ __('Total Contract') }}</th>
-                        <th>{{ __('Investor Profit') }}</th>
-                        <th style="min-width:160px;">{{ __('Investors') }}</th>
-                        <th>{{ __('Start Date') }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($contracts as $contract)
-                        @php
-                            $statusName = $contract->contractStatus->name ?? '-';
-                            $badge = match($statusName) {
-                                'نشط' => 'secondary',
-                                'معلق' => 'warning',
-                                'بدون مستثمر' => 'danger',
-                                default => 'success'
-                            };
-
-                            $count = $contract->investors->count();
-                            $sep   = app()->getLocale() === 'ar' ? '، ' : ', ';
-                            $tip   = $contract->investors
-                                    ->map(fn($i) => ($i->name ?? ('#'.$i->id)).' '.number_format($i->pivot->share_percentage,2).'%')
-                                    ->join($sep);
-                        @endphp
-                        <tr>
-                            <td class="text-muted">
-                                {{ $loop->iteration + ($contracts->currentPage() - 1) * $contracts->perPage() }}
-                            </td>
-                            <td class="text-start">
-                                <a href="{{ route('contracts.show', $contract) }}" class="text-decoration-none text-dark hover-primary fw-bold">
-                                    {{ $contract->contract_number ?? '—' }}
-                                </a>
-                            </td>
-                            <td class="text-center">{{ $contract->customer->name ?? '-' }}</td>
-                            <td class="text-center">{{ $contract->guarantor->name ?? '-' }}</td>
-                            <td>{{ $contract->productType->name ?? '-' }}</td>
-                            <td>
-                                <span class="badge bg-{{ $badge }} d-inline-flex align-items-center gap-1">
-                                    {{ $statusName }}
-                                </span>
-                            </td>
-                            <td>{{ number_format($contract->total_value, 0) }}</td>
-                            <td>{{ number_format($contract->investor_profit, 0) }}</td>
-                            <td class="text-center">
-                                @if($count)
-                                    <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="{{ $tip }}">
-                                        {{ $count }} {{ __('Investor') }}
-                                    </span>
-                                @else
-                                    <span class="badge bg-danger" title="0.00%">
-                                        0 {{ __('Investor') }}
-                                    </span>
-                                @endif
-                            </td>
-                            <td>{{ optional($contract->start_date)->format('Y-m-d') }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="py-5">
-                                <div class="text-muted">
-                                    {{ __('No matching contracts for your search.') }}
-                                    <a href="{{ route('contracts.index') }}" class="ms-1">{{ __('View All') }}</a>
-                                </div>
-                                <div class="mt-3">
-                                    <a href="{{ route('contracts.create') }}" class="btn btn-sm btn-success">
-                                        + {{ __('Add First Contract') }}
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-table head-class="table-light position-sticky top-0" class="text-center">
+            <x-slot name="head">
+                <tr>
+                    <th style="width:60px">#</th>
+                    <th>{{ __('Contract Number') }}</th>
+                    <th>{{ __('Customer') }}</th>
+                    <th>{{ __('Guarantor') }}</th>
+                    <th>{{ __('Product Type') }}</th>
+                    <th>{{ __('Status') }}</th>
+                    <th>{{ __('Total Contract') }}</th>
+                    <th>{{ __('Investor Profit') }}</th>
+                    <th style="min-width:160px;">{{ __('Investors') }}</th>
+                    <th>{{ __('Start Date') }}</th>
+                </tr>
+            </x-slot>
+            @forelse($contracts as $contract)
+                @php
+                    $statusName = $contract->contractStatus->name ?? '-';
+                    $badge = match($statusName) {
+                        'نشط' => 'secondary',
+                        'معلق' => 'warning',
+                        'بدون مستثمر' => 'danger',
+                        default => 'success'
+                    };
+            
+                    $count = $contract->investors->count();
+                    $sep   = app()->getLocale() === 'ar' ? '، ' : ', ';
+                    $tip   = $contract->investors
+                            ->map(fn($i) => ($i->name ?? ('#'.$i->id)).' '.number_format($i->pivot->share_percentage,2).'%')
+                            ->join($sep);
+                @endphp
+                <tr>
+                    <td class="text-muted">
+                        {{ $loop->iteration + ($contracts->currentPage() - 1) * $contracts->perPage() }}
+                    </td>
+                    <td class="text-start">
+                        <a href="{{ route('contracts.show', $contract) }}" class="text-decoration-none text-dark hover-primary fw-bold">
+                            {{ $contract->contract_number ?? '—' }}
+                        </a>
+                    </td>
+                    <td class="text-center">{{ $contract->customer->name ?? '-' }}</td>
+                    <td class="text-center">{{ $contract->guarantor->name ?? '-' }}</td>
+                    <td>{{ $contract->productType->name ?? '-' }}</td>
+                    <td>
+                        <span class="badge bg-{{ $badge }} d-inline-flex align-items-center gap-1">
+                            {{ $statusName }}
+                        </span>
+                    </td>
+                    <td>{{ number_format($contract->total_value, 0) }}</td>
+                    <td>{{ number_format($contract->investor_profit, 0) }}</td>
+                    <td class="text-center">
+                        @if($count)
+                            <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="{{ $tip }}">
+                                {{ $count }} {{ __('Investor') }}
+                            </span>
+                        @else
+                            <span class="badge bg-danger" title="0.00%">
+                                0 {{ __('Investor') }}
+                            </span>
+                        @endif
+                    </td>
+                    <td>{{ optional($contract->start_date)->format('Y-m-d') }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="10" class="py-5">
+                        <div class="text-muted">
+                            {{ __('No matching contracts for your search.') }}
+                            <a href="{{ route('contracts.index') }}" class="ms-1">{{ __('View All') }}</a>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('contracts.create') }}" class="btn btn-sm btn-success">
+                                + {{ __('Add First Contract') }}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            @endforelse
+        </x-table>
     </div>
 
     @if($contracts->hasPages())

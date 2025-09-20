@@ -74,9 +74,9 @@
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-body p-0 table-responsive">
-            <table class="table table-bordered table-striped text-center align-middle mb-0">
-                <thead class="table-light">
+        <div class="card-body p-0">
+            <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+                <x-slot name="head">
                     <tr>
                         <th style="width:70px">#</th>
                         <th>{{ __('Model') }}</th>
@@ -88,42 +88,40 @@
                         <th>{{ __('IP Address') }}</th>
                         <th>{{ __('Performed At') }}</th>
                     </tr>
-                </thead>
-                <tbody>
-                    @forelse($logs as $i => $log)
-                        <tr>
-                            <td>{{ $logs->firstItem() + $i }}</td>
-                            <td>{{ class_basename($log->auditable_type) }}</td>
-                            <td>{{ $log->auditable_id }}</td>
-                            <td>
-                                @php
-                                    $color = match($log->event) {
-                                        'created' => 'success',
-                                        'updated' => 'warning',
-                                        'deleted' => 'danger',
-                                        'restored' => 'info',
-                                        default => 'secondary'
-                                    };
-                                @endphp
-                                <span class="badge bg-{{ $color }}">{{ $log->event }}</span>
-                            </td>
-                            <td>{{ $log->user?->name ?? __('Undefined') }}</td>
-                            <td>
-                                <pre class="text-danger small text-start mb-0">{{ json_encode($log->old_values, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}</pre>
-                            </td>
-                            <td>
-                                <pre class="text-success small text-start mb-0">{{ json_encode($log->new_values, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}</pre>
-                            </td>
-                            <td dir="ltr">{{ $log->ip_address }}</td>
-                            <td>{{ optional($log->performed_at)->format('Y-m-d H:i') }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="9" class="py-4 text-muted">{{ __('No entries found.') }}</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                </x-slot>
+                @forelse($logs as $i => $log)
+                    <tr>
+                        <td>{{ $logs->firstItem() + $i }}</td>
+                        <td>{{ class_basename($log->auditable_type) }}</td>
+                        <td>{{ $log->auditable_id }}</td>
+                        <td>
+                            @php
+                                $color = match($log->event) {
+                                    'created' => 'success',
+                                    'updated' => 'warning',
+                                    'deleted' => 'danger',
+                                    'restored' => 'info',
+                                    default => 'secondary'
+                                };
+                            @endphp
+                            <span class="badge bg-{{ $color }}">{{ $log->event }}</span>
+                        </td>
+                        <td>{{ $log->user?->name ?? __('Undefined') }}</td>
+                        <td>
+                            <pre class="text-danger small text-start mb-0">{{ json_encode($log->old_values, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}</pre>
+                        </td>
+                        <td>
+                            <pre class="text-success small text-start mb-0">{{ json_encode($log->new_values, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}</pre>
+                        </td>
+                        <td dir="ltr">{{ $log->ip_address }}</td>
+                        <td>{{ optional($log->performed_at)->format('Y-m-d H:i') }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="9" class="py-4 text-muted">{{ __('No entries found.') }}</td>
+                    </tr>
+                @endforelse
+            </x-table>
         </div>
 
         @if($logs->hasPages())

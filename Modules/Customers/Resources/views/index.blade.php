@@ -160,8 +160,8 @@
 <div class="card shadow-sm mb-3 ">
     <div class="card-body p-0">
         <div>
-            <table class="table table-hover align-middle text-center mb-0">
-                <thead class="table-light position-sticky top-0" style="z-index: 1;">
+            <x-table head-class="table-light position-sticky top-0" class="text-center">
+                <x-slot name="head">
                     <tr>
                         <th style="width:60px">#</th>
                         <th>{{ __('Name') }}</th>
@@ -173,43 +173,41 @@
                         <th>{{ __('Unpaid Installments This Month') }}</th>
                         <th>{{ __('Unpaid Amount This Month') }}</th>
                     </tr>
-                </thead>
-                <tbody>
-                    @forelse ($customers as $customer)
-                        <tr>
-                            <td class="text-muted">
-                                {{ $loop->iteration + ($customers->currentPage() - 1) * $customers->perPage() }}
-                            </td>
-                            <td class="text-start">
-                                <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold text-dark hover-primary">
-                                    {{ $customer->name }}
+                </x-slot>
+                @forelse ($customers as $customer)
+                    <tr>
+                        <td class="text-muted">
+                            {{ $loop->iteration + ($customers->currentPage() - 1) * $customers->perPage() }}
+                        </td>
+                        <td class="text-start">
+                            <a href="{{ route('customers.show', $customer) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                                {{ $customer->name }}
+                            </a>
+                        </td>
+                        <td>{{ optional($customer->customerStatus)->name ?? __('Undefined') }}</td>
+                        <td dir="ltr">{{ $customer->national_id ?? '—' }}</td>
+                        <td dir="ltr">{{ $customer->phone ?? '—' }}</td>
+                        <td class="text-center">{{ number_format($customer->active_contracts_count ?? 0) }}</td>
+                        <td class="text-center">{{ number_format((float) ($customer->remaining_balance_total ?? 0), 2) }}</td>
+                        <td class="text-center">{{ number_format((int) ($customer->unpaid_installments_this_month ?? 0)) }}</td>
+                        <td class="text-center">{{ number_format((float) ($customer->unpaid_amount_this_month ?? 0), 2) }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="10" class="py-5">
+                            <div class="text-muted">
+                                {{ __('No matching results for your search.') }}
+                                <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>
+                            </div>
+                            <div class="mt-3">
+                                <a href="{{ route('customers.create') }}" class="btn btn-sm btn-success">
+                                    + {{ __('Add First Customer') }}
                                 </a>
-                            </td>
-                            <td>{{ optional($customer->customerStatus)->name ?? __('Undefined') }}</td>
-                            <td dir="ltr">{{ $customer->national_id ?? '—' }}</td>
-                            <td dir="ltr">{{ $customer->phone ?? '—' }}</td>
-                            <td class="text-center">{{ number_format($customer->active_contracts_count ?? 0) }}</td>
-                            <td class="text-center">{{ number_format((float) ($customer->remaining_balance_total ?? 0), 2) }}</td>
-                            <td class="text-center">{{ number_format((int) ($customer->unpaid_installments_this_month ?? 0)) }}</td>
-                            <td class="text-center">{{ number_format((float) ($customer->unpaid_amount_this_month ?? 0), 2) }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="py-5">
-                                <div class="text-muted">
-                                    {{ __('No matching results for your search.') }}
-                                    <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>
-                                </div>
-                                <div class="mt-3">
-                                    <a href="{{ route('customers.create') }}" class="btn btn-sm btn-success">
-                                        + {{ __('Add First Customer') }}
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </x-table>
         </div>
     </div>
 

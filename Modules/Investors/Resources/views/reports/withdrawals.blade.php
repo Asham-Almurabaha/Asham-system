@@ -60,45 +60,44 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-striped table-bordered text-center align-middle">
-      <thead class="table-light">
-        <tr>
-          <th style="width:56px">#</th>
-          <th>@lang('app.Date')</th>
-          <th>@lang('app.Amount')</th>
-          <th>@lang('app.Type')</th>
-          <th>@lang('app.Status')</th>
-          <th class="text-start">@lang('app.Notes')</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($withdrawals as $i => $w)
-          @php
-            $statusName = optional($w->status)->name ?? optional($w->transactionStatus)->name ?? '—';
-            $typeName   = optional($w->type)->name   ?? optional($w->transactionType)->name   ?? '—';
-          @endphp
+  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+      <x-slot name="head">
           <tr>
-            <td>{{ $i + 1 }}</td>
-            <td>{{ Carbon::parse($w->entry_date)->format('d-m-Y') }}</td>
-            <td class="text-danger fw-semibold">
-              {{ number_format($w->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
-            </td>
-            <td>{{ $typeName }}</td>
-            <td>{{ $statusName }}</td>
-            <td class="text-start">{{ $w->notes ?? '—' }}</td>
+            <th style="width:56px">#</th>
+            <th>@lang('app.Date')</th>
+            <th>@lang('app.Amount')</th>
+            <th>@lang('app.Type')</th>
+            <th>@lang('app.Status')</th>
+            <th class="text-start">@lang('app.Notes')</th>
           </tr>
-        @empty
-          <tr>
-            <td colspan="6" class="py-5 text-muted">
-              @lang('app.No withdrawals found for this investor in the current range.')
-            </td>
-          </tr>
-        @endforelse
-      </tbody>
-
+      </x-slot>
       @if($withdrawals instanceof \Illuminate\Pagination\LengthAwarePaginator)
-        <tfoot>
+      
+            @endif
+      
+              @forelse($withdrawals as $i => $w)
+                @php
+                  $statusName = optional($w->status)->name ?? optional($w->transactionStatus)->name ?? '—';
+                  $typeName   = optional($w->type)->name   ?? optional($w->transactionType)->name   ?? '—';
+                @endphp
+                <tr>
+                  <td>{{ $i + 1 }}</td>
+                  <td>{{ Carbon::parse($w->entry_date)->format('d-m-Y') }}</td>
+                  <td class="text-danger fw-semibold">
+                    {{ number_format($w->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
+                  </td>
+                  <td>{{ $typeName }}</td>
+                  <td>{{ $statusName }}</td>
+                  <td class="text-start">{{ $w->notes ?? '—' }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="6" class="py-5 text-muted">
+                    @lang('app.No withdrawals found for this investor in the current range.')
+                  </td>
+                </tr>
+              @endforelse
+      <x-slot name="footer">
           <tr>
             <th colspan="6" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
@@ -106,10 +105,8 @@
               </div>
             </th>
           </tr>
-        </tfoot>
-      @endif
-    </table>
-  </div>
+      </x-slot>
+  </x-table>
 @endsection
 
 @section('actions')
