@@ -42,7 +42,7 @@ class ContractStatusRefresher
             }
         }
 
-        $excludedNames = ['منتهي', 'سداد مبكر', 'مطلوب', 'مرفوع فيه'];
+        $excludedNames = ['منتهي', 'سداد مبكر', 'مطلوب', 'مرفوع فيه', 'منتهي بمطالبة'];
         $excludedIds   = ContractStatus::whereIn('name', $excludedNames)
             ->pluck('id')
             ->filter()
@@ -81,7 +81,7 @@ class ContractStatusRefresher
             return;
         }
 
-        $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب', 'مرفوع فيه'];
+        $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب', 'مرفوع فيه', 'منتهي بمطالبة'];
         if (in_array($contract->contractStatus->name ?? '', $excludedContractStatuses, true)) {
             return;
         }
