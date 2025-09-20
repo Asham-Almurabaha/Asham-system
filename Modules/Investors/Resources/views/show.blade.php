@@ -763,7 +763,6 @@
                         <div class="col-7 value-col">
                             @if($investor->national_id)
                                 <span dir="ltr">{{ $investor->national_id }}</span>
-                                <x-button.action type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">national_id }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button.action>
                             @else <span class="text-muted">—</span> @endif
                         </div>
                     </div>
@@ -787,7 +786,6 @@
                         <div class="col-7 value-col">
                             @if($investor->phone)
                                 <a href="tel:{{ $investor->phone }}" class="text-decoration-none text-dark"><i class="bi bi-telephone me-1"></i>{{ $investor->phone }}</a>
-                                <x-button.action type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">phone }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button.action>
                             @else <span class="text-muted">—</span> @endif
                         </div>
                     </div>
@@ -844,24 +842,6 @@
 
 @push('scripts')
 <script>
-function copyText(txt){
-    navigator.clipboard?.writeText(txt).then(() => {
-        const el = document.createElement('div');
-        el.textContent = 'تم النسخ';
-        el.style.position = 'fixed';
-        el.style.bottom = '16px';
-        el.style.left = '50%';
-        el.style.transform = 'translateX(-50%)';
-        el.style.background = 'rgba(0,0,0,.8)';
-        el.style.color = '#fff';
-        el.style.padding = '6px 12px';
-        el.style.borderRadius = '999px';
-        el.style.fontSize = '12px';
-        el.style.zIndex = 9999;
-        document.body.appendChild(el);
-        setTimeout(()=>{ el.remove(); }, 900);
-    });
-}
 
 // تفعيل Bootstrap Tooltip لو موجود
 document.addEventListener('DOMContentLoaded', function () {
