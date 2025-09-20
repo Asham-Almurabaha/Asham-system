@@ -44,14 +44,22 @@
 
     if ($tag === 'button') {
         $mergedAttributes = $mergedAttributes->merge(['type' => $type]);
+
+        if ($isDisabled) {
+            $mergedAttributes = $mergedAttributes->merge(['disabled' => 'disabled']);
+        } else {
+            $mergedAttributes = $mergedAttributes->except(['disabled']);
+        }
     } elseif ($isDisabled) {
-        $mergedAttributes = $mergedAttributes
-            ->except(['disabled'])
-            ->merge([
-                'class' => trim(($mergedAttributes->get('class') ?? '') . ' disabled'),
-                'aria-disabled' => 'true',
-                'tabindex' => '-1',
-            ]);
+        $mergedAttributes = $mergedAttributes->except(['disabled']);
+
+        $mergedAttributes = $mergedAttributes->merge([
+            'class' => trim(($mergedAttributes->get('class') ?? '') . ' disabled'),
+            'aria-disabled' => 'true',
+            'tabindex' => '-1',
+        ]);
+    } else {
+        $mergedAttributes = $mergedAttributes->except(['disabled']);
     }
 @endphp
 

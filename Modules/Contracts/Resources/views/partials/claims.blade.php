@@ -116,7 +116,7 @@
                 
                                 @if (! $isPaidStatus)
                                     @if ($isUnderReviewStatus)
-                                        <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @disabled($changeStatusOptionsCollection->isEmpty())>
+                                        <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" :disabled="$changeStatusOptionsCollection->isEmpty()">
                                             {{ __('contracts::claims.change_status') }}
                                         </x-button.action>
                                     @elseif ($isRejectedStatus)
@@ -129,11 +129,11 @@
                                             </x-button.action>
                                         </form>
                                     @else
-                                        <x-button.action type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @disabled($claimPayersCollection->isEmpty() || $remainingAmount <= 0)>
+                                        <x-button.action type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" :disabled="$claimPayersCollection->isEmpty() || $remainingAmount <= 0">
                                             {{ __('contracts::claims.record_payment') }}
                                         </x-button.action>
 
-                                        <x-button.action type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @disabled(empty($paidWithDiscountClaimStatusId))>
+                                        <x-button.action type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" :disabled="empty($paidWithDiscountClaimStatusId)">
                                             {{ __('contracts::claims.pay_with_discount') }}
                                         </x-button.action>
                                     @endif
@@ -559,7 +559,7 @@
                 </div>
                 <div class="modal-footer">
                     <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button.action>
-                    <x-button.action type="submit" variant="dark" :outline="true" @disabled($claimPayersCollection->isEmpty() || $remainingAmount <= 0)>{{ __('contracts::claims.record_payment') }}</x-button.action>
+                    <x-button.action type="submit" variant="dark" :outline="true" :disabled="$claimPayersCollection->isEmpty() || $remainingAmount <= 0">{{ __('contracts::claims.record_payment') }}</x-button.action>
                 </div>
             </form>
         </div>
