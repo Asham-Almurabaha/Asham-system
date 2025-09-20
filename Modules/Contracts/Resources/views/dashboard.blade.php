@@ -219,6 +219,7 @@
 
             $name = (string) ($status->name ?? '—');
             [$iconName, $colorClass] = $statusIcon($name);
+            $reportUrl = route('reports.contracts.status', $statusId);
 
             $card = [
                 '__count'     => $count,
@@ -228,6 +229,18 @@
                 'title'       => $name,
                 'value'       => number_format($count),
                 'value_class' => trim('fw-bold ' . $colorClass),
+                'actions'     => [
+                    [
+                        'url'    => $reportUrl,
+                        'icon'   => 'bi bi-file-earmark-text',
+                        'title'  => __('contracts::contracts.View Status Report'),
+                        'target' => '_blank',
+                        'rel'    => 'noopener noreferrer',
+                        'attrs'  => [
+                            'aria-label' => __('contracts::contracts.View Status Report'),
+                        ],
+                    ],
+                ],
             ];
 
             $pct = $metrics['pct'] ?? null;

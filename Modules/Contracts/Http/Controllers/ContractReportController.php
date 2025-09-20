@@ -6,6 +6,7 @@ use Alkoumi\LaravelHijriDate\Hijri;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\Contracts\Entities\Contract;
@@ -46,12 +47,11 @@ class ContractReportController extends Controller
             }
         }
 
-        $rows = Contract::query()
-            ->with(['customer','guarantor','productType','contractStatus'])
+        $rowsQuery = Contract::query()
             ->when($statusIdCol && $statusId, fn($q) => $q->where($statusIdCol, $statusId))
-            ->when(!$statusIdCol && $statusNameCol && $statusName, fn($q) => $q->where($statusNameCol, $statusName))
-            ->orderBy('start_date')
-            ->get();
+            ->when(!$statusIdCol && $statusNameCol && $statusName, fn($q) => $q->where($statusNameCol, $statusName));
+
+        $rows = $this->prepareContractsForReport($rowsQuery);
 
         $title = __('Contracts Report').' - '.($statusName ?: __('Status'));
         return view('contracts::reports.status', compact('rows','title','statusName'));
@@ -61,11 +61,10 @@ class ContractReportController extends Controller
     {
         $this->contractStatusUpdater->refresh();
 
-        $rows = Contract::query()
-            ->with(['customer','guarantor','productType','contractStatus'])
-            ->doesntHave('investors')
-            ->orderBy('start_date')
-            ->get();
+        $rowsQuery = Contract::query()
+            ->doesntHave('investors');
+
+        $rows = $this->prepareContractsForReport($rowsQuery);
 
         $title = __('Contracts Report').' - '.__('Without Investor');
         return view('contracts::reports.status', compact('rows','title'));
@@ -135,6 +134,30 @@ SQL;
             'currencySymbol' => $currencySymbol,
             'totals'         => $totals,
         ]);
+    }
+
+    /**
+     * Load contracts with their financial aggregates for reporting.
+     */
+    private function prepareContractsForReport(Builder $query)
+    {
+        $contracts = $query
+            ->with(['customer', 'guarantor', 'productType', 'contractStatus'])
+            ->withSum('installments as installments_due_sum', 'due_amount')
+            ->withSum('installments as installments_paid_sum', 'payment_amount')
+            ->orderBy('start_date')
+            ->get();
+
+        return $contracts->each(function (Contract $contract) {
+            $totalDue = (float) ($contract->installments_due_sum ?? 0);
+            $totalPaid = (float) ($contract->installments_paid_sum ?? 0);
+
+            if ($totalDue <= 0 && $contract->total_value !== null) {
+                $totalDue = (float) $contract->total_value;
+            }
+
+            $contract->remaining_amount = max(0, round($totalDue - $totalPaid, 2));
+        });
     }
 
      public function show(Contract $contract)

@@ -1,4 +1,4 @@
-@extends('layouts.print-portrait')
+@extends('layouts.print-landscape')
 
 @section('title', $title ?? __('Contracts Report'))
 @section('report_title', $title ?? __('Contracts Report'))
@@ -39,8 +39,8 @@
           <th style="width:56px">#</th>
           <th>{{ __('Contract Number') }}</th>
           <th class="text-start">{{ __('Customer') }}</th>
-          <th>{{ __('Status') }}</th>
           <th>{{ __('Total Contract') }}</th>
+          <th>{{ __('contracts::contracts.Remaining Contract Amount') }}</th>
           <th>{{ __('Start Date') }}</th>
         </tr>
       </thead>
@@ -68,8 +68,8 @@
                 -
               @endif
             </td>
-            <td>{{ $c->contractStatus->name ?? ($c->status ?? '-') }}</td>
             <td>{{ number_format((float)($c->total_value ?? 0), 2) }}</td>
+            <td>{{ number_format((float)($c->remaining_amount ?? 0), 2) }}</td>
             <td>{{ optional($c->start_date)->format('Y-m-d') ?? ($c->start_date ? \Carbon\Carbon::parse($c->start_date)->format('Y-m-d') : '-') }}</td>
           </tr>
         @empty

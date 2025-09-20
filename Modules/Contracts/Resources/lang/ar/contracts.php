@@ -102,6 +102,8 @@ return array (
   'Required Status Contracts' => 'عقود بحالة "مطلوب"',
   'Contracts in Required Status' => 'عدد العقود التي حالتها "مطلوب"',
   'Contract Statuses Overview' => 'نظرة عامة على حالات العقود',
+  'View Status Report' => 'عرض تقرير الحالة',
+  'Remaining Contract Amount' => 'المتبقي في العقد',
   'Contract Statuses Distribution' => 'توزيع حالات العقود',
   'Percentages calculated from current total contracts' => 'النِّسب محسوبة من إجمالي العقود الحالية',
   'No data for statuses.' => 'لا توجد بيانات للحالات.',

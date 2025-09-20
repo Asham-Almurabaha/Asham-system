@@ -135,43 +135,80 @@
         }
     }
     $hasFooter = $footerHtml !== null || !empty($footerItems);
+
+    $actionsList = [];
+    foreach ((array) ($actions ?? []) as $actionItem) {
+        if (!is_array($actionItem)) {
+            continue;
+        }
+
+        $url = $actionItem['url'] ?? $actionItem['href'] ?? null;
+        if (!is_string($url) || $url === '') {
+            continue;
+        }
+
+        $attrs = [];
+        if (!empty($actionItem['attrs']) && is_iterable($actionItem['attrs'])) {
+            foreach ($actionItem['attrs'] as $attrKey => $attrValue) {
+                if (!is_string($attrKey) || $attrKey === '' || $attrValue === null || $attrValue === '') {
+                    continue;
+                }
+                $attrs[$attrKey] = $attrValue;
+            }
+        }
+
+        $actionsList[] = [
+            'url'    => $url,
+            'icon'   => trim((string) ($actionItem['icon'] ?? '')),
+            'label'  => $actionItem['label'] ?? null,
+            'title'  => $actionItem['title'] ?? null,
+            'class'  => trim('kpi-card__action ' . ($actionItem['class'] ?? '')),
+            'target' => $actionItem['target'] ?? null,
+            'rel'    => $actionItem['rel'] ?? null,
+            'attrs'  => $attrs,
+        ];
+    }
+    $hasActions = !empty($actionsList);
 @endphp
 
 <div class="{{ $wrapperClass }}" dir="{{ $dir }}">
     <div class="{{ $headerClass }}{{ $asideHasContent ? ' kpi-card__header--spread' : '' }}">
-        @isset($icon)
-            <div class="{{ $iconWrapperClass }}">
-                <i class="{{ trim(($icon ?? '') . ' ' . $iconClass) }}"></i>
+        <div class="kpi-card__main">
+            @isset($icon)
+                <div class="{{ $iconWrapperClass }}">
+                    <i class="{{ trim(($icon ?? '') . ' ' . $iconClass) }}"></i>
+                </div>
+            @endisset
+
+            <div class="{{ $contentClass }}">
+                @isset($title)
+                    <div class="{{ $titleClass }}">
+                        <span>{{ $title }}</span>
+                        @if($hintText)
+                            <span class="{{ $hintClass }}" data-bs-toggle="tooltip" data-bs-placement="{{ $hintPlacement }}" title="{{ $hintText }}">
+                                <i class="{{ $hintIcon }}"></i>
+                            </span>
+                        @endif
+                    </div>
+                @endisset
+
+                @if(isset($description))
+                    <div class="kpi-card__description subnote">{{ $description }}</div>
+                @endif
+
+                @isset($value)
+                    <div class="{{ $valueClass }}">
+                        <span>{{ $value }}</span>
+                        @isset($value_suffix)
+                            <span class="{{ $valueSuffixClass }}">{{ $value_suffix }}</span>
+                        @endisset
+                    </div>
+                @endisset
+
+                @foreach($metaItems as $metaItem)
+                    <div class="kpi-card__meta {{ $metaItem['class'] }}">{{ $metaItem['text'] }}</div>
+                @endforeach
             </div>
-        @endisset
-        <div class="{{ $contentClass }}">
-            @isset($title)
-                <div class="{{ $titleClass }}">
-                    <span>{{ $title }}</span>
-                    @if($hintText)
-                        <span class="{{ $hintClass }}" data-bs-toggle="tooltip" data-bs-placement="{{ $hintPlacement }}" title="{{ $hintText }}">
-                            <i class="{{ $hintIcon }}"></i>
-                        </span>
-                    @endif
-                </div>
-            @endisset
-
-            @if(isset($description))
-                <div class="kpi-card__description subnote">{{ $description }}</div>
-            @endif
-
-            @isset($value)
-                <div class="{{ $valueClass }}">
-                    <span>{{ $value }}</span>
-                    @isset($value_suffix)
-                        <span class="{{ $valueSuffixClass }}">{{ $value_suffix }}</span>
-                    @endisset
-                </div>
-            @endisset
-
-            @foreach($metaItems as $metaItem)
-                <div class="kpi-card__meta {{ $metaItem['class'] }}">{{ $metaItem['text'] }}</div>
-            @endforeach
         </div>
 
         @if($asideHasContent)
@@ -196,6 +233,30 @@
                 @if(!empty($asideConfig['html']))
                     {!! $asideConfig['html'] !!}
                 @endif
+            </div>
+        @endif
+
+        @if($hasActions)
+            <div class="kpi-card__actions">
+                @foreach($actionsList as $action)
+                    <a href="{{ $action['url'] }}"
+                       class="{{ $action['class'] }}"
+                       @if(!empty($action['title'])) title="{{ e($action['title']) }}" @endif
+                       @if(!empty($action['target'])) target="{{ e($action['target']) }}" @endif
+                       @if(!empty($action['rel'])) rel="{{ e($action['rel']) }}" @endif
+                       @foreach($action['attrs'] as $attrName => $attrValue) {{ $attrName }}="{{ e($attrValue) }}" @endforeach
+                    >
+                        @if($action['icon'] !== '')
+                            <i class="{{ $action['icon'] }}"></i>
+                        @endif
+                        @php($actionLabel = $action['label'])
+                        @if($actionLabel instanceof Illuminate\Support\HtmlString)
+                            {!! $actionLabel->toHtml() !!}
+                        @elseif(is_string($actionLabel) && $actionLabel !== '')
+                            <span>{{ $actionLabel }}</span>
+                        @endif
+                    </a>
+                @endforeach
             </div>
         @endif
     </div>

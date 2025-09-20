@@ -102,6 +102,8 @@ return array (
   'Required Status Contracts' => 'Contracts in "Required" status',
   'Contracts in Required Status' => 'Number of contracts marked as "Required"',
   'Contract Statuses Overview' => 'Contract Statuses Overview',
+  'View Status Report' => 'View Status Report',
+  'Remaining Contract Amount' => 'Remaining Contract Amount',
   'Contract Statuses Distribution' => 'Contract Statuses Distribution',
   'Percentages calculated from current total contracts' => 'Percentages calculated from current total contracts',
   'No data for statuses.' => 'No data for statuses.',
