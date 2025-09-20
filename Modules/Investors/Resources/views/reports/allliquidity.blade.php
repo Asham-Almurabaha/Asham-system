@@ -71,7 +71,7 @@
           <tr>
             <th style="width:56px">#</th>
             <th class="text-start">@lang('app.Investor')</th>
-            <th class="text-start">@lang('reports.Active Contracts')</th>
+            <th>@lang('reports.Active Contracts')</th>
             <th>@lang('reports.Current Liquidity')</th>
           </tr>
       </x-slot>
@@ -91,17 +91,7 @@
                       @endif
                     </div>
                   </td>
-                  <td class="text-start">
-                    @if($activeContracts->isNotEmpty())
-                      <div class="d-flex flex-wrap gap-1">
-                        @foreach($activeContracts as $contractNumber)
-                          <span class="badge bg-light text-dark border">{{ $contractNumber }}</span>
-                        @endforeach
-                      </div>
-                    @else
-                      <span class="text-muted">—</span>
-                    @endif
-                  </td>
+                  <td>{{ number_format($activeContracts->count()) }}</td>
                   <td class="fw-bold {{ $liq>=0 ? 'text-success' : 'text-danger' }}">
                     {{ number_format($liq, 2) }} <span class="small-muted">{{ $cs }}</span>
                   </td>
@@ -124,7 +114,6 @@
 @endsection
 
 @section('actions')
-  <x-button.action href="{{ route('investors.index') }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button.action>
   <x-button.refresh :href="url()->current()" />
 @endsection
 

@@ -53,7 +53,7 @@
             </x-button.action>
             <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
                 <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.Allliquidity') }}">
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.Allliquidity') }}" target="_blank" rel="noopener">
                         <i class="bi bi-cash-coin text-success"></i>
                         <span>{{ __('investors::investors.Investors Liquidity Report') }}</span>
                     </a>
