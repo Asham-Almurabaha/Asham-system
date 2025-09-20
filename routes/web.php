@@ -9,6 +9,7 @@ use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\LedgerEntriesImportController;
 use App\Http\Controllers\Setting\PermissionManagementController;
+use App\Http\Controllers\Setting\RoleManagementController;
 use App\Http\Controllers\Setting\RolePermissionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
@@ -97,6 +98,13 @@ Route::middleware('auth')->group(function () {
             ->name('settings.permissions.store');
         Route::delete('/settings/permissions/{permission}', [PermissionManagementController::class, 'destroy'])
             ->name('settings.permissions.destroy');
+
+        Route::get('/settings/roles', [RoleManagementController::class, 'index'])
+            ->name('settings.roles.index');
+        Route::post('/settings/roles', [RoleManagementController::class, 'store'])
+            ->name('settings.roles.store');
+        Route::delete('/settings/roles/{role}', [RoleManagementController::class, 'destroy'])
+            ->name('settings.roles.destroy');
 
         Route::get('/settings/roles-permissions', [RolePermissionController::class, 'index'])
             ->name('settings.roles.permissions');

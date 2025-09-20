@@ -20,6 +20,7 @@ return array (
   'General Settings' => 'الإعدادات العامة',
   'General Setting' => 'الإعدادات العامة',
   'Users and Permissions' => 'المستخدمون والصلاحيات',
+  'Manage Roles' => 'إدارة الأدوار',
   'Manage Role Permissions' => 'إدارة صلاحيات الأدوار',
   'Manage Permissions' => 'إدارة الصلاحيات',
   'Assign Roles to Users' => 'تعيين الأدوار للمستخدمين',

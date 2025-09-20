@@ -20,6 +20,7 @@ return [
     'General Settings' => 'General Settings',
     'General Setting' => 'General Setting',
     'Users and Permissions' => 'Users and Permissions',
+    'Manage Roles' => 'Manage Roles',
     'Manage Role Permissions' => 'Manage Role Permissions',
     'Manage Permissions' => 'Manage Permissions',
     'Assign Roles to Users' => 'Assign Roles to Users',
