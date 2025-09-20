@@ -8,7 +8,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0">{{ __('Audit Logs') }}</h4>
         <div class="d-flex gap-2">
-            <a href="{{ route('audit.logs') }}" class="btn btn-outline-secondary btn-sm">{{ __('Refresh') }}</a>
+            <x-refresh-button :href="route('audit.logs')" class="btn-sm" />
             <button class="btn btn-primary btn-sm no-print" onclick="window.print()">{{ __('Print') }}</button>
         </div>
     </div>
