@@ -61,6 +61,8 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('investors.transactions.transactions');
     Route::get('reports/investors/outstanding', [InvestorReportController::class, 'outstanding'])
         ->name('reports.investors.outstanding');
+    Route::get('reports/investors/deposits-withdrawals', [InvestorReportController::class, 'depositsWithdrawalsReport'])
+        ->name('reports.investors.deposits-withdrawals');
     Route::get('reports/investors/Allliquidity', [InvestorReportController::class, 'allliquidity'])
         ->name('reports.investors.Allliquidity');
 

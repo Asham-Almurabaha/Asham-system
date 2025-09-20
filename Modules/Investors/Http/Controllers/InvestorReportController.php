@@ -13,10 +13,13 @@ use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 use Modules\Investors\Entities\Investor;
+use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
 
 class InvestorReportController extends Controller
 {
+    use InvestorLiquiditySummaries;
+
     public function statement(Investor $investor, InvestorDataService $service)
     {
         // ابني كل الأرقام من الخدمة
@@ -60,6 +63,69 @@ class InvestorReportController extends Controller
         $depositsTotal = $deposits->sum('amount');
 
         return view('investors::reports.deposits', compact('investor', 'deposits', 'depositsTotal'));
+    }
+
+    public function depositsWithdrawalsReport(Request $request)
+    {
+        $filters = [
+            'q'        => $request->query('q'),
+            'per_page' => (int) $request->query('per_page', 25),
+        ];
+
+        $query = Investor::query()
+            ->select(['id', 'name'])
+            ->when($filters['q'], function ($q, $v) {
+                $q->where('name', 'like', "%{$v}%");
+            })
+            ->orderBy('name');
+
+        $rows = $query
+            ->paginate(max(1, $filters['per_page']))
+            ->withQueryString();
+
+        $pageIds = $rows->pluck('id');
+        $pageLiquidity = $this->summarizeInvestorLiquidity($pageIds);
+        $pageByInvestor = $pageLiquidity['perInvestor'];
+        $pageTotals = $pageLiquidity['totals'];
+
+        $rows->getCollection()->transform(function ($investor) use ($pageByInvestor) {
+            $stats = $pageByInvestor->get($investor->id, ['in' => 0.0, 'out' => 0.0, 'net' => 0.0]);
+            $investor->total_in = $stats['in'] ?? 0.0;
+            $investor->total_out = $stats['out'] ?? 0.0;
+            $investor->net_liquidity = $stats['net'] ?? 0.0;
+
+            return $investor;
+        });
+
+        $overallRow = LedgerEntry::query()
+            ->whereNotNull('investor_id')
+            ->where('is_office', false)
+            ->when($filters['q'], function ($query, $search) {
+                $query->whereIn('investor_id', function ($sub) use ($search) {
+                    $sub->select('id')
+                        ->from('investors')
+                        ->where('name', 'like', "%{$search}%");
+                });
+            })
+            ->selectRaw(<<<SQL
+                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in,
+                COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out
+            SQL)
+            ->first();
+
+        $overallTotals = [
+            'in'  => round((float) (optional($overallRow)->total_in ?? 0), 2),
+            'out' => round((float) (optional($overallRow)->total_out ?? 0), 2),
+        ];
+        $overallTotals['net'] = round($overallTotals['in'] - $overallTotals['out'], 2);
+
+        return view('investors::reports.deposits-withdrawals-investors', [
+            'rows'           => $rows,
+            'filters'        => $filters,
+            'currencySymbol' => 'ر.س',
+            'pageTotals'     => $pageTotals,
+            'overallTotals'  => $overallTotals,
+        ]);
     }
 
     public function depositsInstallments(Investor $investor)

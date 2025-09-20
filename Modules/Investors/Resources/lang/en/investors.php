@@ -67,6 +67,7 @@ return array (
   'Net Liquidity' => 'Net Liquidity',
   'Total Deposits' => 'Total Deposits',
   'Total Withdrawals' => 'Total Withdrawals',
+  'Investors Deposits Withdrawals Report' => 'Investors Deposits & Withdrawals Report',
   'Investors With Contracts' => 'Investors With Contracts',
   'Investors Without Contracts' => 'Investors Without Contracts',
   'Average Office Share' => 'Average Office Share',

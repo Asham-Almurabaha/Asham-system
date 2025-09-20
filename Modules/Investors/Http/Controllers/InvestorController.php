@@ -16,10 +16,13 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInvestor;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
+use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
 
 class InvestorController extends Controller
 {
+    use InvestorLiquiditySummaries;
+
     public function index(Request $request)
     {
         // استعلام أساسي
@@ -107,57 +110,33 @@ class InvestorController extends Controller
             'inactive' => $investorsTotalAll > 0 ? round(($inactiveInvestorsTotalAll / $investorsTotalAll) * 100, 1) : 0.0,
         ];
 
-        $liquidityRow = LedgerEntry::query()
-            ->whereNotNull('investor_id')
-            ->where('is_office', false)
-            ->selectRaw(<<<SQL
-                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in,
-                COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out
-            SQL)
-            ->first();
+        $liquidityData = $this->summarizeInvestorLiquidity();
+        $liquidityTotals = $liquidityData['totals'];
+        $liquidityByInvestor = $liquidityData['perInvestor'];
 
-        $liquidityTotals = [
-            'in'  => round((float) ($liquidityRow->total_in ?? 0), 2),
-            'out' => round((float) ($liquidityRow->total_out ?? 0), 2),
-        ];
-        $liquidityTotals['net'] = round($liquidityTotals['in'] - $liquidityTotals['out'], 2);
+        $investorLookup = $liquidityByInvestor->isNotEmpty()
+            ? Investor::whereIn('id', $liquidityByInvestor->keys()->all())
+                ->get(['id', 'name'])
+                ->keyBy('id')
+            : collect();
 
-        $topLiquidityRaw = LedgerEntry::query()
-            ->whereNotNull('investor_id')
-            ->where('is_office', false)
-            ->groupBy('investor_id')
-            ->selectRaw(<<<SQL
-                investor_id,
-                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in,
-                COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out,
-                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS net_balance
-            SQL)
-            ->havingRaw(
-                'COALESCE(SUM(CASE WHEN direction = ? THEN amount ELSE 0 END), 0) - COALESCE(SUM(CASE WHEN direction = ? THEN amount ELSE 0 END), 0) > 0',
-                ['in', 'out']
-            )
-            ->orderByDesc('net_balance')
+        $liquidityReport = $liquidityByInvestor
+            ->map(function (array $row, int $investorId) use ($investorLookup) {
+                return [
+                    'id'   => $investorId,
+                    'name' => $investorLookup[$investorId]->name ?? ('#' . $investorId),
+                    'in'   => $row['in'],
+                    'out'  => $row['out'],
+                    'net'  => $row['net'],
+                ];
+            })
+            ->sortByDesc('net')
+            ->values();
+
+        $topLiquidity = $liquidityReport
+            ->filter(fn ($row) => $row['net'] > 0)
             ->take(10)
-            ->get();
-
-        $topInvestorIds = $topLiquidityRaw->pluck('investor_id')->all();
-        $investorLookup = Investor::whereIn('id', $topInvestorIds)
-            ->get(['id', 'name'])
-            ->keyBy('id');
-
-        $topLiquidity = $topLiquidityRaw->map(function ($row) use ($investorLookup) {
-            $totalIn = round((float) ($row->total_in ?? 0), 2);
-            $totalOut = round((float) ($row->total_out ?? 0), 2);
-            $net = round($totalIn - $totalOut, 2);
-
-            return [
-                'id'    => (int) $row->investor_id,
-                'name'  => $investorLookup[$row->investor_id]->name ?? ('#' . $row->investor_id),
-                'in'    => $totalIn,
-                'out'   => $totalOut,
-                'net'   => $net,
-            ];
-        })->filter(fn ($row) => $row['net'] > 0)->values();
+            ->values();
 
         $topLiquidityTotalNet = round((float) $topLiquidity->sum('net'), 2);
 
@@ -206,6 +185,7 @@ class InvestorController extends Controller
             'newInvestorsThisWeekAll'   => $newInvestorsThisWeekAll,
             'percentages'               => $percentages,
             'liquidityTotals'           => $liquidityTotals,
+            'liquidityReport'           => $liquidityReport,
             'topLiquidity'              => $topLiquidity,
             'topLiquidityTotalNet'      => $topLiquidityTotalNet,
             'recentInvestors'           => $recentInvestors,

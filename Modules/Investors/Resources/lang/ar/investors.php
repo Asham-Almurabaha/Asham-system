@@ -67,6 +67,7 @@ return array (
   'Net Liquidity' => 'صافي السيولة',
   'Total Deposits' => 'إجمالي الإيداعات',
   'Total Withdrawals' => 'إجمالي السحوبات',
+  'Investors Deposits Withdrawals Report' => 'تقرير إيداعات ومسحوبات المستثمرين',
   'Investors With Contracts' => 'مستثمرون مرتبطون بعقود',
   'Investors Without Contracts' => 'مستثمرون بدون عقود',
   'Average Office Share' => 'متوسط حصة المكتب',

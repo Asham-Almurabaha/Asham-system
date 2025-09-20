@@ -18,6 +18,7 @@
     $percentages = (array) ($percentages ?? []);
     $liquidityTotals = (array) ($liquidityTotals ?? []);
     $contractStats = (array) ($contractStats ?? []);
+    $liquidityReportCollection = collect($liquidityReport ?? []);
     $topLiquidityCollection = collect($topLiquidity ?? []);
     $topLiquidityTotalNet = (float) ($topLiquidityTotalNet ?? $topLiquidityCollection->sum('net'));
 
@@ -52,6 +53,12 @@
                 <span>{{ __('investors::investors.Reports') }}</span>
             </x-button.action>
             <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
+                <li>
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.deposits-withdrawals') }}" target="_blank" rel="noopener">
+                        <i class="bi bi-arrow-left-right text-warning"></i>
+                        <span>{{ __('investors::investors.Investors Deposits Withdrawals Report') }}</span>
+                    </a>
+                </li>
                 <li>
                     <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.Allliquidity') }}" target="_blank" rel="noopener">
                         <i class="bi bi-cash-coin text-success"></i>
@@ -200,6 +207,51 @@
                 <div class="subnote">{{ __('investors::investors.Investors With Contracts') }}</div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4" dir="rtl">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h6 class="mb-0">{{ __('investors::investors.Investors Deposits Withdrawals Report') }}</h6>
+            <div class="small text-muted">{{ __('dashboard.Net = In - Out. Internal transfers are neutral and do not affect the net.') }}</div>
+        </div>
+        <div class="text-end small">
+            <span class="badge bg-light text-dark">{{ __('investors::investors.Results') }}: {{ number_format($liquidityReportCollection->count()) }}</span>
+            <div class="text-muted mt-1">{{ __('investors::investors.Total Deposits') }}: {{ number_format($liquidityTotals['in'] ?? 0, 2) }}</div>
+            <div class="text-muted">{{ __('investors::investors.Total Withdrawals') }}: {{ number_format($liquidityTotals['out'] ?? 0, 2) }}</div>
+            <div class="text-muted">{{ __('investors::investors.Net Liquidity') }}: {{ number_format($liquidityTotals['net'] ?? 0, 2) }}</div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <x-table head-class="table-light" class="text-center">
+            <x-slot name="head">
+                <tr>
+                    <th style="width:60px">#</th>
+                    <th>{{ __('investors::investors.Name') }}</th>
+                    <th>{{ __('investors::investors.Total Deposits') }}</th>
+                    <th>{{ __('investors::investors.Total Withdrawals') }}</th>
+                    <th>{{ __('investors::investors.Net Liquidity') }}</th>
+                </tr>
+            </x-slot>
+            @forelse($liquidityReportCollection as $index => $row)
+                <tr>
+                    <td class="text-muted">{{ $index + 1 }}</td>
+                    <td class="text-start">
+                        <a href="{{ route('investors.show', $row['id']) }}" class="text-decoration-none fw-bold text-dark hover-primary">
+                            {{ $row['name'] }}
+                        </a>
+                    </td>
+                    <td>{{ number_format($row['in'] ?? 0, 2) }}</td>
+                    <td>{{ number_format($row['out'] ?? 0, 2) }}</td>
+                    <td class="fw-bold {{ ($row['net'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">{{ number_format($row['net'] ?? 0, 2) }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="5" class="py-4 text-muted">{{ __('investors::investors.No data available') }}</td>
+                </tr>
+            @endforelse
+        </x-table>
     </div>
 </div>
 
