@@ -21,6 +21,7 @@ return array (
   'General Setting' => 'الإعدادات العامة',
   'Users and Permissions' => 'المستخدمون والصلاحيات',
   'Manage Role Permissions' => 'إدارة صلاحيات الأدوار',
+  'Manage Permissions' => 'إدارة الصلاحيات',
   'Assign Roles to Users' => 'تعيين الأدوار للمستخدمين',
   'Lookup Tables' => 'جداول التعاريف',
   'People & Customers' => 'الأشخاص والعملاء',

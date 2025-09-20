@@ -367,6 +367,11 @@
           </a>
         </li>
         <li>
+          <a class="{{ $active($isRoute('settings.permissions.*')) }}" href="{{ route('settings.permissions.index') }}">
+            <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Permissions')</span>
+          </a>
+        </li>
+        <li>
           <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
             <i class="bi bi-circle"></i><span>@lang('sidebar.Assign Roles to Users')</span>
           </a>
