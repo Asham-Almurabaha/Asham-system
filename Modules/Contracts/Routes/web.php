@@ -7,6 +7,7 @@ use Modules\Contracts\Http\Controllers\ContractReportController;
 use Modules\Contracts\Http\Controllers\ContractsImportController;
 use Modules\Contracts\Http\Controllers\ContractsExportController;
 use Modules\Contracts\Http\Controllers\ContractClaimController;
+use Modules\Contracts\Http\Controllers\ContractNoteController;
 
 // استيراد العقود
 Route::prefix('contracts/import')->name('contracts.')->group(function () {
@@ -46,6 +47,11 @@ Route::put('contracts/{contract}/images', [ContractController::class, 'updateIma
     ->name('contracts.images.update');
 Route::resource('contracts', ContractController::class);
 Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');
+
+Route::prefix('contracts/{contract}/notes')->name('contracts.notes.')->group(function () {
+    Route::post('/', [ContractNoteController::class, 'store'])->name('store');
+    Route::delete('{contract_note}', [ContractNoteController::class, 'destroy'])->name('destroy');
+});
 
 // الأقساط
 Route::prefix('installments')->name('installments.')->group(function () {

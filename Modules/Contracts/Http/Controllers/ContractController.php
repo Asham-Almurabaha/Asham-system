@@ -582,6 +582,7 @@ class ContractController extends Controller
             'productType',     // ✅ العلاقة أصبحت productType
             'installmentType',
             'investors',
+            'notes',
             'installments.installmentStatus',
             'claims' => fn ($query) => $query
                 ->orderByDesc('claim_date')

@@ -52,6 +52,9 @@
 {{-- معلومات أساسية عن العقد --}}
 @include('contracts::partials.basic-info', ['contract' => $contract])
 
+{{-- ملاحظات العقد --}}
+@include('contracts::partials.notes', ['contract' => $contract])
+
 {{-- المستثمرون --}}
 @include('contracts::partials.investors', ['contract' => $contract])
 
