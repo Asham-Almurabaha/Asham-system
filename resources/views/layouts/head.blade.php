@@ -68,7 +68,27 @@
 
 {{-- Project utilities and custom styles (placed before template CSS to avoid overriding Bootstrap defaults) --}}
 <link href="{{ asset('assets/css/util.css') }}" rel="stylesheet">
-<link href="{{ asset('assets/css/custom.css') }}" rel="stylesheet">
+
+@php
+  $customCssDirectory = public_path('assets/css/custom');
+  $customCssFiles     = [];
+
+  if (is_dir($customCssDirectory)) {
+      foreach (scandir($customCssDirectory) as $file) {
+          $fullPath = $customCssDirectory.DIRECTORY_SEPARATOR.$file;
+
+          if (is_file($fullPath) && pathinfo($file, PATHINFO_EXTENSION) === 'css') {
+              $customCssFiles[] = $file;
+          }
+      }
+
+      sort($customCssFiles);
+  }
+@endphp
+
+@foreach ($customCssFiles as $cssFile)
+  <link href="{{ asset('assets/css/custom/'.$cssFile) }}" rel="stylesheet">
+@endforeach
 
 {{-- Template Main CSS --}}
 @if ($isRtl)
