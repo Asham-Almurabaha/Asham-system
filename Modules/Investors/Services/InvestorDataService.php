@@ -26,6 +26,45 @@ class InvestorDataService
         $contractsEnded  = (int) $contractsAll->whereIn('contract_status_id', $endedStatusIds)->count();
         $contractsActive = max($contractsTotal - $contractsEnded, 0);
 
+        $statusCounts = [];
+        foreach ($contractsAll as $contractRow) {
+            $statusId = (int) ($contractRow->contract_status_id ?? 0);
+            $statusName = (string) ($contractRow->contractStatus->name ?? 'غير محدد');
+
+            if (!isset($statusCounts[$statusId])) {
+                $statusCounts[$statusId] = [
+                    'id'    => $statusId,
+                    'name'  => $statusName,
+                    'count' => 0,
+                ];
+            } elseif (
+                isset($statusCounts[$statusId]['name'])
+                && $statusCounts[$statusId]['name'] === 'غير محدد'
+                && $statusName !== 'غير محدد'
+                && $statusName !== ''
+            ) {
+                $statusCounts[$statusId]['name'] = $statusName;
+            }
+
+            $statusCounts[$statusId]['count']++;
+        }
+
+        $statusMetrics = array_map(static function (array $row) use ($contractsTotal) {
+            $count = (int) ($row['count'] ?? 0);
+            $pct = $contractsTotal > 0
+                ? round(($count / $contractsTotal) * 100, 2)
+                : 0.0;
+
+            return [
+                'id'    => (int) ($row['id'] ?? 0),
+                'name'  => (string) ($row['name'] ?? 'غير محدد'),
+                'count' => $count,
+                'pct'   => $pct,
+            ];
+        }, array_values($statusCounts));
+
+        usort($statusMetrics, static fn ($a, $b) => ($b['count'] ?? 0) <=> ($a['count'] ?? 0));
+
         // العقود النشطة فقط
         $activeContracts = $contractsAll->reject(
             fn($c) => in_array((int)($c->contract_status_id ?? 0), $endedStatusIds, true)
@@ -258,6 +297,8 @@ class InvestorDataService
             'totalProfitNet'            => $totalProfitNet,
             'totalPaidPortionToInvestor'=> $totalPaidPortionToInvestor,
             'totalRemainingOnCustomers' => $totalRemainingOnCustomers,
+            'contractStatusMetrics'     => $statusMetrics,
+            'contractStatusTotal'       => $contractsTotal,
             'zakat'                     => $zakatData,
             'contractBreakdown'         => $contractBreakdown,
             'totals' => [

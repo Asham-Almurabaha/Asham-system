@@ -81,6 +81,166 @@
         $contractBreakdown = $contractBreakdown ?? [];
         $liquidity         = isset($liquidity) ? (float)$liquidity : 0.0;
 
+        $statusMetricsCollection = collect($contractStatusMetrics ?? [])
+            ->map(function ($row) {
+                return [
+                    'id'    => (int) ($row['id'] ?? 0),
+                    'name'  => (string) ($row['name'] ?? '—'),
+                    'count' => (int) ($row['count'] ?? 0),
+                    'pct'   => isset($row['pct']) ? (float) $row['pct'] : 0.0,
+                ];
+            })
+            ->filter(fn ($row) => $row['count'] > 0)
+            ->sortByDesc('count');
+
+        $statusTotal = (int) ($contractStatusTotal ?? $contractsTotal ?? 0);
+        $investorId = (int) ($investor->id ?? 0);
+
+        $statusIcon = function ($name) {
+            $normalize = fn($value) => mb_strtolower(trim((string) $value), 'UTF-8');
+            $normalizedName = $normalize($name);
+
+            static $normalizedStatusMap = null;
+            static $aliasMap = null;
+
+            if ($normalizedStatusMap === null) {
+                $statusMap = [
+                    'بدون مستثمر'    => ['bi-person-dash',             'text-secondary'],
+                    'معلق'           => ['bi-hourglass-split',         'text-warning'],
+                    'جديد'           => ['bi-stars',                   'text-primary'],
+                    'منتهي'          => ['bi-flag-fill',               'text-secondary'],
+                    'سداد مبكر'      => ['bi-cash-stack',              'text-success'],
+                    'مطلوب'          => ['bi-exclamation-diamond',     'text-danger'],
+                    'منتظم'          => ['bi-check2-circle',           'text-success'],
+                    'غير منتظم'      => ['bi-slash-circle',            'text-warning'],
+                    'متأخر'          => ['bi-clock-history',           'text-warning'],
+                    'متعثر'          => ['bi-exclamation-triangle',    'text-danger'],
+                    'مرفوع فيه'      => ['bi-exclamation-octagon',     'text-danger'],
+                    'منتهي بمطالبة'  => ['bi-file-earmark-exclamation','text-danger'],
+                ];
+
+                $normalizedStatusMap = [];
+                foreach ($statusMap as $label => $iconData) {
+                    $normalizedStatusMap[$normalize($label)] = $iconData;
+                }
+
+                $aliases = [
+                    'without investor'   => 'بدون مستثمر',
+                    'no investor'        => 'بدون مستثمر',
+                    'pending'            => 'معلق',
+                    'on hold'            => 'معلق',
+                    'waiting'            => 'معلق',
+                    'new'                => 'جديد',
+                    'fresh'              => 'جديد',
+                    'ended'              => 'منتهي',
+                    'closed'             => 'منتهي',
+                    'complete'           => 'منتهي',
+                    'completed'          => 'منتهي',
+                    'early settlement'   => 'سداد مبكر',
+                    'paid off'           => 'سداد مبكر',
+                    'required'           => 'مطلوب',
+                    'demand'             => 'مطلوب',
+                    'active'             => 'منتظم',
+                    'regular'            => 'منتظم',
+                    'irregular'          => 'غير منتظم',
+                    'non-regular'        => 'غير منتظم',
+                    'late'               => 'متأخر',
+                    'overdue'            => 'متأخر',
+                    'delayed'            => 'متأخر',
+                    'delinquent'         => 'متعثر',
+                    'defaulted'          => 'متعثر',
+                    'raised'             => 'مرفوع فيه',
+                    'ended with claim'   => 'منتهي بمطالبة',
+                    'under claim'        => 'منتهي بمطالبة',
+                    'claim closed'       => 'منتهي بمطالبة',
+                ];
+
+                $aliasMap = [];
+                foreach ($aliases as $alias => $canonical) {
+                    $canonicalKey = $normalize($canonical);
+                    if (isset($normalizedStatusMap[$canonicalKey])) {
+                        $aliasMap[$normalize($alias)] = $canonicalKey;
+                    }
+                }
+            }
+
+            if (isset($normalizedStatusMap[$normalizedName])) {
+                return $normalizedStatusMap[$normalizedName];
+            }
+
+            if (isset($aliasMap[$normalizedName])) {
+                return $normalizedStatusMap[$aliasMap[$normalizedName]];
+            }
+
+            if ($normalizedName !== '') {
+                logger()->warning('Unknown contract status icon mapping (investor view)', ['status' => $name]);
+            }
+
+            return ['bi-question-circle', 'text-muted'];
+        };
+
+        $statusKpiCards = $statusMetricsCollection
+            ->map(function ($statusRow) use ($statusIcon, $investorId) {
+                $statusId = (int) ($statusRow['id'] ?? 0);
+                $name = (string) ($statusRow['name'] ?? '—');
+                [$iconName, $colorClass] = $statusIcon($name);
+                $count = (int) ($statusRow['count'] ?? 0);
+                $pct = (float) ($statusRow['pct'] ?? 0.0);
+
+                if ($count <= 0) {
+                    return null;
+                }
+
+                $barClass = 'bg-primary';
+                if (str_contains($colorClass, 'text-success')) {
+                    $barClass = 'bg-success';
+                } elseif (str_contains($colorClass, 'text-danger')) {
+                    $barClass = 'bg-danger';
+                } elseif (str_contains($colorClass, 'text-warning')) {
+                    $barClass = 'bg-warning';
+                } elseif (str_contains($colorClass, 'text-secondary')) {
+                    $barClass = 'bg-secondary';
+                } elseif (str_contains($colorClass, 'text-info')) {
+                    $barClass = 'bg-info';
+                }
+
+                $card = [
+                    'col_class'  => 'col-12 col-sm-6 col-lg-4 col-xl-3',
+                    'icon'       => 'bi ' . $iconName,
+                    'icon_class' => trim('fs-4 ' . $colorClass),
+                    'title'      => $name,
+                    'value'      => number_format($count),
+                    'value_class'=> trim('fw-bold ' . $colorClass),
+                    'meta'       => [
+                        ['text' => 'النسبة: ' . number_format($pct, 2) . '%'],
+                    ],
+                    'progress'   => [
+                        'value'     => $pct,
+                        'bar_class' => $barClass,
+                    ],
+                ];
+
+                if ($statusId > 0 && $investorId > 0) {
+                    $card['actions'] = [
+                        [
+                            'url'    => route('contracts.index', [
+                                'status'      => $statusId,
+                                'investor_id' => $investorId,
+                            ]),
+                            'icon'   => 'bi bi-arrow-up-right-square',
+                            'title'  => 'عرض العقود',
+                            'target' => '_blank',
+                            'rel'    => 'noopener noreferrer',
+                        ],
+                    ];
+                }
+
+                return $card;
+            })
+            ->filter()
+            ->values()
+            ->all();
+
         $zakatData = is_array($zakat ?? null) ? $zakat : [];
         $zakatAmount = (float)($zakatData['amount'] ?? 0);
         $zakatBase = isset($zakatData['base']) ? (float)$zakatData['base'] : ($liquidity + $totalRemainingOnCustomers);
@@ -238,6 +398,63 @@
         </div>
     </div>
 
+    {{-- ====== KPIs العقود الأساسية ====== --}}
+    {{-- <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-files fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">إجمالي العقود المشاركة</div>
+                </div>
+                <div class="fs-2 fw-bold">{{ number_format($contractsTotal) }}</div>
+                <div class="stat-sub">جميع العقود المرتبطة بالمستثمر</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-person-check fs-5 text-success"></i></div>
+                    <div class="fw-bold text-muted">العقود النشطة</div>
+                </div>
+                <div class="fs-2 fw-bold text-pos">{{ number_format($contractsActive) }}</div>
+                <div class="stat-sub">النسبة: {{ number_format($activePct,1) }}%</div>
+                <div class="progress bar-8 mt-2"><div class="progress-bar" style="width: {{ $activePct }}%"></div></div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-archive fs-5 text-danger"></i></div>
+                    <div class="fw-bold text-muted">العقود المنتهية</div>
+                </div>
+                <div class="fs-2 fw-bold text-neg">{{ number_format($contractsEnded) }}</div>
+                <div class="stat-sub">النسبة: {{ number_format($endedPct,1) }}%</div>
+                <div class="progress bar-8 mt-2"><div class="progress-bar bg-danger" style="width: {{ $endedPct }}%"></div></div>
+            </div>
+        </div>
+    </div> --}}
+
+     @if(!empty($statusKpiCards))
+        <div class="card shadow-sm mb-4" dir="rtl">
+            <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-start gap-2">
+                <div>
+                    <h6 class="mb-1">توزيع حالات عقود المستثمر</h6>
+                    <div class="small text-muted">النسب محسوبة من إجمالي العقود المرتبطة بهذا المستثمر</div>
+                </div>
+                <div class="small text-muted text-nowrap">إجمالي العقود: {{ number_format($statusTotal) }}</div>
+            </div>
+            <div class="card-body p-20">
+                <div class="row g-3">
+                    @foreach($statusKpiCards as $card)
+                        <div class="{{ $card['col_class'] }}">
+                            @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
 
     {{-- ====== ملخص أقساط هذا الشهر (لـ {{ $investor->name }}) ====== --}}
     <div class="card shadow-soft mb-4">
@@ -316,41 +533,9 @@
         </div>
     </div>
 
-    {{-- ====== KPIs العقود الأساسية ====== --}}
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-4">
-            <div class="kpi-card p-3">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-files fs-5 text-primary"></i></div>
-                    <div class="fw-bold text-muted">إجمالي العقود المشاركة</div>
-                </div>
-                <div class="fs-2 fw-bold">{{ number_format($contractsTotal) }}</div>
-                <div class="stat-sub">جميع العقود المرتبطة بالمستثمر</div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="kpi-card p-3">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-person-check fs-5 text-success"></i></div>
-                    <div class="fw-bold text-muted">العقود النشطة</div>
-                </div>
-                <div class="fs-2 fw-bold text-pos">{{ number_format($contractsActive) }}</div>
-                <div class="stat-sub">النسبة: {{ number_format($activePct,1) }}%</div>
-                <div class="progress bar-8 mt-2"><div class="progress-bar" style="width: {{ $activePct }}%"></div></div>
-            </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="kpi-card p-3">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-archive fs-5 text-danger"></i></div>
-                    <div class="fw-bold text-muted">العقود المنتهية</div>
-                </div>
-                <div class="fs-2 fw-bold text-neg">{{ number_format($contractsEnded) }}</div>
-                <div class="stat-sub">النسبة: {{ number_format($endedPct,1) }}%</div>
-                <div class="progress bar-8 mt-2"><div class="progress-bar bg-danger" style="width: {{ $endedPct }}%"></div></div>
-            </div>
-        </div>
-    </div>
+    
+
+   
 
     {{-- ====== كروت "المتبقي على العملاء" + "سيولة المستثمر" ====== --}}
     <div class="row g-3 mb-4">
