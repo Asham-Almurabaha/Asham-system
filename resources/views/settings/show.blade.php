@@ -30,9 +30,9 @@
     </div>
 
     <div class="d-flex gap-2">
-      <x-button href="{{ route('settings.edit', $setting) }}" variant="primary">
-        <i class="bi bi-pencil-square me-1"></i>@lang('sidebar.Edit')
-      </x-button>
+      <x-edit-button href="{{ route('settings.edit', $setting) }}">
+        @lang('sidebar.Edit')
+      </x-edit-button>
       <x-button href="{{ route('settings.index') }}" variant="secondary" :outline="true">
         <i class="bi bi-arrow-right-circle me-1"></i>@lang('sidebar.Back')
       </x-button>
@@ -82,9 +82,9 @@
               <form action="{{ route('settings.destroy', $setting) }}" method="POST"
                     onsubmit="return confirm('@lang('sidebar.Are you sure you want to delete this setting? The operation cannot be undone.')')">
                 @csrf @method('DELETE')
-                <x-button type="submit" variant="danger" :outline="true">
-                  <i class="bi bi-trash me-1"></i>@lang('sidebar.Delete Setting')
-                </x-button>
+                <x-delete-button type="submit" :outline="true">
+                  @lang('sidebar.Delete Setting')
+                </x-delete-button>
               </form>
             </div>
           </div>

@@ -60,7 +60,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <x-button id="AddCompany" name="AddCompany" type="submit" variant="primary">Add</x-button>
+                    <x-add-button id="AddCompany" name="AddCompany" type="submit">
+                        {{ __('Add') }}
+                    </x-add-button>
                 </div>
             </div>
         </form>

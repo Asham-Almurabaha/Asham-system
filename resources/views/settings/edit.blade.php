@@ -91,10 +91,10 @@
             </div>
 
             <div class="col-12 d-flex gap-2">
-              <x-button type="submit" variant="primary" :outline="true">
-                <i class="bi bi-check2 me-1"></i>@lang('sidebar.Update')
-              </x-button>
-              <x-button href="{{ route('settings.index') }}" variant="secondary" :outline="true">@lang('sidebar.Cancel')</x-button>
+              <x-update-button>
+                @lang('sidebar.Update')
+              </x-update-button>
+              <x-secondary-button href="{{ route('settings.index') }}">@lang('sidebar.Cancel')</x-secondary-button>
             </div>
           </form>
         </div>

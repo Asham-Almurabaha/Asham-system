@@ -75,7 +75,7 @@
               <x-save-button>
                 @lang('app.Save')
               </x-save-button>
-              <x-button href="{{ route('settings.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
+              <x-secondary-button href="{{ route('settings.index') }}">@lang('app.Cancel')</x-secondary-button>
             </div>
           </form>
         </div>

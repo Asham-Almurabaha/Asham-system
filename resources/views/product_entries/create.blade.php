@@ -57,9 +57,9 @@
                                 <x-save-button>
                                     {{ __('Save') }}
                                 </x-save-button>
-                                <x-button href="{{ route('product_entries.index') }}" variant="secondary" :outline="true">
+                                <x-secondary-button href="{{ route('product_entries.index') }}">
                                     {{ __('Cancel') }}
-                                </x-button>
+                                </x-secondary-button>
                             </div>
                         </div>
                     </form>

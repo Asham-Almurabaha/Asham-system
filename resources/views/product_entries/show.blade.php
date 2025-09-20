@@ -46,16 +46,16 @@
                         </div>
 
                         <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mt-4">
-                            <x-button href="{{ route('settings.edit', $setting->id) }}" variant="warning">
+                            <x-update-button href="{{ route('settings.edit', $setting->id) }}">
                                 @lang('pages.Update')
-                            </x-button>
+                            </x-update-button>
                             <form action="{{ route('settings.destroy', $setting->id) }}" method="POST" class="m-0"
                                   onsubmit="return confirm('{{ __('app.Confirm Delete') }}');">
                                 @csrf
                                 @method('DELETE')
-                                <x-button type="submit" variant="danger">
+                                <x-delete-button type="submit">
                                     @lang('pages.Delete')
-                                </x-button>
+                                </x-delete-button>
                             </form>
                         </div>
                     </div>
@@ -66,9 +66,9 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <p class="mb-3">لا توجد إعدادات بعد، يرجى إضافة إعداد جديد.</p>
-                <x-button href="{{ route('settings.create') }}" variant="success">
+                <x-add-button href="{{ route('settings.create') }}" variant="success">
                     @lang('pages.Add')
-                </x-button>
+                </x-add-button>
             </div>
         </div>
     @endif
