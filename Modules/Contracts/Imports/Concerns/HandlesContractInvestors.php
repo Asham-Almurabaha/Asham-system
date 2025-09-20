@@ -121,9 +121,12 @@ trait HandlesContractInvestors
             }
 
             if (!empty($entries)) {
+                $transactionDate = $this->resolveContractLedgerDate($contract);
+
                 app(InvestorTransactionLogger::class)->log($contract, $entries, 'إضافة عقد', [
                     'allow_type_fallback' => true,
                     'fallback_direction'  => 'in',
+                    'transaction_date'    => $transactionDate,
                 ]);
             }
 
@@ -132,6 +135,25 @@ trait HandlesContractInvestors
             $id = ContractStatus::where('name', ContractStatusNames::NO_INVESTORS)->value('id');
             if ($id) $contract->update(['contract_status_id'=>$id]);
         }
+    }
+
+    private function resolveContractLedgerDate(Contract $contract): \Carbon\CarbonInterface
+    {
+        $date = $contract->start_date ?: $contract->created_at;
+
+        if ($date instanceof \Carbon\CarbonInterface) {
+            return $date->copy();
+        }
+
+        if ($date instanceof \DateTimeInterface) {
+            return \Carbon\Carbon::instance($date);
+        }
+
+        if (is_string($date) && trim($date) !== '') {
+            return \Carbon\Carbon::parse($date);
+        }
+
+        return \Carbon\Carbon::now();
     }
 
 }

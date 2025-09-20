@@ -29,6 +29,7 @@ use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
 use Carbon\Carbon;
+use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -342,7 +343,11 @@ class ContractController extends Controller
                         ];
                     }
 
-                    $this->investorTransactionLogger->log($contract, $entries, 'إضافة عقد');
+                    $ledgerDate = $this->resolveContractLedgerDate($contract);
+
+                    $this->investorTransactionLogger->log($contract, $entries, 'إضافة عقد', [
+                        'transaction_date' => $ledgerDate,
+                    ]);
                 }
 
                 // === قيد فرق البيع (مكتب) + تسجيل في product_transactions ===
@@ -540,7 +545,11 @@ class ContractController extends Controller
                 ];
             }
 
-            $this->investorTransactionLogger->log($contract, $entries, 'إضافة عقد');
+            $ledgerDate = $this->resolveContractLedgerDate($contract);
+
+            $this->investorTransactionLogger->log($contract, $entries, 'إضافة عقد', [
+                'transaction_date' => $ledgerDate,
+            ]);
 
             $pivotTable = 'contract_investor';
             $dbSum      = (float) $contract->investors()->sum("$pivotTable.share_percentage");
@@ -736,6 +745,25 @@ class ContractController extends Controller
         }
 
         return array_values($clean);
+    }
+
+    private function resolveContractLedgerDate(Contract $contract): Carbon
+    {
+        $date = $contract->start_date ?: $contract->created_at;
+
+        if ($date instanceof Carbon) {
+            return $date->copy();
+        }
+
+        if ($date instanceof DateTimeInterface) {
+            return Carbon::instance($date);
+        }
+
+        if (is_string($date) && trim($date) !== '') {
+            return Carbon::parse($date);
+        }
+
+        return Carbon::now();
     }
 
     private function preparePivotData(array $investors, float $contractValue): array
