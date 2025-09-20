@@ -39,6 +39,19 @@
 
   // فتح مجموعة الحسابات؟
   $accountsOpen = $isRoute('ledger.*');
+
+  $customerManagePatterns = [
+      'customers.index',
+      'customers.create',
+      'customers.store',
+      'customers.show',
+      'customers.edit',
+      'customers.update',
+      'customers.destroy',
+      'customers.import.*',
+  ];
+
+  $customersOpen = $isRoute(array_merge(['customers.dashboard'], $customerManagePatterns));
 @endphp
 
 <ul class="sidebar-nav" id="sidebar-nav">
@@ -53,10 +66,24 @@
 
   {{-- Customers --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('customers.*')) }} {{ $active($isRoute('customers.*')) }}"
-       href="{{ route('customers.index') }}">
-      <i class="bi bi-people"></i><span>@lang('sidebar.Customers')</span>
+    <a class="nav-link {{ $coll($customersOpen) }}"
+       data-bs-target="#customers-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $customersOpen ? 'true' : 'false' }}">
+      <i class="bi bi-people"></i><span>@lang('sidebar.Customers')</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
+
+    <ul id="customers-nav" class="nav-content collapse {{ $open($customersOpen) }}" data-bs-parent="#sidebar-nav">
+      <li>
+        <a class="{{ $active($isRoute('customers.dashboard')) }}" href="{{ route('customers.dashboard') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Customers Dashboard')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute($customerManagePatterns)) }}" href="{{ route('customers.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Customers')</span>
+        </a>
+      </li>
+    </ul>
   </li>
 
   {{-- Guarantors --}}

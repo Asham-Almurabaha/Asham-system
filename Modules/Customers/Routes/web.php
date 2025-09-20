@@ -6,6 +6,9 @@ use Modules\Customers\Http\Controllers\CustomerImportController;
 use Modules\Customers\Http\Controllers\CustomerReportController;
 
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('customers/dashboard', [CustomerController::class, 'dashboard'])
+        ->name('customers.dashboard');
+
     Route::prefix('customers/import')->name('customers.')->group(function () {
         Route::get('/',               [CustomerImportController::class, 'create'])->name('import.form');
         Route::post('/',              [CustomerImportController::class, 'store'])->name('import');

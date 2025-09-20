@@ -3,6 +3,8 @@
 return [
     'Dashboard' => 'Dashboard',
     'Customers' => 'Customers',
+    'Customers Dashboard' => 'Customers Dashboard',
+    'Manage Customers' => 'Manage Customers',
     'Guarantors' => 'Guarantors',
     'Investors' => 'Investors',
     'Investors Dashboard' => 'Investors Dashboard',

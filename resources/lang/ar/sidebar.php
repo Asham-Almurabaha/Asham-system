@@ -3,6 +3,8 @@
 return array (
   'Dashboard' => 'لوحة التحكم',
   'Customers' => 'العملاء',
+  'Customers Dashboard' => 'لوحة تحكم العملاء',
+  'Manage Customers' => 'إدارة العملاء',
   'Guarantors' => 'الكفلاء',
   'Investors' => 'المستثمرين',
   'Investors Dashboard' => 'لوحة تحكم المستثمرين',

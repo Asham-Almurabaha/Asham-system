@@ -23,6 +23,7 @@
 @endphp --}}
 
 {{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
 
 
@@ -99,6 +100,9 @@
       <a href="{{ route('customers.create') }}" class="btn btn-success">
         <i class="bi bi-plus-lg"></i> {{ __('Add Customer') }}
       </a>
+      <a href="{{ route('customers.dashboard') }}" class="btn btn-outline-dark">
+        <i class="bi bi-speedometer2"></i> {{ __('customers::messages.View Dashboard') }}
+      </a>
       @role('admin')
         <a href="{{ route('customers.import.form') }}" class="btn btn-outline-primary">
             <i class="bi bi-upload"></i> {{ __('Import Excel') }}
@@ -106,38 +110,6 @@
       @endrole
 
       {{-- Template button removed as requested --}}
-    </div>
-
-    <div class="btn-group">
-      <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-        
-        📊 {{ __('Reports') }}
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end text-end">
-        <li>
-          <a class="dropdown-item" href="{{ route('reports.customers.delinquent') }}">
-            <i class="bi bi-exclamation-triangle me-2 text-warning"></i>
-            {{ __('Delinquent Customers') }}
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item" href="{{ route('reports.customers.active') }}">
-            <i class="bi bi-person-check me-2 text-success"></i> {{ __('Customers With Active Contracts') }}
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item" href="{{ route('reports.customers.unpaid') }}">
-            <i class="bi bi-cash-coin me-2 text-primary"></i>
-            {{ __('Unpaid This Month') }}
-          </a>
-        </li>
-        <li>
-          <a class="dropdown-item" href="{{ route('reports.customers.contracts') }}">
-            <i class="bi bi-list-check me-2"></i>
-            {{ __('Customers & Contracts Report') }}
-          </a>
-        </li>
-      </ul>
     </div>
 
     <span class="ms-auto small text-muted">
@@ -200,6 +172,7 @@
                         <th>{{ __('Total Remaining on Customer') }}</th>
                         <th>{{ __('Unpaid Installments This Month') }}</th>
                         <th>{{ __('Unpaid Amount This Month') }}</th>
+                        <th class="text-center" style="min-width:140px;">{{ __('customers::messages.Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -216,39 +189,24 @@
                             <td>{{ optional($customer->customerStatus)->name ?? __('Undefined') }}</td>
                             <td dir="ltr">{{ $customer->national_id ?? '—' }}</td>
                             <td dir="ltr">{{ $customer->phone ?? '—' }}</td>
-
-                                @php
-                                    $endedStatusNames = ['مغلق','منتهي','سداد مبكر','مقفلة','مغلقة','Completed','Early Settlement'];
-                                    $statusIdCol = null; $statusNameCol = null;
-                                    foreach (['contract_status_id','status_id','state_id'] as $col) { if (Schema::hasColumn('contracts',$col)) { $statusIdCol = $col; break; } }
-                                    foreach (['status','state','contract_status'] as $col) { if (Schema::hasColumn('contracts',$col)) { $statusNameCol = $col; break; } }
-                                    $activeQ = $customer->contracts();
-                                    if ($statusIdCol) {
-                                        $endedIds = class_exists(\Modules\Lookups\Entities\ContractStatus::class) ? \Modules\Lookups\Entities\ContractStatus::whereIn('name',$endedStatusNames)->pluck('id')->all() : [];
-                                        if (!empty($endedIds)) { $activeQ->whereNotIn($statusIdCol, $endedIds); }
-                                    } elseif ($statusNameCol) {
-                                        $activeQ->whereNotIn($statusNameCol, $endedStatusNames);
-                                    } elseif (Schema::hasColumn('contracts','is_closed')) {
-                                        $activeQ->where('is_closed',0);
-                                    } elseif (Schema::hasColumn('contracts','closed_at')) {
-                                        $activeQ->whereNull('closed_at');
-                                    }
-                                    $activeIds = $activeQ->pluck('id');
-                                    $activeCount = $activeIds->count();
-                                      $remainingSum = $activeCount ? \Modules\Contracts\Entities\ContractInstallment::whereIn('contract_id',$activeIds)->whereNull('payment_date')->sum('due_amount') : 0;
-                                    $startMonth = \Carbon\Carbon::now()->startOfMonth();
-                                    $endMonth = \Carbon\Carbon::now()->endOfMonth();
-                                      $unpaidAmountThisMonth = $activeCount ? \Modules\Contracts\Entities\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->sum('due_amount') : 0;
-                                      $unpaidCountThisMonth = $activeCount ? \Modules\Contracts\Entities\ContractInstallment::whereIn('contract_id',$activeIds)->whereBetween('due_date',[$startMonth,$endMonth])->whereNull('payment_date')->count() : 0;
-                                @endphp
-                            <td class="text-center">{{ $activeCount }}</td>
-                            <td class="text-center">{{ number_format((float)$remainingSum, 2) }}</td>
-                            <td class="text-center">{{ $unpaidCountThisMonth }}</td>
-                            <td class="text-center">{{ number_format((float)$unpaidAmountThisMonth, 2) }}</td>
+                            <td class="text-center">{{ number_format($customer->active_contracts_count ?? 0) }}</td>
+                            <td class="text-center">{{ number_format((float) ($customer->remaining_balance_total ?? 0), 2) }}</td>
+                            <td class="text-center">{{ number_format((int) ($customer->unpaid_installments_this_month ?? 0)) }}</td>
+                            <td class="text-center">{{ number_format((float) ($customer->unpaid_amount_this_month ?? 0), 2) }}</td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-primary">
+                                        {{ __('customers::messages.View') }}
+                                    </a>
+                                    <a href="{{ route('customers.edit', $customer) }}" class="btn btn-outline-secondary">
+                                        {{ __('customers::messages.Edit') }}
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="py-5">
+                            <td colspan="10" class="py-5">
                                 <div class="text-muted">
                                     {{ __('No matching results for your search.') }}
                                     <a href="{{ route('customers.index') }}" class="ms-1">{{ __('View All') }}</a>
