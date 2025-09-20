@@ -114,7 +114,7 @@
                                     {{ __('contracts::claims.view_payments') }}
                                 </x-button.action>
                 
-                                @unless ($isPaidStatus)
+                                @if (! $isPaidStatus)
                                     @if ($isUnderReviewStatus)
                                         <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @disabled($changeStatusOptionsCollection->isEmpty())>
                                             {{ __('contracts::claims.change_status') }}
@@ -137,7 +137,7 @@
                                             {{ __('contracts::claims.pay_with_discount') }}
                                         </x-button.action>
                                     @endif
-                                @endunless
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -179,14 +179,12 @@
                                     @else
                                         <div class="text-muted small">{{ __('contracts::claims.no_payments') }}</div>
                                     @endif
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </x-table>
         @else
             <div class="p-3 text-muted">{{ __('contracts::claims.no_results') }}</div>
         @endif
