@@ -110,7 +110,7 @@
                 
                                 @unless ($isPaidStatus)
                                     @if ($isUnderReviewStatus)
-                                        <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @if ($changeStatusOptionsCollection->isEmpty()) disabled @endif>
+                                        <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @disabled($changeStatusOptionsCollection->isEmpty())>
                                             {{ __('contracts::claims.change_status') }}
                                         </x-button.action>
                                     @endif
@@ -127,11 +127,11 @@
                                     @endif
                 
                                     @if (! $isUnderReviewStatus && ! $isRejectedStatus)
-                                        <x-button.action type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>
+                                        <x-button.action type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @disabled($claimPayersCollection->isEmpty() || $remainingAmount <= 0)>
                                             {{ __('contracts::claims.record_payment') }}
                                         </x-button.action>
                 
-                                        <x-button.action type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
+                                        <x-button.action type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @disabled(empty($paidWithDiscountClaimStatusId))>
                                             {{ __('contracts::claims.pay_with_discount') }}
                                         </x-button.action>
                                     @endif
@@ -212,7 +212,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">{{ __('contracts::claims.claimant') }}</label>
-                        <select name="claimant_id" class="form-select" @if ($availableClaimants->isEmpty()) disabled @endif>
+                        <select name="claimant_id" class="form-select" @disabled($availableClaimants->isEmpty())>
                             <option value="">{{ __('contracts::claims.choose_claimant') }}</option>
                             @foreach ($availableClaimants as $claimant)
                                 <option value="{{ $claimant->id }}" @selected((string) $selectedClaimantId === (string) $claimant->id)>
@@ -232,7 +232,7 @@
 
                     <div class="mb-3">
                         <label class="form-label">{{ __('contracts::claims.filed_party_role') }}</label>
-                        <select name="filed_party_role" class="form-select" @if (empty($availablePartyOptions)) disabled @endif required>
+                        <select name="filed_party_role" class="form-select" @disabled(empty($availablePartyOptions)) required>
                             <option value="">{{ __('contracts::claims.choose_filed_party') }}</option>
                             @foreach ($availablePartyOptions as $role => $info)
                                 <option value="{{ $role }}" @selected($selectedRole === $role)>
@@ -456,7 +456,7 @@
                                 id="claim-payment-payer-contract-{{ $contract->id }}-{{ $claim->id }}"
                                 class="form-select"
                                 required
-                                @if ($claimPayersCollection->isEmpty()) disabled @endif>
+                                @disabled($claimPayersCollection->isEmpty())>
                             <option value="">{{ __('contracts::claims.choose_claim_payer') }}</option>
                             @foreach ($claimPayersCollection as $payer)
                                 <option value="{{ $payer->id }}" @selected((string) $oldPaymentPayer === (string) $payer->id)>{{ $payer->name }}</option>
@@ -481,7 +481,7 @@
                                max="{{ $maxPaymentAmount }}"
                                required
                                value="{{ $oldPaymentAmount }}"
-                               @if ($remainingAmount <= 0) disabled @endif>
+                               @disabled($remainingAmount <= 0)>
                         @error('amount')
                             <div class="text-danger small">{{ $message }}</div>
                         @enderror
@@ -511,7 +511,7 @@
                                 data-claim-account-picker="1"
                                 data-bank-input="claim-payment-bank-contract-{{ $contract->id }}-{{ $claim->id }}"
                                 data-safe-input="claim-payment-safe-contract-{{ $contract->id }}-{{ $claim->id }}"
-                                @if ($banksCollection->isEmpty() && $safesCollection->isEmpty()) disabled @endif>
+                                @disabled($banksCollection->isEmpty() && $safesCollection->isEmpty())>
                             <option value="" @selected($selectedAccount === '')>{{ __('contracts::claims.choose_payment_account') }}</option>
                             @if ($banksCollection->isNotEmpty())
                                 <optgroup label="{{ __('contracts::claims.bank_accounts_label') }}">
@@ -553,7 +553,7 @@
                 </div>
                 <div class="modal-footer">
                     <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button.action>
-                    <x-button.action type="submit" variant="dark" :outline="true" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</x-button.action>
+                    <x-button.action type="submit" variant="dark" :outline="true" @disabled($claimPayersCollection->isEmpty() || $remainingAmount <= 0)>{{ __('contracts::claims.record_payment') }}</x-button.action>
                 </div>
             </form>
         </div>
@@ -603,7 +603,7 @@
                         <select name="claim_payer_id"
                                 id="claim-discount-payer-{{ $contract->id }}-{{ $claim->id }}"
                                 class="form-select"
-                                @if ($claimPayersCollection->isEmpty()) disabled @endif>
+                                @disabled($claimPayersCollection->isEmpty())>
                             <option value="">{{ __('contracts::claims.choose_claim_payer') }}</option>
                             @foreach ($claimPayersCollection as $payer)
                                 <option value="{{ $payer->id }}" @selected((string) $oldDiscountPayer === (string) $payer->id)>{{ $payer->name }}</option>
@@ -637,7 +637,7 @@
                                 data-claim-account-picker="1"
                                 data-bank-input="claim-discount-bank-contract-{{ $contract->id }}-{{ $claim->id }}"
                                 data-safe-input="claim-discount-safe-contract-{{ $contract->id }}-{{ $claim->id }}"
-                                @if ($banksCollection->isEmpty() && $safesCollection->isEmpty()) disabled @endif>
+                                @disabled($banksCollection->isEmpty() && $safesCollection->isEmpty())>
                             <option value="" @selected($selectedDiscountAccount === '')>{{ __('contracts::claims.choose_payment_account') }}</option>
                             @if ($banksCollection->isNotEmpty())
                                 <optgroup label="{{ __('contracts::claims.bank_accounts_label') }}">
