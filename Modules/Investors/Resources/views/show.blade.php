@@ -328,7 +328,7 @@
                     </x-button.action>
                     <ul class="dropdown-menu dropdown-menu-end text-end investor-reports-dropdown" id="investorReportsDropdown">
                         <li>
-                            <a class="dropdown-item" href="{{ route('investors.statement.statement', $investor) }}">
+                            <a class="dropdown-item" href="{{ route('investors.statement.statement', $investor) }}" target="_blank" rel="noopener">
                                 📄 تقرير جرد المستثمر
                             </a>
                         </li>
@@ -347,13 +347,13 @@
                                 <i class="bi bi-chevron-down report-submenu-chevron"></i>
                             </x-button.action>
                             <div class="collapse dropdown-submenu-menu" id="investorReportsDeposits">
-                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.deposits', $investor) }}">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.deposits', $investor) }}" target="_blank" rel="noopener">
                                     💰 جرد الإيداعات
                                 </a>
-                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.ledger', $investor) }}">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.ledger', $investor) }}" target="_blank" rel="noopener">
                                     📥 جرد الإيداعات (قيود المستثمر)
                                 </a>
-                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.installments', $investor) }}">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.deposits.installments', $investor) }}" target="_blank" rel="noopener">
                                     💳 جرد إيداعات سداد قسط
                                 </a>
                             </div>
@@ -372,20 +372,20 @@
                                 <i class="bi bi-chevron-down report-submenu-chevron"></i>
                             </x-button.action>
                             <div class="collapse dropdown-submenu-menu" id="investorReportsWithdrawals">
-                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.withdrawals', $investor) }}">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.withdrawals', $investor) }}" target="_blank" rel="noopener">
                                     💸 جرد المسحوبات
                                 </a>
-                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.ledger', $investor) }}">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.ledger', $investor) }}" target="_blank" rel="noopener">
                                     🏧 جرد المسحوبات (قيود المستثمر)
                                 </a>
-                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.add-contract', $investor) }}">
+                                <a class="dropdown-item ps-4" href="{{ route('investors.withdrawals.add-contract', $investor) }}" target="_blank" rel="noopener">
                                     🧾 جرد المسحوبات لحالة إضافة عقد
                                 </a>
                             </div>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="{{ route('investors.transactions.transactions', $investor) }}">
+                            <a class="dropdown-item" href="{{ route('investors.transactions.transactions', $investor) }}" target="_blank" rel="noopener">
                                 🔄 جرد إيداعات / مسحوبات
                             </a>
                         </li>

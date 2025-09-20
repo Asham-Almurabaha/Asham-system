@@ -24,19 +24,19 @@
 
     <!-- طباعة العقد -->
     @if($paidTotal == 0)
-        <x-button.action href="{{ route('contracts.print', $contract->id) }}" variant="primary">
+        <x-button.action href="{{ route('contracts.print', $contract->id) }}" variant="primary" target="_blank" rel="noopener">
             <i class="bi bi-printer me-1"></i> {{ __('Print Contract') }}</x-button.action>
     @endif
 
     <!-- طباعة السدادات -->
     @if($paidTotal <= $contract->total_value - $contract->discount_amount)
-        <x-button.action href="{{ route('contracts.paid', $contract->id) }}" variant="success" :outline="true">
+        <x-button.action href="{{ route('contracts.paid', $contract->id) }}" variant="success" :outline="true" target="_blank" rel="noopener">
             <i class="bi bi-receipt me-1"></i> {{ __('Paid Report') }}</x-button.action>
     @endif
 
     <!-- طباعة المخالصة -->
     @if($paidTotal >= $contract->total_value - $contract->discount_amount )
-        <x-button.action href="{{ route('contracts.closure', $contract->id) }}" variant="primary" :outline="true">
+        <x-button.action href="{{ route('contracts.closure', $contract->id) }}" variant="primary" :outline="true" target="_blank" rel="noopener">
             <i class="bi bi-file-earmark-check me-1"></i> {{ __('Closure Report') }}</x-button.action>
     @endif
     {{--

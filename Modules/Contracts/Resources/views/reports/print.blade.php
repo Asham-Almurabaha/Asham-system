@@ -120,7 +120,3 @@
   </div>
 @endsection
 
-@section('actions')
-  <x-button.action href="{{ route('contracts.show' , $contract) }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button.action>
-@endsection
-

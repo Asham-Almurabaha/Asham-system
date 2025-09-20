@@ -368,7 +368,7 @@
         </x-button.action>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.office_outstanding') }}">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.office_outstanding') }}" target="_blank" rel="noopener">
                     <i class="bi bi-cash-coin text-warning"></i>
                     <span>{{ __('Office Outstanding Report') }}</span>
                 </a>

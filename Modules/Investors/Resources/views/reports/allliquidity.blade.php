@@ -113,7 +113,3 @@
   </x-table>
 @endsection
 
-@section('actions')
-  <x-button.refresh :href="url()->current()" />
-@endsection
-

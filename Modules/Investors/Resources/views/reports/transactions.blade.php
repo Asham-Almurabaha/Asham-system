@@ -121,7 +121,3 @@
   </x-table>
 @endsection
 
-@section('actions')
-  <x-button.action href="{{ route('investors.show', $investor) }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button.action>
-@endsection
-

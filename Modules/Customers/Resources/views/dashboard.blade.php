@@ -126,25 +126,25 @@
         </x-button.action>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.delinquent') }}">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.delinquent') }}" target="_blank" rel="noopener">
                     <i class="bi bi-exclamation-triangle text-warning"></i>
                     <span>{{ __('customers::messages.Delinquent Customers') }}</span>
                 </a>
             </li>
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.active') }}">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.active') }}" target="_blank" rel="noopener">
                     <i class="bi bi-person-check text-success"></i>
                     <span>{{ __('customers::messages.Customers With Active Contracts') }}</span>
                 </a>
             </li>
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.unpaid') }}">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.unpaid') }}" target="_blank" rel="noopener">
                     <i class="bi bi-cash-coin text-primary"></i>
                     <span>{{ __('customers::messages.Unpaid This Month') }}</span>
                 </a>
             </li>
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.contracts') }}">
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.customers.contracts') }}" target="_blank" rel="noopener">
                     <i class="bi bi-list-check"></i>
                     <span>{{ __('customers::messages.Customers & Contracts Report') }}</span>
                 </a>

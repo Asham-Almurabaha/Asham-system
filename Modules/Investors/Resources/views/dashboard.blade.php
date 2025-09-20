@@ -59,7 +59,7 @@
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.outstanding') }}">
+                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.outstanding') }}" target="_blank" rel="noopener">
                         <i class="bi bi-clipboard-data text-primary"></i>
                         <span>{{ __('investors::investors.Investors Outstanding Report') }}</span>
                     </a>
