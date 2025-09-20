@@ -6,6 +6,8 @@ return array (
   'Customers Dashboard' => 'لوحة تحكم العملاء',
   'Manage Customers' => 'إدارة العملاء',
   'Guarantors' => 'الكفلاء',
+  'Guarantors Dashboard' => 'لوحة تحكم الكفلاء',
+  'Manage Guarantors' => 'إدارة الكفلاء',
   'Investors' => 'المستثمرين',
   'Investors Dashboard' => 'لوحة تحكم المستثمرين',
   'Manage Investors' => 'إدارة المستثمرين',

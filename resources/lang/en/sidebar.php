@@ -6,6 +6,8 @@ return [
     'Customers Dashboard' => 'Customers Dashboard',
     'Manage Customers' => 'Manage Customers',
     'Guarantors' => 'Guarantors',
+    'Guarantors Dashboard' => 'Guarantors Dashboard',
+    'Manage Guarantors' => 'Manage Guarantors',
     'Investors' => 'Investors',
     'Investors Dashboard' => 'Investors Dashboard',
     'Manage Investors' => 'Manage Investors',

@@ -21,7 +21,20 @@
     $newThisWeekAll  = (int)($newGuarantorsThisWeekAll  ?? 0);
 @endphp --}}
 
-{{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+@php
+    $activeReport      = $report ?? request('report');
+    $reportOptions     = [
+        'overdue'           => __('guarantors::messages.Overdue Guarantors'),
+        'due-this-month'    => __('guarantors::messages.Due This Month Guarantors'),
+        'without-contracts' => __('guarantors::messages.Guarantors Without Contracts'),
+    ];
+    $activeReportLabel = $activeReport && isset($reportOptions[$activeReport])
+        ? __('guarantors::messages.Reports') . ' — ' . $reportOptions[$activeReport]
+        : null;
+    $showInstallmentMetrics = in_array($activeReport, ['overdue', 'due-this-month'], true);
+@endphp
 
 
 
@@ -91,6 +104,9 @@
       <a href="{{ route('guarantors.create') }}" class="btn btn-success">
         <i class="bi bi-plus-lg"></i> {{ __('guarantors::messages.Add Guarantor') }}
       </a>
+      <a href="{{ route('guarantors.dashboard') }}" class="btn btn-outline-dark">
+        <i class="bi bi-speedometer2"></i> {{ __('guarantors::messages.View Dashboard') }}
+      </a>
       @role('admin')
         <a href="{{ route('guarantors.import.form') }}" class="btn btn-outline-primary">
             <i class="bi bi-upload"></i> {{ __('guarantors::messages.Import Excel') }}
@@ -99,6 +115,16 @@
 
       {{-- 🔥 شيلنا زر "تمبليت" زى العملاء --}}
     </div>
+
+    @if($activeReportLabel)
+        <span class="badge bg-info text-dark d-inline-flex align-items-center gap-2 px-3 py-2">
+            <i class="bi bi-clipboard-data"></i>
+            <span>{{ $activeReportLabel }}</span>
+            <a href="{{ route('guarantors.index') }}" class="link-dark d-inline-flex align-items-center" title="{{ __('guarantors::messages.Clear') }}">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </span>
+    @endif
 
     <span class="ms-auto small text-muted">
       {{ __('guarantors::messages.Results') }}: <strong>{{ $guarantors->total() }}</strong>
@@ -114,6 +140,9 @@
   <div class="collapse @if(request()->hasAny(['guarantor_q','national_id','phone'])) show @endif border-top" id="filterBar">
     <div class="card-body">
       <form id="filterForm" action="{{ route('guarantors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+        @if($activeReport)
+          <input type="hidden" name="report" value="{{ $activeReport }}">
+        @endif
         {{-- ✅ بحث باسم الكفيل فقط --}}
         <div class="col-12 col-md-4">
           <label class="form-label mb-1">{{ __('guarantors::messages.Guarantor (by name)') }}</label>
@@ -157,6 +186,11 @@
                         <th>{{ __('guarantors::messages.Phone') }}</th>
                         <th>{{ __('guarantors::messages.Contracts Count') }}</th>
                         <th>{{ __('guarantors::messages.Customers Count') }}</th>
+                        @if($showInstallmentMetrics)
+                            <th>{{ __('guarantors::messages.Outstanding Amount') }}</th>
+                            <th>{{ __('guarantors::messages.Overdue Amount') }}</th>
+                            <th>{{ __('guarantors::messages.Due This Month') }}</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
@@ -175,6 +209,11 @@
                             <td dir="ltr">{{ $g->phone ?? '—' }}</td>
                             <td>{{ number_format($g->contracts_count ?? 0) }}</td>
                             <td>{{ number_format($g->customers_count ?? 0) }}</td>
+                            @if($showInstallmentMetrics)
+                                <td>{{ number_format((float) ($g->unpaid_total ?? 0), 2) }}</td>
+                                <td>{{ number_format((float) ($g->overdue_total ?? 0), 2) }}</td>
+                                <td>{{ number_format((float) ($g->due_this_month_total ?? 0), 2) }}</td>
+                            @endif
                         </tr>
                     @empty
                         <tr>

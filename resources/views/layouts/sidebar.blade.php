@@ -52,6 +52,19 @@
   ];
 
   $customersOpen = $isRoute(array_merge(['customers.dashboard'], $customerManagePatterns));
+
+  $guarantorManagePatterns = [
+      'guarantors.index',
+      'guarantors.create',
+      'guarantors.store',
+      'guarantors.show',
+      'guarantors.edit',
+      'guarantors.update',
+      'guarantors.destroy',
+      'guarantors.import.*',
+  ];
+
+  $guarantorsOpen = $isRoute(array_merge(['guarantors.dashboard'], $guarantorManagePatterns));
 @endphp
 
 <ul class="sidebar-nav" id="sidebar-nav">
@@ -88,10 +101,24 @@
 
   {{-- Guarantors --}}
   <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('guarantors.*')) }} {{ $active($isRoute('guarantors.*')) }}"
-       href="{{ route('guarantors.index') }}">
-      <i class="bi bi-person-bounding-box"></i><span>@lang('sidebar.Guarantors')</span>
+    <a class="nav-link {{ $coll($guarantorsOpen) }}"
+       data-bs-target="#guarantors-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $guarantorsOpen ? 'true' : 'false' }}">
+      <i class="bi bi-person-bounding-box"></i><span>@lang('sidebar.Guarantors')</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
+
+    <ul id="guarantors-nav" class="nav-content collapse {{ $open($guarantorsOpen) }}" data-bs-parent="#sidebar-nav">
+      <li>
+        <a class="{{ $active($isRoute('guarantors.dashboard')) }}" href="{{ route('guarantors.dashboard') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Guarantors Dashboard')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute($guarantorManagePatterns)) }}" href="{{ route('guarantors.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Guarantors')</span>
+        </a>
+      </li>
+    </ul>
   </li>
 
   {{-- المستثمرين --}}
