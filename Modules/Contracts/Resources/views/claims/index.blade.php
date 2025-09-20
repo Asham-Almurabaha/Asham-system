@@ -244,8 +244,7 @@
                         </td>
                     </tr>
                 @endforelse
-                </tbody>
-            </table>
+            </x-table>
         </div>
     </div>
 
