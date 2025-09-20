@@ -10,6 +10,7 @@ use Modules\Guarantors\Entities\Guarantor;
 use Modules\Lookups\Entities\InstallmentStatus;
 use Modules\Lookups\Entities\InstallmentType;
 use Modules\Lookups\Entities\Claimant;
+use Modules\Lookups\Entities\ClaimPayer;
 use Modules\Lookups\Entities\ClaimStatus;
 use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\ProductType;
@@ -578,6 +579,7 @@ class ContractController extends Controller
                 ->orderByDesc('id'),
             'claims.claimant:id,name',
             'claims.claimStatus:id,name',
+            'claims.payments.claimPayer:id,name',
         ]);
 
         $investors = Investor::all();
@@ -587,10 +589,9 @@ class ContractController extends Controller
 
         $claimants = Claimant::orderBy('name')->get(['id', 'name']);
         $claimStatuses = ClaimStatus::orderBy('name')->get(['id', 'name']);
+        $claimPayers = ClaimPayer::orderBy('name')->get(['id', 'name']);
 
-
-
-        return view('contracts::show', compact('contract', 'investors','banks','safes','claimants', 'claimStatuses'));
+        return view('contracts::show', compact('contract', 'investors','banks','safes','claimants', 'claimStatuses', 'claimPayers'));
     }
 
     public function updateImages(Request $request, Contract $contract)

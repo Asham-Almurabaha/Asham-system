@@ -57,7 +57,32 @@ class ContractClaim extends Model
 
     public function payments(): HasMany
     {
-        return $this->hasMany(ContractClaimPayment::class, 'contract_claim_id');
+        return $this->hasMany(ContractClaimPayment::class, 'contract_claim_id')
+            ->orderByDesc('paid_at')
+            ->orderByDesc('id');
+    }
+
+    public function getPaidAmountAttribute(): float
+    {
+        if ($this->relationLoaded('payments')) {
+            return (float) $this->payments->sum('amount');
+        }
+
+        return (float) $this->payments()->sum('amount');
+    }
+
+    public function getNetClaimAmountAttribute(): float
+    {
+        $netAmount = (float) $this->claim_amount - (float) $this->discount_amount;
+
+        return $netAmount > 0 ? $netAmount : 0.0;
+    }
+
+    public function getRemainingAmountAttribute(): float
+    {
+        $remaining = $this->net_claim_amount - $this->paid_amount;
+
+        return $remaining > 0 ? $remaining : 0.0;
     }
 
     public function getFiledPartyNameAttribute(): ?string

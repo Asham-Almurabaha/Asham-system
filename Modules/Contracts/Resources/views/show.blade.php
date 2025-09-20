@@ -63,6 +63,7 @@
     'contract' => $contract,
     'claimants' => $claimants,
     'claimStatuses' => $claimStatuses,
+    'claimPayers' => $claimPayers,
 ])
 
 {{-- الصور --}}

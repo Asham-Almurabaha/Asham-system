@@ -5,8 +5,12 @@ namespace Modules\Contracts\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
+use Modules\Contracts\Entities\ContractClaimPayment;
+use Modules\Contracts\Services\ClaimPaymentDistributionService;
 use Modules\Contracts\Http\Requests\ApplyContractClaimDiscountRequest;
 use Modules\Contracts\Http\Requests\StoreContractClaimPaymentRequest;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
@@ -17,7 +21,6 @@ use Modules\Lookups\Entities\ClaimStatus;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\GuarantorStatus;
-
 class ContractClaimController extends Controller
 {
     private const CHANGE_STATUS_NAMES = ['مقبول', 'مرفوض'];
@@ -28,7 +31,13 @@ class ContractClaimController extends Controller
     private ?int $defaultClaimStatusId = null;
     private ?int $acceptedClaimStatusId = null;
     private ?int $paidWithDiscountClaimStatusId = null;
+    private ?int $partialPaidClaimStatusId = null;
+    private ?int $paidInFullClaimStatusId = null;
     private ?int $raisedContractStatusId = null;
+
+    public function __construct(private ClaimPaymentDistributionService $claimPaymentDistribution)
+    {
+    }
 
     public function index(Request $request)
     {
@@ -41,6 +50,8 @@ class ContractClaimController extends Controller
                 'contract.guarantor:id,name',
                 'claimant:id,name',
                 'claimStatus:id,name',
+                'payments' => fn ($query) => $query->orderByDesc('paid_at')->orderByDesc('id'),
+                'payments.claimPayer:id,name',
             ]);
 
         if ($request->filled('contract_number')) {
@@ -66,12 +77,16 @@ class ContractClaimController extends Controller
 
         $claimStatuses = ClaimStatus::orderBy('name')->get(['id', 'name']);
         $claimPayers = ClaimPayer::orderBy('name')->get(['id', 'name']);
+        $banks = BankAccount::orderBy('name')->get(['id', 'name']);
+        $safes = Safe::orderBy('name')->get(['id', 'name']);
 
         return view('contracts::claims.index', [
             'claims' => $claims,
             'partyRoles' => $this->partyRoleOptions(),
             'claimStatuses' => $claimStatuses,
             'claimPayers' => $claimPayers,
+            'banks' => $banks,
+            'safes' => $safes,
             'changeStatusOptions' => $claimStatuses
                 ->filter(fn ($status) => in_array($status->name, self::CHANGE_STATUS_NAMES, true))
                 ->values(),
@@ -193,11 +208,29 @@ class ContractClaimController extends Controller
         $payload = $request->validated();
 
         $claim = DB::transaction(function () use ($contractClaim, $payload) {
-            $contractClaim->payments()->create([
+            $payment = $contractClaim->payments()->create([
                 'claim_payer_id' => $payload['claim_payer_id'],
                 'amount' => $payload['amount'],
                 'paid_at' => $payload['paid_at'],
             ]);
+
+            $contract = $contractClaim->contract()->first();
+
+            if ($contract) {
+                $this->claimPaymentDistribution->logClaimPayment(
+                    $contract,
+                    $contractClaim,
+                    $payment,
+                    $payload['amount'],
+                    $payload['bank_account_id'] ?? null,
+                    $payload['safe_id'] ?? null,
+                    $payload['notes'] ?? null
+                );
+            }
+
+            $contractClaim->refresh();
+
+            $this->syncClaimSettlementStatus($contractClaim);
 
             return $contractClaim->fresh();
         });
@@ -370,11 +403,39 @@ class ContractClaimController extends Controller
     private function paidWithDiscountClaimStatusId(): ?int
     {
         if ($this->paidWithDiscountClaimStatusId === null) {
-            $id = ClaimStatus::where('name', 'مدفوع بخصم')->value('id');
-            $this->paidWithDiscountClaimStatusId = $id ? (int) $id : 0;
+            $this->paidWithDiscountClaimStatusId = $this->resolveClaimStatusId([
+                'مدفوع بخصم',
+                'مسدد بخصم',
+            ]);
         }
 
         return $this->paidWithDiscountClaimStatusId ?: null;
+    }
+
+    private function partialPaidClaimStatusId(): ?int
+    {
+        if ($this->partialPaidClaimStatusId === null) {
+            $this->partialPaidClaimStatusId = $this->resolveClaimStatusId([
+                'مدفوع جزئي',
+                'مدفوع جزئياً',
+                'مدفوع جزئيا',
+            ]);
+        }
+
+        return $this->partialPaidClaimStatusId ?: null;
+    }
+
+    private function paidInFullClaimStatusId(): ?int
+    {
+        if ($this->paidInFullClaimStatusId === null) {
+            $this->paidInFullClaimStatusId = $this->resolveClaimStatusId([
+                'مدفوع كامل',
+                'مسدد كامل',
+                'مدفوع بالكامل',
+            ]);
+        }
+
+        return $this->paidInFullClaimStatusId ?: null;
     }
 
     private function defaultClaimStatusId(): ?int
@@ -385,5 +446,58 @@ class ContractClaimController extends Controller
         }
 
         return $this->defaultClaimStatusId ?: null;
+    }
+
+    private function resolveClaimStatusId(array $names): int
+    {
+        $statuses = ClaimStatus::query()
+            ->where(function ($query) use ($names) {
+                foreach ($names as $name) {
+                    $query->orWhere('name', $name);
+                }
+            })
+            ->get(['id', 'name']);
+
+        foreach ($names as $name) {
+            $match = $statuses->firstWhere('name', $name);
+            if ($match) {
+                return (int) $match->id;
+            }
+        }
+
+        return 0;
+    }
+
+    private function syncClaimSettlementStatus(ContractClaim $claim): void
+    {
+        $discountAmount = round((float) $claim->discount_amount, 2);
+        $paidAmount = round((float) $claim->paid_amount, 2);
+        $remainingAmount = round((float) $claim->remaining_amount, 2);
+
+        $targetStatusId = null;
+
+        if ($discountAmount > 0) {
+            $statusId = $this->paidWithDiscountClaimStatusId();
+            if ($statusId) {
+                $targetStatusId = $statusId;
+            }
+        } elseif ($paidAmount > 0 && $remainingAmount <= 0.009) {
+            $statusId = $this->paidInFullClaimStatusId();
+            if ($statusId) {
+                $targetStatusId = $statusId;
+            }
+        } elseif ($paidAmount > 0 && $remainingAmount > 0.009) {
+            $statusId = $this->partialPaidClaimStatusId();
+            if ($statusId) {
+                $targetStatusId = $statusId;
+            }
+        }
+
+        if (! $targetStatusId || (int) $claim->claim_status_id === $targetStatusId) {
+            return;
+        }
+
+        $claim->claim_status_id = $targetStatusId;
+        $claim->save();
     }
 }

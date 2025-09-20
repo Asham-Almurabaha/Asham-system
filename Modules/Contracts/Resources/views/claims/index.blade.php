@@ -25,6 +25,8 @@
                         <th>{{ __('contracts::claims.claimant') }}</th>
                         <th>{{ __('contracts::claims.filed_party_role') }}</th>
                         <th>{{ __('contracts::claims.claim_amount') }}</th>
+                        <th>{{ __('contracts::claims.claim_paid_total') }}</th>
+                        <th>{{ __('contracts::claims.claim_remaining_amount') }}</th>
                         <th>{{ __('contracts::claims.claim_date') }}</th>
                         <th>{{ __('contracts::claims.document_number') }}</th>
                         <th>{{ __('contracts::claims.claim_status') }}</th>
@@ -32,7 +34,28 @@
                     </tr>
                 </thead>
                 <tbody>
+                @php($oldPaymentClaimId = (string) old('payment_claim_id'))
+                @php($banksCollection = collect($banks ?? [])->values())
+                @php($safesCollection = collect($safes ?? [])->values())
                 @forelse ($claims as $claim)
+                    @php($payments = collect($claim->payments ?? [])->values())
+                    @php($totalPaid = (float) ($claim->paid_amount ?? $payments->sum('amount')))
+                    @php($remainingAmount = (float) ($claim->remaining_amount ?? 0))
+                    @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
+                    @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
+                    @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
+                    @php($isRejectedStatus = $currentClaimStatus === 'مرفوض')
+                    @php($modalId = 'changeClaimStatusModal-' . $claim->id)
+                    @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
+                    @php($paymentModalId = 'recordClaimPaymentModal-' . $claim->id)
+                    @php($paymentsRowId = 'claim-payments-' . $claim->id)
+                    @php($isCurrentPaymentClaim = $oldPaymentClaimId === (string) $claim->id)
+                    @php($oldPaymentPayer = $isCurrentPaymentClaim ? old('claim_payer_id') : null)
+                    @php($oldPaymentAmount = $isCurrentPaymentClaim ? old('amount') : null)
+                    @php($oldPaymentDate = $isCurrentPaymentClaim ? old('paid_at') : null)
+                    @php($oldPaymentBank = $isCurrentPaymentClaim ? old('bank_account_id') : null)
+                    @php($oldPaymentSafe = $isCurrentPaymentClaim ? old('safe_id') : null)
+                    @php($oldPaymentNotes = $isCurrentPaymentClaim ? old('notes') : null)
                     <tr>
                         <td class="text-muted">{{ $loop->iteration + ($claims->currentPage() - 1) * $claims->perPage() }}</td>
                         <td class="text-start">
@@ -52,19 +75,23 @@
                             @endif
                         </td>
                         <td>{{ number_format((float) $claim->claim_amount, 2) }}</td>
+                        <td>{{ number_format($totalPaid, 2) }}</td>
+                        <td>{{ number_format($remainingAmount, 2) }}</td>
                         <td>{{ optional($claim->claim_date)->format('Y-m-d') }}</td>
                         <td>{{ $claim->document_number }}</td>
                         <td class="text-start">{{ optional($claim->claimStatus)->name ?? '—' }}</td>
-                        @php($modalId = 'changeClaimStatusModal-' . $claim->id)
-                        @php($discountModalId = 'applyClaimDiscountModal-' . $claim->id)
-                        @php($paymentModalId = 'recordClaimPaymentModal-' . $claim->id)
-                        @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
-                        @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
-                        @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
-                        @php($isRejectedStatus = $currentClaimStatus === 'مرفوض')
                         <td class="text-nowrap">
-                            @unless ($isPaidStatus)
-                                <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm collapsed"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#{{ $paymentsRowId }}"
+                                        aria-expanded="false"
+                                        aria-controls="{{ $paymentsRowId }}">
+                                    {{ __('contracts::claims.view_payments') }}
+                                </button>
+
+                                @unless ($isPaidStatus)
                                     @if ($isUnderReviewStatus)
                                         <button type="button"
                                                 class="btn btn-outline-primary btn-sm"
@@ -90,7 +117,7 @@
                                                 class="btn btn-outline-dark btn-sm"
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#{{ $paymentModalId }}"
-                                                @if ($claimPayers->isEmpty()) disabled @endif>
+                                                @if ($claimPayers->isEmpty() || $remainingAmount <= 0) disabled @endif>
                                             {{ __('contracts::claims.record_payment') }}
                                         </button>
 
@@ -102,10 +129,53 @@
                                             {{ __('contracts::claims.pay_with_discount') }}
                                         </button>
                                     @endif
-                                </div>
-                            @endunless
+                                @endunless
+                            </div>
                         </td>
                     </tr>
+                    <tr class="table-light">
+                        <td colspan="11" class="text-start">
+                            <div class="collapse" id="{{ $paymentsRowId }}">
+                                <div class="px-3 py-2">
+                                    <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                                        <div class="fw-semibold text-muted">{{ __('contracts::claims.payments') }}</div>
+                                        <div class="d-flex flex-wrap gap-2 small">
+                                            <span class="badge bg-light text-dark border">{{ __('contracts::claims.claim_amount') }}: {{ number_format((float) $claim->claim_amount, 2) }}</span>
+                                            <span class="badge bg-light text-dark border">{{ __('contracts::claims.claim_paid_total') }}: {{ number_format($totalPaid, 2) }}</span>
+                                            <span class="badge {{ $remainingAmount > 0 ? 'bg-warning text-dark' : 'bg-success' }}">{{ __('contracts::claims.claim_remaining_amount') }}: {{ number_format($remainingAmount, 2) }}</span>
+                                        </div>
+                                    </div>
+                                    @if ($payments->isNotEmpty())
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered align-middle mb-0">
+                                                <thead class="table-secondary">
+                                                    <tr>
+                                                        <th style="width: 60px;" class="text-center">#</th>
+                                                        <th>{{ __('contracts::claims.claim_payer') }}</th>
+                                                        <th class="text-end">{{ __('contracts::claims.claim_payment_amount') }}</th>
+                                                        <th>{{ __('contracts::claims.claim_payment_date') }}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($payments as $index => $payment)
+                                                        <tr>
+                                                            <td class="text-center">{{ $index + 1 }}</td>
+                                                            <td>{{ optional($payment->claimPayer)->name ?? '—' }}</td>
+                                                            <td class="text-end">{{ number_format((float) $payment->amount, 2) }}</td>
+                                                            <td>{{ optional($payment->paid_at)->format('Y-m-d') ?? '—' }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
+                                        <div class="text-muted small">{{ __('contracts::claims.no_payments') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
                 @empty
                     <tr>
                         <td colspan="9" class="py-4">
@@ -153,6 +223,8 @@
     @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
     @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
     @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
+    @php($remainingAmount = (float) ($claim->remaining_amount ?? 0))
+    @php($maxPaymentAmount = number_format($remainingAmount, 2, '.', ''))
     @if ($isPaidStatus)
         @continue
     @endif
@@ -201,7 +273,7 @@
                             <select name="claim_payer_id" id="claim-payment-payer-{{ $claim->id }}" class="form-select" required @if ($claimPayers->isEmpty()) disabled @endif>
                                 <option value="">{{ __('contracts::claims.choose_claim_payer') }}</option>
                                 @foreach ($claimPayers as $payer)
-                                    <option value="{{ $payer->id }}" @selected((string) old('claim_payer_id') === (string) $payer->id)>{{ $payer->name }}</option>
+                                    <option value="{{ $payer->id }}" @selected((string) $oldPaymentPayer === (string) $payer->id)>{{ $payer->name }}</option>
                                 @endforeach
                             </select>
                             @if ($claimPayers->isEmpty())
@@ -219,30 +291,83 @@
                                    id="claim-payment-amount-{{ $claim->id }}"
                                    class="form-control"
                                    step="0.01"
-                                   min="0"
+                                   min="0.01"
+                                   max="{{ $maxPaymentAmount }}"
                                    required
-                                   value="{{ old('amount') }}">
+                                   value="{{ $oldPaymentAmount }}"
+                                   @if ($remainingAmount <= 0) disabled @endif>
                             @error('amount')
                                 <div class="text-danger small">{{ $message }}</div>
                             @enderror
+                            <div class="form-text">
+                                {{ __('contracts::claims.claim_remaining_amount') }}: {{ number_format($remainingAmount, 2) }}
+                            </div>
                         </div>
 
-                        <div class="mb-0 text-start">
+                        <div class="mb-3 text-start">
                             <label for="claim-payment-date-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_payment_date') }}</label>
                             <input type="text"
                                    name="paid_at"
                                    id="claim-payment-date-{{ $claim->id }}"
                                    class="form-control js-date"
                                    required
-                                   value="{{ old('paid_at', now()->toDateString()) }}">
+                                   value="{{ $oldPaymentDate ?? now()->toDateString() }}">
                             @error('paid_at')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3 text-start">
+                            <label for="claim-payment-account-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.payment_account') }}</label>
+                            @php($selectedAccount = $oldPaymentBank ? 'bank:' . $oldPaymentBank : ($oldPaymentSafe ? 'safe:' . $oldPaymentSafe : ''))
+                            <select id="claim-payment-account-{{ $claim->id }}"
+                                    class="form-select"
+                                    data-claim-account-picker="1"
+                                    data-bank-input="claim-payment-bank-{{ $claim->id }}"
+                                    data-safe-input="claim-payment-safe-{{ $claim->id }}"
+                                    @if ($banksCollection->isEmpty() && $safesCollection->isEmpty()) disabled @endif>
+                                <option value="" @selected($selectedAccount === '')>{{ __('contracts::claims.choose_payment_account') }}</option>
+                                @if ($banksCollection->isNotEmpty())
+                                    <optgroup label="{{ __('contracts::claims.bank_accounts_label') }}">
+                                        @foreach ($banksCollection as $bank)
+                                            <option value="bank:{{ $bank->id }}" @selected($selectedAccount === 'bank:' . $bank->id)>{{ $bank->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                                @if ($safesCollection->isNotEmpty())
+                                    <optgroup label="{{ __('contracts::claims.safes_label') }}">
+                                        @foreach ($safesCollection as $safe)
+                                            <option value="safe:{{ $safe->id }}" @selected($selectedAccount === 'safe:' . $safe->id)>{{ $safe->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                            </select>
+                            <input type="hidden" name="bank_account_id" id="claim-payment-bank-{{ $claim->id }}" value="{{ $oldPaymentBank }}">
+                            <input type="hidden" name="safe_id" id="claim-payment-safe-{{ $claim->id }}" value="{{ $oldPaymentSafe }}">
+                            <div class="form-text">{{ __('contracts::claims.payment_account_hint') }}</div>
+                            @if ($banksCollection->isEmpty() && $safesCollection->isEmpty())
+                                <div class="text-danger small">{{ __('contracts::claims.no_accounts_available') }}</div>
+                            @endif
+                            @error('bank_account_id')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                            @error('safe_id')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-0 text-start">
+                            <label for="claim-payment-notes-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.payment_notes') }}</label>
+                            <textarea name="notes" id="claim-payment-notes-{{ $claim->id }}" class="form-control" rows="2">{{ $oldPaymentNotes }}</textarea>
+                            <div class="form-text">{{ __('contracts::claims.payment_notes_hint') }}</div>
+                            @error('notes')
                                 <div class="text-danger small">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                        <button type="submit" class="btn btn-dark">{{ __('contracts::claims.record_payment') }}</button>
+                        <button type="submit" class="btn btn-dark" @if ($claimPayers->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</button>
                     </div>
                 </form>
             </div>
@@ -285,6 +410,39 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            var pickers = document.querySelectorAll('[data-claim-account-picker]');
+
+            pickers.forEach(function (picker) {
+                var bankInput = picker.dataset.bankInput ? document.getElementById(picker.dataset.bankInput) : null;
+                var safeInput = picker.dataset.safeInput ? document.getElementById(picker.dataset.safeInput) : null;
+
+                var sync = function () {
+                    if (bankInput) bankInput.value = '';
+                    if (safeInput) safeInput.value = '';
+
+                    var value = picker.value || '';
+                    if (!value) {
+                        return;
+                    }
+
+                    var parts = value.split(':');
+                    if (parts.length !== 2) {
+                        return;
+                    }
+
+                    if (parts[0] === 'bank' && bankInput) {
+                        bankInput.value = parts[1];
+                    }
+
+                    if (parts[0] === 'safe' && safeInput) {
+                        safeInput.value = parts[1];
+                    }
+                };
+
+                picker.addEventListener('change', sync);
+                sync();
+            });
+
             var claimId = "{{ old('payment_claim_id') }}";
             if (!claimId) {
                 return;
