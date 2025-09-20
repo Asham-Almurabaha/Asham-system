@@ -194,6 +194,64 @@
         ],
     ];
 
+    $statusMetricsMap = $statusMetrics
+        ->filter(fn($row) => is_array($row) && isset($row['id']))
+        ->mapWithKeys(fn($row) => [
+            (int) ($row['id'] ?? 0) => [
+                'count' => (int) ($row['count'] ?? 0),
+                'pct'   => isset($row['pct']) ? (float) $row['pct'] : null,
+            ],
+        ]);
+
+    $statusKpiCards = collect($contractStatuses ?? [])
+        ->map(function ($status) use ($statusMetricsMap, $statusIcon) {
+            $statusId = (int) ($status->id ?? 0);
+            if ($statusId <= 0) {
+                return null;
+            }
+
+            $metrics = $statusMetricsMap->get($statusId, ['count' => 0, 'pct' => null]);
+            $count   = (int) ($metrics['count'] ?? 0);
+
+            if ($count <= 0) {
+                return null;
+            }
+
+            $name = (string) ($status->name ?? '—');
+            [$iconName, $colorClass] = $statusIcon($name);
+
+            $card = [
+                '__count'     => $count,
+                'col_class'   => 'col-12 col-sm-6 col-lg-4 col-xl-3',
+                'icon'        => 'bi ' . $iconName,
+                'icon_class'  => trim('fs-4 ' . $colorClass),
+                'title'       => $name,
+                'value'       => number_format($count),
+                'value_class' => trim('fw-bold ' . $colorClass),
+            ];
+
+            $pct = $metrics['pct'] ?? null;
+            if ($pct !== null) {
+                $card['meta'] = [
+                    [
+                        'text' => __('contracts::contracts.Percentage: :value%', [
+                            'value' => number_format((float) $pct, 2),
+                        ]),
+                    ],
+                ];
+            }
+
+            return $card;
+        })
+        ->filter()
+        ->sortByDesc('__count')
+        ->map(function ($card) {
+            unset($card['__count']);
+            return $card;
+        })
+        ->values()
+        ->all();
+
     $monthlyInstallmentCards = [
         [
             'col_class'  => 'col-12 col-md-3',
@@ -303,6 +361,27 @@
         </div>
     @endforeach
 </div>
+
+@if(!empty($statusKpiCards))
+    <div class="card shadow-sm mb-4" dir="rtl">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+                <h6 class="mb-1">{{ __('contracts::contracts.Contract Statuses Overview') }}</h6>
+                <div class="small text-muted">{{ __('contracts::contracts.Percentages calculated from current total contracts') }}</div>
+            </div>
+            <div class="small text-muted text-nowrap">{{ __('contracts::contracts.Total Statuses') }}: {{ number_format($statusTotal) }}</div>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                @foreach($statusKpiCards as $card)
+                    <div class="{{ $card['col_class'] }}">
+                        @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endif
 
 <div class="card shadow-sm mb-4" dir="rtl">
     <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
