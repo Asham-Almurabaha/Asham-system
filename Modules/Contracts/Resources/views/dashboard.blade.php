@@ -364,7 +364,7 @@
 
         <button class="btn btn-outline-dark dropdown-toggle d-inline-flex align-items-center gap-2 px-3" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <span class="fs-5">📊</span>
-            <span>{{ __('Status Reports') }}</span>
+            <span>{{ __('Reports') }}</span>
         </button>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
             <li>
