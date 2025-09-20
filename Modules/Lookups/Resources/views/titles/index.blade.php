@@ -16,9 +16,9 @@
             <h1 class="h4 mb-0">{{ __('Titles List') }}</h1>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
-            <a href="{{ route('titles.create') }}" class="btn btn-success">
+            <x-button href="{{ route('titles.create') }}" variant="success">
                 <i class="bi bi-plus-lg me-1"></i>{{ __('Add New Title') }}
-            </a>
+            </x-button>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
                     <td class="fw-semibold text-start">{{ $title->name }}</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <a href="{{ route('titles.edit', $title->id) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
+                            <x-button href="{{ route('titles.edit', $title->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button>
                             @include('lookups::components.delete-button', [
                                 'action' => route('titles.destroy', $title->id),
                                 'confirm' => __('Are you sure to delete this title?'),

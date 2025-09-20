@@ -25,8 +25,8 @@
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $customer_status->name) }}" required autofocus>
                 </div>
 
-                <button type="submit" class="btn btn-outline-primary">{{ __('Update') }}</button>
-                <a href="{{ route('customer_statuses.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
+                <x-button type="submit" variant="primary" :outline="true">{{ __('Update') }}</x-button>
+                <x-button href="{{ route('customer_statuses.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button>
             </form>
         </div>
     </div>

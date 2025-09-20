@@ -357,15 +357,15 @@
         <span class="badge bg-light text-dark">{{ __('Current Investor:') }} {{ $selectedInvestorName }}</span>
     </div>
     <div class="btn-group" role="group">
-        <a href="{{ route('contracts.index') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3">
+        <x-button href="{{ route('contracts.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
             <i class="bi bi-table"></i>
             <span>{{ __('Manage Contracts') }}</span>
-        </a>
+        </x-button>
 
-        <button class="btn btn-outline-dark dropdown-toggle d-inline-flex align-items-center gap-2 px-3" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+        <x-button type="button" variant="dark" :outline="true" class="dropdown-toggle d-inline-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <span class="fs-5">📊</span>
             <span>{{ __('Reports') }}</span>
-        </button>
+        </x-button>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.office_outstanding') }}">
@@ -436,8 +436,8 @@
                 <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
             </div>
             <div class="col-12 col-md-auto d-flex gap-2">
-                <button class="btn btn-primary btn-sm">{{ __('Update') }}</button>
-                <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-secondary btn-sm">{{ __('Clear') }}</a>
+                <x-button type="submit" variant="primary" size="sm">{{ __('Update') }}</x-button>
+                <x-button href="{{ route('contracts.dashboard') }}" variant="secondary" :outline="true" size="sm">{{ __('Clear') }}</x-button>
             </div>
         </form>
     </div>

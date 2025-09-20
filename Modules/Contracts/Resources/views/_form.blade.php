@@ -271,7 +271,7 @@
                         <span class="fw-semibold js-cash-text" data-raw="0">—</span>
                         <span class="text-muted">ريال</span>
                         <span class="text-muted small">| المطلوب: <span class="js-needed-text">—</span> ريال</span>
-                        <button type="button" class="btn btn-sm btn-outline-secondary js-copy-cash" title="نسخ القيمة">نسخ</button>
+                        <x-button type="button" variant="secondary" :outline="true" size="sm" class="js-copy-cash" title="نسخ القيمة">نسخ</x-button>
                       </div>
                     </div>
                   </div>
@@ -294,13 +294,13 @@
             </td>
         
             <td>
-              <button type="button" class="btn btn-danger btn-sm remove-investor">حذف</button>
+              <x-button type="button" variant="danger" size="sm" class="remove-investor">حذف</x-button>
             </td>
           </tr>
         @endforeach
     </x-table>
 
-    <button type="button" id="add-investor" class="btn btn-outline-primary btn-sm">+ إضافة مستثمر</button>
+    <x-button type="button" variant="primary" :outline="true" size="sm" id="add-investor">+ إضافة مستثمر</x-button>
   </div>
 </div>
 
@@ -760,7 +760,7 @@ document.addEventListener('DOMContentLoaded', function () {
                   <span class="fw-semibold js-cash-text" data-raw="0">—</span>
                   <span class="text-muted">ريال</span>
                   <span class="text-muted small">| المطلوب: <span class="js-needed-text">—</span> ريال</span>
-                  <button type="button" class="btn btn-sm btn-outline-secondary js-copy-cash" title="نسخ القيمة">نسخ</button>
+                  <x-button type="button" variant="secondary" :outline="true" size="sm" class="js-copy-cash" title="نسخ القيمة">نسخ</x-button>
                 </div>
               </div>
             </div>
@@ -777,7 +777,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <input type="number" step="0.01" name="investors[${idx}][share_value]"
                class="form-control" inputmode="decimal" autocomplete="off" aria-label="قيمة المستثمر">
       </td>
-      <td><button type="button" class="btn btn-danger btn-sm remove-investor">حذف</button></td>
+      <td><x-button type="button" variant="danger" size="sm" class="remove-investor">حذف</x-button></td>
     `;
     tbody.appendChild(row);
     updateSelectOptions();

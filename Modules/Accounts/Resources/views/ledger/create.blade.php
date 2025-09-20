@@ -173,7 +173,7 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddProduct">إضافة نوع</button>
+                        <x-button type="button" variant="primary" :outline="true" size="sm" id="btnAddProduct">إضافة نوع</x-button>
                     </div>
                     <div class="card-body" id="products_wrapper">
                         @if(!empty($oldProducts))
@@ -198,7 +198,7 @@
                                         </label>
                                         <div class="input-group">
                                             <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
-                                            <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+                                            <x-button type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button>
                                         </div>
                                     </div>
                                 </div>
@@ -224,7 +224,7 @@
                                     </label>
                                     <div class="input-group">
                                         <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
-                                        <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+                                        <x-button type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button>
                                     </div>
                                 </div>
                             </div>
@@ -243,16 +243,16 @@
             </div>
 
             <div class="col-12 d-flex gap-2 mt-2">
-                <button class="btn btn-outline-success" id="btnSave">
+                <x-button type="submit" variant="success" :outline="true" id="btnSave">
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                     حفظ
-                </button>
-                <a href="{{ $cancelUrl }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
+                </x-button>
+                <x-button href="{{ $cancelUrl }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
 
                 @if($showTransferLinks)
                     <div class="ms-auto d-flex gap-2">
-                        <a href="{{ route('ledger.transfer.create') }}" class="btn btn-outline-primary">تحويل داخلي</a>
-                        <a href="{{ route('ledger.split.create') }}" class="btn btn-outline-secondary">قيد مُجزّأ</a>
+                        <x-button href="{{ route('ledger.transfer.create') }}" variant="primary" :outline="true">تحويل داخلي</x-button>
+                        <x-button href="{{ route('ledger.split.create') }}" variant="secondary" :outline="true">قيد مُجزّأ</x-button>
                     </div>
                 @endif
             </div>
@@ -282,7 +282,7 @@
             </label>
             <div class="input-group">
                 <input type="number" min="1" class="form-control js-qty-input" placeholder="0">
-                <button type="button" class="btn btn-outline-danger js-remove-product" title="حذف">حذف</button>
+                <x-button type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button>
             </div>
         </div>
     </div>

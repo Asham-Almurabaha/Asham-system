@@ -191,12 +191,12 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-outline-success">
+                    <x-button type="submit" variant="success" :outline="true">
                         <i class="bi bi-check2-circle me-1"></i> {{ __('guarantors::messages.Save') }}
-                    </button>
-                    <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary">
+                    </x-button>
+                    <x-button href="{{ route('guarantors.index') }}" variant="secondary" :outline="true">
                         {{ __('guarantors::messages.Cancel') }}
-                    </a>
+                    </x-button>
                 </div>
             </form>
         </div>

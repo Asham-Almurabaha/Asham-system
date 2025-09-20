@@ -73,6 +73,6 @@
 @endsection
 
 @section('actions')
-  <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+  <x-button href="{{ route('customers.index') }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button>
   {{-- زر الطباعة موجود أصلاً في الـlayout --}}
 @endsection

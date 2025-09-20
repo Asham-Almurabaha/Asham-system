@@ -22,9 +22,9 @@
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <a href="{{ route('contracts.export.payments') }}" class="btn btn-outline-secondary btn-sm">
+        <x-button href="{{ route('contracts.export.payments') }}" variant="secondary" :outline="true" size="sm">
           <i class="bi bi-download me-1"></i> تصدير حالة الأقساط
-        </a>
+        </x-button>
       </div>
     </div>
   </div>
@@ -116,18 +116,18 @@
           too-large-message="حجم الملف يتجاوز 10MB."
       >
         @if ($hasFailures && Route::has('contracts.import.payments.failures.fix'))
-          <a class="btn btn-warning" href="{{ route('contracts.import.payments.failures.fix') }}">
+          <x-button href="{{ route('contracts.import.payments.failures.fix') }}" variant="warning">
             <i class="bi bi-wrench-adjustable me-1"></i>
             تصدير أخطاء التحقق
             <span class="badge text-bg-danger ms-1">{{ $failuresCount }}</span>
-          </a>
+          </x-button>
         @endif
         @if ($hasSkipped && Route::has('contracts.import.payments.skipped.export'))
-          <a class="btn btn-outline-warning" href="{{ route('contracts.import.payments.skipped.export') }}">
+          <x-button href="{{ route('contracts.import.payments.skipped.export') }}" variant="warning" :outline="true">
             <i class="bi bi-skip-forward-fill me-1"></i>
             تصدير الصفوف المتخطاة
             <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
-          </a>
+          </x-button>
         @endif
       </x-import.form>
     </div>

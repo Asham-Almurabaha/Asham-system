@@ -50,9 +50,9 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
         <strong>{{ __('contracts::claims.claims') }}</strong>
-        <a  class="btn btn-dark btn-sm text-light" data-bs-toggle="modal" data-bs-target="#addClaimModal">
+        <x-button variant="dark" size="sm" class="text-light" data-bs-toggle="modal" data-bs-target="#addClaimModal">
             <i class="bi bi-plus-lg"></i> {{ __('contracts::claims.add_claim') }}
-        </a>
+        </x-button>
     </div>
     <div class="card-body p-0">
         @if ($claimsCollection->isNotEmpty())
@@ -104,24 +104,15 @@
                         <td class="text-end">{{ number_format($remainingAmount, 2) }}</td>
                         <td class="text-center">
                             <div class="d-flex flex-wrap justify-content-center gap-2">
-                                <button type="button"
-                                        class="btn btn-outline-secondary btn-sm collapsed"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#{{ $paymentsRowId }}"
-                                        aria-expanded="false"
-                                        aria-controls="{{ $paymentsRowId }}">
+                                <x-button type="button" variant="secondary" :outline="true" size="sm" class="collapsed" data-bs-toggle="collapse" data-bs-target="#{{ $paymentsRowId }}" aria-expanded="false" aria-controls="{{ $paymentsRowId }}">
                                     {{ __('contracts::claims.view_payments') }}
-                                </button>
+                                </x-button>
                 
                                 @unless ($isPaidStatus)
                                     @if ($isUnderReviewStatus)
-                                        <button type="button"
-                                                class="btn btn-outline-primary btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#{{ $modalId }}"
-                                                @if ($changeStatusOptionsCollection->isEmpty()) disabled @endif>
+                                        <x-button type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @if ($changeStatusOptionsCollection->isEmpty()) disabled @endif>
                                             {{ __('contracts::claims.change_status') }}
-                                        </button>
+                                        </x-button>
                                     @endif
                 
                                     @if ($isRejectedStatus)
@@ -129,28 +120,20 @@
                                             @csrf
                                             @method('patch')
                                             <input type="hidden" name="return_to_contract" value="1">
-                                            <button type="submit" class="btn btn-outline-warning btn-sm">
+                                            <x-button type="submit" variant="warning" :outline="true" size="sm">
                                                 {{ __('contracts::claims.reopen_claim') }}
-                                            </button>
+                                            </x-button>
                                         </form>
                                     @endif
                 
                                     @if (! $isUnderReviewStatus && ! $isRejectedStatus)
-                                        <button type="button"
-                                                class="btn btn-outline-dark btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#{{ $paymentModalId }}"
-                                                @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>
+                                        <x-button type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>
                                             {{ __('contracts::claims.record_payment') }}
-                                        </button>
+                                        </x-button>
                 
-                                        <button type="button"
-                                                class="btn btn-outline-success btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#{{ $discountModalId }}"
-                                                @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
+                                        <x-button type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
                                             {{ __('contracts::claims.pay_with_discount') }}
-                                        </button>
+                                        </x-button>
                                     @endif
                                 @endunless
                             </div>
@@ -293,8 +276,8 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                    <button type="submit" class="btn btn-outline-success">{{ __('contracts::claims.save') }}</button>
+                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
+                    <x-button type="submit" variant="success" :outline="true">{{ __('contracts::claims.save') }}</x-button>
                 </div>
             </form>
         </div>
@@ -431,8 +414,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                        <button type="submit" class="btn btn-outline-primary">{{ __('contracts::claims.update_status') }}</button>
+                        <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
+                        <x-button type="submit" variant="primary" :outline="true">{{ __('contracts::claims.update_status') }}</x-button>
                     </div>
                 </form>
             </div>
@@ -565,8 +548,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                    <button type="submit" class="btn btn-outline-dark" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</button>
+                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
+                    <x-button type="submit" variant="dark" :outline="true" @if ($claimPayersCollection->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</x-button>
                 </div>
             </form>
         </div>
@@ -691,8 +674,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                    <button type="submit" class="btn btn-success">{{ __('contracts::claims.apply_discount') }}</button>
+                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
+                    <x-button type="submit" variant="success">{{ __('contracts::claims.apply_discount') }}</x-button>
                 </div>
             </form>
         </div>

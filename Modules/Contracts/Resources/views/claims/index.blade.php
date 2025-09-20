@@ -52,8 +52,8 @@
             </div>
 
             <div class="col-12 col-lg-3 d-flex flex-column flex-sm-row gap-2">
-                <button type="submit" class="btn btn-primary btn-sm w-100">{{ __('contracts::claims.search') }}</button>
-                <a href="{{ route('contract-claims.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('contracts::claims.clear') }}</a>
+                <x-button type="submit" variant="primary" size="sm" class="w-100">{{ __('contracts::claims.search') }}</x-button>
+                <x-button href="{{ route('contract-claims.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('contracts::claims.clear') }}</x-button>
             </div>
         </form>
     </div>
@@ -136,52 +136,35 @@
                     <td class="text-start">{{ optional($claim->claimStatus)->name ?? '—' }}</td>
                     <td class="text-nowrap">
                         <div class="d-flex flex-wrap justify-content-center gap-2">
-                            <button type="button"
-                                    class="btn btn-outline-secondary btn-sm collapsed"
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#{{ $paymentsRowId }}"
-                                    aria-expanded="false"
-                                    aria-controls="{{ $paymentsRowId }}">
+                            <x-button type="button" variant="secondary" :outline="true" size="sm" class="collapsed" data-bs-toggle="collapse" data-bs-target="#{{ $paymentsRowId }}" aria-expanded="false" aria-controls="{{ $paymentsRowId }}">
                                 {{ __('contracts::claims.view_payments') }}
-                            </button>
+                            </x-button>
             
                             @unless ($isPaidStatus)
                                 @if ($isUnderReviewStatus)
-                                    <button type="button"
-                                            class="btn btn-outline-primary btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#{{ $modalId }}"
-                                            @if ($changeStatusOptions->isEmpty()) disabled @endif>
+                                    <x-button type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @if ($changeStatusOptions->isEmpty()) disabled @endif>
                                         {{ __('contracts::claims.change_status') }}
-                                    </button>
+                                    </x-button>
                                 @endif
             
                                 @if ($isRejectedStatus)
                                     <form action="{{ route('contract-claims.reopen', $claim) }}" method="post">
                                         @csrf
                                         @method('patch')
-                                        <button type="submit" class="btn btn-outline-warning btn-sm">
+                                        <x-button type="submit" variant="warning" :outline="true" size="sm">
                                             {{ __('contracts::claims.reopen_claim') }}
-                                        </button>
+                                        </x-button>
                                     </form>
                                 @endif
             
                                 @if (! $isUnderReviewStatus && ! $isRejectedStatus)
-                                    <button type="button"
-                                            class="btn btn-outline-dark btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#{{ $paymentModalId }}"
-                                            @if ($claimPayers->isEmpty() || $remainingAmount <= 0) disabled @endif>
+                                    <x-button type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @if ($claimPayers->isEmpty() || $remainingAmount <= 0) disabled @endif>
                                         {{ __('contracts::claims.record_payment') }}
-                                    </button>
+                                    </x-button>
             
-                                    <button type="button"
-                                            class="btn btn-outline-success btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#{{ $discountModalId }}"
-                                            @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
+                                    <x-button type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @if (empty($paidWithDiscountClaimStatusId)) disabled @endif>
                                         {{ __('contracts::claims.pay_with_discount') }}
-                                    </button>
+                                    </x-button>
                                 @endif
                             @endunless
                         </div>
@@ -305,8 +288,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ __('contracts::claims.update_status') }}</button>
+                        <x-button type="button" variant="light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
+                        <x-button type="submit" variant="primary">{{ __('contracts::claims.update_status') }}</x-button>
                     </div>
                 </form>
             </div>
@@ -421,8 +404,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                        <button type="submit" class="btn btn-dark" @if ($claimPayers->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</button>
+                        <x-button type="button" variant="light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
+                        <x-button type="submit" variant="dark" @if ($claimPayers->isEmpty() || $remainingAmount <= 0) disabled @endif>{{ __('contracts::claims.record_payment') }}</x-button>
                     </div>
                 </form>
             </div>
@@ -533,8 +516,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</button>
-                        <button type="submit" class="btn btn-success">{{ __('contracts::claims.apply_discount') }}</button>
+                        <x-button type="button" variant="light" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
+                        <x-button type="submit" variant="success">{{ __('contracts::claims.apply_discount') }}</x-button>
                     </div>
                 </form>
             </div>

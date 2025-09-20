@@ -16,9 +16,9 @@
             <h1 class="h4 mb-0">{{ __('Installment Statuses List') }}</h1>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
-            <a href="{{ route('installment_statuses.create') }}" class="btn btn-success">
+            <x-button href="{{ route('installment_statuses.create') }}" variant="success">
                 <i class="bi bi-plus-lg me-1"></i>{{ __('Add New Installment Status') }}
-            </a>
+            </x-button>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
                     <td class="fw-semibold text-start">{{ $status->name }}</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <a href="{{ route('installment_statuses.edit', $status->id) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
+                            <x-button href="{{ route('installment_statuses.edit', $status->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button>
                             @include('lookups::components.delete-button', [
                                 'action' => route('installment_statuses.destroy', $status->id),
                                 'confirm' => __('Are you sure to delete this installment status?'),

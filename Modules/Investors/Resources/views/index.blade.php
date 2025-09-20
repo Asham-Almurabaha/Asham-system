@@ -18,16 +18,16 @@
   <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
 
     <div class="btn-group" role="group" aria-label="Investor Actions">
-      <a href="{{ route('investors.create') }}" class="btn btn-success">
+      <x-button href="{{ route('investors.create') }}" variant="success">
         <i class="bi bi-plus-lg"></i> {{ __('investors::investors.Add Investor') }}
-      </a>
-      <a href="{{ route('investors.dashboard') }}" class="btn btn-outline-dark">
+      </x-button>
+      <x-button href="{{ route('investors.dashboard') }}" variant="dark" :outline="true">
         <i class="bi bi-speedometer2"></i> {{ __('investors::investors.View Dashboard') }}
-      </a>
+      </x-button>
       <div class="btn-group" role="group">
-        <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <x-button type="button" variant="primary" :outline="true" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
           <i class="bi bi-journal-text"></i> إدارة العمليات المحاسبية
-        </button>
+        </x-button>
         <ul class="dropdown-menu dropdown-menu-end text-end">
           <li>
             <a class="dropdown-item" href="{{ route('investors.ledger.create') }}">
@@ -50,16 +50,16 @@
         </ul>
       </div>
       @role('admin')
-        <a href="{{ route('investors.import.form') }}" class="btn btn-outline-primary">
+        <x-button href="{{ route('investors.import.form') }}" variant="primary" :outline="true">
             <i class="bi bi-upload"></i> {{ __('investors::investors.Import Excel') }}
-        </a>
+        </x-button>
       @endrole
 
       
       @if (session('failures') && count(session('failures')))
-        <a href="{{ route('investors.import.export_failures') }}" class="btn btn-warning">
+        <x-button href="{{ route('investors.import.export_failures') }}" variant="warning">
           <i class="bi bi-exclamation-triangle"></i> {{ __('investors::investors.Export Failures') }}
-        </a>
+        </x-button>
       @endif
     </div>
 
@@ -67,11 +67,11 @@
       {{ __('investors::investors.Results') }}: <strong>{{ $investors->total() }}</strong>
     </span>
 
-    <button class="btn btn-outline-secondary btn-sm" type="button"
-            data-bs-toggle="collapse" data-bs-target="#filterBar"
-            aria-expanded="false" aria-controls="filterBar">
+    <x-button type="button" variant="secondary" :outline="true" size="sm"
+              data-bs-toggle="collapse" data-bs-target="#filterBar"
+              aria-expanded="false" aria-controls="filterBar">
       {{ __('investors::investors.Filter') }}
-    </button>
+    </x-button>
   </div>
 
   <div class="collapse @if(request()->has('investor_q')) show @endif border-top" id="filterBar">
@@ -84,7 +84,7 @@
         </div>
 
         <div class="col-12 col-md-1">
-          <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('investors::investors.Clear') }}</a>
+          <x-button href="{{ route('investors.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('investors::investors.Clear') }}</x-button>
         </div>
       </form>
     </div>
@@ -131,7 +131,7 @@
                     <tr>
                         <td colspan="6" class="py-5">
                             <div class="text-muted">{{ __('investors::investors.No matching results.') }} <a href="{{ route('investors.index') }}" class="ms-1">{{ __('investors::investors.Show All') }}</a></div>
-                            <div class="mt-3"><a href="{{ route('investors.create') }}" class="btn btn-sm btn-success">+ {{ __('investors::investors.Add First Investor') }}</a></div>
+                            <div class="mt-3"><x-button href="{{ route('investors.create') }}" variant="success" size="sm">+ {{ __('investors::investors.Add First Investor') }}</x-button></div>
                         </td>
                     </tr>
                 @endforelse

@@ -25,8 +25,8 @@
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-outline-success">{{ __('Save') }}</button>
-                    <a href="{{ route('titles.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
+                    <x-button type="submit" variant="success" :outline="true">{{ __('Save') }}</x-button>
+                    <x-button href="{{ route('titles.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button>
                 </form>
             </div>
         </div>

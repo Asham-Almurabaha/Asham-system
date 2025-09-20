@@ -17,23 +17,20 @@
 <div class="card shadow-sm mb-3" dir="rtl">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
         <div class="btn-group" role="group" aria-label="{{ __('Contract Actions') }}">
-            <a href="{{ route('contracts.create') }}" class="btn btn-success">
+            <x-button href="{{ route('contracts.create') }}" variant="success">
                 <i class="bi bi-plus-lg"></i> {{ __('Add New Contract') }}
-            </a>
-            <a href="{{ route('contracts.dashboard') }}" class="btn btn-outline-dark">
+            </x-button>
+            <x-button href="{{ route('contracts.dashboard') }}" variant="dark" :outline="true">
                 <i class="bi bi-speedometer2"></i> {{ __('contracts::contracts.View Dashboard') }}
-            </a>
-            <button type="submit"
-                    form="contracts-refresh-statuses-form"
-                    class="btn btn-outline-primary"
-                    onclick="return confirm('{{ __('contracts::contracts.Confirm Refresh All Statuses') }}');">
+            </x-button>
+            <x-button type="submit" variant="primary" :outline="true" form="contracts-refresh-statuses-form" onclick="return confirm('{{ __('contracts::contracts.Confirm Refresh All Statuses') }}');">
                 <i class="bi bi-arrow-clockwise"></i> {{ __('contracts::contracts.Refresh All Statuses') }}
-            </button>
+            </x-button>
             @role('admin')
             <div class="btn-group">
-                <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <x-button type="button" variant="primary" :outline="true" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-upload"></i> {{ __('Import Excel') }}
-                </button>
+                </x-button>
                 <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
                     <li>
                         <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.form') }}">
@@ -72,9 +69,9 @@
             @csrf
         </form>
 
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
+        <x-button type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
             {{ __('Advanced Filter') }}
-        </button>
+        </x-button>
     </div>
 
     <div class="collapse @if(request()->hasAny(['customer','contract_number','investor_id','status','from','to'])) show @endif border-top" id="filterBar">
@@ -123,8 +120,8 @@
                 </div>
 
                 <div class="col-12 col-md-1 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm w-100">{{ __('Search') }}</button>
-                    <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('Clear') }}</a>
+                    <x-button type="submit" variant="primary" size="sm" class="w-100">{{ __('Search') }}</x-button>
+                    <x-button href="{{ route('contracts.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('Clear') }}</x-button>
                 </div>
             </form>
         </div>
@@ -204,9 +201,9 @@
                             <a href="{{ route('contracts.index') }}" class="ms-1">{{ __('View All') }}</a>
                         </div>
                         <div class="mt-3">
-                            <a href="{{ route('contracts.create') }}" class="btn btn-sm btn-success">
+                            <x-button href="{{ route('contracts.create') }}" variant="success" size="sm">
                                 + {{ __('Add First Contract') }}
-                            </a>
+                            </x-button>
                         </div>
                     </td>
                 </tr>

@@ -20,9 +20,9 @@
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <a href="{{ route('guarantors.import.template') }}" class="btn btn-outline-secondary btn-sm">
+        <x-button href="{{ route('guarantors.import.template') }}" variant="secondary" :outline="true" size="sm">
           <i class="bi bi-filetype-xlsx me-1"></i> {{ __('guarantors::messages.Download Template') }}
-        </a>
+        </x-button>
       </div>
     </div>
   </div>
@@ -230,21 +230,21 @@
                   <div class="d-flex flex-column flex-lg-row gap-2">
                     <form method="POST" action="{{ route('guarantors.import.pending.confirm', $token) }}">
                       @csrf
-                      <button type="submit" class="btn btn-success btn-sm w-100">
+                      <x-button type="submit" variant="success" size="sm" class="w-100">
                         <i class="bi bi-check2-circle me-1"></i> {{ __('guarantors::messages.Confirm Update') }}
-                      </button>
+                      </x-button>
                     </form>
                     <form method="POST" action="{{ route('guarantors.import.pending.store-new', $token) }}">
                       @csrf
-                      <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                      <x-button type="submit" variant="primary" :outline="true" size="sm" class="w-100">
                         <i class="bi bi-plus-circle me-1"></i> {{ __('guarantors::messages.Save as new record') }}
-                      </button>
+                      </x-button>
                     </form>
                     <form method="POST" action="{{ route('guarantors.import.pending.ignore', $token) }}">
                       @csrf
-                      <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                      <x-button type="submit" variant="secondary" :outline="true" size="sm" class="w-100">
                         <i class="bi bi-x-circle me-1"></i> {{ __('guarantors::messages.Ignore') }}
-                      </button>
+                      </x-button>
                     </form>
                   </div>
                 </td>
@@ -282,7 +282,7 @@
           :too-large-message="__('guarantors::messages.File size exceeds 10MB.')"
       >
         @if ($hasIssues && Route::has('guarantors.import.failures.fix'))
-          <a class="btn btn-warning" href="{{ route('guarantors.import.failures.fix') }}">
+          <x-button href="{{ route('guarantors.import.failures.fix') }}" variant="warning">
             <i class="bi bi-wrench-adjustable me-1"></i>
             {{ __('guarantors::messages.Download Errors/Skipped File') }}
             @if($hasFailures)
@@ -291,7 +291,7 @@
             @if($skippedCount > 0)
               <span class="badge text-bg-warning ms-1">{{ $skippedCount }}</span>
             @endif
-          </a>
+          </x-button>
         @endif
       </x-import.form>
     </div>
@@ -304,10 +304,9 @@
         <i class="bi bi-list-check me-2"></i>
         <span>{{ __('guarantors::messages.Validation Errors') }}</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
-        <button class="btn btn-sm btn-outline-secondary ms-auto"
-                data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
+        <x-button type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
           {{ __('guarantors::messages.Show/Hide') }}
-        </button>
+        </x-button>
       </div>
 
       <div id="failuresTable" class="collapse show">
@@ -362,10 +361,9 @@
         <i class="bi bi-skip-forward-fill me-2"></i>
         <span>{{ __('guarantors::messages.Skipped Rows') }}</span>
         <span class="badge rounded-pill text-bg-warning ms-2">{{ $skippedCount }}</span>
-        <button class="btn btn-sm btn-outline-secondary ms-auto"
-                data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
+        <x-button type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#skippedTable" aria-expanded="true">
           {{ __('guarantors::messages.Show/Hide') }}
-        </button>
+        </x-button>
       </div>
 
       <div id="skippedTable" class="collapse show">

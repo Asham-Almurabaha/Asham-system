@@ -78,12 +78,12 @@
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
-                <a href="{{ route('guarantors.edit', $guarantor) }}" class="btn btn-primary">
+                <x-button href="{{ route('guarantors.edit', $guarantor) }}" variant="primary">
                     <i class="bi bi-pencil-square me-1"></i> {{ __('guarantors::messages.Edit') }}
-                </a>
-                <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary">
+                </x-button>
+                <x-button href="{{ route('guarantors.index') }}" variant="secondary" :outline="true">
                     <i class="bi bi-arrow-right-circle me-1"></i> {{ __('guarantors::messages.Back to List') }}
-                </a>
+                </x-button>
             </div>
         </div>
     </div>
@@ -141,9 +141,9 @@
                         <div class="col-7 value-col">
                             @if($guarantor->national_id)
                                 <span>{{ $guarantor->national_id }}</span>
-                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->national_id }}')" title="{{ __('guarantors::messages.Copy') }}">
+                                <x-button type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $guarantor-">national_id }}')" title="{{ __('guarantors::messages.Copy') }}">
                                     <i class="bi bi-clipboard"></i>
-                                </button>
+                                </x-button>
                             @else
                                 <span class="text-muted">—</span>
                             @endif
@@ -169,9 +169,9 @@
                         <div class="col-7 value-col">
                             @if($guarantor->phone)
                                 <a href="tel:{{ $guarantor->phone }}" class="text-decoration-none text-dark"><i class="bi bi-telephone me-1"></i>{{ $guarantor->phone }}</a>
-                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $guarantor->phone }}')" title="{{ __('guarantors::messages.Copy') }}">
+                                <x-button type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $guarantor-">phone }}')" title="{{ __('guarantors::messages.Copy') }}">
                                     <i class="bi bi-clipboard"></i>
-                                </button>
+                                </x-button>
                             @else
                                 <span class="text-muted">—</span>
                             @endif

@@ -87,6 +87,10 @@
 </div>
 
 <div class="d-flex gap-2 mt-4">
-    <button type="submit" class="btn btn-outline-success">{{ $submitLabel }}</button>
-    <a href="{{ $cancelRoute }}" class="btn btn-outline-secondary">@lang('accounts::accounts.shared.cancel')</a>
+    <x-button type="submit" variant="success" :outline="true">
+        {{ $submitLabel }}
+    </x-button>
+    <x-button href="{{ $cancelRoute }}" variant="secondary" :outline="true">
+        @lang('accounts::accounts.shared.cancel')
+    </x-button>
 </div>

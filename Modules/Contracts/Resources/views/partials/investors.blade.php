@@ -22,9 +22,9 @@
     <div class="card-body p-0">
         @if($sumPct < 100)
             <div class="p-3 d-flex align-items-center gap-2">
-                <a  class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInvestorModal">
+                <x-button variant="primary" data-bs-toggle="modal" data-bs-target="#addInvestorModal">
                     ➕ إضافة مستثمر
-                </a>
+                </x-button>
             </div>
         @endif
 
@@ -82,22 +82,22 @@
                   <input type="number" step="1" class="form-control"
                          value="{{ (int)round($inv->pivot->share_value) }}" disabled>
                 </td>
-                <td><button type="button" class="btn btn-danger btn-sm" disabled>حذف</button></td>
+                <td><x-button type="button" variant="danger" size="sm" disabled>حذف</x-button></td>
               </tr>
               @endforeach
           </x-table>
 
           <div class="d-flex gap-2">
-            <button type="button" id="add-investor-row" class="btn btn-outline-primary btn-sm">+ إضافة مستثمر آخر</button>
+            <x-button type="button" variant="primary" :outline="true" size="sm" id="add-investor-row">+ إضافة مستثمر آخر</x-button>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success" disabled>
+          <x-button type="submit" variant="success" disabled>
             <span class="save-text">💾 @lang('app.Save')</span>
             <span class="spinner-border spinner-border-sm align-middle ms-2 d-none" role="status" aria-hidden="true"></span>
-          </button>
-          <a class="btn btn-secondary" data-bs-dismiss="modal">@lang('app.Cancel')</a>
+          </x-button>
+          <x-button variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button>
         </div>
       </form>
     </div>
@@ -417,7 +417,7 @@
                     <span class="fw-semibold js-cash-text" data-raw="0">—</span>
                     <span class="text-muted">ريال</span>
                     <span class="text-muted small">| المطلوب: <span class="js-needed-text">—</span> ريال</span>
-                    <button type="button" class="btn btn-sm btn-outline-secondary js-copy-cash" title="نسخ القيمة">نسخ</button>
+                    <x-button type="button" variant="secondary" :outline="true" size="sm" class="js-copy-cash" title="نسخ القيمة">نسخ</x-button>
                   </div>
                 </div>
               </div>
@@ -427,7 +427,7 @@
         </td>
         <td><input type="number" step="1" min="0" max="100" name="investors[${index}][share_percentage]" class="form-control required" value="${defaultPct}"></td>
         <td><input type="number" step="1" min="0" name="investors[${index}][share_value]" class="form-control required" value="${defaultVal}"></td>
-        <td><button type="button" class="btn btn-danger btn-sm remove-investor">حذف</button></td>
+        <td><x-button type="button" variant="danger" size="sm" class="remove-investor">حذف</x-button></td>
       `;
       tableBody.appendChild(tr);
       bindRowEvents(tr);

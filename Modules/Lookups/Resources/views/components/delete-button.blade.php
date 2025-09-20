@@ -1,14 +1,14 @@
 @php
     $formClass = $formClass ?? 'd-inline';
-    $buttonClass = $buttonClass ?? 'btn btn-outline-danger btn-sm';
     $label = $label ?? __('Delete');
     $confirm = $confirm ?? __('Are you sure you want to delete this item?');
+    $buttonClass = $buttonClass ?? 'px-3 rounded-pill';
 @endphp
 
 <form action="{{ $action }}" method="POST" class="{{ $formClass }}" onsubmit='return confirm(@json($confirm));'>
     @csrf
     @method('DELETE')
-    <button type="submit" class="{{ $buttonClass }}">
+    <x-button type="submit" variant="danger" :outline="true" size="sm" class="{{ $buttonClass }}">
         {{ $label }}
-    </button>
+    </x-button>
 </form>

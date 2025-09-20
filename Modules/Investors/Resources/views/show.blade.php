@@ -317,15 +317,15 @@
                 </div>
             </div>
             <div class="mini-actions d-flex flex-wrap gap-2">
-                {{-- <a href="{{ route('investors.edit', $investor) }}" class="btn btn-primary">
+                {{-- <x-button href="{{ route('investors.edit', $investor) }}" variant="primary">
                     <i class="bi bi-pencil-square me-1"></i> تعديل
-                </a> --}}
+                </x-button> --}}
                 
                  {{-- ✅ Dropdown للتقارير --}}
                 <div class="btn-group" data-bs-auto-close="outside">
-                    <button type="button" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <x-button type="button" variant="dark" :outline="true" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         📊 التقارير
-                    </button>
+                    </x-button>
                     <ul class="dropdown-menu dropdown-menu-end text-end investor-reports-dropdown" id="investorReportsDropdown">
                         <li>
                             <a class="dropdown-item" href="{{ route('investors.statement.statement', $investor) }}">
@@ -390,9 +390,9 @@
                     </ul>
                 </div>
 
-                <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
+                <x-button href="{{ route('investors.index') }}" variant="secondary" :outline="true">
                     <i class="bi bi-arrow-right-circle me-1"></i> العودة للقائمة
-                </a>
+                </x-button>
 
             </div>
         </div>
@@ -476,7 +476,7 @@
                 @endforeach
                 <input type="number" name="m" min="1" max="12" class="form-control form-control-sm" style="width:86px" value="{{ request('m', $mVal) }}" placeholder="شهر">
                 <input type="number" name="y" min="2000" max="2100" class="form-control form-control-sm" style="width:92px" value="{{ request('y', $yVal) }}" placeholder="سنة">
-                <button class="btn btn-outline-primary btn-sm">تحديث</button>
+                <x-button type="submit" variant="primary" :outline="true" size="sm">تحديث</x-button>
             </form>
         </div>
         <div class="card-body">
@@ -761,7 +761,7 @@
                         <div class="col-7 value-col">
                             @if($investor->national_id)
                                 <span dir="ltr">{{ $investor->national_id }}</span>
-                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $investor->national_id }}')" title="نسخ"><i class="bi bi-clipboard"></i></button>
+                                <x-button type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">national_id }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button>
                             @else <span class="text-muted">—</span> @endif
                         </div>
                     </div>
@@ -785,7 +785,7 @@
                         <div class="col-7 value-col">
                             @if($investor->phone)
                                 <a href="tel:{{ $investor->phone }}" class="text-decoration-none text-dark"><i class="bi bi-telephone me-1"></i>{{ $investor->phone }}</a>
-                                <button class="btn btn-light btn-sm ms-1" onclick="copyText('{{ $investor->phone }}')" title="نسخ"><i class="bi bi-clipboard"></i></button>
+                                <x-button type="submit" variant="light" size="sm" class="ms-1" onclick="copyText('{{ $investor-">phone }}')" title="نسخ"><i class="bi bi-clipboard"></i></x-button>
                             @else <span class="text-muted">—</span> @endif
                         </div>
                     </div>

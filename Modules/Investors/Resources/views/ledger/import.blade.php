@@ -23,9 +23,9 @@
         <p class="text-muted small mb-0">@lang('investors::investor_ledger_import.IDs or names note')</p>
       </div>
       <div class="ms-auto d-none d-md-block">
-        <a href="{{ route('investors.ledger.import.template') }}" class="btn btn-outline-secondary btn-sm">
+        <x-button href="{{ route('investors.ledger.import.template') }}" variant="secondary" :outline="true" size="sm">
           <i class="bi bi-filetype-xlsx me-1"></i> @lang('investors::investors_import.Download template')
-        </a>
+        </x-button>
       </div>
     </div>
   </div>
@@ -126,9 +126,9 @@
           :too-large-message="__('investors::investor_ledger_import.File size exceeds 10MB.')"
       >
         @if ($hasFailures && Route::has('investors.ledger.import.failures.fix'))
-          <a class="btn btn-warning" href="{{ route('investors.ledger.import.failures.fix') }}">
+          <x-button href="{{ route('investors.ledger.import.failures.fix') }}" variant="warning">
             <i class="bi bi-wrench-adjustable me-1"></i> @lang('investors::investors_import.Download file to fix rows')
-          </a>
+          </x-button>
         @endif
       </x-import.form>
     </div>
@@ -141,10 +141,9 @@
         <i class="bi bi-list-check me-2"></i>
         <span>@lang('investors::investors_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
-        <button class="btn btn-sm btn-outline-secondary ms-auto"
-                data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
+        <x-button type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
           @lang('investors::investors_import.Show/Hide')
-        </button>
+        </x-button>
       </div>
 
       <div id="failuresTable" class="collapse show">

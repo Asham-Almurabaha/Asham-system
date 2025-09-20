@@ -43,14 +43,14 @@
             {{ __('dashboard.Investors Liquidity Net') }}: {{ number_format($liquidityTotals['net'] ?? 0, 2) }}
         </span>
         <div class="btn-group" role="group">
-            <a href="{{ route('investors.index') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3">
+            <x-button href="{{ route('investors.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
                 <i class="bi bi-table"></i>
                 <span>{{ __('investors::investors.Manage Investors') }}</span>
-            </a>
-            <button class="btn btn-outline-dark dropdown-toggle d-inline-flex align-items-center gap-2 px-3" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+            </x-button>
+            <x-button type="button" variant="dark" :outline="true" class="dropdown-toggle d-inline-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                 <span class="fs-5">📊</span>
                 <span>{{ __('investors::investors.Reports') }}</span>
-            </button>
+            </x-button>
             <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
                 <li>
                     <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.investors.Allliquidity') }}">
@@ -240,7 +240,7 @@
                             <td>{{ number_format($row['out'] ?? 0, 2) }}</td>
                             <td>{{ number_format($row['net'] ?? 0, 2) }}</td>
                             <td>
-                                <a href="{{ route('investors.show', $row['id']) }}" class="btn btn-sm btn-outline-primary">{{ __('investors::investors.View') }}</a>
+                                <x-button href="{{ route('investors.show', $row['id']) }}" variant="primary" :outline="true" size="sm">{{ __('investors::investors.View') }}</x-button>
                             </td>
                         </tr>
                     @empty

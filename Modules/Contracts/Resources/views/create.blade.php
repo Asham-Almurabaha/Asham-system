@@ -22,8 +22,8 @@
             @include('contracts::_form')
 
             <div class="mt-3">
-                <button type="submit" class="btn btn-outline-success">@lang('app.Save')</button>
-                <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary" type="button">@lang('app.Cancel')</a>
+                <x-button type="submit" variant="success" :outline="true">@lang('app.Save')</x-button>
+                <x-button href="{{ route('contracts.index') }}" type="button" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
             </div>
         </form>
     </div>

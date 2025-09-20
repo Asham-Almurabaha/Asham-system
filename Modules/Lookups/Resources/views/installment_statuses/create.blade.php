@@ -25,8 +25,8 @@
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name') }}" required autofocus>
                 </div>
 
-                <button type="submit" class="btn btn-outline-success">@lang('app.Save')</button>
-                <a href="{{ route('installment_statuses.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
+                <x-button type="submit" variant="success" :outline="true">@lang('app.Save')</x-button>
+                <x-button href="{{ route('installment_statuses.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
             </form>
         </div>
     </div>

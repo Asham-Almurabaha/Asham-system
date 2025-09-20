@@ -14,17 +14,17 @@
 
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <a href="{{ route('investor-transactions.create') }}" class="btn btn-success">
+        <x-button href="{{ route('investor-transactions.create') }}" variant="success">
             + إضافة عملية
-        </a>
+        </x-button>
 
         <span class="ms-auto small text-muted">
             النتائج: <strong>{{ $transactions->total() }}</strong>
         </span>
 
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false">
+        <x-button type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false">
             تصفية متقدمة
-        </button>
+        </x-button>
     </div>
 
     <div class="collapse @if(request()->hasAny(['investor','status','from','to'])) show @endif border-top" id="filterBar">
@@ -57,8 +57,8 @@
                     <input type="date" name="to" value="{{ request('to') }}" class="form-control form-control-sm">
                 </div>
                 <div class="col-12 col-md-1 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm w-100">بحث</button>
-                    <a href="{{ route('investor-transactions.index') }}" class="btn btn-outline-secondary btn-sm w-100">مسح</a>
+                    <x-button type="submit" variant="primary" size="sm" class="w-100">بحث</x-button>
+                    <x-button href="{{ route('investor-transactions.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">مسح</x-button>
                 </div>
             </form>
         </div>
@@ -95,9 +95,9 @@
                             <a href="{{ route('investor-transactions.index') }}" class="ms-1">عرض الكل</a>
                         </div>
                         <div class="mt-3">
-                            <a href="{{ route('investor-transactions.create') }}" class="btn btn-sm btn-success">
+                            <x-button href="{{ route('investor-transactions.create') }}" variant="success" size="sm">
                                 + إضافة أول عملية
-                            </a>
+                            </x-button>
                         </div>
                     </td>
                 </tr>

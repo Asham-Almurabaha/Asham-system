@@ -215,10 +215,10 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-outline-primary">
+                    <x-button type="submit" variant="primary" :outline="true">
                         <i class="bi bi-save2 me-1"></i> {{ __('guarantors::messages.Update') }}
-                    </button>
-                    <a href="{{ route('guarantors.index') }}" class="btn btn-outline-secondary">{{ __('guarantors::messages.Cancel') }}</a>
+                    </x-button>
+                    <x-button href="{{ route('guarantors.index') }}" variant="secondary" :outline="true">{{ __('guarantors::messages.Cancel') }}</x-button>
                 </div>
             </form>
         </div>

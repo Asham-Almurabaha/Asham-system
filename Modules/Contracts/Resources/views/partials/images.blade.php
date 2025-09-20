@@ -2,13 +2,10 @@
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
         <strong class="mb-0">{{ __('Images') }}</strong>
-        <button type="button"
-                class="btn btn-light btn-sm"
-                data-bs-toggle="modal"
-                data-bs-target="#contract-images-modal">
+        <x-button type="button" variant="light" size="sm" data-bs-toggle="modal" data-bs-target="#contract-images-modal">
             <i class="bi bi-plus-circle me-1"></i>
             {{ __('Add Images') }}
-        </button>
+        </x-button>
     </div>
     <div class="card-body p-0">
         <div class="row p-3 g-3 justify-content-center">
@@ -76,10 +73,10 @@
                                     <img data-preview-for="contract_image" src="#" alt="{{ __('Image Preview') }}" class="img-fluid rounded d-none">
                                     <div class="text-muted small" data-placeholder-for="contract_image">{{ __('Preview will appear here after selecting a file.') }}</div>
                                 </div>
-                                <button type="button" class="btn btn-outline-danger btn-sm mt-2 w-100 d-none" data-remove-for="contract_image">
+                                <x-button type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_image">
                                     <i class="bi bi-x-circle me-1"></i>
                                     {{ __('Remove Selected Image') }}
-                                </button>
+                                </x-button>
                             </div>
                         </div>
 
@@ -100,10 +97,10 @@
                                     <img data-preview-for="contract_customer_image" src="#" alt="{{ __('Image Preview') }}" class="img-fluid rounded d-none">
                                     <div class="text-muted small" data-placeholder-for="contract_customer_image">{{ __('Preview will appear here after selecting a file.') }}</div>
                                 </div>
-                                <button type="button" class="btn btn-outline-danger btn-sm mt-2 w-100 d-none" data-remove-for="contract_customer_image">
+                                <x-button type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_customer_image">
                                     <i class="bi bi-x-circle me-1"></i>
                                     {{ __('Remove Selected Image') }}
-                                </button>
+                                </x-button>
                             </div>
                         </div>
 
@@ -124,18 +121,18 @@
                                     <img data-preview-for="contract_guarantor_image" src="#" alt="{{ __('Image Preview') }}" class="img-fluid rounded d-none">
                                     <div class="text-muted small" data-placeholder-for="contract_guarantor_image">{{ __('Preview will appear here after selecting a file.') }}</div>
                                 </div>
-                                <button type="button" class="btn btn-outline-danger btn-sm mt-2 w-100 d-none" data-remove-for="contract_guarantor_image">
+                                <x-button type="button" variant="danger" :outline="true" size="sm" class="mt-2 w-100 d-none" data-remove-for="contract_guarantor_image">
                                     <i class="bi bi-x-circle me-1"></i>
                                     {{ __('Remove Selected Image') }}
-                                </button>
+                                </x-button>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
-                    <button type="submit" class="btn btn-outline-primary">{{ __('Save') }}</button>
+                    <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('Cancel') }}</x-button>
+                    <x-button type="submit" variant="primary" :outline="true">{{ __('Save') }}</x-button>
                 </div>
             </form>
         </div>

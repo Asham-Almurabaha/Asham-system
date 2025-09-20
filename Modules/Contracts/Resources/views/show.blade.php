@@ -15,8 +15,8 @@
 
 <!-- أزرار الإجراءات -->
 <div class="d-flex flex-wrap gap-2 mb-3">
-    <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-right-circle me-1"></i> {{ __('Back to List') }}</a>
+    <x-button href="{{ route('contracts.index') }}" variant="secondary" :outline="true">
+                    <i class="bi bi-arrow-right-circle me-1"></i> {{ __('Back to List') }}</x-button>
 
     @php
         $paidTotal = $contract->installments->sum('payment_amount');
@@ -24,27 +24,27 @@
 
     <!-- طباعة العقد -->
     @if($paidTotal == 0)
-        <a href="{{ route('contracts.print', $contract->id) }}" class="btn btn-primary">
-            <i class="bi bi-printer me-1"></i> {{ __('Print Contract') }}</a>
+        <x-button href="{{ route('contracts.print', $contract->id) }}" variant="primary">
+            <i class="bi bi-printer me-1"></i> {{ __('Print Contract') }}</x-button>
     @endif
 
     <!-- طباعة السدادات -->
     @if($paidTotal <= $contract->total_value - $contract->discount_amount)
-        <a href="{{ route('contracts.paid', $contract->id) }}" class="btn btn-outline-success">
-            <i class="bi bi-receipt me-1"></i> {{ __('Paid Report') }}</a>
+        <x-button href="{{ route('contracts.paid', $contract->id) }}" variant="success" :outline="true">
+            <i class="bi bi-receipt me-1"></i> {{ __('Paid Report') }}</x-button>
     @endif
 
     <!-- طباعة المخالصة -->
     @if($paidTotal >= $contract->total_value - $contract->discount_amount )
-        <a href="{{ route('contracts.closure', $contract->id) }}" class="btn btn-outline-primary">
-            <i class="bi bi-file-earmark-check me-1"></i> {{ __('Closure Report') }}</a>
+        <x-button href="{{ route('contracts.closure', $contract->id) }}" variant="primary" :outline="true">
+            <i class="bi bi-file-earmark-check me-1"></i> {{ __('Closure Report') }}</x-button>
     @endif
     {{--
     <form action="{{ route('contracts.destroy', $contract) }}" method="POST" class="ms-auto"
           onsubmit="return confirm('هل أنت متأكد من حذف هذا العقد؟');">
         @csrf
         @method('DELETE')
-        <button type="submit" class="btn btn-danger">حذف</button>
+        <x-button type="submit" variant="danger">حذف</x-button>
     </form>
     --}}
 </div>

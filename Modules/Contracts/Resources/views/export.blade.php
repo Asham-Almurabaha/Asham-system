@@ -18,15 +18,15 @@
   </div>
 
   <div class="d-flex flex-column flex-md-row gap-3">
-    <a href="{{ route('contracts.export.basic') }}" class="btn btn-primary">
+    <x-button href="{{ route('contracts.export.basic') }}" variant="primary">
       <i class="bi bi-filetype-xlsx me-1"></i> تصدير البيانات الأساسية (المثال)
-    </a>
-    <a href="{{ route('contracts.export.investors') }}" class="btn btn-info">
+    </x-button>
+    <x-button href="{{ route('contracts.export.investors') }}" variant="info">
       <i class="bi bi-filetype-xlsx me-1"></i> تصدير المستثمرين (النسب غير المكتملة)
-    </a>
-    <a href="{{ route('contracts.export.payments') }}" class="btn btn-success">
+    </x-button>
+    <x-button href="{{ route('contracts.export.payments') }}" variant="success">
       <i class="bi bi-filetype-xlsx me-1"></i> تصدير الأقساط (المبلغ المتبقي)
-    </a>
+    </x-button>
   </div>
 </div>
 @endsection

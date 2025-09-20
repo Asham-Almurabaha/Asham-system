@@ -17,9 +17,9 @@
             </div>
 
             <div class="ms-auto d-flex flex-wrap gap-2">
-                <a href="{{ route('accounts.safes.create') }}" class="btn btn-success">
+                <x-button href="{{ route('accounts.safes.create') }}" variant="success">
                     <i class="bi bi-plus-lg me-1"></i>@lang('accounts::accounts.safes.actions.create')
-                </a>
+                </x-button>
             </div>
         </div>
 
@@ -52,9 +52,9 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
-                                <a href="{{ route('accounts.safes.edit', $safe) }}" class="btn btn-sm btn-outline-primary">
+                                <x-button href="{{ route('accounts.safes.edit', $safe) }}" variant="primary" :outline="true" size="sm">
                                     @lang('accounts::accounts.shared.edit')
-                                </a>
+                                </x-button>
                                 @include('lookups::components.delete-button', [
                                     'action' => route('accounts.safes.destroy', $safe),
                                     'confirm' => __('accounts::accounts.safes.confirm_delete'),

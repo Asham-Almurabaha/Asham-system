@@ -48,8 +48,8 @@
         </select>
       </div>
       <div class="col-6 col-md-4 d-flex gap-2">
-        <button class="btn btn-primary flex-fill"><i class="bi bi-search"></i> {{ __('Search') }}</button>
-        <a href="{{ url()->current() }}" class="btn btn-outline-secondary flex-fill">{{ __('Clear') }}</a>
+        <x-button type="submit" variant="primary" class="flex-fill"><i class="bi bi-search"></i> {{ __('Search') }}</x-button>
+        <x-button href="{{ url()->current() }}" variant="secondary" :outline="true" class="flex-fill">{{ __('Clear') }}</x-button>
       </div>
     </form>
   </div>
@@ -145,6 +145,6 @@
 @endsection
 
 @section('actions')
-  <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+  <x-button href="{{ route('investors.index') }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button>
   <x-refresh-button :href="url()->current()" />
 @endsection

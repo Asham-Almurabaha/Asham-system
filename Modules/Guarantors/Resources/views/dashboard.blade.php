@@ -115,15 +115,14 @@
         <span class="badge bg-light text-dark">{{ __('guarantors::messages.Total Guarantors') }}: {{ number_format($totals['total'] ?? 0) }}</span>
     </div>
     <div class="btn-group" role="group">
-        <a href="{{ route('guarantors.index') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 px-3">
+        <x-button href="{{ route('guarantors.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
             <i class="bi bi-table"></i>
             <span>{{ __('sidebar.Manage Guarantors') }}</span>
-        </a>
-        <button class="btn btn-outline-dark dropdown-toggle d-inline-flex align-items-center gap-2 px-3" type="button"
-                data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+        </x-button>
+        <x-button type="button" variant="dark" :outline="true" class="dropdown-toggle d-inline-flex align-items-center gap-2 px-3" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <span class="fs-5">📊</span>
             <span>{{ __('guarantors::messages.Reports') }}</span>
-        </button>
+        </x-button>
         <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('guarantors.index', ['report' => 'overdue']) }}">
@@ -304,34 +303,30 @@
             </div>
             <div class="card-body p-0">
                 @if($topContractGuarantors->isNotEmpty())
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:50px;">#</th>
-                                    <th>{{ __('Name') }}</th>
-                                    <th>{{ __('guarantors::messages.Guarantor Status') }}</th>
-                                    <th>{{ __('Active Contracts') }}</th>
-                                    <th>{{ __('guarantors::messages.Total Contracts') }}</th>
-                                    <th>{{ __('guarantors::messages.Customers Count') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($topContractGuarantors as $index => $item)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td class="text-start">
-                                            <a href="{{ route('guarantors.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
-                                        </td>
-                                        <td>{{ $item['status'] ?? __('guarantors::messages.Undefined') }}</td>
-                                        <td>{{ number_format($item['active_contracts'] ?? 0) }}</td>
-                                        <td>{{ number_format($item['total_contracts'] ?? 0) }}</td>
-                                        <td>{{ number_format($item['customers_count'] ?? 0) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-table :small="true" head-class="table-light">
+                        <x-slot name="head">
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('guarantors::messages.Guarantor Status') }}</th>
+                                <th>{{ __('Active Contracts') }}</th>
+                                <th>{{ __('guarantors::messages.Total Contracts') }}</th>
+                                <th>{{ __('guarantors::messages.Customers Count') }}</th>
+                            </tr>
+                        </x-slot>
+                        @foreach($topContractGuarantors as $index => $item)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td class="text-start">
+                                    <a href="{{ route('guarantors.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
+                                </td>
+                                <td>{{ $item['status'] ?? __('guarantors::messages.Undefined') }}</td>
+                                <td>{{ number_format($item['active_contracts'] ?? 0) }}</td>
+                                <td>{{ number_format($item['total_contracts'] ?? 0) }}</td>
+                                <td>{{ number_format($item['customers_count'] ?? 0) }}</td>
+                            </tr>
+                        @endforeach
+                    </x-table>
                 @else
                     <div class="p-3 text-muted">{{ __('guarantors::messages.No data available') }}</div>
                 @endif
@@ -346,32 +341,28 @@
             </div>
             <div class="card-body p-0">
                 @if($topOutstanding->isNotEmpty())
-                    <div class="table-responsive">
-                        <table class="table table-hover table-sm align-middle mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width:50px;">#</th>
-                                    <th>{{ __('Name') }}</th>
-                                    <th>{{ __('guarantors::messages.Outstanding Amount') }}</th>
-                                    <th>{{ __('guarantors::messages.Overdue Amount') }}</th>
-                                    <th>{{ __('guarantors::messages.Due This Month') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($topOutstanding as $index => $item)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td class="text-start">
-                                            <a href="{{ route('guarantors.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
-                                        </td>
-                                        <td>{{ number_format($item['unpaid_total'] ?? 0, 2) }}</td>
-                                        <td>{{ number_format($item['overdue_total'] ?? 0, 2) }}</td>
-                                        <td>{{ number_format($item['due_this_month_total'] ?? 0, 2) }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    <x-table :small="true" head-class="table-light">
+                        <x-slot name="head">
+                            <tr>
+                                <th style="width:50px;">#</th>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('guarantors::messages.Outstanding Amount') }}</th>
+                                <th>{{ __('guarantors::messages.Overdue Amount') }}</th>
+                                <th>{{ __('guarantors::messages.Due This Month') }}</th>
+                            </tr>
+                        </x-slot>
+                        @foreach($topOutstanding as $index => $item)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td class="text-start">
+                                    <a href="{{ route('guarantors.show', $item['id']) }}" class="text-decoration-none fw-bold">{{ $item['name'] }}</a>
+                                </td>
+                                <td>{{ number_format($item['unpaid_total'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($item['overdue_total'] ?? 0, 2) }}</td>
+                                <td>{{ number_format($item['due_this_month_total'] ?? 0, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </x-table>
                 @else
                     <div class="p-3 text-muted">{{ __('guarantors::messages.No data available') }}</div>
                 @endif

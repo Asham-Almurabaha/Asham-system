@@ -16,9 +16,9 @@
             <h1 class="h4 mb-0">{{ __('Installment Types List') }}</h1>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
-            <a href="{{ route('installment_types.create') }}" class="btn btn-success">
+            <x-button href="{{ route('installment_types.create') }}" variant="success">
                 <i class="bi bi-plus-lg me-1"></i>{{ __('Add New Installment Type') }}
-            </a>
+            </x-button>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
                     <td class="fw-semibold text-start">{{ $type->name }}</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <a href="{{ route('installment_types.edit', $type->id) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
+                            <x-button href="{{ route('installment_types.edit', $type->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button>
                             @include('lookups::components.delete-button', [
                                 'action' => route('installment_types.destroy', $type->id),
                                 'confirm' => __('Are you sure to delete this installment type?'),

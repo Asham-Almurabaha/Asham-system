@@ -25,8 +25,8 @@
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $claimant->name) }}" required autofocus>
                     </div>
 
-                    <button type="submit" class="btn btn-outline-success">{{ __('Update') }}</button>
-                    <a href="{{ route('claimants.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
+                    <x-button type="submit" variant="success" :outline="true">{{ __('Update') }}</x-button>
+                    <x-button href="{{ route('claimants.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button>
                 </form>
             </div>
         </div>

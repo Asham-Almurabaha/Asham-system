@@ -76,8 +76,8 @@
             </div>
 
             <div class="mt-3">
-                <button type="submit" class="btn btn-outline-success" {{ $statuses->count() ? '' : 'disabled' }}>@lang('app.Save')</button>
-                <a href="{{ route('investor-transactions.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
+                <x-button type="submit" variant="success" :outline="true" {{ $statuses->count() ? '' : 'disabled' }}>@lang('app.Save')</x-button>
+                <x-button href="{{ route('investor-transactions.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
             </div>
         </form>
     </div>

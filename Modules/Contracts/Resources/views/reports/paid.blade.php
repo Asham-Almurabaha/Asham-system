@@ -118,6 +118,6 @@
 @endsection
 
 @section('actions')
-  <a href="{{ route('contracts.show' , $contract) }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
+  <x-button href="{{ route('contracts.show' , $contract) }}" variant="secondary" :outline="true">↩ @lang('app.Back')</x-button>
 @endsection
 

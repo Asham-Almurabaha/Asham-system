@@ -26,8 +26,8 @@
                     <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $installmentType->name) }}" required autofocus>
                 </div>
 
-                <button type="submit" class="btn btn-primary">تحديث</button>
-                <a href="{{ route('installment_types.index') }}" class="btn btn-outline-secondary">@lang('app.Cancel')</a>
+                <x-button type="submit" variant="primary">تحديث</x-button>
+                <x-button href="{{ route('installment_types.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
             </form>
         </div>
     </div>

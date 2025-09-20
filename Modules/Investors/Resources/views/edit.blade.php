@@ -234,12 +234,12 @@
                 </div>
 
                 <div class="d-flex gap-2 mt-4">
-                    <button type="submit" class="btn btn-outline-primary">
+                    <x-button type="submit" variant="primary" :outline="true">
                         <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
-                    </button>
-                    <a href="{{ route('investors.index') }}" class="btn btn-outline-secondary">
+                    </x-button>
+                    <x-button href="{{ route('investors.index') }}" variant="secondary" :outline="true">
                         {{ __('Cancel') }}
-                    </a>
+                    </x-button>
                 </div>
             </form>
         </div>

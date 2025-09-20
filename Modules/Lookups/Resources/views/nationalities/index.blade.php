@@ -16,9 +16,9 @@
             <h1 class="h4 mb-0">{{ __('Nationalities List') }}</h1>
         </div>
         <div class="ms-auto d-flex flex-wrap gap-2">
-            <a href="{{ route('nationalities.create') }}" class="btn btn-success">
+            <x-button href="{{ route('nationalities.create') }}" variant="success">
                 <i class="bi bi-plus-lg me-1"></i>{{ __('Add New Nationality') }}
-            </a>
+            </x-button>
         </div>
     </div>
 
@@ -37,7 +37,7 @@
                     <td class="fw-semibold text-start">{{ $nationality->name }}</td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <a href="{{ route('nationalities.edit', $nationality->id) }}" class="btn btn-sm btn-outline-primary">{{ __('Edit') }}</a>
+                            <x-button href="{{ route('nationalities.edit', $nationality->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button>
                             @include('lookups::components.delete-button', [
                                 'action' => route('nationalities.destroy', $nationality->id),
                                 'confirm' => __('Are you sure to delete this nationality?'),

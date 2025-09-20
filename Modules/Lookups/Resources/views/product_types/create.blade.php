@@ -28,8 +28,8 @@
                         <textarea name="description" id="description" class="form-control" rows="3">{{ old('description') }}</textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-outline-success">{{ __('Save') }}</button>
-                    <a href="{{ route('product_types.index') }}" class="btn btn-outline-secondary">{{ __('Cancel') }}</a>
+                    <x-button type="submit" variant="success" :outline="true">{{ __('Save') }}</x-button>
+                    <x-button href="{{ route('product_types.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button>
                 </form>
             </div>
         </div>
