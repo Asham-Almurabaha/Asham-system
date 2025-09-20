@@ -71,33 +71,30 @@
             <th class="text-start">@lang('app.Notes')</th>
           </tr>
       </x-slot>
-      @if($withdrawals instanceof \Illuminate\Pagination\LengthAwarePaginator)
-      
-            @endif
-      
-              @forelse($withdrawals as $i => $w)
-                @php
-                  $statusName = optional($w->status)->name ?? optional($w->transactionStatus)->name ?? '—';
-                  $typeName   = optional($w->type)->name   ?? optional($w->transactionType)->name   ?? '—';
-                @endphp
-                <tr>
-                  <td>{{ $i + 1 }}</td>
-                  <td>{{ Carbon::parse($w->entry_date)->format('d-m-Y') }}</td>
-                  <td class="text-danger fw-semibold">
-                    {{ number_format($w->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
-                  </td>
-                  <td>{{ $typeName }}</td>
-                  <td>{{ $statusName }}</td>
-                  <td class="text-start">{{ $w->notes ?? '—' }}</td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="6" class="py-5 text-muted">
-                    @lang('app.No withdrawals found for this investor in the current range.')
-                  </td>
-                </tr>
-              @endforelse
+      @forelse($withdrawals as $i => $w)
+        @php
+          $statusName = optional($w->status)->name ?? optional($w->transactionStatus)->name ?? '—';
+          $typeName   = optional($w->type)->name   ?? optional($w->transactionType)->name   ?? '—';
+        @endphp
+        <tr>
+          <td>{{ $i + 1 }}</td>
+          <td>{{ Carbon::parse($w->entry_date)->format('d-m-Y') }}</td>
+          <td class="text-danger fw-semibold">
+            {{ number_format($w->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
+          </td>
+          <td>{{ $typeName }}</td>
+          <td>{{ $statusName }}</td>
+          <td class="text-start">{{ $w->notes ?? '—' }}</td>
+        </tr>
+      @empty
+        <tr>
+          <td colspan="6" class="py-5 text-muted">
+            @lang('app.No withdrawals found for this investor in the current range.')
+          </td>
+        </tr>
+      @endforelse
       <x-slot name="footer">
+        @if($withdrawals instanceof \Illuminate\Pagination\LengthAwarePaginator)
           <tr>
             <th colspan="6" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
@@ -105,6 +102,7 @@
               </div>
             </th>
           </tr>
+        @endif
       </x-slot>
   </x-table>
 @endsection

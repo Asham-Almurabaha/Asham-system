@@ -71,31 +71,28 @@
             <th>@lang('app.Notes')</th>
           </tr>
       </x-slot>
-      @if($deposits instanceof \Illuminate\Pagination\LengthAwarePaginator)
-      
-            @endif
-      
-              @forelse($deposits as $i => $d)
-                @php
-                  $statusName = optional($d->status)->name ?? optional($d->transactionStatus)->name ?? '—';
-                  $typeName   = optional($d->type)->name   ?? optional($d->transactionType)->name   ?? '—';
-                @endphp
-                <tr>
-                  <td>{{ $i + 1 }}</td>
-                  <td>{{ Carbon::parse($d->entry_date)->format('d-m-Y') }}</td>
-                  <td class="text-success fw-semibold">
-                    {{ number_format($d->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
-                  </td>
-                  <td>{{ $typeName }}</td>
-                  <td>{{ $statusName }}</td>
-                  <td class="text-start">{{ $d->notes ?? '—' }}</td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="6" class="py-5 text-muted">@lang('reports.No deposits recorded for this investor in the current range.')</td>
-                </tr>
-              @endforelse
+      @forelse($deposits as $i => $d)
+        @php
+          $statusName = optional($d->status)->name ?? optional($d->transactionStatus)->name ?? '—';
+          $typeName   = optional($d->type)->name   ?? optional($d->transactionType)->name   ?? '—';
+        @endphp
+        <tr>
+          <td>{{ $i + 1 }}</td>
+          <td>{{ Carbon::parse($d->entry_date)->format('d-m-Y') }}</td>
+          <td class="text-success fw-semibold">
+            {{ number_format($d->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
+          </td>
+          <td>{{ $typeName }}</td>
+          <td>{{ $statusName }}</td>
+          <td class="text-start">{{ $d->notes ?? '—' }}</td>
+        </tr>
+      @empty
+        <tr>
+          <td colspan="6" class="py-5 text-muted">@lang('reports.No deposits recorded for this investor in the current range.')</td>
+        </tr>
+      @endforelse
       <x-slot name="footer">
+        @if($deposits instanceof \Illuminate\Pagination\LengthAwarePaginator)
           <tr>
             <th colspan="6" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
@@ -103,6 +100,7 @@
               </div>
             </th>
           </tr>
+        @endif
       </x-slot>
   </x-table>
 @endsection
