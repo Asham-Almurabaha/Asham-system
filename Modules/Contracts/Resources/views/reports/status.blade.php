@@ -82,6 +82,3 @@
   </div>
 @endsection
 
-@section('actions')
-  <a href="{{ route('contracts.index') }}" class="btn btn-outline-secondary">↩ @lang('app.Back')</a>
-@endsection
