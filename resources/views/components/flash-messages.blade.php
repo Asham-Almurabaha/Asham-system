@@ -5,7 +5,10 @@
 ])
 
 @php
-    $isRtl = app()->getLocale() === 'ar';
+    $locale = app()->getLocale();
+    $localeRoot = strtolower(strtok($locale, '_'));
+    $rtlLocales = ['ar', 'he'];
+    $isRtl = in_array($localeRoot, $rtlLocales, true);
 
     $flashKeys = [
         'success' => 'success',

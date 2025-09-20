@@ -6,8 +6,10 @@
   $favicon   = $setting->favicon ?? null;
   $desc      = $setting->meta_description ?? $appName;           // إن عندك وصف في الإعدادات
   $canonical = request()->url();
-  $locale    = app()->getLocale();
-  $isRtl     = $locale === 'ar';
+  $locale      = app()->getLocale();
+  $localeRoot  = strtolower(strtok($locale, '_'));
+  $rtlLocales  = ['ar', 'he'];
+  $isRtl       = in_array($localeRoot, $rtlLocales, true);
 @endphp
 
 <meta charset="utf-8">
@@ -27,7 +29,15 @@
 <meta name="color-scheme" content="light dark">
 
 {{-- Open Graph (للمشاركة على السوشيال) --}}
-<meta property="og:locale" content="{{ $locale === 'ar' ? 'ar_AR' : 'en_US' }}">
+@php
+  $openGraphLocale = match (true) {
+      str_starts_with($locale, 'ar') => 'ar_AR',
+      str_starts_with($locale, 'he') => 'he_IL',
+      default => 'en_US',
+  };
+@endphp
+
+<meta property="og:locale" content="{{ $openGraphLocale }}">
 <meta property="og:title" content="{{ $title }}">
 <meta property="og:description" content="{{ $desc }}">
 <meta property="og:site_name" content="{{ $appName }}">
@@ -51,7 +61,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link
-  href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Open+Sans:wght@300;400;600;700&family=Nunito:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700&family=Cairo:wght@300;400;600;700&family=Heebo:wght@300;400;500;700&family=Nunito:wght@300;400;600;700&family=Open+Sans:wght@300;400;600;700&family=Poppins:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;700&display=swap"
   rel="stylesheet">
 
 {{-- Bootstrap & DataTables RTL/LTR --}}

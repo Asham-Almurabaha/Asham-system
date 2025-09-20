@@ -3,7 +3,13 @@
 @section('title', __('sidebar.Assign Roles to Users'))
 
 @section('content')
-<div class="container py-3" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+@php
+  $locale = app()->getLocale();
+  $localeRoot = strtolower(strtok($locale, '_'));
+  $rtlLocales = ['ar', 'he'];
+  $isRtl = in_array($localeRoot, $rtlLocales, true);
+@endphp
+<div class="container py-3" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb mb-0">
       <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>

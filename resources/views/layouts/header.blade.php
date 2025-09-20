@@ -46,17 +46,16 @@
           <span class="badge bg-danger badge-number">{{ $notificationsTotal }}</span>
         @endif
       </a>
-      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
-        <li class="dropdown-header">
-          <div class="d-flex flex-column">
-            <span class="fw-semibold">{{ __('notifications.title') }}</span>
-            <span class="small text-muted">{{ __('notifications.zakat_due_title') }}</span>
+      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications shadow-sm">
+        <li class="dropdown-header notifications-header">
+          <div>
+            <span class="notifications-heading">{{ __('notifications.title') }}</span>
+            <span class="notifications-subheading">{{ __('notifications.zakat_due_title') }}</span>
           </div>
-          <span class="badge bg-primary-subtle text-primary ms-2">
+          <span class="badge bg-primary-subtle text-primary notifications-count">
             {{ trans_choice('notifications.zakat_due_count', $zakatCount, ['count' => number_format($zakatCount)]) }}
           </span>
         </li>
-        <li><hr class="dropdown-divider"></li>
 
         @forelse ($zakatItems as $item)
           @php
@@ -65,37 +64,32 @@
             $daysOverdue = $item['days_overdue'];
           @endphp
           <li class="notification-item">
-            <a class="dropdown-item d-flex align-items-start gap-2" href="{{ route('investors.show', $item['id']) }}">
-              <i class="bi bi-exclamation-triangle text-warning fs-5 mt-1" aria-hidden="true"></i>
-              <div>
-                <div class="fw-semibold">{{ $item['name'] }}</div>
-                <div class="small text-muted">
+            <a class="notification-link" href="{{ route('investors.show', $item['id']) }}">
+              <span class="notification-icon" aria-hidden="true">
+                <i class="bi bi-exclamation-triangle"></i>
+              </span>
+              <div class="notification-content">
+                <span class="notification-title">{{ $item['name'] }}</span>
+                <span class="notification-meta">
                   {{ __('notifications.zakat_due_amount', ['amount' => number_format((float) $item['amount'], 2), 'currency' => $item['currency']]) }}
-                </div>
-                <div class="small text-muted">
+                </span>
+                <span class="notification-meta">
                   {{ __('notifications.zakat_due_due_date', ['date' => $formattedDate]) }}
-                </div>
+                </span>
                 @if(!is_null($daysOverdue) && $daysOverdue >= 0)
-                  <div class="small text-muted">
+                  <span class="notification-status">
                     {{ trans_choice('notifications.zakat_due_days_overdue', (int) $daysOverdue, ['days' => number_format((int) $daysOverdue)]) }}
-                  </div>
+                  </span>
                 @endif
               </div>
             </a>
           </li>
-          @if (! $loop->last)
-            <li><hr class="dropdown-divider"></li>
-          @endif
         @empty
-          <li class="px-4 py-3 text-muted small">{{ __('notifications.no_notifications') }}</li>
+          <li class="notifications-empty">{{ __('notifications.no_notifications') }}</li>
         @endforelse
 
-        @if($zakatItems->isNotEmpty())
-          <li><hr class="dropdown-divider"></li>
-        @endif
-
-        <li class="dropdown-footer text-center">
-          <a href="{{ route('investors.index') }}">{{ __('notifications.view_all') }}</a>
+        <li class="dropdown-footer notifications-footer">
+          <a class="notifications-footer-link" href="{{ route('investors.index') }}">{{ __('notifications.view_all') }}</a>
         </li>
       </ul>
     </li>

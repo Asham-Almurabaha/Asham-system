@@ -3,7 +3,13 @@
 @section('title', __('users.Edit User Roles'))
 
 @section('content')
-<div class="container-xxl py-4" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+@php
+  $locale = app()->getLocale();
+  $localeRoot = strtolower(strtok($locale, '_'));
+  $rtlLocales = ['ar', 'he'];
+  $isRtl = in_array($localeRoot, $rtlLocales, true);
+@endphp
+<div class="container-xxl py-4" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
   <div class="mb-3">
     <x-button.secondary href="{{ route('users.index') }}" size="sm">
       @lang('users.Back to List')

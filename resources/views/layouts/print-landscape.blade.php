@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+@php
+  $locale = app()->getLocale();
+  $localeRoot = strtolower(strtok($locale, '_'));
+  $rtlLocales = ['ar', 'he'];
+  $isRtl = in_array($localeRoot, $rtlLocales, true);
+@endphp
+<html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
   <meta charset="utf-8">
   <title>@yield('title', __('reports.Report'))</title>
@@ -11,7 +17,7 @@
   @endisset
 
   {{-- Bootstrap RTL/LTR تلقائي --}}
-  @if(app()->getLocale() === 'ar')
+  @if($isRtl)
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
   @else
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">

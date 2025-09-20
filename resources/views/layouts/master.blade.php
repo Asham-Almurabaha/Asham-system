@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-@php 
-  $isRtl = app()->getLocale() === 'ar'; 
+@php
+  $locale     = app()->getLocale();
+  $localeRoot = strtolower(strtok($locale, '_'));
+  $rtlLocales = ['ar', 'he'];
+  $isRtl      = in_array($localeRoot, $rtlLocales, true);
 @endphp
-<html lang="{{ $isRtl ? 'ar' : 'en' }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
+<html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
   @include('layouts.head')
 </head>

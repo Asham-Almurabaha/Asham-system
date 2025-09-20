@@ -129,7 +129,13 @@
 @endpush
 
 @section('content')
-  <div class="container-xxl py-4 settings-roles-permissions" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+  @php
+    $locale = app()->getLocale();
+    $localeRoot = strtolower(strtok($locale, '_'));
+    $rtlLocales = ['ar', 'he'];
+    $isRtl = in_array($localeRoot, $rtlLocales, true);
+  @endphp
+  <div class="container-xxl py-4 settings-roles-permissions" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
     {{-- Breadcrumbs --}}
     <nav aria-label="breadcrumb" class="mb-3">
       <ol class="breadcrumb mb-0">
