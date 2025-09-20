@@ -172,7 +172,6 @@
                         <th>{{ __('Total Remaining on Customer') }}</th>
                         <th>{{ __('Unpaid Installments This Month') }}</th>
                         <th>{{ __('Unpaid Amount This Month') }}</th>
-                        <th class="text-center" style="min-width:140px;">{{ __('customers::messages.Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -193,16 +192,6 @@
                             <td class="text-center">{{ number_format((float) ($customer->remaining_balance_total ?? 0), 2) }}</td>
                             <td class="text-center">{{ number_format((int) ($customer->unpaid_installments_this_month ?? 0)) }}</td>
                             <td class="text-center">{{ number_format((float) ($customer->unpaid_amount_this_month ?? 0), 2) }}</td>
-                            <td class="text-center">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('customers.show', $customer) }}" class="btn btn-outline-primary">
-                                        {{ __('customers::messages.View') }}
-                                    </a>
-                                    <a href="{{ route('customers.edit', $customer) }}" class="btn btn-outline-secondary">
-                                        {{ __('customers::messages.Edit') }}
-                                    </a>
-                                </div>
-                            </td>
                         </tr>
                     @empty
                         <tr>
