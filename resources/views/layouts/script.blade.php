@@ -9,7 +9,7 @@
 <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 
 {{-- TinyMCE (اختياري) --}}
-{{-- <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js') }}" defer></script> --}}
+<script src="{{ asset('assets/vendor/tinymce/tinymce.min.js') }}"></script>
 
 {{-- Template Main: enables sidebar toggle and UI helpers --}}
 <script src="{{ asset('assets/js/main.js') }}"></script>
