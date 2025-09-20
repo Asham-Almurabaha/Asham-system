@@ -354,13 +354,13 @@
     </div>
 </div>
 
-<div class="row g-3 mb-4" dir="rtl">
+{{-- <div class="row g-3 mb-4" dir="rtl">
     @foreach($topKpiCards as $card)
         <div class="{{ $card['col_class'] }}">
             @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
         </div>
     @endforeach
-</div>
+</div> --}}
 
 @if(!empty($statusKpiCards))
     <div class="card shadow-sm mb-4" dir="rtl">
