@@ -57,7 +57,7 @@
     </div>
 
     <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
-        <x-button id="{{ $submitId }}" variant="primary" :disabled="true">
+        <x-button id="{{ $submitId }}" type="submit" variant="primary" :disabled="true">
             @if (!empty($buttonIcon))
                 <i class="bi {{ $buttonIcon }} me-1"></i>
             @endif
