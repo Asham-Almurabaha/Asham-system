@@ -20,9 +20,9 @@
                 <div class="card-header bg-white border-0 pb-0">
                     <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2 justify-content-between">
                         <h2 class="h5 mb-0">{{ __('Product Entries List') }}</h2>
-                        <x-add-button href="{{ route('product_entries.create') }}" variant="success" class="ms-sm-auto">
+                        <x-button.add href="{{ route('product_entries.create') }}" variant="success" class="ms-sm-auto">
                             {{ __('Add New Product Entry') }}
-                        </x-add-button>
+                        </x-button.add>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -47,16 +47,16 @@
                                 <td>{{ \Carbon\Carbon::parse($entry->entry_date)->format('Y-m-d') }}</td>
                                 <td class="text-end">
                                     <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-end">
-                                        <x-edit-button href="{{ route('product_entries.edit', $entry->id) }}" size="sm">
+                                        <x-button.edit href="{{ route('product_entries.edit', $entry->id) }}" size="sm">
                                             {{ __('Edit') }}
-                                        </x-edit-button>
+                                        </x-button.edit>
                                         <form action="{{ route('product_entries.destroy', $entry->id) }}" method="POST" class="m-0"
                                               onsubmit="return confirm('{{ __('Are you sure to delete this entry?') }}')">
                                             @csrf
                                             @method('DELETE')
-                                            <x-delete-button type="submit" size="sm">
+                                            <x-button.delete type="submit" size="sm">
                                                 {{ __('Delete') }}
-                                            </x-delete-button>
+                                            </x-button.delete>
                                         </form>
                                     </div>
                                 </td>

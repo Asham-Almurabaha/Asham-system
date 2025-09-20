@@ -54,12 +54,12 @@
 
                         <div class="col-12">
                             <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
-                                <x-save-button>
+                                <x-button.save>
                                     {{ __('Save') }}
-                                </x-save-button>
-                                <x-secondary-button href="{{ route('product_entries.index') }}">
+                                </x-button.save>
+                                <x-button.secondary href="{{ route('product_entries.index') }}">
                                     {{ __('Cancel') }}
-                                </x-secondary-button>
+                                </x-button.secondary>
                             </div>
                         </div>
                     </form>

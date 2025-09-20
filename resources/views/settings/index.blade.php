@@ -29,20 +29,20 @@
         <x-button href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true">
           <i class="bi bi-eye me-1"></i>@lang('sidebar.View')
         </x-button>
-        <x-edit-button href="{{ route('settings.edit', $setting) }}">
+        <x-button.edit href="{{ route('settings.edit', $setting) }}">
           @lang('sidebar.Edit')
-        </x-edit-button>
+        </x-button.edit>
         <form action="{{ route('settings.destroy', $setting) }}" method="POST"
               onsubmit="return confirm('@lang('sidebar.Delete setting and images. Are you sure?')')">
           @csrf @method('DELETE')
-          <x-delete-button type="submit">
+          <x-button.delete type="submit">
             @lang('sidebar.Delete')
-          </x-delete-button>
+          </x-button.delete>
         </form>
       @else
-        <x-add-button href="{{ route('settings.create') }}" variant="success">
+        <x-button.add href="{{ route('settings.create') }}" variant="success">
           @lang('sidebar.Create Setting')
-        </x-add-button>
+        </x-button.add>
       @endif
     </div>
   </div>
@@ -53,7 +53,7 @@
         <div class="mb-3"><i class="bi bi-gear-wide-connected fs-1"></i></div>
         <h5 class="mb-2">@lang('sidebar.No saved setting yet')</h5>
         <p class="text-muted mb-4">@lang('sidebar.Create a setting to show the name, owner name, logo, and site icon across the system.')</p>
-        <x-add-button href="{{ route('settings.create') }}" variant="success">@lang('sidebar.Create Now')</x-add-button>
+        <x-button.add href="{{ route('settings.create') }}" variant="success">@lang('sidebar.Create Now')</x-button.add>
       </div>
     </div>
   @else
@@ -135,9 +135,9 @@
               <x-button href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true" size="sm">
                 <i class="bi bi-eye me-1"></i>@lang('sidebar.View Details')
               </x-button>
-              <x-edit-button href="{{ route('settings.edit', $setting) }}" size="sm">
+              <x-button.edit href="{{ route('settings.edit', $setting) }}" size="sm">
                 @lang('sidebar.Edit')
-              </x-edit-button>
+              </x-button.edit>
             </div>
           </div>
         </div>

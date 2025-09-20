@@ -91,10 +91,10 @@
             </div>
 
             <div class="col-12 d-flex gap-2">
-              <x-update-button>
+              <x-button.update>
                 @lang('sidebar.Update')
-              </x-update-button>
-              <x-secondary-button href="{{ route('settings.index') }}">@lang('sidebar.Cancel')</x-secondary-button>
+              </x-button.update>
+              <x-button.secondary href="{{ route('settings.index') }}">@lang('sidebar.Cancel')</x-button.secondary>
             </div>
           </form>
         </div>

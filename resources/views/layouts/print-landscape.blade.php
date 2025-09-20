@@ -116,7 +116,7 @@
       {{-- أزرار الإجراء (لا تُطبع) --}}
       <div class="no-print d-flex justify-content-end gap-2 mt-3">
         @yield('actions')
-        <x-print-button variant="primary" onclick="window.print()">🖨 @lang('app.Print')</x-print-button>
+        <x-button.print variant="primary" onclick="window.print()">🖨 @lang('app.Print')</x-button.print>
       </div>
     </div>
   </div>

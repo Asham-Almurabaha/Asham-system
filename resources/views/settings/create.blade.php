@@ -72,10 +72,10 @@
             </div>
 
             <div class="col-12 d-flex gap-2">
-              <x-save-button>
+              <x-button.save>
                 @lang('app.Save')
-              </x-save-button>
-              <x-secondary-button href="{{ route('settings.index') }}">@lang('app.Cancel')</x-secondary-button>
+              </x-button.save>
+              <x-button.secondary href="{{ route('settings.index') }}">@lang('app.Cancel')</x-button.secondary>
             </div>
           </form>
         </div>

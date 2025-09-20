@@ -5,9 +5,9 @@
 @section('content')
 <div class="container-xxl py-4" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
   <div class="mb-3">
-    <x-secondary-button href="{{ route('users.index') }}" size="sm">
+    <x-button.secondary href="{{ route('users.index') }}" size="sm">
       @lang('users.Back to List')
-    </x-secondary-button>
+    </x-button.secondary>
   </div>
 
   <div class="row g-4">
@@ -100,12 +100,12 @@
         </div>
 
         <div class="d-flex gap-2">
-          <x-save-button>
+          <x-button.save>
             @lang('users.Save')
-          </x-save-button>
-          <x-secondary-button href="{{ route('users.index') }}">
+          </x-button.save>
+          <x-button.secondary href="{{ route('users.index') }}">
             @lang('users.Cancel')
-          </x-secondary-button>
+          </x-button.secondary>
         </div>
       </form>
     </div>

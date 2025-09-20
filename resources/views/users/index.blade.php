@@ -110,9 +110,9 @@
                 @endforelse
               </td>
               <td class="text-end">
-                <x-edit-button href="{{ route('users.roles.edit', $u) }}" size="sm">
+                <x-button.edit href="{{ route('users.roles.edit', $u) }}" size="sm">
                   @lang('users.Manage Roles')
-                </x-edit-button>
+                </x-button.edit>
               </td>
             </tr>
           @endforeach

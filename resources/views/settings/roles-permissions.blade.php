@@ -365,9 +365,9 @@
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">
-                  <x-save-button>
+                  <x-button.save>
                     @lang('permissions.Save Permissions')
-                  </x-save-button>
+                  </x-button.save>
                 </div>
               </form>
             @endif

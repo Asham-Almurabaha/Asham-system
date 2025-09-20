@@ -8,10 +8,10 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="fw-bold mb-0">{{ __('Audit Logs') }}</h4>
         <div class="d-flex gap-2">
-            <x-refresh-button :href="route('audit.logs')" class="btn-sm" />
-            <x-print-button variant="primary" size="sm" class="no-print" onclick="window.print()">
+            <x-button.refresh :href="route('audit.logs')" class="btn-sm" />
+            <x-button.print variant="primary" size="sm" class="no-print" onclick="window.print()">
                 {{ __('Print') }}
-            </x-print-button>
+            </x-button.print>
         </div>
     </div>
 
@@ -69,7 +69,7 @@
                 </div>
                 <div class="col-12 col-md-4 d-flex gap-2">
                     <x-button type="submit" variant="primary" size="sm" :block="true">{{ __('Search') }}</x-button>
-                    <x-secondary-button href="{{ route('audit.logs') }}" size="sm" :block="true">{{ __('Clear') }}</x-secondary-button>
+                    <x-button.secondary href="{{ route('audit.logs') }}" size="sm" :block="true">{{ __('Clear') }}</x-button.secondary>
                 </div>
             </form>
         </div>
