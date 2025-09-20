@@ -22,4 +22,10 @@ return array (
   'Choose roles then save.' => 'Choose roles then save.',
   'Save' => 'Save',
   'Cancel' => 'Cancel',
+  'Search Users' => 'Search users',
+  'Search Users Placeholder' => 'Search by name or email…',
+  'Clear Search' => 'Clear',
+  'Search Users Help' => 'Results update instantly as you type.',
+  'No users match your search.' => 'No users match your search.',
+  'No users match query' => 'No users match ":query".',
 );

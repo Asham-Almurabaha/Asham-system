@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Route;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -14,68 +14,17 @@ class RolesAndPermissionsSeeder extends Seeder
     public function run(): void
     {
         // ===== 1) كل الصلاحيات اللي هنستخدمها =====
-        // تقدر تزود/تنقص براحتك لاحقًا
-        $permissions = [
-            // عامة
+        // - الصلاحيات اليدوية (زي view-dashboard)
+        // - كل أسماء الروت المحمية بـ auth
+        $manualPermissions = [
             'view-dashboard',
             'view-audit-logs',
-
-            // Settings (resources)
-            'settings.index','settings.create','settings.store','settings.show','settings.edit','settings.update','settings.destroy',
-            'nationalities.index','nationalities.create','nationalities.store','nationalities.show','nationalities.edit','nationalities.update','nationalities.destroy',
-            'titles.index','titles.create','titles.store','titles.show','titles.edit','titles.update','titles.destroy',
-            'contract_statuses.index','contract_statuses.create','contract_statuses.store','contract_statuses.show','contract_statuses.edit','contract_statuses.update','contract_statuses.destroy',
-            'installment_statuses.index','installment_statuses.create','installment_statuses.store','installment_statuses.show','installment_statuses.edit','installment_statuses.update','installment_statuses.destroy',
-            'installment_types.index','installment_types.create','installment_types.store','installment_types.show','installment_types.edit','installment_types.update','installment_types.destroy',
-            'transaction_types.index','transaction_types.create','transaction_types.store','transaction_types.show','transaction_types.edit','transaction_types.update','transaction_types.destroy',
-            'transaction_statuses.index','transaction_statuses.create','transaction_statuses.store','transaction_statuses.show','transaction_statuses.edit','transaction_statuses.update','transaction_statuses.destroy',
-            'categories.index','categories.create','categories.store','categories.show','categories.edit','categories.update','categories.destroy',
-
-            // Customers
-            'customers.index','customers.create','customers.store','customers.show','customers.edit','customers.update','customers.destroy',
-            // Customers Import
-            'customers.import.form','customers.import','customers.import.template','customers.import.failures.fix',
-
-            // Guarantors
-            'guarantors.index','guarantors.create','guarantors.store','guarantors.show','guarantors.edit','guarantors.update','guarantors.destroy',
-            // Guarantors Import
-            'guarantors.import.form','guarantors.import','guarantors.import.template','guarantors.import.failures.fix',
-
-            // Investors
-            'investors.index','investors.create','investors.store','investors.show','investors.edit','investors.update','investors.destroy',
-            // Investors Import
-            'investors.import.form','investors.import','investors.import.template','investors.import.failures.fix',
-            // Investors Ledger Import
-            'investors.ledger.import.form','investors.ledger.import','investors.ledger.import.template','investors.ledger.import.failures.fix',
-            // Investor Transactions (resource)
-            'investor-transactions.index','investor-transactions.create','investor-transactions.store','investor-transactions.show','investor-transactions.edit','investor-transactions.update','investor-transactions.destroy',
-            // Investor Reports
-            'investors.statement.statement','investors.withdrawals.withdrawals','investors.deposits.deposits','investors.transactions.transactions',
-            'reports.investors.Allliquidity','reports.investors.outstanding',
-            // AJAX (لو عايز تتحكم فيها)
-            'ajax.investors.liquidity','investors.cash','investors.liquidity',
-
-            // Contracts
-            'contracts.index','contracts.create','contracts.store','contracts.show','contracts.edit','contracts.update','contracts.destroy',
-            'contracts.print','contracts.closure','contracts.investors.store',
-            // Contracts Import
-            'contracts.import.form','contracts.import','contracts.import.template','contracts.import.failures.fix',
-
-            // Ledger
-            'ledger.index','ledger.create','ledger.store',
-            'ledger.transfer.create','ledger.transfer.store',
-            'ledger.split.create','ledger.split.store',
-            // Ledger Import
-            'ledger.import.form','ledger.import','ledger.import.template','ledger.import.failures.fix',
-            // AJAX Accounts
-            'ajax.accounts.availability','ajax.accounts.availability.bulk',
-
-            // Installments actions
-            'installments.pay','installments.early_settle','installments.defer','installments.excuse',
-
-            // Product types AJAX
-            'product-types.available',
         ];
+
+        $routePermissions = $this->collectAuthenticatedRouteNames();
+
+        $permissions = array_values(array_unique(array_merge($manualPermissions, $routePermissions)));
+        sort($permissions);
 
         // أنشئ/حدّث كل Permission
         foreach ($permissions as $name) {
@@ -128,5 +77,49 @@ class RolesAndPermissionsSeeder extends Seeder
         if ($first && method_exists($first, 'assignRole')) {
             $first->assignRole('admin');
         }
+    }
+
+    /**
+     * رجّع كل أسماء الروت المحمية بـ auth (باستثناء النظامية)
+     * علشان نولّد منها صلاحيات بشكل تلقائي.
+     *
+     * @return array<int, string>
+     */
+    protected function collectAuthenticatedRouteNames(): array
+    {
+        $ignoredPrefixes = [
+            'generated::',
+            'ignition.',
+            'telescope.',
+            'horizon.',
+            'nova.',
+            'livewire.',
+            'pulse.',
+            'debugbar.',
+            'sanctum.',
+        ];
+
+        return collect(Route::getRoutes())
+            ->filter(function ($route) use ($ignoredPrefixes) {
+                $name = $route->getName();
+                if (!$name) {
+                    return false;
+                }
+
+                foreach ($ignoredPrefixes as $prefix) {
+                    if (str_starts_with($name, $prefix)) {
+                        return false;
+                    }
+                }
+
+                $middleware = $route->gatherMiddleware();
+
+                return in_array('auth', $middleware, true);
+            })
+            ->map(fn($route) => (string) $route->getName())
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
     }
 }

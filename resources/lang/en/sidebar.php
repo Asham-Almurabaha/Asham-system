@@ -16,6 +16,7 @@ return [
     'General Settings' => 'General Settings',
     'General Setting' => 'General Setting',
     'Users and Permissions' => 'Users and Permissions',
+    'Manage Role Permissions' => 'Manage Role Permissions',
     'Assign Roles to Users' => 'Assign Roles to Users',
     'Lookup Tables' => 'Lookup Tables',
     'People & Customers' => 'People & Customers',

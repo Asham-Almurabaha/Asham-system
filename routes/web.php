@@ -8,6 +8,7 @@ use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\LedgerEntriesImportController;
+use App\Http\Controllers\Setting\RolePermissionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
 use App\Models\Setting;
@@ -89,6 +90,11 @@ Route::middleware('auth')->group(function () {
 
     // ✅ إدارة أدوار المستخدمين (محمية بدور admin)
     Route::middleware(['role:admin'])->group(function () {
+        Route::get('/settings/roles-permissions', [RolePermissionController::class, 'index'])
+            ->name('settings.roles.permissions');
+        Route::put('/settings/roles-permissions/{role}', [RolePermissionController::class, 'update'])
+            ->name('settings.roles.permissions.update');
+
         Route::get('/users',               [UserRoleController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/roles',  [UserRoleController::class, 'edit'])->name('users.roles.edit');
         Route::put('/users/{user}/roles',  [UserRoleController::class, 'update'])->name('users.roles.update');

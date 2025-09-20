@@ -22,4 +22,10 @@ return array (
   'Choose roles then save.' => 'اختَر الأدوار ثم احفظ.',
   'Save' => 'حفظ',
   'Cancel' => 'إلغاء',
+  'Search Users' => 'بحث في المستخدمين',
+  'Search Users Placeholder' => 'ابحث بالاسم أو البريد…',
+  'Clear Search' => 'مسح',
+  'Search Users Help' => 'سيتم تحديث النتائج مباشرة أثناء الكتابة.',
+  'No users match your search.' => 'لا يوجد مستخدمون مطابقون لبحثك.',
+  'No users match query' => 'لا يوجد مستخدمون مطابقون لـ ":query".',
 );

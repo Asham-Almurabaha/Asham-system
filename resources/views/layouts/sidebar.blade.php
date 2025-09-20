@@ -308,6 +308,11 @@
 
       <li class="nav-heading">@lang('sidebar.Users and Permissions')</li>
         <li>
+          <a class="{{ $active($isRoute('settings.roles.permissions*')) }}" href="{{ route('settings.roles.permissions') }}">
+            <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Role Permissions')</span>
+          </a>
+        </li>
+        <li>
           <a class="{{ $active($isRoute('users.*')) }}" href="{{ route('users.index') }}">
             <i class="bi bi-circle"></i><span>@lang('sidebar.Assign Roles to Users')</span>
           </a>
