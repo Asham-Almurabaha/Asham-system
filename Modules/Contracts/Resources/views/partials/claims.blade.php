@@ -277,7 +277,9 @@
 
                 <div class="modal-footer">
                     <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
-                    <x-button type="submit" variant="success" :outline="true">{{ __('contracts::claims.save') }}</x-button>
+                    <x-button type="submit" variant="success" :outline="true">
+                        <i class="bi bi-check2-circle me-1"></i> {{ __('contracts::claims.save') }}
+                    </x-button>
                 </div>
             </form>
         </div>
@@ -415,7 +417,9 @@
                     </div>
                     <div class="modal-footer">
                         <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('contracts::claims.back') }}</x-button>
-                        <x-button type="submit" variant="primary" :outline="true">{{ __('contracts::claims.update_status') }}</x-button>
+                        <x-button type="submit" variant="primary" :outline="true">
+                            <i class="bi bi-save2 me-1"></i> {{ __('contracts::claims.update_status') }}
+                        </x-button>
                     </div>
                 </form>
             </div>

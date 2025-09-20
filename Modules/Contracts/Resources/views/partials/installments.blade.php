@@ -226,7 +226,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <x-button type="submit" variant="success">💾 @lang('app.Save')</x-button>
+                    <x-button type="submit" variant="success">
+                        <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
+                    </x-button>
                     <x-button type="button" variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button>
                 </div>
             </form>
@@ -278,7 +280,9 @@
                 </div>
 
                 <div class="modal-footer">
-                    <x-button type="submit" variant="warning">💾 @lang('app.Save')</x-button>
+                    <x-button type="submit" variant="warning">
+                        <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
+                    </x-button>
                     <x-button type="button" variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button>
                 </div>
             </form>

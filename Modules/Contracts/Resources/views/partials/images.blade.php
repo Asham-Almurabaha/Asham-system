@@ -132,7 +132,9 @@
 
                 <div class="modal-footer">
                     <x-button type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('Cancel') }}</x-button>
-                    <x-button type="submit" variant="primary" :outline="true">{{ __('Save') }}</x-button>
+                    <x-button type="submit" variant="primary" :outline="true">
+                        <i class="bi bi-save2 me-1"></i> {{ __('Save') }}
+                    </x-button>
                 </div>
             </form>
         </div>

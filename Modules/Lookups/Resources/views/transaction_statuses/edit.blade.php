@@ -38,7 +38,9 @@
                     </select>
                 </div>
 
-                <x-button type="submit" variant="primary" :outline="true">{{ __('Update') }}</x-button>
+                <x-button type="submit" variant="primary" :outline="true">
+                    <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
+                </x-button>
                 <x-button href="{{ route('transaction_statuses.index') }}" variant="secondary" :outline="true">{{ __('Cancel') }}</x-button>
             </form>
         </div>

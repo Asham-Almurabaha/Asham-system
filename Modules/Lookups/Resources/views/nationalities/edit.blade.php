@@ -26,7 +26,9 @@
                         <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $nationality->name) }}" required autofocus>
                     </div>
 
-                    <x-button type="submit" variant="primary">تحديث</x-button>
+                    <x-button type="submit" variant="primary" :outline="true">
+                        <i class="bi bi-save2 me-1"></i> تحديث
+                    </x-button>
                     <x-button href="{{ route('nationalities.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
                 </form>
             </div>

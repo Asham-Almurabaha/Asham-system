@@ -2,6 +2,9 @@
     $safe = $safe ?? null;
     $submitLabel = $submitLabel ?? __('Save');
     $cancelRoute = $cancelRoute ?? route('accounts.safes.index');
+    $isUpdate    = $safe && ($safe->exists ?? true);
+    $submitVariant = $isUpdate ? 'primary' : 'success';
+    $submitIcon    = $isUpdate ? 'bi bi-save2' : 'bi bi-check2-circle';
 @endphp
 
 <div class="row g-3">
@@ -87,8 +90,8 @@
 </div>
 
 <div class="d-flex gap-2 mt-4">
-    <x-button type="submit" variant="success" :outline="true">
-        {{ $submitLabel }}
+    <x-button type="submit" variant="{{ $submitVariant }}" :outline="true">
+        <i class="{{ $submitIcon }} me-1"></i> {{ $submitLabel }}
     </x-button>
     <x-button href="{{ $cancelRoute }}" variant="secondary" :outline="true">
         @lang('accounts::accounts.shared.cancel')

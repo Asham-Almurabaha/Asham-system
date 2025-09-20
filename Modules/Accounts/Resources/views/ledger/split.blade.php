@@ -274,11 +274,14 @@
             </div>
 
             <div class="col-12 d-flex gap-2 mt-2">
-                <x-button type="submit" variant="primary" id="btnSubmit">
+                <x-button type="submit" variant="success" :outline="true" id="btnSubmit">
                     <span class="spinner-border spinner-border-sm me-1 d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
-                    حفظ
+                    <span class="d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-check2-circle"></i>
+                        <span>حفظ</span>
+                    </span>
                 </x-button>
-                <x-button href="{{ $cancelUrl }}" variant="secondary">@lang('app.Cancel')</x-button>
+                <x-button href="{{ $cancelUrl }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button>
 
                 @if($showLedgerLinks)
                     <div class="ms-auto d-flex gap-2">

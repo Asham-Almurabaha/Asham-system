@@ -436,7 +436,9 @@
                 <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
             </div>
             <div class="col-12 col-md-auto d-flex gap-2">
-                <x-button type="submit" variant="primary" size="sm">{{ __('Update') }}</x-button>
+                <x-button type="submit" variant="primary" :outline="true" size="sm">
+                    <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
+                </x-button>
                 <x-button href="{{ route('contracts.dashboard') }}" variant="secondary" :outline="true" size="sm">{{ __('Clear') }}</x-button>
             </div>
         </form>

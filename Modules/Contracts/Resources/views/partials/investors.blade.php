@@ -94,7 +94,10 @@
 
         <div class="modal-footer">
           <x-button type="submit" variant="success" disabled>
-            <span class="save-text">💾 @lang('app.Save')</span>
+            <span class="save-text d-inline-flex align-items-center gap-1">
+              <i class="bi bi-check2-circle"></i>
+              <span>@lang('app.Save')</span>
+            </span>
             <span class="spinner-border spinner-border-sm align-middle ms-2 d-none" role="status" aria-hidden="true"></span>
           </x-button>
           <x-button variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button>

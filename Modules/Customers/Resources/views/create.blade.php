@@ -192,7 +192,7 @@
 
                 <div class="d-flex gap-2 mt-4">
                     <x-button type="submit" variant="success" :outline="true">
-                        </i> {{ __('Save') }}
+                        <i class="bi bi-check2-circle me-1"></i> {{ __('Save') }}
                     </x-button>
                     <x-button href="{{ route('customers.index') }}" variant="secondary" :outline="true">
                         {{ __('Cancel') }}

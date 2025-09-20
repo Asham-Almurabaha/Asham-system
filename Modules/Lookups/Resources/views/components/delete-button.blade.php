@@ -9,6 +9,6 @@
     @csrf
     @method('DELETE')
     <x-button type="submit" variant="danger" :outline="true" size="sm" class="{{ $buttonClass }}">
-        {{ $label }}
+        <i class="bi bi-trash me-1"></i> {{ $label }}
     </x-button>
 </form>
