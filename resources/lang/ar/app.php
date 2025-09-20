@@ -49,4 +49,8 @@ return [
     'Active' => 'سارية',
     'Ended' => 'منتهية',
     'Refresh' => 'تحديث',
+    'Download' => 'تحميل',
+    'Dashboard' => 'لوحة التحكم',
+    'Report' => 'تقرير',
+    'Show' => 'عرض',
 ];

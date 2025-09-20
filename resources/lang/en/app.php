@@ -49,4 +49,8 @@ return [
     'Active' => 'Active',
     'Ended' => 'Ended',
     'Refresh' => 'Refresh',
+    'Download' => 'Download',
+    'Dashboard' => 'Dashboard',
+    'Report' => 'Report',
+    'Show' => 'Show',
 ];
