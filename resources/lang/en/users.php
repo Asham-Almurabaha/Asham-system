@@ -48,4 +48,6 @@ return array (
   'Search Users Help' => 'Results update instantly as you type.',
   'No users match your search.' => 'No users match your search.',
   'No users match query' => 'No users match ":query".',
+  'Results Summary' => '{0} No users available right now.|{1} Showing :count user.|[2,*] Showing :count users.',
+  'Results Summary For Query' => '{0} No users match ":query".|{1} Showing :count user matching ":query".|[2,*] Showing :count users matching ":query".',
 );

@@ -9,21 +9,38 @@ use Spatie\Permission\Models\Role;
 
 class UserRoleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->string('search')->trim();
+
+        $userQuery = User::query()
+            ->with('roles')
+            ->orderBy('name')
+            ->when($search->isNotEmpty(), function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $value = '%' . $search->value() . '%';
+
+                    $inner->where('name', 'like', $value)
+                        ->orWhere('email', 'like', $value);
+                });
+            });
+
         // هنعرض كل المستخدمين مع أدوارهم
-        $users = User::with('roles')->orderBy('id', 'asc')->paginate(15);
+        $users = $userQuery->paginate(15)->withQueryString();
 
         $totalUsers        = User::count();
         $usersWithRoles    = User::whereHas('roles')->count();
         $usersWithoutRoles = User::whereDoesntHave('roles')->count();
 
-        return view('users.index', compact(
-            'users',
-            'totalUsers',
-            'usersWithRoles',
-            'usersWithoutRoles'
-        ));
+        return view('users.index', [
+            'users'              => $users,
+            'totalUsers'         => $totalUsers,
+            'usersWithRoles'     => $usersWithRoles,
+            'usersWithoutRoles'  => $usersWithoutRoles,
+            'searchTerm'         => $search->value(),
+            'hasSearch'          => $search->isNotEmpty(),
+            'filteredCount'      => $users->total(),
+        ]);
     }
 
     public function edit(User $user)

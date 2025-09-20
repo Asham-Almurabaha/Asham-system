@@ -48,4 +48,6 @@ return array (
   'Search Users Help' => 'سيتم تحديث النتائج مباشرة أثناء الكتابة.',
   'No users match your search.' => 'لا يوجد مستخدمون مطابقون لبحثك.',
   'No users match query' => 'لا يوجد مستخدمون مطابقون لـ ":query".',
+  'Results Summary' => '{0} لا يوجد مستخدمون حالياً.|{1} يتم عرض مستخدم واحد.|[2,*] يتم عرض :count مستخدم.',
+  'Results Summary For Query' => '{0} لا يوجد مستخدمون مطابقون لـ ":query".|{1} يتم عرض مستخدم واحد مطابق لـ ":query".|[2,*] يتم عرض :count مستخدم مطابق لـ ":query".',
 );
