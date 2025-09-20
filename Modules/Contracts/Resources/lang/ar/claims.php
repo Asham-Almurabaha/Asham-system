@@ -32,6 +32,7 @@ return [
     'claim_payment_date' => 'تاريخ السداد',
     'claim_paid_total' => 'إجمالي المسدد',
     'claim_remaining_amount' => 'المتبقي',
+    'claim_discount_badge' => 'الخصم المطبق',
     'discount_amount' => 'قيمة الخصم',
     'apply_discount' => 'تطبيق الخصم',
     'pay_with_discount' => 'دفع مع الخصم',
@@ -71,4 +72,9 @@ return [
     'payment_notes' => 'ملاحظات السداد',
     'payment_notes_hint' => 'سيتم حفظ الملاحظات مع القيد.',
     'validation_account_conflict' => 'لا يمكن اختيار بنك وخزنة معًا في نفس السداد.',
+    'discount_payment_hint' => 'سيتم إنشاء سداد تلقائي بقيمة المتبقي بعد الخصم.',
+    'validation_discount_exceeds_claim' => 'قيمة الخصم لا يمكن أن تتجاوز إجمالي المطالبة (:claim).',
+    'validation_discount_below_paid' => 'قيمة الخصم يجب أن تغطي السدادات السابقة على الأقل (:paid).',
+    'validation_discount_requires_payer' => 'يجب اختيار مسدد المطالبة عند وجود مبلغ سداد.',
+    'validation_discount_requires_date' => 'يجب تحديد تاريخ السداد عند وجود مبلغ سداد.',
 ];

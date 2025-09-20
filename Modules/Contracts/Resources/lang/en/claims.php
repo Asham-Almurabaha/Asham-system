@@ -32,6 +32,7 @@ return [
     'claim_payment_date' => 'Payment Date',
     'claim_paid_total' => 'Total Paid',
     'claim_remaining_amount' => 'Remaining Amount',
+    'claim_discount_badge' => 'Applied Discount',
     'discount_amount' => 'Discount Amount',
     'apply_discount' => 'Apply Discount',
     'pay_with_discount' => 'Pay with Discount',
@@ -71,4 +72,9 @@ return [
     'payment_notes' => 'Payment Notes',
     'payment_notes_hint' => 'These notes will be stored with the ledger entry.',
     'validation_account_conflict' => 'You cannot choose a bank account and a safe at the same time.',
+    'discount_payment_hint' => 'A payment equal to the remaining balance after discount will be created automatically.',
+    'validation_discount_exceeds_claim' => 'The discount amount may not exceed the total claim (:claim).',
+    'validation_discount_below_paid' => 'The discount must cover the payments that were already collected (:paid).',
+    'validation_discount_requires_payer' => 'Please choose who paid the claim when a payment amount exists.',
+    'validation_discount_requires_date' => 'Please provide the payment date when a payment amount exists.',
 ];

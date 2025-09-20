@@ -35,12 +35,14 @@
                 </thead>
                 <tbody>
                 @php($oldPaymentClaimId = (string) old('payment_claim_id'))
+                @php($oldDiscountClaimId = (string) old('discount_claim_id'))
                 @php($banksCollection = collect($banks ?? [])->values())
                 @php($safesCollection = collect($safes ?? [])->values())
                 @forelse ($claims as $claim)
                     @php($payments = collect($claim->payments ?? [])->values())
                     @php($totalPaid = (float) ($claim->paid_amount ?? $payments->sum('amount')))
                     @php($remainingAmount = (float) ($claim->remaining_amount ?? 0))
+                    @php($discountAmountValue = (float) ($claim->discount_amount ?? 0))
                     @php($currentClaimStatus = (string) optional($claim->claimStatus)->name)
                     @php($isPaidStatus = str_contains($currentClaimStatus, 'مدفوع'))
                     @php($isUnderReviewStatus = $currentClaimStatus === 'قيد المراجعة')
@@ -50,12 +52,19 @@
                     @php($paymentModalId = 'recordClaimPaymentModal-' . $claim->id)
                     @php($paymentsRowId = 'claim-payments-' . $claim->id)
                     @php($isCurrentPaymentClaim = $oldPaymentClaimId === (string) $claim->id)
+                    @php($isCurrentDiscountClaim = $oldDiscountClaimId === (string) $claim->id)
                     @php($oldPaymentPayer = $isCurrentPaymentClaim ? old('claim_payer_id') : null)
                     @php($oldPaymentAmount = $isCurrentPaymentClaim ? old('amount') : null)
                     @php($oldPaymentDate = $isCurrentPaymentClaim ? old('paid_at') : null)
                     @php($oldPaymentBank = $isCurrentPaymentClaim ? old('bank_account_id') : null)
                     @php($oldPaymentSafe = $isCurrentPaymentClaim ? old('safe_id') : null)
                     @php($oldPaymentNotes = $isCurrentPaymentClaim ? old('notes') : null)
+                    @php($oldDiscountAmountInput = $isCurrentDiscountClaim ? old('discount_amount') : null)
+                    @php($oldDiscountPayer = $isCurrentDiscountClaim ? old('claim_payer_id') : null)
+                    @php($oldDiscountDate = $isCurrentDiscountClaim ? old('paid_at') : null)
+                    @php($oldDiscountBank = $isCurrentDiscountClaim ? old('bank_account_id') : null)
+                    @php($oldDiscountSafe = $isCurrentDiscountClaim ? old('safe_id') : null)
+                    @php($oldDiscountNotes = $isCurrentDiscountClaim ? old('notes') : null)
                     <tr>
                         <td class="text-muted">{{ $loop->iteration + ($claims->currentPage() - 1) * $claims->perPage() }}</td>
                         <td class="text-start">
@@ -141,6 +150,9 @@
                                         <div class="fw-semibold text-muted">{{ __('contracts::claims.payments') }}</div>
                                         <div class="d-flex flex-wrap gap-2 small">
                                             <span class="badge bg-light text-dark border">{{ __('contracts::claims.claim_amount') }}: {{ number_format((float) $claim->claim_amount, 2) }}</span>
+                                            @if ($discountAmountValue > 0)
+                                                <span class="badge bg-light text-dark border">{{ __('contracts::claims.claim_discount_badge') }}: {{ number_format($discountAmountValue, 2) }}</span>
+                                            @endif
                                             <span class="badge bg-light text-dark border">{{ __('contracts::claims.claim_paid_total') }}: {{ number_format($totalPaid, 2) }}</span>
                                             <span class="badge {{ $remainingAmount > 0 ? 'bg-warning text-dark' : 'bg-success' }}">{{ __('contracts::claims.claim_remaining_amount') }}: {{ number_format($remainingAmount, 2) }}</span>
                                         </div>
@@ -378,6 +390,7 @@
                 <form action="{{ route('contract-claims.apply-discount', $claim) }}" method="post" class="modal-content">
                     @csrf
                     @method('patch')
+                    <input type="hidden" name="discount_claim_id" value="{{ $claim->id }}">
                     <div class="modal-header">
                         <h5 class="modal-title" id="{{ $discountLabelId }}">{{ __('contracts::claims.apply_discount') }}</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -392,8 +405,86 @@
                                    step="0.01"
                                    min="0"
                                    required
-                                   value="{{ old('discount_amount', $claim->discount_amount) }}">
+                                   value="{{ $oldDiscountAmountInput ?? $claim->discount_amount }}">
                             @error('discount_amount')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">{{ __('contracts::claims.discount_payment_hint') }}</div>
+                        </div>
+
+                        <div class="mb-3 text-start">
+                            <label for="claim-discount-payer-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_payer') }}</label>
+                            <select name="claim_payer_id" id="claim-discount-payer-{{ $claim->id }}" class="form-select" @if ($claimPayers->isEmpty()) disabled @endif>
+                                <option value="">{{ __('contracts::claims.choose_claim_payer') }}</option>
+                                @foreach ($claimPayers as $payer)
+                                    <option value="{{ $payer->id }}" @selected((string) $oldDiscountPayer === (string) $payer->id)>{{ $payer->name }}</option>
+                                @endforeach
+                            </select>
+                            @if ($claimPayers->isEmpty())
+                                <div class="text-danger small">{{ __('contracts::claims.no_claim_payers') }}</div>
+                            @endif
+                            @error('claim_payer_id')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3 text-start">
+                            <label for="claim-discount-date-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.claim_payment_date') }}</label>
+                            <input type="text"
+                                   name="paid_at"
+                                   id="claim-discount-date-{{ $claim->id }}"
+                                   class="form-control js-date"
+                                   value="{{ $oldDiscountDate ?? now()->toDateString() }}">
+                            @error('paid_at')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3 text-start">
+                            <label for="claim-discount-account-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.payment_account') }}</label>
+                            @php($selectedDiscountAccount = $oldDiscountBank ? 'bank:' . $oldDiscountBank : ($oldDiscountSafe ? 'safe:' . $oldDiscountSafe : ''))
+                            <select id="claim-discount-account-{{ $claim->id }}"
+                                    class="form-select"
+                                    data-claim-account-picker="1"
+                                    data-bank-input="claim-discount-bank-{{ $claim->id }}"
+                                    data-safe-input="claim-discount-safe-{{ $claim->id }}"
+                                    @if ($banksCollection->isEmpty() && $safesCollection->isEmpty()) disabled @endif>
+                                <option value="" @selected($selectedDiscountAccount === '')>{{ __('contracts::claims.choose_payment_account') }}</option>
+                                @if ($banksCollection->isNotEmpty())
+                                    <optgroup label="{{ __('contracts::claims.bank_accounts_label') }}">
+                                        @foreach ($banksCollection as $bank)
+                                            <option value="bank:{{ $bank->id }}" @selected($selectedDiscountAccount === 'bank:' . $bank->id)>{{ $bank->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                                @if ($safesCollection->isNotEmpty())
+                                    <optgroup label="{{ __('contracts::claims.safes_label') }}">
+                                        @foreach ($safesCollection as $safe)
+                                            <option value="safe:{{ $safe->id }}" @selected($selectedDiscountAccount === 'safe:' . $safe->id)>{{ $safe->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                            </select>
+                            <input type="hidden" name="bank_account_id" id="claim-discount-bank-{{ $claim->id }}" value="{{ $oldDiscountBank }}">
+                            <input type="hidden" name="safe_id" id="claim-discount-safe-{{ $claim->id }}" value="{{ $oldDiscountSafe }}">
+                            <div class="form-text">{{ __('contracts::claims.payment_account_hint') }}</div>
+                            @if ($banksCollection->isEmpty() && $safesCollection->isEmpty())
+                                <div class="text-danger small">{{ __('contracts::claims.no_accounts_available') }}</div>
+                            @endif
+                            @error('bank_account_id')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                            @error('safe_id')
+                                <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+        
+                        <div class="mb-0 text-start">
+                            <label for="claim-discount-notes-{{ $claim->id }}" class="form-label">{{ __('contracts::claims.payment_notes') }}</label>
+                            <textarea name="notes" id="claim-discount-notes-{{ $claim->id }}" class="form-control" rows="2">{{ $oldDiscountNotes }}</textarea>
+                            <div class="form-text">{{ __('contracts::claims.payment_notes_hint') }}</div>
+                            @error('notes')
                                 <div class="text-danger small">{{ $message }}</div>
                             @enderror
                         </div>
@@ -443,15 +534,20 @@
                 sync();
             });
 
-            var claimId = "{{ old('payment_claim_id') }}";
-            if (!claimId) {
-                return;
+            var paymentClaimId = "{{ old('payment_claim_id') }}";
+            if (paymentClaimId) {
+                var paymentModal = document.getElementById('recordClaimPaymentModal-' + paymentClaimId);
+                if (paymentModal) {
+                    bootstrap.Modal.getOrCreateInstance(paymentModal).show();
+                }
             }
 
-            var modalElement = document.getElementById('recordClaimPaymentModal-' + claimId);
-            if (modalElement) {
-                var modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
-                modalInstance.show();
+            var discountClaimId = "{{ old('discount_claim_id') }}";
+            if (discountClaimId) {
+                var discountModal = document.getElementById('applyClaimDiscountModal-' + discountClaimId);
+                if (discountModal) {
+                    bootstrap.Modal.getOrCreateInstance(discountModal).show();
+                }
             }
         });
     </script>

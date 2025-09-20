@@ -274,8 +274,12 @@ class ContractClaimControllerTest extends TestCase
             'claim_status_id' => $claimReviewStatus->id,
         ]);
 
+        $claimPayer = ClaimPayer::where('name', 'المحكمة')->firstOrFail();
+
         $response = $this->patch(route('contract-claims.apply-discount', $claim), [
             'discount_amount' => 150.75,
+            'claim_payer_id' => $claimPayer->id,
+            'paid_at' => now()->toDateString(),
         ]);
 
         $response->assertRedirect(route('contract-claims.index'));
@@ -289,6 +293,12 @@ class ContractClaimControllerTest extends TestCase
         );
 
         $this->assertEquals(150.75, (float) $claim->discount_amount);
+
+        $this->assertDatabaseHas('contract_claim_payments', [
+            'contract_claim_id' => $claim->id,
+            'claim_payer_id' => $claimPayer->id,
+            'amount' => '449.25',
+        ]);
     }
 
     public function test_recording_claim_payment_creates_entry_with_claim_payer(): void
@@ -617,6 +627,8 @@ class ContractClaimControllerTest extends TestCase
 
         $discountResponse = $this->patch(route('contract-claims.apply-discount', $claim), [
             'discount_amount' => 150,
+            'claim_payer_id' => $claimPayer->id,
+            'paid_at' => now()->toDateString(),
         ]);
 
         $discountResponse->assertRedirect(route('contract-claims.index'));

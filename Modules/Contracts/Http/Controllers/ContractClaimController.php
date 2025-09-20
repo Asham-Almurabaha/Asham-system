@@ -186,15 +186,57 @@ class ContractClaimController extends Controller
         }
 
         $payload = $request->validated();
-        $payload['claim_status_id'] = $statusId;
 
-        $contractClaim->update($payload);
+        $claim = DB::transaction(function () use ($contractClaim, $payload, $statusId) {
+            $contractClaim->refresh();
 
-        $this->updateRelatedStatuses($contractClaim);
+            $discountAmount = round((float) $payload['discount_amount'], 2);
+            $claimAmount = (float) $contractClaim->claim_amount;
+            $alreadyPaid = (float) $contractClaim->paid_amount;
+
+            $netAmount = max($claimAmount - $discountAmount, 0);
+            $paymentAmount = round(max($netAmount - $alreadyPaid, 0), 2);
+
+            $contractClaim->update([
+                'discount_amount' => $discountAmount,
+                'claim_status_id' => $statusId,
+            ]);
+
+            $payment = null;
+            $contract = $contractClaim->contract()->first();
+
+            if ($paymentAmount > 0) {
+                $payment = $contractClaim->payments()->create([
+                    'claim_payer_id' => $payload['claim_payer_id'],
+                    'amount' => $paymentAmount,
+                    'paid_at' => $payload['paid_at'],
+                ]);
+
+                if ($contract) {
+                    $this->claimPaymentDistribution->logClaimPayment(
+                        $contract,
+                        $contractClaim,
+                        $payment,
+                        $paymentAmount,
+                        $payload['bank_account_id'] ?? null,
+                        $payload['safe_id'] ?? null,
+                        $payload['notes'] ?? null
+                    );
+                }
+            }
+
+            $contractClaim->refresh();
+
+            $this->syncClaimSettlementStatus($contractClaim);
+
+            return $contractClaim->fresh();
+        });
+
+        $this->updateRelatedStatuses($claim);
 
         if ($request->boolean('return_to_contract')) {
             return redirect()
-                ->route('contracts.show', $contractClaim->contract_id)
+                ->route('contracts.show', $claim->contract_id)
                 ->with('success', __('contracts::claims.discount_applied'));
         }
 
