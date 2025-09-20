@@ -134,8 +134,8 @@
     </li>
 
     @if (Auth::check())
-      <li class="nav-item dropdown pe-3">
-        <a class="nav-link nav-profile dropdown-toggle d-flex align-items-center pe-3" href="#"
+      <li class="nav-item dropdown ">
+        <a class="nav-link nav-profile dropdown-toggle d-flex align-items-center" href="#"
            data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('User menu') }}">
           <img src="{{ asset('assets/img/profile-img.jpg') }}" alt="Profile" class="rounded-circle" width="36" height="36">
           <span class="d-none d-md-block ps-2">{{ Auth::user()->name }}</span>
