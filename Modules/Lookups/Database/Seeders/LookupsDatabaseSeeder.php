@@ -41,6 +41,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'متأخر', 'is_protected' => true],
             ['name' => 'متعثر', 'is_protected' => true],
             ['name' => 'مرفوع فيه', 'is_protected' => true],
+            ['name' => 'منتهي بمطالبة', 'is_protected' => true],
         ], $now);
 
         $this->syncNamedRecords('claim_statuses', [
