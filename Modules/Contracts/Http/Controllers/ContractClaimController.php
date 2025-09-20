@@ -69,6 +69,14 @@ class ContractClaimController extends Controller
             }
         }
 
+        if ($request->filled('claim_status_id')) {
+            $statusId = (int) $request->input('claim_status_id');
+
+            if ($statusId > 0) {
+                $claimsQuery->where('claim_status_id', $statusId);
+            }
+        }
+
         $claims = $claimsQuery
             ->orderByDesc('claim_date')
             ->orderByDesc('id')

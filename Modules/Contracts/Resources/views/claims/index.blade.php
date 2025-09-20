@@ -14,6 +14,51 @@
 </div>
 
 
+<div class="card shadow-sm mb-3">
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="fw-semibold">{{ __('contracts::claims.filters') }}</div>
+        <div class="small text-muted">{{ __('contracts::claims.results_count', ['count' => $claims->total()]) }}</div>
+    </div>
+    <div class="card-body">
+        <form action="{{ route('contract-claims.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+            <div class="col-12 col-md-4 col-lg-3">
+                <label for="claim-filter-contract-number" class="form-label mb-1">{{ __('contracts::claims.contract_number') }}</label>
+                <input id="claim-filter-contract-number"
+                       type="text"
+                       name="contract_number"
+                       value="{{ request('contract_number') }}"
+                       class="form-control form-control-sm"
+                       placeholder="{{ __('contracts::claims.contract_number_placeholder') }}">
+            </div>
+
+            <div class="col-12 col-md-4 col-lg-3">
+                <label for="claim-filter-filed-party" class="form-label mb-1">{{ __('contracts::claims.filed_party_role') }}</label>
+                <select id="claim-filter-filed-party" name="filed_party_role" class="form-select form-select-sm">
+                    <option value="">{{ __('contracts::claims.choose_filed_party') }}</option>
+                    @foreach ($partyRoles as $role => $label)
+                        <option value="{{ $role }}" @selected(request('filed_party_role') === $role)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-12 col-md-4 col-lg-3">
+                <label for="claim-filter-status" class="form-label mb-1">{{ __('contracts::claims.claim_status') }}</label>
+                <select id="claim-filter-status" name="claim_status_id" class="form-select form-select-sm">
+                    <option value="">{{ __('contracts::claims.choose_claim_status') }}</option>
+                    @foreach ($claimStatuses as $status)
+                        <option value="{{ $status->id }}" @selected((string) request('claim_status_id') === (string) $status->id)>{{ $status->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-12 col-lg-3 d-flex flex-column flex-sm-row gap-2">
+                <button type="submit" class="btn btn-primary btn-sm w-100">{{ __('contracts::claims.search') }}</button>
+                <a href="{{ route('contract-claims.index') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('contracts::claims.clear') }}</a>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
