@@ -584,14 +584,30 @@ class ContractController extends Controller
 
         $investors = Investor::all();
 
-        $banks = BankAccount::all();
-        $safes = Safe::all();
+        $banks = BankAccount::orderBy('name')->get(['id', 'name']);
+        $safes = Safe::orderBy('name')->get(['id', 'name']);
 
         $claimants = Claimant::orderBy('name')->get(['id', 'name']);
         $claimStatuses = ClaimStatus::orderBy('name')->get(['id', 'name']);
         $claimPayers = ClaimPayer::orderBy('name')->get(['id', 'name']);
+        $changeStatusOptions = $claimStatuses
+            ->filter(fn ($status) => in_array($status->name, ['مقبول', 'مرفوض'], true))
+            ->values();
+        $paidWithDiscountClaimStatusId = optional($claimStatuses
+            ->first(fn ($status) => in_array($status->name, ['مدفوع بخصم', 'مسدد بخصم'], true))
+        )->id;
 
-        return view('contracts::show', compact('contract', 'investors','banks','safes','claimants', 'claimStatuses', 'claimPayers'));
+        return view('contracts::show', compact(
+            'contract',
+            'investors',
+            'banks',
+            'safes',
+            'claimants',
+            'claimStatuses',
+            'claimPayers',
+            'changeStatusOptions',
+            'paidWithDiscountClaimStatusId'
+        ));
     }
 
     public function updateImages(Request $request, Contract $contract)

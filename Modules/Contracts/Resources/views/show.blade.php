@@ -64,6 +64,10 @@
     'claimants' => $claimants,
     'claimStatuses' => $claimStatuses,
     'claimPayers' => $claimPayers,
+    'changeStatusOptions' => $changeStatusOptions,
+    'paidWithDiscountClaimStatusId' => $paidWithDiscountClaimStatusId,
+    'banks' => $banks,
+    'safes' => $safes,
 ])
 
 {{-- الصور --}}

@@ -144,7 +144,7 @@ class ContractClaimController extends Controller
             ->with('success', __('contracts::claims.status_updated'));
     }
 
-    public function reopen(ContractClaim $contractClaim)
+    public function reopen(Request $request, ContractClaim $contractClaim)
     {
         $statusId = $this->defaultClaimStatusId();
 
@@ -169,6 +169,12 @@ class ContractClaimController extends Controller
         });
 
         $this->updateRelatedStatuses($claim);
+
+        if ($request->boolean('return_to_contract')) {
+            return redirect()
+                ->route('contracts.show', $claim->contract_id)
+                ->with('success', __('contracts::claims.reopened'));
+        }
 
         return redirect()
             ->route('contract-claims.index')
