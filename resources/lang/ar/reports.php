@@ -32,6 +32,7 @@ return [
     'Without Office Share' => 'بدون حصة المكتب',
     'Page breakdown: positive/zero/negative' => 'صفحة: موجب/صفر/سالب',
     'Contracts (Active/Total)' => 'العقود (نشِط/إجمالي)',
+    'Active Contracts' => 'العقود النشطة',
     'Initial Capital' => 'رأس المال المبدئي',
     'Current Liquidity' => 'السيولة الحالية',
     'Deposits Summary' => 'جرد الإيداعات',

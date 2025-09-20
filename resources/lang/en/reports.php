@@ -32,6 +32,7 @@ return [
     'Without Office Share' => 'Without Office Share',
     'Page breakdown: positive/zero/negative' => 'Page breakdown: positive/zero/negative',
     'Contracts (Active/Total)' => 'Contracts (Active/Total)',
+    'Active Contracts' => 'Active Contracts',
     'Initial Capital' => 'Initial Capital',
     'Current Liquidity' => 'Current Liquidity',
     'Deposits Summary' => 'Deposits Summary',

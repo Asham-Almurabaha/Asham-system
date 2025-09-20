@@ -5,6 +5,7 @@ namespace Modules\Investors\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
 use Modules\Lookups\Entities\Category;
@@ -445,6 +446,7 @@ class InvestorReportController extends Controller
 
         $liquidityByInvestor = collect();
         $contractStats = collect();
+        $activeContractNumbers = collect();
         if ($ids->isNotEmpty()) {
             $liquidityByInvestor = LedgerEntry::query()
                 ->whereIn('investor_id', $ids)
@@ -472,15 +474,29 @@ class InvestorReportController extends Controller
                 )
                 ->get()
                 ->keyBy('investor_id');
+
+            $activeContractNumbers = DB::table('contract_investor as ci')
+                ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
+                ->whereIn('ci.investor_id', $ids)
+                ->when(!empty($endedIds), fn ($query) => $query->whereNotIn('c.contract_status_id', $endedIds))
+                ->orderBy('c.contract_number')
+                ->select(['ci.investor_id', 'c.contract_number'])
+                ->get()
+                ->groupBy('investor_id')
+                ->map(fn ($rows) => $rows->pluck('contract_number')->unique()->values());
         }
 
-        $rows->getCollection()->transform(function ($r) use ($liquidityByInvestor, $contractStats) {
+        $rows->getCollection()->transform(function ($r) use ($liquidityByInvestor, $contractStats, $activeContractNumbers) {
             $id = $r->id;
             $stats = $contractStats[$id] ?? null;
             $r->liquidity        = (float) ($liquidityByInvestor[$id] ?? 0);
-            $r->initial_capital  = $stats ? (float) ($stats->initial_capital ?? 0) : 0.0;
             $r->contracts_active = $stats ? (int) ($stats->contracts_active ?? 0) : 0;
-            $r->contracts_total  = $stats ? (int) ($stats->contracts_total ?? 0) : 0;
+            $contracts = $activeContractNumbers[$id] ?? collect();
+            $contracts = $contracts instanceof Collection ? $contracts : collect($contracts);
+            $r->active_contract_numbers = $contracts->values()->all();
+            if (!$r->contracts_active) {
+                $r->contracts_active = $contracts->count();
+            }
             return $r;
         });
 

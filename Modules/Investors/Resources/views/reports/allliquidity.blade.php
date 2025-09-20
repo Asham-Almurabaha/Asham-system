@@ -10,14 +10,7 @@
   $items = $isPaginated ? $rows->items() : (is_iterable($rows) ? $rows : []);
   $items = collect($items);
 
-  $countAll     = $isPaginated ? $rows->total() : $items->count();
-  $pageCount    = $items->count();
-  $pageSum      = (float) $items->sum('liquidity');
-  $avgLiquidity = $countAll > 0 ? (($grandTotal ?? 0) / $countAll) : 0;
-
-  $posCount     = (int) $items->filter(fn($r)=>(float)$r->liquidity > 0)->count();
-  $negCount     = (int) $items->filter(fn($r)=>(float)$r->liquidity < 0)->count();
-  $zeroCount    = max(0, $pageCount - $posCount - $negCount);
+  $countAll = $isPaginated ? $rows->total() : $items->count();
 
   $q        = data_get($filters ?? [], 'q', '');
   $perPage  = (int) data_get($filters ?? [], 'per_page', 25);
@@ -57,31 +50,17 @@
   </div>
 
   <div class="row g-3 kpi mb-4">
-    <div class="col-12 col-md-3">
+    <div class="col-12 col-md-6">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Investors (All)')</div>
         <div class="fs-5 fw-bold">{{ number_format($countAll) }}</div>
       </div></div>
     </div>
-    <div class="col-12 col-md-3">
+    <div class="col-12 col-md-6">
       <div class="card"><div class="card-body text-center">
         <div class="small-muted">@lang('reports.Total Liquidity (All)')</div>
         <div class="fs-5 fw-bold {{ ($grandTotal??0)>=0 ? 'text-success' : 'text-danger' }}">
           {{ number_format((float)($grandTotal ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span>
-        </div>
-      </div></div>
-    </div>
-    <div class="col-12 col-md-3">
-      <div class="card"><div class="card-body text-center">
-        <div class="small-muted">@lang('reports.Average Liquidity per Investor')</div>
-        <div class="fs-5 fw-bold">{{ number_format($avgLiquidity, 2) }} <span class="small-muted">{{ $cs }}</span></div>
-      </div></div>
-    </div>
-    <div class="col-12 col-md-3">
-      <div class="card"><div class="card-body text-center">
-        <div class="small-muted">@lang('reports.Page breakdown: positive/zero/negative')</div>
-        <div class="fs-5 fw-bold">
-          {{ $posCount }} / {{ $zeroCount }} / {{ $negCount }}
         </div>
       </div></div>
     </div>
@@ -92,55 +71,49 @@
           <tr>
             <th style="width:56px">#</th>
             <th class="text-start">@lang('app.Investor')</th>
-            <th>@lang('reports.Contracts (Active/Total)')</th>
-            <th>@lang('reports.Initial Capital')</th>
+            <th class="text-start">@lang('reports.Active Contracts')</th>
             <th>@lang('reports.Current Liquidity')</th>
-            <th class="no-print" style="width:120px">{{ __('Actions') }}</th>
           </tr>
       </x-slot>
-      @if($isPaginated)
-      
-            @endif
-      
               @forelse($items as $i => $r)
                 @php
                   $liq  = (float) ($r->liquidity ?? 0);
-                  $init = (float) ($r->initial_capital ?? 0);
-                  $act  = (int)   ($r->contracts_active ?? 0);
-                  $tot  = (int)   ($r->contracts_total  ?? 0);
+                  $activeContracts = collect($r->active_contract_numbers ?? []);
                 @endphp
                 <tr>
                   <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
                   <td class="text-start">
                     <div class="fw-semibold">
                       @if(Route::has('investors.show'))
-                        <a href="{{ route('investors.show', $r->id) }}">{{ $r->name }}</a>
+                        <a href="{{ route('investors.show', $r->id) }}" class="fw-bold text-dark text-decoration-none">{{ $r->name }}</a>
                       @else
-                        {{ $r->name }}
+                        <span class="fw-bold text-dark">{{ $r->name }}</span>
                       @endif
                     </div>
                   </td>
-                  <td class="fw-semibold">{{ $act }} / {{ $tot }}</td>
-                  <td class="text-primary fw-semibold">
-                    {{ number_format($init, 2) }} <span class="small-muted">{{ $cs }}</span>
+                  <td class="text-start">
+                    @if($activeContracts->isNotEmpty())
+                      <div class="d-flex flex-wrap gap-1">
+                        @foreach($activeContracts as $contractNumber)
+                          <span class="badge bg-light text-dark border">{{ $contractNumber }}</span>
+                        @endforeach
+                      </div>
+                    @else
+                      <span class="text-muted">—</span>
+                    @endif
                   </td>
                   <td class="fw-bold {{ $liq>=0 ? 'text-success' : 'text-danger' }}">
                     {{ number_format($liq, 2) }} <span class="small-muted">{{ $cs }}</span>
                   </td>
-                  <td class="no-print">
-                    @if(Route::has('investors.show'))
-                      <x-button.action href="{{ route('investors.show', $r->id) }}" variant="primary" :outline="true" size="sm">@lang('pages.Details')</x-button.action>
-                    @endif
-                  </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="6" class="py-5 text-muted">@lang('reports.No matching data.')</td>
+                  <td colspan="4" class="py-5 text-muted">@lang('reports.No matching data.')</td>
                 </tr>
               @endforelse
       <x-slot name="footer">
           <tr>
-            <th colspan="6" class="bg-white">
+            <th colspan="4" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
                 {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}
               </div>
