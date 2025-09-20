@@ -112,7 +112,7 @@
 
     <div class="col-12 col-lg-4">
       <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body">
+        <div class="card-body p-20">
           <h6 class="text-uppercase text-muted fs-6 mb-3">@lang('users.Access Overview')</h6>
           <p class="text-muted small mb-4">@lang('users.Access Overview Help')</p>
 
