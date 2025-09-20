@@ -26,23 +26,23 @@
 
     <div class="d-flex gap-2">
       @if($setting)
-        <a href="{{ route('settings.show', $setting) }}" class="btn btn-outline-secondary">
+        <x-button href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true">
           <i class="bi bi-eye me-1"></i>@lang('sidebar.View')
-        </a>
-        <a href="{{ route('settings.edit', $setting) }}" class="btn btn-primary">
+        </x-button>
+        <x-button href="{{ route('settings.edit', $setting) }}" variant="primary">
           <i class="bi bi-pencil-square me-1"></i>@lang('sidebar.Edit')
-        </a>
+        </x-button>
         <form action="{{ route('settings.destroy', $setting) }}" method="POST"
               onsubmit="return confirm('@lang('sidebar.Delete setting and images. Are you sure?')')">
           @csrf @method('DELETE')
-          <button class="btn btn-danger">
+          <x-button type="submit" variant="danger">
             <i class="bi bi-trash me-1"></i>@lang('sidebar.Delete')
-          </button>
+          </x-button>
         </form>
       @else
-        <a href="{{ route('settings.create') }}" class="btn btn-success">
+        <x-button href="{{ route('settings.create') }}" variant="success">
           <i class="bi bi-plus-circle me-1"></i>@lang('sidebar.Create Setting')
-        </a>
+        </x-button>
       @endif
     </div>
   </div>
@@ -53,7 +53,7 @@
         <div class="mb-3"><i class="bi bi-gear-wide-connected fs-1"></i></div>
         <h5 class="mb-2">@lang('sidebar.No saved setting yet')</h5>
         <p class="text-muted mb-4">@lang('sidebar.Create a setting to show the name, owner name, logo, and site icon across the system.')</p>
-        <a href="{{ route('settings.create') }}" class="btn btn-success">@lang('sidebar.Create Now')</a>
+        <x-button href="{{ route('settings.create') }}" variant="success">@lang('sidebar.Create Now')</x-button>
       </div>
     </div>
   @else
@@ -136,12 +136,12 @@
             </div>
 
             <div class="mt-3 d-flex gap-2">
-              <a href="{{ route('settings.show', $setting) }}" class="btn btn-outline-secondary btn-sm">
+              <x-button href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true" size="sm">
                 <i class="bi bi-eye me-1"></i>@lang('sidebar.View Details')
-              </a>
-              <a href="{{ route('settings.edit', $setting) }}" class="btn btn-primary btn-sm">
+              </x-button>
+              <x-button href="{{ route('settings.edit', $setting) }}" variant="primary" size="sm">
                 <i class="bi bi-pencil me-1"></i>@lang('sidebar.Edit')
-              </a>
+              </x-button>
             </div>
           </div>
         </div>

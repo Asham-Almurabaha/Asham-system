@@ -54,12 +54,12 @@
 
                         <div class="col-12">
                             <div class="d-grid gap-2 d-sm-flex justify-content-sm-end">
-                                <button type="submit" class="btn btn-outline-primary">
+                                <x-button type="submit" variant="primary" :outline="true">
                                     {{ __('Update') }}
-                                </button>
-                                <a href="{{ route('product_entries.index') }}" class="btn btn-outline-secondary">
+                                </x-button>
+                                <x-button href="{{ route('product_entries.index') }}" variant="secondary" :outline="true">
                                     {{ __('Cancel') }}
-                                </a>
+                                </x-button>
                             </div>
                         </div>
                     </form>

@@ -8,9 +8,9 @@
       <div class="card shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <h5 class="mb-0">@lang('sidebar.Edit Settings')</h5>
-          <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm">
+          <x-button href="{{ route('settings.index') }}" variant="secondary" :outline="true" size="sm">
             <i class="bi bi-arrow-right-circle me-1"></i>@lang('sidebar.Back')
-          </a>
+          </x-button>
         </div>
 
         <div class="card-body">
@@ -91,10 +91,10 @@
             </div>
 
             <div class="col-12 d-flex gap-2">
-              <button class="btn btn-outline-primary">
+              <x-button type="submit" variant="primary" :outline="true">
                 <i class="bi bi-check2 me-1"></i>@lang('sidebar.Update')
-              </button>
-              <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary">@lang('sidebar.Cancel')</a>
+              </x-button>
+              <x-button href="{{ route('settings.index') }}" variant="secondary" :outline="true">@lang('sidebar.Cancel')</x-button>
             </div>
           </form>
         </div>

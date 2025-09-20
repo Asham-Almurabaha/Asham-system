@@ -60,7 +60,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="AddCompany" name="AddCompany" type="submit" class="btn btn-primary">Add</button>
+                    <x-button id="AddCompany" name="AddCompany" type="submit" variant="primary">Add</x-button>
                 </div>
             </div>
         </form>

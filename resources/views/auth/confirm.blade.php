@@ -29,14 +29,14 @@
 
                         <div class="row mb-0">
                             <div class="col-md-8 offset-md-4">
-                                <button type="submit" class="btn btn-primary">
+                                <x-button type="submit" variant="primary">
                                     {{ __('Confirm Password') }}
-                                </button>
+                                </x-button>
 
                                 @if (Route::has('password.request'))
-                                    <a class="btn btn-link" href="{{ route('password.request') }}">
+                                    <x-button href="{{ route('password.request') }}" variant="link">
                                         {{ __('Forgot Your Password?') }}
-                                    </a>
+                                    </x-button>
                                 @endif
                             </div>
                         </div>

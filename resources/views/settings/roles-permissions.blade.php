@@ -272,12 +272,12 @@
                 <p class="text-muted small mb-0">@lang('permissions.Permissions Panel Description')</p>
               </div>
               <div class="d-flex flex-wrap align-items-center gap-2">
-                <button type="button" class="btn btn-sm btn-outline-primary" data-action="expand-all">
+                <x-button type="button" variant="primary" :outline="true" size="sm" data-action="expand-all">
                   <i class="bi bi-arrows-fullscreen me-1"></i>@lang('permissions.Expand All')
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-action="collapse-all">
+                </x-button>
+                <x-button type="button" variant="secondary" :outline="true" size="sm" data-action="collapse-all">
                   <i class="bi bi-arrows-collapse me-1"></i>@lang('permissions.Collapse All')
-                </button>
+                </x-button>
               </div>
             </div>
           </div>
@@ -297,9 +297,9 @@
                     <div class="input-group search-input-group">
                       <span class="input-group-text bg-body"><i class="bi bi-search"></i></span>
                       <input type="search" id="permission-search" class="form-control" placeholder="@lang('permissions.Permission Search Placeholder')" aria-label="@lang('permissions.Filter Permissions')">
-                      <button type="button" class="btn btn-outline-secondary" id="permission-search-clear">
+                      <x-button type="button" variant="secondary" :outline="true" id="permission-search-clear">
                         <i class="bi bi-x-circle me-1"></i>@lang('permissions.Clear Search')
-                      </button>
+                      </x-button>
                     </div>
                     <div class="form-text">@lang('permissions.Permission Search Help')</div>
                   </div>
@@ -326,12 +326,12 @@
                           <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                             <p class="text-muted small mb-0">@lang('permissions.Permission Tools Description')</p>
                             <div class="btn-group btn-group-sm" role="group" aria-label="@lang('permissions.Group Actions Hint')">
-                              <button type="button" class="btn btn-outline-primary" data-select-group="{{ $index }}">
+                              <x-button type="button" variant="primary" :outline="true" size="sm" data-select-group="{{ $index }}">
                                 <i class="bi bi-check2-all me-1"></i>@lang('permissions.Select Group')
-                              </button>
-                              <button type="button" class="btn btn-outline-secondary" data-deselect-group="{{ $index }}">
+                              </x-button>
+                              <x-button type="button" variant="secondary" :outline="true" size="sm" data-deselect-group="{{ $index }}">
                                 <i class="bi bi-eraser me-1"></i>@lang('permissions.Deselect Group')
-                              </button>
+                              </x-button>
                             </div>
                           </div>
                           <div class="row g-3">

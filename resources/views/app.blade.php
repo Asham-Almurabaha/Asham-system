@@ -51,7 +51,7 @@
                         <li class="nav-item">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="btn btn-link nav-link p-0" style="display:inline;">@lang('app.Logout')</button>
+                                <x-button type="submit" variant="link" class="nav-link p-0" style="display:inline;">@lang('app.Logout')</x-button>
                             </form>
                         </li>
                     @else

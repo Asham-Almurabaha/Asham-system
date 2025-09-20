@@ -20,9 +20,9 @@
                 <div class="card-header bg-white border-0 pb-0">
                     <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-2 justify-content-between">
                         <h2 class="h5 mb-0">{{ __('Product Entries List') }}</h2>
-                        <a href="{{ route('product_entries.create') }}" class="btn btn-success ms-sm-auto">
+                        <x-button href="{{ route('product_entries.create') }}" variant="success" class="ms-sm-auto">
                             {{ __('Add New Product Entry') }}
-                        </a>
+                        </x-button>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -48,16 +48,16 @@
                                         <td>{{ \Carbon\Carbon::parse($entry->entry_date)->format('Y-m-d') }}</td>
                                         <td class="text-end">
                                             <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-end">
-                                                <a href="{{ route('product_entries.edit', $entry->id) }}" class="btn btn-primary btn-sm">
+                                                <x-button href="{{ route('product_entries.edit', $entry->id) }}" variant="primary" size="sm">
                                                     {{ __('Edit') }}
-                                                </a>
+                                                </x-button>
                                                 <form action="{{ route('product_entries.destroy', $entry->id) }}" method="POST" class="m-0"
                                                       onsubmit="return confirm('{{ __('Are you sure to delete this entry?') }}');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                    <x-button type="submit" variant="danger" size="sm">
                                                         {{ __('Delete') }}
-                                                    </button>
+                                                    </x-button>
                                                 </form>
                                             </div>
                                         </td>

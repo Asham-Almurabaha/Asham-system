@@ -9,7 +9,7 @@
         <h4 class="fw-bold mb-0">{{ __('Audit Logs') }}</h4>
         <div class="d-flex gap-2">
             <x-refresh-button :href="route('audit.logs')" class="btn-sm" />
-            <button class="btn btn-primary btn-sm no-print" onclick="window.print()">{{ __('Print') }}</button>
+            <x-button variant="primary" size="sm" class="no-print" onclick="window.print()">{{ __('Print') }}</x-button>
         </div>
     </div>
 
@@ -66,8 +66,8 @@
                     <input type="text" name="q" class="form-control form-control-sm" value="{{ request('q') }}" placeholder="{{ __('Search') }}">
                 </div>
                 <div class="col-12 col-md-4 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm w-100">{{ __('Search') }}</button>
-                    <a href="{{ route('audit.logs') }}" class="btn btn-outline-secondary btn-sm w-100">{{ __('Clear') }}</a>
+                    <x-button type="submit" variant="primary" size="sm" :block="true">{{ __('Search') }}</x-button>
+                    <x-button href="{{ route('audit.logs') }}" variant="secondary" :outline="true" size="sm" :block="true">{{ __('Clear') }}</x-button>
                 </div>
             </form>
         </div>

@@ -88,13 +88,14 @@
                 autocomplete="new-password"
                 minlength="8"
                 aria-describedby="togglePassword pwdHelp">
-        <button class="btn btn-outline-secondary"
-                type="button"
-                id="togglePassword"
-                tabindex="-1"
-                aria-label="{{ __('Show/Hide password') }}">
+        <x-button type="button"
+                  variant="secondary"
+                  :outline="true"
+                  id="togglePassword"
+                  tabindex="-1"
+                  aria-label="{{ __('Show/Hide password') }}">
           <i class="bi bi-eye"></i>
-        </button>
+        </x-button>
         @error('password')
           <div class="invalid-feedback d-block" id="pwdHelp" aria-live="polite"><strong>{{ $message }}</strong></div>
         @else
@@ -114,20 +115,21 @@
                 required
                 autocomplete="new-password"
                 aria-describedby="togglePasswordConfirm confirmFeedback">
-        <button class="btn btn-outline-secondary"
-                type="button"
-                id="togglePasswordConfirm"
-                tabindex="-1"
-                aria-label="{{ __('Show/Hide password') }}">
+        <x-button type="button"
+                  variant="secondary"
+                  :outline="true"
+                  id="togglePasswordConfirm"
+                  tabindex="-1"
+                  aria-label="{{ __('Show/Hide password') }}">
           <i class="bi bi-eye"></i>
-        </button>
+        </x-button>
         <div class="invalid-feedback" id="confirmFeedback">{{ __('Passwords do not match.') }}</div>
       </div>
     </div>
 
     {{-- Actions --}}
     <div class="col-12 d-flex flex-column gap-2">
-      <button class="btn btn-outline-primary w-100" type="submit">{{ __('Register') }}</button>
+      <x-button type="submit" variant="primary" :outline="true" :block="true">{{ __('Register') }}</x-button>
       <p class="small mb-0 text-center">
         {{ __('Already have an account?') }}
         <a href="{{ route('login') }}">{{ __('Log in') }}</a>
