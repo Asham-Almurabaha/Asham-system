@@ -119,9 +119,7 @@
                                         <x-button.action type="button" variant="primary" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $modalId }}" @disabled($changeStatusOptionsCollection->isEmpty())>
                                             {{ __('contracts::claims.change_status') }}
                                         </x-button.action>
-                                    @endif
-                
-                                    @if ($isRejectedStatus)
+                                    @elseif ($isRejectedStatus)
                                         <form action="{{ route('contract-claims.reopen', $claim) }}" method="post">
                                             @csrf
                                             @method('patch')
@@ -130,13 +128,11 @@
                                                 {{ __('contracts::claims.reopen_claim') }}
                                             </x-button.action>
                                         </form>
-                                    @endif
-                
-                                    @if (! $isUnderReviewStatus && ! $isRejectedStatus)
+                                    @else
                                         <x-button.action type="button" variant="dark" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $paymentModalId }}" @disabled($claimPayersCollection->isEmpty() || $remainingAmount <= 0)>
                                             {{ __('contracts::claims.record_payment') }}
                                         </x-button.action>
-                
+
                                         <x-button.action type="button" variant="success" :outline="true" size="sm" data-bs-toggle="modal" data-bs-target="#{{ $discountModalId }}" @disabled(empty($paidWithDiscountClaimStatusId))>
                                             {{ __('contracts::claims.pay_with_discount') }}
                                         </x-button.action>
