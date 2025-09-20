@@ -371,7 +371,7 @@
             </div>
             <div class="small text-muted text-nowrap">{{ __('contracts::contracts.Total Statuses') }}: {{ number_format($statusTotal) }}</div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-20">
             <div class="row g-3">
                 @foreach($statusKpiCards as $card)
                     <div class="{{ $card['col_class'] }}">
