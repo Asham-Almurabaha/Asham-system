@@ -18,6 +18,8 @@
 
     $pageTotals = (array) ($pageTotals ?? ['in' => 0.0, 'out' => 0.0, 'net' => 0.0]);
     $overallTotals = (array) ($overallTotals ?? ['in' => 0.0, 'out' => 0.0, 'net' => 0.0]);
+
+    $perPageOptions = [10, 25, 50, 100];
 @endphp
 
 @push('styles')
@@ -41,9 +43,9 @@
             <div class="col-6 col-md-2">
                 <label class="form-label mb-1 small">@lang('reports.Per Page')</label>
                 <select name="per_page" class="form-select">
-                    @foreach([10,25,50,100] as $n)
+                    <?php foreach ($perPageOptions as $n) { ?>
                         <option value="{{ $n }}" @selected($perPage === $n)>{{ $n }}</option>
-                    @endforeach
+                    <?php } ?>
                 </select>
             </div>
             <div class="col-6 col-md-4 d-flex gap-2">
@@ -101,38 +103,40 @@
                 <th>@lang('investors::investors.Net Liquidity')</th>
             </tr>
         </x-slot>
-        @forelse($items as $i => $investor)
-            @php
-                $totalIn = (float) ($investor->total_in ?? 0);
-                $totalOut = (float) ($investor->total_out ?? 0);
-                $net = (float) ($investor->net_liquidity ?? 0);
-            @endphp
-            <tr>
-                <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
-                <td class="text-start">
-                    @if(Route::has('investors.show'))
-                        <a href="{{ route('investors.show', $investor->id) }}" class="fw-bold text-dark text-decoration-none hover-primary">
-                            {{ $investor->name }}
-                        </a>
-                    @else
-                        <span class="fw-bold text-dark">{{ $investor->name }}</span>
-                    @endif
-                </td>
-                <td class="text-success fw-semibold">
-                    {{ number_format($totalIn, 2) }} <span class="small-muted">{{ $cs }}</span>
-                </td>
-                <td class="text-danger fw-semibold">
-                    {{ number_format($totalOut, 2) }} <span class="small-muted">{{ $cs }}</span>
-                </td>
-                <td class="fw-bold {{ $net >= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ number_format($net, 2) }} <span class="small-muted">{{ $cs }}</span>
-                </td>
-            </tr>
-        @empty
+        <?php if ($items->isNotEmpty()) { ?>
+            <?php foreach ($items as $i => $investor) { ?>
+                @php
+                    $totalIn = (float) ($investor->total_in ?? 0);
+                    $totalOut = (float) ($investor->total_out ?? 0);
+                    $net = (float) ($investor->net_liquidity ?? 0);
+                @endphp
+                <tr>
+                    <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
+                    <td class="text-start">
+                        @if(Route::has('investors.show'))
+                            <a href="{{ route('investors.show', $investor->id) }}" class="fw-bold text-dark text-decoration-none hover-primary">
+                                {{ $investor->name }}
+                            </a>
+                        @else
+                            <span class="fw-bold text-dark">{{ $investor->name }}</span>
+                        @endif
+                    </td>
+                    <td class="text-success fw-semibold">
+                        {{ number_format($totalIn, 2) }} <span class="small-muted">{{ $cs }}</span>
+                    </td>
+                    <td class="text-danger fw-semibold">
+                        {{ number_format($totalOut, 2) }} <span class="small-muted">{{ $cs }}</span>
+                    </td>
+                    <td class="fw-bold {{ $net >= 0 ? 'text-success' : 'text-danger' }}">
+                        {{ number_format($net, 2) }} <span class="small-muted">{{ $cs }}</span>
+                    </td>
+                </tr>
+            <?php } ?>
+        <?php } else { ?>
             <tr>
                 <td colspan="5" class="py-5 text-muted">@lang('reports.No matching data.')</td>
             </tr>
-        @endforelse
+        <?php } ?>
         <x-slot name="footer">
             <tr class="table-light fw-semibold">
                 <td colspan="2" class="text-start">@lang('reports.Page Totals')</td>
