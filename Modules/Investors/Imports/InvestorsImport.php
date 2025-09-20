@@ -6,6 +6,7 @@ use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Modules\Investors\Entities\Investor;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -45,6 +46,26 @@ class InvestorsImport implements
     protected array $skippedSimple = [];
     protected array $pendingUpdates = [];
 
+    /** @var array<string, array<int, string>>|null */
+    protected ?array $headingAliasMap = null;
+
+    /** @var array<string, array<int, string>> */
+    protected array $headingManualAliases = [
+        'name' => ['الاسم'],
+        'national_id' => ['رقم الهوية', 'رقم الهوية الوطنية', 'الهوية الوطنية', 'الهوية'],
+        'phone' => ['الجوال', 'رقم الجوال', 'الهاتف', 'رقم الهاتف'],
+        'email' => ['البريد الإلكتروني', 'البريد الالكتروني', 'الايميل'],
+        'address' => ['العنوان'],
+        'nationality_id' => ['الجنسية_id', 'معرّف الجنسية', 'معرف الجنسية'],
+        'nationality' => ['الجنسية', 'جنسية'],
+        'title_id' => ['الوظيفة_id', 'معرّف الوظيفة', 'معرف الوظيفة'],
+        'title' => ['الوظيفة', 'المسمى الوظيفي'],
+        'id_card_image' => ['صورة الهوية', 'صورة_الهوية'],
+        'contract_image' => ['صورة العقد', 'صورة_العقد'],
+        'office_share_percentage' => ['نسبة مشاركة المكتب', 'نسبة_مشاركة_المكتب', 'نسبة المكتب'],
+        'investment_start_date' => ['تاريخ بدء الاستثمار', 'تاريخ_بدء_الاستثمار', 'start date', 'investment start', 'investment_start'],
+    ];
+
     public function headingRow(): int { return 1; }
 
     /**
@@ -74,6 +95,8 @@ class InvestorsImport implements
     public function model(array $row)
     {
         $this->rows++;
+
+        $row = $this->normalizeRowKeys($row);
 
         // خرائط عربي/إنجليزي
         $name       = $this->safeStr($row['name'] ?? $row['الاسم'] ?? null);
@@ -222,6 +245,17 @@ class InvestorsImport implements
         ];
     }
 
+    public function prepareForValidation(array $data, int $index)
+    {
+        $row = $this->normalizeRowKeys($data);
+
+        if (array_key_exists('investment_start_date', $row)) {
+            $row['investment_start_date'] = $this->normalizeDateForValidation($row['investment_start_date']);
+        }
+
+        return $row;
+    }
+
     public function customValidationMessages()
     {
         return [
@@ -267,6 +301,216 @@ class InvestorsImport implements
     }
 
     // ===== Helpers =====
+    private function normalizeRowKeys(array $row): array
+    {
+        foreach ($this->headingAliasMap() as $canonical => $aliases) {
+            $hasCanonical = array_key_exists($canonical, $row) && $this->valueIsFilled($row[$canonical]);
+
+            if ($hasCanonical) {
+                continue;
+            }
+
+            foreach ($aliases as $alias) {
+                if ($alias === $canonical) {
+                    continue;
+                }
+
+                if (array_key_exists($alias, $row) && $this->valueIsFilled($row[$alias])) {
+                    $row[$canonical] = $row[$alias];
+                    break;
+                }
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function headingAliasMap(): array
+    {
+        if ($this->headingAliasMap !== null) {
+            return $this->headingAliasMap;
+        }
+
+        $map = [];
+
+        foreach ($this->canonicalHeadingKeys() as $key) {
+            $aliases = [$key];
+            $aliases = array_merge($aliases, $this->headingManualAliases[$key] ?? []);
+
+            foreach ($this->headingTranslations($key) as $translation) {
+                $aliases[] = $translation;
+                $aliases = array_merge($aliases, $this->slugVariants($translation));
+            }
+
+            $aliases = array_merge($aliases, $this->slugVariants($key));
+
+            $map[$key] = $this->uniqueHeadingAliases($aliases);
+        }
+
+        return $this->headingAliasMap = $map;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function canonicalHeadingKeys(): array
+    {
+        return [
+            'name',
+            'national_id',
+            'phone',
+            'email',
+            'address',
+            'nationality_id',
+            'nationality',
+            'title_id',
+            'title',
+            'id_card_image',
+            'contract_image',
+            'office_share_percentage',
+            'investment_start_date',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function headingTranslations(string $key): array
+    {
+        $locales = array_unique(array_filter([
+            app()->getLocale(),
+            config('app.fallback_locale'),
+            'ar',
+            'en',
+        ]));
+
+        $translations = [];
+        $fullKey = 'export.headings.' . $key;
+
+        foreach ($locales as $locale) {
+            if (Lang::has($fullKey, $locale)) {
+                $translations[] = Lang::get($fullKey, [], $locale);
+            }
+        }
+
+        return array_values(array_unique(array_filter($translations, static function ($value) {
+            return is_string($value) && trim($value) !== '';
+        })));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function slugVariants(string $value): array
+    {
+        $variants = [];
+
+        foreach (['-', '_'] as $separator) {
+            $slug = Str::slug($value, $separator);
+
+            if ($slug !== '') {
+                $variants[] = $slug;
+                $variants[] = str_replace('-', '_', $slug);
+                $variants[] = str_replace(['-', '_'], '', $slug);
+            }
+        }
+
+        return array_values(array_unique(array_filter($variants)));
+    }
+
+    /**
+     * @param  array<int, string>  $aliases
+     * @return array<int, string>
+     */
+    private function uniqueHeadingAliases(array $aliases): array
+    {
+        $clean = [];
+
+        foreach ($aliases as $alias) {
+            if (!is_string($alias)) {
+                continue;
+            }
+
+            $trimmed = trim($alias);
+
+            if ($trimmed === '') {
+                continue;
+            }
+
+            $clean[] = $trimmed;
+            $clean[] = mb_strtolower($trimmed, 'UTF-8');
+        }
+
+        return array_values(array_unique($clean));
+    }
+
+    private function valueIsFilled($value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        if (is_string($value)) {
+            return trim($value) !== '';
+        }
+
+        if (is_array($value)) {
+            return !empty($value);
+        }
+
+        return true;
+    }
+
+    private function normalizeDateForValidation($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($value instanceof \DateTimeInterface || is_numeric($value)) {
+            return $this->parseDate($value) ?? $value;
+        }
+
+        if (is_string($value)) {
+            $normalized = $this->stripDirectionalFormatting(
+                $this->normalizeLocalizedDigits($value)
+            );
+
+            $normalized = preg_replace('/\s+/u', ' ', $normalized ?? '');
+            $normalized = trim((string) $normalized);
+
+            if ($normalized === '') {
+                return null;
+            }
+
+            return $this->parseDate($normalized) ?? $normalized;
+        }
+
+        return $value;
+    }
+
+    private function normalizeLocalizedDigits(string $value): string
+    {
+        return strtr($value, [
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        ]);
+    }
+
+    private function stripDirectionalFormatting(string $value): string
+    {
+        return str_replace([
+            "\u{200f}", "\u{200e}", "\u{202a}", "\u{202b}", "\u{202c}",
+            "\u{202d}", "\u{202e}", "\u{2066}", "\u{2067}", "\u{2068}",
+            "\u{2069}",
+        ], '', $value);
+    }
+
     private function safeStr($v): ?string
     {
         if ($v === null) return null;

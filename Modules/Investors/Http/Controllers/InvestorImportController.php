@@ -109,9 +109,9 @@ class InvestorImportController extends Controller
             // المتخطّى المبسّط للتصدير (جاي من InvestorsImport::skipped())
             $skippedSimple = $import->skipped();
 
-            // ==== استخدم "flash" بدل put —> تظهر مرة بعد الـ redirect وتختفي مع أول Refresh ====
-            session()->flash('investors_import.failures_simple', $failuresSimple);
-            session()->flash('investors_import.skipped_simple',  $skippedSimple);
+            // نخزنها بالجلسة لحين تنزيل ملف الإصلاح أو تحديث الصفحة التالية.
+            session()->put('investors_import.failures_simple', $failuresSimple);
+            session()->put('investors_import.skipped_simple',  $skippedSimple);
 
             $savedMessage = $inserted > 0
                 ? 'تم حفظ '.$inserted.' مستثمر جديد.'

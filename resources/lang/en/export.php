@@ -33,6 +33,7 @@ return [
         'customer_status' => 'Customer Status',
         'id_card_image' => 'ID Card Image',
         'contract_image' => 'Contract Image',
+        'investment_start_date' => 'Investment Start Date',
         'reason' => 'Reason',
         'customer_id' => 'Customer ID',
         'customer_name' => 'Customer Name',

@@ -33,6 +33,7 @@ return [
         'customer_status' => 'حالة العميل',
         'id_card_image' => 'صورة الهوية',
         'contract_image' => 'صورة العقد',
+        'investment_start_date' => 'تاريخ بدء الاستثمار',
         'reason' => 'السبب',
         'customer_id' => 'معرّف العميل',
         'customer_name' => 'اسم العميل',
