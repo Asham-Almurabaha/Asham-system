@@ -13,7 +13,6 @@ use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -23,7 +22,6 @@ class LedgerEntriesImport implements
     WithHeadingRow,
     WithValidation,
     WithChunkReading,
-    WithBatchInserts,
     SkipsOnFailure,
     SkipsOnError
 {
@@ -147,7 +145,8 @@ class LedgerEntriesImport implements
         ];
     }
 
-    public function batchSize(): int { return 500; }
+    // ملاحظة: لا نستخدم WithBatchInserts لأننا نحفظ السجل يدويًا داخل model()
+    // واستعمالها مع ToModel يجعل المكتبة تحاول إدراج نفس الصفوف مرة ثانية.
     public function chunkSize(): int { return 500; }
 
     public function getRowCount(): int      { return $this->rowCount; }

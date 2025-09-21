@@ -14,7 +14,6 @@ use Maatwebsite\Excel\Concerns\SkipsFailures;
 use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
@@ -32,7 +31,6 @@ class InvestorLedgerEntriesImport implements
     WithHeadingRow,
     WithValidation,
     WithChunkReading,
-    WithBatchInserts,
     SkipsOnFailure,
     SkipsOnError
 {
@@ -324,11 +322,9 @@ class InvestorLedgerEntriesImport implements
         ];
     }
 
-    public function batchSize(): int
-    {
-        return 500;
-    }
-
+    // ملاحظة: لا نستخدم WithBatchInserts هنا لنفس السبب المذكور في LedgerEntriesImport:
+    // عملية model() تحفظ السجلات مباشرةً، ووجود WithBatchInserts يدفع المكتبة
+    // لمحاولة إدراجها مرة ثانية بنفس المفاتيح.
     public function chunkSize(): int
     {
         return 500;
