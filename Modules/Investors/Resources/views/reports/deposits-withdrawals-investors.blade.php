@@ -35,11 +35,11 @@
                 <label class="form-label mb-1 small">@lang('reports.Search by name')</label>
                 <select name="investor_id" class="form-select">
                     <option value="">@lang('reports.All Investors')</option>
-                    @foreach ($investorOptions as $investor)
+                    <?php foreach ($investorOptions as $investor) { ?>
                         <option value="{{ $investor->id }}" @selected((string) $selectedInvestor === (string) $investor->id)>
                             {{ $investor->name }}
                         </option>
-                    @endforeach
+                    <?php } ?>
                 </select>
             </div>
             <div class="col-12 col-md-6 col-lg-4 d-flex gap-2">
@@ -97,38 +97,44 @@
                 <th>@lang('investors::investors.Net Liquidity')</th>
             </tr>
         </x-slot>
-        @forelse ($items as $investor)
-            @php
-                $totalIn = (float) ($investor->total_in ?? 0);
-                $totalOut = (float) ($investor->total_out ?? 0);
-                $net = (float) ($investor->net_liquidity ?? 0);
-            @endphp
-            <tr>
-                <td>{{ $loop->iteration }}</td>
-                <td class="text-start">
-                    @if (Route::has('investors.show'))
-                        <a href="{{ route('investors.show', $investor->id) }}" class="fw-bold text-dark text-decoration-none hover-primary">
-                            {{ $investor->name }}
-                        </a>
-                    @else
-                        <span class="fw-bold text-dark">{{ $investor->name }}</span>
-                    @endif
-                </td>
-                <td class="text-success fw-semibold">
-                    {{ number_format($totalIn, 2) }} <span class="small-muted">{{ $cs }}</span>
-                </td>
-                <td class="text-danger fw-semibold">
-                    {{ number_format($totalOut, 2) }} <span class="small-muted">{{ $cs }}</span>
-                </td>
-                <td class="fw-bold {{ $net >= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ number_format($net, 2) }} <span class="small-muted">{{ $cs }}</span>
-                </td>
-            </tr>
-        @empty
+        @if ($items->isNotEmpty())
+            <?php
+                $rowIndex = 0;
+                foreach ($items as $investor) {
+                    $rowIndex++;
+                    $totalIn = (float) ($investor->total_in ?? 0);
+                    $totalOut = (float) ($investor->total_out ?? 0);
+                    $net = (float) ($investor->net_liquidity ?? 0);
+            ?>
+                <tr>
+                    <td>{{ $rowIndex }}</td>
+                    <td class="text-start">
+                        @if (Route::has('investors.show'))
+                            <a href="{{ route('investors.show', $investor->id) }}" class="fw-bold text-dark text-decoration-none hover-primary">
+                                {{ $investor->name }}
+                            </a>
+                        @else
+                            <span class="fw-bold text-dark">{{ $investor->name }}</span>
+                        @endif
+                    </td>
+                    <td class="text-success fw-semibold">
+                        {{ number_format($totalIn, 2) }} <span class="small-muted">{{ $cs }}</span>
+                    </td>
+                    <td class="text-danger fw-semibold">
+                        {{ number_format($totalOut, 2) }} <span class="small-muted">{{ $cs }}</span>
+                    </td>
+                    <td class="fw-bold {{ $net >= 0 ? 'text-success' : 'text-danger' }}">
+                        {{ number_format($net, 2) }} <span class="small-muted">{{ $cs }}</span>
+                    </td>
+                </tr>
+            <?php
+                }
+            ?>
+        @else
             <tr>
                 <td colspan="5" class="py-5 text-muted">@lang('reports.No matching data.')</td>
             </tr>
-        @endforelse
+        @endif
         <x-slot name="footer">
             <tr class="table-light fw-semibold">
                 <td colspan="2" class="text-start">@lang('reports.Page Totals')</td>
