@@ -18,6 +18,7 @@ use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
+use Modules\Investors\Support\InvestorContractPaymentAggregator;
 
 class InvestorReportController extends Controller
 {
@@ -340,19 +341,21 @@ class InvestorReportController extends Controller
             ->map(fn ($id) => (int) $id)
             ->all();
 
-        $raisedStatusIds = $statusRows
-            ->filter(function ($status) {
-                return $this->normalizeStatusName($status->name ?? null) === 'مرفوع فيه';
-            })
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+        $paymentStatusBuckets = InvestorContractPaymentAggregator::transactionStatusBuckets();
+        $paymentStatusIds = array_values(array_unique(array_merge(
+            $paymentStatusBuckets['installment'] ?? [],
+            $paymentStatusBuckets['claim'] ?? []
+        )));
 
-        $ledgerSub = DB::table('ledger_entries')
-            ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
-            ->where('direction', 'in')
-            ->whereNull('deleted_at')
-            ->groupBy('investor_id', 'contract_id');
+        $paidSub = DB::table('investor_transactions as it')
+            ->selectRaw('it.investor_id, it.contract_id, SUM(it.amount) AS paid_in')
+            ->groupBy('it.investor_id', 'it.contract_id');
+
+        if (!empty($paymentStatusIds)) {
+            $paidSub->whereIn('it.status_id', $paymentStatusIds);
+        } else {
+            $paidSub->whereRaw('0 = 1');
+        }
 
         $officePaidSub = DB::table('office_transactions as ot')
             ->selectRaw('ot.investor_id, ot.contract_id, SUM(ot.amount) AS office_paid')
@@ -361,37 +364,13 @@ class InvestorReportController extends Controller
             })
             ->groupBy('ot.investor_id', 'ot.contract_id');
 
-        $claimPaidSub = null;
-        if (!empty($raisedStatusIds)) {
-            $claimPaidSub = DB::table('investor_transactions as it')
-                ->join('contracts as c_claim', 'c_claim.id', '=', 'it.contract_id')
-                ->leftJoin('ledger_entries as le_claim', function ($join) {
-                    $join->on('le_claim.investor_id', '=', 'it.investor_id')
-                        ->on('le_claim.contract_id', '=', 'it.contract_id')
-                        ->on('le_claim.ref', '=', DB::raw("CONCAT('IT-', it.id)"))
-                        ->where('le_claim.direction', '=', 'in')
-                        ->whereNull('le_claim.deleted_at');
-                })
-                ->whereNotNull('it.contract_claim_payment_id')
-                ->whereIn('c_claim.contract_status_id', $raisedStatusIds)
-                ->selectRaw(
-                    'it.investor_id, it.contract_id, '
-                    . 'SUM(CASE WHEN le_claim.id IS NULL THEN it.amount ELSE 0 END) AS claim_paid_missing'
-                )
-                ->groupBy('it.investor_id', 'it.contract_id');
-        }
-
         $capitalExprRaw = "CASE WHEN COALESCE(ci.share_value, 0) <= 0 THEN COALESCE(c.contract_value, 0) * COALESCE(ci.share_percentage, 0) / 100 ELSE COALESCE(ci.share_value, 0) END";
         $capitalExpr = "ROUND($capitalExprRaw, 2)";
         $shareRatioExpr = "CASE WHEN COALESCE(ci.share_percentage, 0) > 0 THEN COALESCE(ci.share_percentage, 0) / 100 WHEN COALESCE(ci.share_value, 0) > 0 AND COALESCE(c.contract_value, 0) > 0 THEN COALESCE(ci.share_value, 0) / NULLIF(c.contract_value, 0) ELSE 0 END";
         $profitGrossExpr = "ROUND(COALESCE(c.investor_profit, 0) * ($shareRatioExpr), 2)";
         $officePctExpr = 'COALESCE(inv.office_share_percentage, 0)';
         $officeCutExpr = "ROUND($profitGrossExpr * $officePctExpr / 100, 2)";
-        $paidExpr = 'COALESCE(le.paid_in, 0)';
-        if (!empty($raisedStatusIds)) {
-            $raisedIdList = implode(',', array_map('intval', $raisedStatusIds));
-            $paidExpr = "COALESCE(le.paid_in, 0) + CASE WHEN c.contract_status_id IN ($raisedIdList) THEN COALESCE(cp.claim_paid_missing, 0) ELSE 0 END";
-        }
+        $paidExpr = 'COALESCE(paid.paid_in, 0)';
         $profitNetExpr = "GREATEST(ROUND($profitGrossExpr - $officeCutExpr, 2), 0)";
         $profitPaidExpr = "LEAST(GREATEST($paidExpr - $capitalExpr, 0), $profitNetExpr)";
         $unpaidProfitExpr = "GREATEST($profitNetExpr - $profitPaidExpr, 0)";
@@ -410,15 +389,9 @@ class InvestorReportController extends Controller
         $totalsRow = DB::table('contract_investor as ci')
             ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
             ->join('investors as inv', 'ci.investor_id', '=', 'inv.id')
-            ->leftJoinSub($ledgerSub, 'le', function ($join) {
-                $join->on('le.contract_id', '=', 'ci.contract_id')
-                    ->on('le.investor_id', '=', 'ci.investor_id');
-            })
-            ->when($claimPaidSub, function ($query) use ($claimPaidSub) {
-                $query->leftJoinSub($claimPaidSub, 'cp', function ($join) {
-                    $join->on('cp.contract_id', '=', 'ci.contract_id')
-                        ->on('cp.investor_id', '=', 'ci.investor_id');
-                });
+            ->leftJoinSub($paidSub, 'paid', function ($join) {
+                $join->on('paid.contract_id', '=', 'ci.contract_id')
+                    ->on('paid.investor_id', '=', 'ci.investor_id');
             })
             ->leftJoinSub($officePaidSub, 'op', function ($join) {
                 $join->on('op.contract_id', '=', 'ci.contract_id')
@@ -466,20 +439,8 @@ class InvestorReportController extends Controller
 
             $paidByInvestor = collect();
             $officePaidByInvestor = collect();
-            $claimPaidByInvestor = collect();
             if ($contractIds->isNotEmpty()) {
-                $paidRows = DB::table('ledger_entries')
-                    ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
-                    ->whereIn('investor_id', $ids)
-                    ->whereIn('contract_id', $contractIds)
-                    ->where('direction', 'in')
-                    ->whereNull('deleted_at')
-                    ->groupBy('investor_id', 'contract_id')
-                    ->get();
-
-                $paidByInvestor = $paidRows->groupBy('investor_id')->map(function ($rows) {
-                    return $rows->mapWithKeys(fn ($r) => [$r->contract_id => (float) ($r->paid_in ?? 0)]);
-                });
+                $paidByInvestor = InvestorContractPaymentAggregator::sumForInvestors($ids, $contractIds);
 
                 $officePaidRows = DB::table('office_transactions as ot')
                     ->selectRaw('ot.investor_id, ot.contract_id, SUM(ot.amount) AS office_paid')
@@ -494,41 +455,13 @@ class InvestorReportController extends Controller
                 $officePaidByInvestor = $officePaidRows->groupBy('investor_id')->map(function ($rows) {
                     return $rows->mapWithKeys(fn ($r) => [$r->contract_id => (float) ($r->office_paid ?? 0)]);
                 });
-
-                if (!empty($raisedStatusIds)) {
-                    $claimPaidRows = DB::table('investor_transactions as it')
-                        ->join('contracts as c', 'c.id', '=', 'it.contract_id')
-                        ->leftJoin('ledger_entries as le', function ($join) {
-                            $join->on('le.investor_id', '=', 'it.investor_id')
-                                ->on('le.contract_id', '=', 'it.contract_id')
-                                ->on('le.ref', '=', DB::raw("CONCAT('IT-', it.id)"))
-                                ->where('le.direction', '=', 'in')
-                                ->whereNull('le.deleted_at');
-                        })
-                        ->selectRaw(
-                            'it.investor_id, it.contract_id, '
-                            . 'SUM(CASE WHEN le.id IS NULL THEN it.amount ELSE 0 END) AS claim_paid_missing'
-                        )
-                        ->whereIn('it.investor_id', $ids)
-                        ->whereIn('it.contract_id', $contractIds)
-                        ->whereNotNull('it.contract_claim_payment_id')
-                        ->whereIn('c.contract_status_id', $raisedStatusIds)
-                        ->groupBy('it.investor_id', 'it.contract_id')
-                        ->get();
-
-                    $claimPaidByInvestor = $claimPaidRows->groupBy('investor_id')->map(function ($rows) {
-                        return $rows->mapWithKeys(fn ($r) => [$r->contract_id => (float) ($r->claim_paid_missing ?? 0)]);
-                    });
-                }
             }
 
             $rows = $rows->map(function ($investor) use (
                 $contractsByInvestor,
                 $paidByInvestor,
                 $officePaidByInvestor,
-                $claimPaidByInvestor,
-                $claimStatusIds,
-                $raisedStatusIds
+                $claimStatusIds
             ) {
                 $investorId = (int) ($investor->id ?? 0);
                 $pctOffice = (float) ($investor->office_share_percentage ?? 0);
@@ -536,9 +469,8 @@ class InvestorReportController extends Controller
                 $contracts = $contracts instanceof \Illuminate\Support\Collection
                     ? $contracts
                     : collect($contracts);
-                $paidMap = $paidByInvestor->get($investorId, collect());
+                $paymentsMap = $paidByInvestor->get($investorId, collect());
                 $officePaidMap = $officePaidByInvestor->get($investorId, collect());
-                $claimPaidMap = $claimPaidByInvestor->get($investorId, collect());
 
                 $withOffice = 0.0;
                 $withoutOffice = 0.0;
@@ -569,21 +501,20 @@ class InvestorReportController extends Controller
                     $officeCut = round($profitGross * $pctOffice / 100, 2);
                     $expectedWith = round($shareVal + $profitGross, 2);
 
-                    if ($paidMap instanceof \Illuminate\Support\Collection) {
-                        $paid = (float) $paidMap->get($contract->contract_id, 0.0);
+                    $paymentRow = [];
+                    if ($paymentsMap instanceof \Illuminate\Support\Collection) {
+                        $paymentRow = $paymentsMap->get($contract->contract_id, []);
                     } else {
-                        $paid = (float) ($paidMap[$contract->contract_id] ?? 0.0);
+                        $paymentRow = $paymentsMap[$contract->contract_id] ?? [];
                     }
 
-                    if (!empty($raisedStatusIds)
-                        && in_array((int) ($contract->contract_status_id ?? 0), $raisedStatusIds, true)
-                    ) {
-                        if ($claimPaidMap instanceof \Illuminate\Support\Collection) {
-                            $paid += (float) $claimPaidMap->get($contract->contract_id, 0.0);
-                        } else {
-                            $paid += (float) ($claimPaidMap[$contract->contract_id] ?? 0.0);
-                        }
+                    if ($paymentRow instanceof \Illuminate\Support\Collection) {
+                        $paymentRow = $paymentRow->toArray();
                     }
+
+                    $paid = (float) ($paymentRow['total']
+                        ?? ((float) ($paymentRow['installments'] ?? 0.0)
+                            + (float) ($paymentRow['claims'] ?? 0.0)));
 
                     if ($officePaidMap instanceof \Illuminate\Support\Collection) {
                         $officePaid = (float) $officePaidMap->get($contract->contract_id, 0.0);

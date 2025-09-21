@@ -7,8 +7,8 @@ use Modules\Investors\Entities\Investor;
 use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
-use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Lookups\Entities\TransactionStatus;
+use Modules\Investors\Support\InvestorContractPaymentAggregator;
 
 class InvestorDataService
 {
@@ -118,43 +118,23 @@ class InvestorDataService
         // ===== التحصيل الفعلي لكل عقد لهذا المستثمر (بدون Pro-Rata) =====
         $activeIds = $activeContracts->pluck('id')->filter()->values();
 
-        $statusBuckets = $this->transactionStatusBuckets();
-        $installmentStatusIds = $statusBuckets['installment'] ?? [];
-        $claimStatusIds = $statusBuckets['claim'] ?? [];
-        $officeStatusIds = $statusBuckets['office'] ?? [];
+        $officeStatusIds = $this->officeStatusIds();
 
         $paidInstallmentsByContract = collect();
-        if ($activeIds->isNotEmpty() && !empty($installmentStatusIds)) {
-            $paidInstallmentsByContract = InvestorTransaction::query()
-                ->from('investor_transactions as it')
-                ->whereIn('it.contract_id', $activeIds)
-                ->where('it.investor_id', $investor->id)
-                ->whereIn('it.status_id', $installmentStatusIds)
-                ->groupBy('it.contract_id')
-                ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_installments')
-                ->pluck('paid_installments', 'contract_id');
-        }
-
         $paidClaimsByContract = collect();
-        $raisedContractIds = $activeContracts
-            ->filter(function ($contract) {
-                $statusName = $this->normalizeStatusName($contract->contractStatus->name ?? null);
+        if ($activeIds->isNotEmpty()) {
+            $paidByContract = InvestorContractPaymentAggregator::sumForInvestor(
+                $investor->id,
+                $activeIds
+            );
 
-                return $statusName === 'مرفوع فيه';
-            })
-            ->pluck('id')
-            ->filter()
-            ->values();
+            $paidInstallmentsByContract = $paidByContract->map(
+                static fn ($row) => (float) ($row['installments'] ?? 0.0)
+            );
 
-        if ($raisedContractIds->isNotEmpty() && !empty($claimStatusIds)) {
-            $paidClaimsByContract = InvestorTransaction::query()
-                ->from('investor_transactions as it')
-                ->whereIn('it.contract_id', $raisedContractIds)
-                ->where('it.investor_id', $investor->id)
-                ->whereIn('it.status_id', $claimStatusIds)
-                ->groupBy('it.contract_id')
-                ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_from_claims')
-                ->pluck('paid_from_claims', 'contract_id');
+            $paidClaimsByContract = $paidByContract->map(
+                static fn ($row) => (float) ($row['claims'] ?? 0.0)
+            );
         }
 
         $officeCutPaidByContract = collect();
@@ -207,16 +187,10 @@ class InvestorDataService
             $officeCut = round($profitGross * $pctOffice / 100, 2);
             $profitNet = round($profitGross - $officeCut, 2);
 
-            $paidFromInstallments = (float) ($paidInstallmentsByContract[$c->id] ?? 0);
             $statusName = $this->normalizeStatusName($c->contractStatus->name ?? null);
 
-            $paidFromClaims = 0.0;
-            if ($statusName === 'مرفوع فيه') {
-                $paidFromClaims = (float) ($paidClaimsByContract[$c->id] ?? 0);
-            }
-
-            $paidFromInstallments = round($paidFromInstallments, 2);
-            $paidFromClaims = round($paidFromClaims, 2);
+            $paidFromInstallments = round((float) ($paidInstallmentsByContract[$c->id] ?? 0), 2);
+            $paidFromClaims = round((float) ($paidClaimsByContract[$c->id] ?? 0), 2);
             $paidIn = round($paidFromInstallments + $paidFromClaims, 2);
 
             $customerName = $c->customer->name ?? null;
@@ -389,7 +363,16 @@ class InvestorDataService
         ];
     }
 
-    private function transactionStatusBuckets(): array
+    private function officeStatusNames(): array
+    {
+        return [
+            'ربح المكتب',
+            'office profit',
+            'office share',
+        ];
+    }
+
+    private function officeStatusIds(): array
     {
         static $cache = null;
 
@@ -398,76 +381,24 @@ class InvestorDataService
         }
 
         $normalize = static fn ($value) => mb_strtolower(trim((string) $value), 'UTF-8');
-
-        $installmentKeys = array_unique(array_map($normalize, $this->installmentStatusNames()));
-        $claimKeys = array_unique(array_map($normalize, $this->claimStatusNames()));
         $officeKeys = array_unique(array_map($normalize, $this->officeStatusNames()));
 
-        if (empty($installmentKeys) && empty($claimKeys) && empty($officeKeys)) {
-            return $cache = ['installment' => [], 'claim' => [], 'office' => []];
+        if (empty($officeKeys)) {
+            return $cache = [];
         }
 
         $statuses = TransactionStatus::query()->select(['id', 'name'])->get();
 
-        $installmentIds = [];
-        $claimIds = [];
         $officeIds = [];
-
         foreach ($statuses as $status) {
             $key = $normalize($status->name ?? '');
-
-            if (in_array($key, $installmentKeys, true)) {
-                $installmentIds[] = (int) $status->id;
-            }
-
-            if (in_array($key, $claimKeys, true)) {
-                $claimIds[] = (int) $status->id;
-            }
 
             if (in_array($key, $officeKeys, true)) {
                 $officeIds[] = (int) $status->id;
             }
         }
 
-        return $cache = [
-            'installment' => array_values(array_unique($installmentIds)),
-            'claim'       => array_values(array_unique($claimIds)),
-            'office'      => array_values(array_unique($officeIds)),
-        ];
-    }
-
-    private function installmentStatusNames(): array
-    {
-        return [
-            'سداد قسط',
-            'تحصيل قسط',
-            'تحصيل',
-            'installment payment',
-            'installment',
-            'installment settlement',
-        ];
-    }
-
-    private function claimStatusNames(): array
-    {
-        return [
-            'سداد مطالبة',
-            'سداد مطالبه',
-            'سداد مطالبة للمستثمرين',
-            'سداد مطالبه للمستثمرين',
-            'claim payment',
-            'claim settlement',
-            'claim investor payment',
-        ];
-    }
-
-    private function officeStatusNames(): array
-    {
-        return [
-            'ربح المكتب',
-            'office profit',
-            'office share',
-        ];
+        return $cache = array_values(array_unique($officeIds));
     }
 
     private function normalizeStatusName(?string $statusName): string
