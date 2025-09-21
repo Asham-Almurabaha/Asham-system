@@ -190,13 +190,15 @@ class ClaimPaymentDistributionService
 
                         if ($officeTake > 0) {
                             $officeTransaction = OfficeTransaction::create([
-                                'investor_id'      => $investorId,
-                                'contract_id'      => $contract->id,
-                                'installment_id'   => null,
-                                'status_id'        => $officeProfitStatus->id,
-                                'amount'           => $officeTake,
-                                'transaction_date' => $paymentDate,
-                                'notes'            => "تحصيل ربح المكتب من {$investorMeta[$investorId]['name']} - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
+                                'investor_id'                => $investorId,
+                                'contract_id'                => $contract->id,
+                                'contract_claim_id'          => $claim->id,
+                                'contract_claim_payment_id'  => $payment->id,
+                                'installment_id'             => null,
+                                'status_id'                  => $officeProfitStatus->id,
+                                'amount'                     => $officeTake,
+                                'transaction_date'           => $paymentDate,
+                                'notes'                      => "تحصيل ربح المكتب من {$investorMeta[$investorId]['name']} - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
                             ]);
 
                             LedgerEntry::create(array_merge([
@@ -272,13 +274,15 @@ class ClaimPaymentDistributionService
                         $allocatedSum = round($allocatedSum + $allocation, 2);
 
                         $officeTransaction = OfficeTransaction::create([
-                            'investor_id'      => $investorId,
-                            'contract_id'      => $contract->id,
-                            'installment_id'   => null,
-                            'status_id'        => $officeProfitStatus->id,
-                            'amount'           => $allocation,
-                            'transaction_date' => $paymentDate,
-                            'notes'            => "تحصيل ربح المكتب من {$investorMeta[$investorId]['name']} - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
+                            'investor_id'                => $investorId,
+                            'contract_id'                => $contract->id,
+                            'contract_claim_id'          => $claim->id,
+                            'contract_claim_payment_id'  => $payment->id,
+                            'installment_id'             => null,
+                            'status_id'                  => $officeProfitStatus->id,
+                            'amount'                     => $allocation,
+                            'transaction_date'           => $paymentDate,
+                            'notes'                      => "تحصيل ربح المكتب من {$investorMeta[$investorId]['name']} - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
                         ]);
 
                         LedgerEntry::create(array_merge([
@@ -375,13 +379,15 @@ class ClaimPaymentDistributionService
 
         if ($excessAmount > 0) {
             OfficeTransaction::create([
-                'investor_id'      => null,
-                'contract_id'      => $contract->id,
-                'installment_id'   => null,
-                'status_id'        => $officeStatus->id,
-                'amount'           => $excessAmount,
-                'transaction_date' => $paymentDate,
-                'notes'            => "تحصيل محاماة مطالبة - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
+                'investor_id'                => null,
+                'contract_id'                => $contract->id,
+                'contract_claim_id'          => $claim->id,
+                'contract_claim_payment_id'  => $payment->id,
+                'installment_id'             => null,
+                'status_id'                  => $officeStatus->id,
+                'amount'                     => $excessAmount,
+                'transaction_date'           => $paymentDate,
+                'notes'                      => "تحصيل محاماة مطالبة - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
             ]);
 
             LedgerEntry::create(array_merge([

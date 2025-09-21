@@ -976,13 +976,16 @@ class ContractClaimControllerTest extends TestCase
 
         $this->assertNotNull($paymentRecord, 'Payment record should exist after storing claim payment.');
 
-        $this->assertTrue(
-            OfficeTransaction::where('contract_id', $contract->id)
-                ->where('status_id', $officeStatus->id)
-                ->where('amount', '30.00')
-                ->exists(),
-            'Office transaction for office profit should be recorded.'
-        );
+        $officeTransaction = OfficeTransaction::where('contract_id', $contract->id)
+            ->where('status_id', $officeStatus->id)
+            ->where('amount', '30.00')
+            ->where('contract_claim_id', $claim->id)
+            ->where('contract_claim_payment_id', $paymentRecord->id)
+            ->first();
+
+        $this->assertNotNull($officeTransaction, 'Office transaction for office profit should be recorded.');
+        $this->assertSame($claim->id, $officeTransaction?->contract_claim_id);
+        $this->assertSame($paymentRecord->id, $officeTransaction?->contract_claim_payment_id);
 
         $officeLedger = LedgerEntry::where([
             'contract_id' => $contract->id,
@@ -1572,12 +1575,20 @@ class ContractClaimControllerTest extends TestCase
             ])->exists()
         );
 
-        $this->assertTrue(
-            OfficeTransaction::where([
+        $paymentRecord = ContractClaimPayment::where('contract_claim_id', $claim->id)->first();
+        $this->assertNotNull($paymentRecord, 'Payment record should exist after storing claim payment.');
+
+        $officeTransaction = OfficeTransaction::where([
                 'contract_id' => $contract->id,
                 'status_id' => $legalStatus->id,
                 'amount' => '50.00',
-            ])->exists()
-        );
+            ])
+            ->where('contract_claim_id', $claim->id)
+            ->where('contract_claim_payment_id', $paymentRecord->id)
+            ->first();
+
+        $this->assertNotNull($officeTransaction, 'Office legal transaction should include claim references.');
+        $this->assertSame($claim->id, $officeTransaction?->contract_claim_id);
+        $this->assertSame($paymentRecord->id, $officeTransaction?->contract_claim_payment_id);
     }
 }
