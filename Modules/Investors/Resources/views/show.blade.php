@@ -80,6 +80,9 @@
 
         $contractBreakdown = $contractBreakdown ?? [];
         $liquidity         = isset($liquidity) ? (float)$liquidity : 0.0;
+        $liquiditySummaryData = (array) ($liquiditySummary ?? []);
+        $liquidityTotalIn  = (float) ($liquiditySummaryData['in'] ?? 0);
+        $liquidityTotalOut = (float) ($liquiditySummaryData['out'] ?? 0);
 
         $statusMetricsCollection = collect($contractStatusMetrics ?? [])
             ->map(function ($row) {
@@ -551,6 +554,16 @@
                     {{ number_format($liquidity, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
                 </div>
                 <div class="stat-sub">{{ $liquidity >= 0 ? 'صافي الرصيد المتاح' : 'صافي الرصيد المستحق' }}</div>
+                <div class="stat-sub small text-muted">
+                    {{ __('investors::investors.Total Deposits') }}:
+                    <span class="fw-semibold">{{ number_format($liquidityTotalIn, 2) }}</span>
+                    <span class="text-muted">{{ $currencySymbol }}</span>
+                </div>
+                <div class="stat-sub small text-muted">
+                    {{ __('investors::investors.Total Withdrawals') }}:
+                    <span class="fw-semibold">{{ number_format($liquidityTotalOut, 2) }}</span>
+                    <span class="text-muted">{{ $currencySymbol }}</span>
+                </div>
             </div>
         </div>
         <div class="col-12 col-md-6">

@@ -43,7 +43,7 @@
     "Back": "رجوع",
     "Back to List": "العودة للقائمة",
     "Bank Cash Accounts": "حسابات بنكية/خزينة",
-    "Based on ledger: In - Out for each investor.": "يعتمد على دفتر القيود: داخل − خارج لكل مستثمر.",
+    "Based on investor transactions: deposits minus withdrawals for each investor.": "يعتمد على معاملات المستثمر: الإيداعات ناقص المسحوبات لكل مستثمر.",
     "Basic Data": "بيانات أساسية",
     "Basic Information": "البيانات الأساسية",
     "Cancel": "إلغاء",

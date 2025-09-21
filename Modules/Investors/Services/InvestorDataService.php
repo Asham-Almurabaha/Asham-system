@@ -281,7 +281,16 @@ class InvestorDataService
 
         // صافي السيولة الحالية = إجمالي الداخل - إجمالي الخارج (باستثناء قيود المكتب)
         $liquiditySummary = InvestorLiquidityCalculator::summarizeForInvestor($investor->id);
-        $liquidity = round((float) ($liquiditySummary['net'] ?? 0), 2);
+        $liquidityIn = round((float) ($liquiditySummary['in'] ?? 0), 2);
+        $liquidityOut = round((float) ($liquiditySummary['out'] ?? 0), 2);
+        $liquidityNet = round((float) ($liquiditySummary['net'] ?? ($liquidityIn - $liquidityOut)), 2);
+        $liquidity = $liquidityNet;
+
+        $liquidityBreakdown = [
+            'in'  => $liquidityIn,
+            'out' => $liquidityOut,
+            'net' => $liquidityNet,
+        ];
 
         // ===== زكاة المال =====
         $lastZakatEntry = LedgerEntry::query()
@@ -363,6 +372,7 @@ class InvestorDataService
             'contractStatusMetrics'     => $statusMetrics,
             'contractStatusTotal'       => $contractsTotal,
             'zakat'                     => $zakatData,
+            'liquiditySummary'          => $liquidityBreakdown,
             'contractBreakdown'         => $contractBreakdown,
             'totals' => [
                 'capital_share_all' => $totalCapitalShareAll,

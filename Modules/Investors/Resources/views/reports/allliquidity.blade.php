@@ -22,7 +22,7 @@
 
 @section('content')
   <div class="small-muted mb-2">
-    @lang('reports.Based on ledger: in minus out per investor.')
+    @lang('reports.Based on investor transactions: deposits minus withdrawals per investor.')
   </div>
 
   <div class="toolbar soft p-3 mb-3 no-print">

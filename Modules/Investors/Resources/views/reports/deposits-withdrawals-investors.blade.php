@@ -26,7 +26,7 @@
 
 @section('content')
     <div class="small-muted mb-2">
-        @lang('reports.Based on ledger totals for deposits and withdrawals per investor.')
+        @lang('reports.Based on investor transactions totals for deposits and withdrawals per investor.')
     </div>
 
     <div class="toolbar soft p-3 mb-3 no-print">
