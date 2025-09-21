@@ -3,12 +3,30 @@
   $name    = $setting->name ?? config('app.name', 'اسم الشركة');
   $homeUrl = url('/');
   $locale  = app()->getLocale();
+  $localeParts = explode('_', $locale, 2);
+  $localeRoot = strtolower($localeParts[0] ?? $locale);
+  $rtlLocales = ['ar', 'he', 'fa', 'ur'];
+  $isRtl = in_array($localeRoot, $rtlLocales, true);
+  $direction = $isRtl ? 'rtl' : 'ltr';
+  $textAlignmentClass = $isRtl ? 'text-end' : 'text-start';
   $currentLocaleBadge = strtoupper($locale); // AR أو EN
   $notificationsData = $headerNotifications ?? [];
   $notificationsTotal = (int) ($notificationsData['total'] ?? 0);
   $zakatNotifications = $notificationsData['zakat'] ?? ['count' => 0, 'items' => []];
   $zakatCount = (int) ($zakatNotifications['count'] ?? 0);
   $zakatItems = collect($zakatNotifications['items'] ?? []);
+  $searchMinChars = 2;
+  $searchConfig = [
+    'endpoint' => route('global-search'),
+    'min_length' => $searchMinChars,
+    'placeholder' => __('search.placeholder'),
+    'empty' => __('search.empty_state'),
+    'min_length_message' => __('search.min_length', ['count' => $searchMinChars]),
+    'loading' => __('search.loading'),
+    'error' => __('search.error'),
+    'no_results' => __('search.no_results'),
+    'open' => __('search.open_record'),
+  ];
 @endphp
 
 <div class="d-flex align-items-center justify-content-between w-100 pe-3">
@@ -156,3 +174,49 @@
 
   </ul>
 </nav>
+
+<div id="header-search"
+     class="header-search collapse"
+     dir="{{ $direction }}"
+     data-endpoint="{{ $searchConfig['endpoint'] }}"
+     data-min-length="{{ $searchConfig['min_length'] }}"
+     data-direction="{{ $direction }}"
+     data-empty="{{ e($searchConfig['empty']) }}"
+     data-min-length-message="{{ e($searchConfig['min_length_message']) }}"
+     data-loading="{{ e($searchConfig['loading']) }}"
+     data-error="{{ e($searchConfig['error']) }}"
+     data-no-results="{{ e($searchConfig['no_results']) }}"
+     data-open-label="{{ e($searchConfig['open']) }}">
+  <div class="header-search-card card shadow-sm border-0">
+    <div class="card-body p-3">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="flex-grow-1">
+          <div class="position-relative">
+            <span class="header-search-input-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
+            <input type="search"
+                   class="form-control header-search-input"
+                   data-role="input"
+                   dir="{{ $direction }}"
+                   autocomplete="off"
+                   spellcheck="false"
+                   placeholder="{{ $searchConfig['placeholder'] }}"
+                   aria-label="{{ __('Search') }}">
+          </div>
+        </div>
+        <button type="button"
+                class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                data-bs-toggle="collapse"
+                data-bs-target="#header-search"
+                aria-label="{{ __('general.Cancel') }}">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="header-search-status small text-muted {{ $textAlignmentClass }}" data-role="status" dir="{{ $direction }}">
+        {{ $searchConfig['empty'] }}
+      </div>
+
+      <ul class="list-group list-group-flush header-search-results mt-3 {{ $textAlignmentClass }}" data-role="results" dir="{{ $direction }}" hidden></ul>
+    </div>
+  </div>
+</div>

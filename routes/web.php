@@ -4,6 +4,7 @@ use App\Http\Controllers\AjaxAccountController;
 use App\Http\Controllers\AjaxProductTypeController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LedgerController;
@@ -30,6 +31,9 @@ Route::get('/', function () {
 });
 
 Route::middleware('auth')->group(function () {
+
+    Route::get('/global-search', GlobalSearchController::class)
+        ->name('global-search');
 
     Route::get('/home', function () {
         return Setting::count() > 0
