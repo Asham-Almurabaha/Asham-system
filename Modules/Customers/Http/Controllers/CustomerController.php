@@ -5,7 +5,9 @@ namespace Modules\Customers\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\Customers\Entities\Customer;
 use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractClaim;
 use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
@@ -15,6 +17,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use App\Models\OfficeTransaction;
+use Modules\Investors\Entities\InvestorTransaction;
+use Modules\Investors\Support\InvestorContractPaymentAggregator;
+use Modules\Lookups\Entities\TransactionStatus;
 
 
 class CustomerController extends Controller
@@ -435,6 +441,69 @@ class CustomerController extends Controller
             return response()->json($details->toArray());
         }
 
+        $contractIdsForFinancials = [];
+        $collectContractIds = function ($items) use (&$contractIdsForFinancials): void {
+            if (!is_iterable($items)) {
+                return;
+            }
+
+            foreach ($items as $item) {
+                if (is_object($item) && isset($item->id)) {
+                    $id = (int) $item->id;
+                } elseif (is_array($item) && isset($item['id'])) {
+                    $id = (int) $item['id'];
+                } else {
+                    $id = null;
+                }
+
+                if ($id && $id > 0) {
+                    $contractIdsForFinancials[] = $id;
+                }
+            }
+        };
+
+        $collectContractIds($details->active   ?? []);
+        $collectContractIds($details->finished ?? []);
+        $collectContractIds($details->other    ?? []);
+
+        $financialByContract = [];
+        if (!empty($contractIdsForFinancials)) {
+            $financialData = $this->computeContractFinancials($contractIdsForFinancials);
+            $financialByContract = $financialData['per_contract'] ?? [];
+        }
+
+        if (!empty($financialByContract)) {
+            $updateBriefs = function ($items) use ($financialByContract): void {
+                if (!is_iterable($items)) {
+                    return;
+                }
+
+                foreach ($items as $item) {
+                    if (!is_object($item)) {
+                        continue;
+                    }
+
+                    $contractId = (int) ($item->id ?? 0);
+
+                    if ($contractId <= 0 || !isset($financialByContract[$contractId])) {
+                        continue;
+                    }
+
+                    $financial = $financialByContract[$contractId];
+                    $item->due_sum = round((float) ($financial['expected_total'] ?? 0.0), 2);
+                    $item->paid_sum = round((float) ($financial['paid_total'] ?? 0.0), 2);
+                    $item->unpaid_sum = round((float) ($financial['remaining'] ?? 0.0), 2);
+                    $item->remaining_amount = $item->unpaid_sum;
+                }
+            };
+
+            $updateBriefs($details->active   ?? []);
+            $updateBriefs($details->finished ?? []);
+            $updateBriefs($details->other    ?? []);
+        }
+
+        $claimCards = $this->buildCustomerClaimCards($customer->id);
+
         // بعض النِّسَب الجاهزة للعرض (اختياري للواجهة)
         $totalContracts = (int)$details->total_contracts;
         $percent = function (int $part) use ($totalContracts): float {
@@ -463,6 +532,7 @@ class CustomerController extends Controller
 
             'statusesBreakdown' => $details->statuses_breakdown,
             'installments'      => $details->installments_summary,
+            'claimCards'        => $claimCards,
 
             // الفلاتر بعد التنظيف لإعادة ملؤها في الواجهة
             'filters'           => $filters,
@@ -568,6 +638,9 @@ class CustomerController extends Controller
                 ->keyBy('customer_id');
         }
 
+        $financialData = $this->computeContractFinancials($activeContractIds);
+        $remainingByCustomer = $financialData['per_customer'] ?? [];
+
         $metrics = [];
 
         foreach ($customerIds as $customerId) {
@@ -576,13 +649,266 @@ class CustomerController extends Controller
 
             $metrics[$customerId] = [
                 'active_contracts'   => $activeCollection->count(),
-                'remaining_sum'      => $aggRow ? (float) ($aggRow->remaining_sum ?? 0.0) : 0.0,
+                'remaining_sum'      => (float) ($remainingByCustomer[$customerId] ?? 0.0),
                 'unpaid_month_count' => $aggRow ? (int) ($aggRow->unpaid_month_count ?? 0) : 0,
                 'unpaid_month_sum'   => $aggRow ? (float) ($aggRow->unpaid_month_sum ?? 0.0) : 0.0,
             ];
         }
 
         return $metrics;
+    }
+
+    private function computeContractFinancials(array $contractIds): array
+    {
+        $contractIds = array_values(array_unique(array_filter(array_map('intval', $contractIds), fn ($id) => $id > 0)));
+
+        if (empty($contractIds)) {
+            return [
+                'per_contract' => [],
+                'per_customer' => [],
+            ];
+        }
+
+        $contracts = Contract::query()
+            ->select(['id', 'customer_id', 'total_value', 'contract_value', 'investor_profit', 'discount_amount'])
+            ->whereIn('id', $contractIds)
+            ->get();
+
+        if ($contracts->isEmpty()) {
+            return [
+                'per_contract' => [],
+                'per_customer' => [],
+            ];
+        }
+
+        $expectedByContract = [];
+        $customerByContract = [];
+
+        foreach ($contracts as $contract) {
+            $contractId = (int) ($contract->id ?? 0);
+            $customerId = (int) ($contract->customer_id ?? 0);
+
+            if ($contractId <= 0 || $customerId <= 0) {
+                continue;
+            }
+
+            $totalValue = $this->resolveContractTotalValue($contract);
+
+            if ($totalValue <= 0) {
+                continue;
+            }
+
+            $expectedByContract[$contractId] = round($totalValue, 2);
+            $customerByContract[$contractId] = $customerId;
+        }
+
+        if (empty($expectedByContract)) {
+            return [
+                'per_contract' => [],
+                'per_customer' => [],
+            ];
+        }
+
+        $paymentBuckets = InvestorContractPaymentAggregator::transactionStatusBuckets();
+        $paymentStatusIds = array_values(array_unique(array_merge(
+            $paymentBuckets['installment'] ?? [],
+            $paymentBuckets['claim'] ?? []
+        )));
+
+        $investorPaidQuery = InvestorTransaction::query()
+            ->selectRaw('contract_id, SUM(amount) as amount')
+            ->whereIn('contract_id', array_keys($expectedByContract));
+
+        if (!empty($paymentStatusIds)) {
+            $investorPaidQuery->whereIn('status_id', $paymentStatusIds);
+        } else {
+            $investorPaidQuery->whereRaw('0 = 1');
+        }
+
+        $investorPaid = $investorPaidQuery
+            ->groupBy('contract_id')
+            ->pluck('amount', 'contract_id');
+
+        $officeStatusIds = $this->officeProfitStatusIds();
+
+        $officePaidQuery = OfficeTransaction::query()
+            ->selectRaw('contract_id, SUM(amount) as amount')
+            ->whereIn('contract_id', array_keys($expectedByContract));
+
+        if (!empty($officeStatusIds)) {
+            $officePaidQuery->whereIn('status_id', $officeStatusIds);
+        } else {
+            $officePaidQuery->whereRaw('0 = 1');
+        }
+
+        $officePaid = $officePaidQuery
+            ->groupBy('contract_id')
+            ->pluck('amount', 'contract_id');
+
+        $perContract = [];
+        $perCustomer = [];
+
+        foreach ($expectedByContract as $contractId => $expected) {
+            $paidInvestor = round((float) ($investorPaid[$contractId] ?? 0.0), 2);
+            $paidOffice   = round((float) ($officePaid[$contractId]   ?? 0.0), 2);
+            $paidTotal    = round($paidInvestor + $paidOffice, 2);
+            $remaining    = round($expected - $paidTotal, 2);
+
+            if ($remaining < 0) {
+                $remaining = 0.0;
+            }
+
+            $perContract[$contractId] = [
+                'expected_total' => $expected,
+                'paid_investor'  => $paidInvestor,
+                'paid_office'    => $paidOffice,
+                'paid_total'     => $paidTotal,
+                'remaining'      => $remaining,
+            ];
+
+            $customerId = $customerByContract[$contractId] ?? null;
+
+            if ($customerId) {
+                $perCustomer[$customerId] = round(($perCustomer[$customerId] ?? 0.0) + $remaining, 2);
+            }
+        }
+
+        return [
+            'per_contract' => $perContract,
+            'per_customer' => $perCustomer,
+        ];
+    }
+
+    private function resolveContractTotalValue($contract): float
+    {
+        $total = (float) ($contract->total_value ?? 0.0);
+
+        if ($total > 0) {
+            return round($total, 2);
+        }
+
+        $contractValue = (float) ($contract->contract_value ?? 0.0);
+        $profit        = (float) ($contract->investor_profit ?? 0.0);
+        $discount      = (float) ($contract->discount_amount ?? 0.0);
+
+        $computed = $contractValue + $profit - $discount;
+
+        return $computed > 0 ? round($computed, 2) : 0.0;
+    }
+
+    private function officeProfitStatusIds(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $names = ['ربح المكتب', 'office profit', 'office share'];
+        $normalize = static fn ($value) => mb_strtolower(trim((string) $value), 'UTF-8');
+        $target = array_map($normalize, $names);
+
+        $ids = TransactionStatus::query()
+            ->select(['id', 'name'])
+            ->get()
+            ->filter(function ($status) use ($normalize, $target) {
+                $name = $normalize($status->name ?? '');
+
+                return $name !== '' && in_array($name, $target, true);
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return $cache = $ids;
+    }
+
+    private function buildCustomerClaimCards(int $customerId): array
+    {
+        $statusIds = ContractStatus::query()
+            ->whereIn('name', ['مطلوب', 'مرفوع فيه'])
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($statusIds)) {
+            return [
+                'show'      => false,
+                'total'     => 0.0,
+                'paid'      => 0.0,
+                'remaining' => 0.0,
+            ];
+        }
+
+        $contractIds = Contract::query()
+            ->where('customer_id', $customerId)
+            ->whereIn('contract_status_id', $statusIds)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($contractIds)) {
+            return [
+                'show'      => false,
+                'total'     => 0.0,
+                'paid'      => 0.0,
+                'remaining' => 0.0,
+            ];
+        }
+
+        $claimsNet = ContractClaim::query()
+            ->whereIn('contract_id', $contractIds)
+            ->selectRaw('SUM(COALESCE(claim_amount,0) - COALESCE(discount_amount,0)) as net_sum')
+            ->value('net_sum');
+
+        $totalClaims = round(max(0.0, (float) ($claimsNet ?? 0.0)), 2);
+
+        $paymentBuckets = InvestorContractPaymentAggregator::transactionStatusBuckets();
+        $claimStatusIds = $paymentBuckets['claim'] ?? [];
+
+        $investorPaidQuery = InvestorTransaction::query()
+            ->whereIn('contract_id', $contractIds)
+            ->whereNotNull('contract_claim_id');
+
+        if (!empty($claimStatusIds)) {
+            $investorPaidQuery->whereIn('status_id', $claimStatusIds);
+        } else {
+            $investorPaidQuery->whereRaw('0 = 1');
+        }
+
+        $investorPaid = (float) $investorPaidQuery->sum('amount');
+
+        $officeStatusIds = $this->officeProfitStatusIds();
+
+        $officePaidQuery = OfficeTransaction::query()
+            ->whereIn('contract_id', $contractIds)
+            ->whereNotNull('contract_claim_id');
+
+        if (!empty($officeStatusIds)) {
+            $officePaidQuery->whereIn('status_id', $officeStatusIds);
+        } else {
+            $officePaidQuery->whereRaw('0 = 1');
+        }
+
+        $officePaid = (float) $officePaidQuery->sum('amount');
+
+        $totalPaid = round($investorPaid + $officePaid, 2);
+        $remaining = round(max(0.0, $totalClaims - $totalPaid), 2);
+
+        return [
+            'show'      => true,
+            'total'     => $totalClaims,
+            'paid'      => $totalPaid,
+            'remaining' => $remaining,
+        ];
     }
 
     private function buildCustomerInstallmentAggregation(

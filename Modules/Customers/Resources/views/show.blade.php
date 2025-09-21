@@ -77,6 +77,42 @@
         </div>
     </div>
 
+    @if(($claimCards['show'] ?? false))
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-lg-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="kpi-icon"><i class="bi bi-exclamation-diamond-fill fs-5 text-danger"></i></div>
+                        <div class="fw-bold text-muted">{{ __('Total Claims Value') }}</div>
+                    </div>
+                    <div class="fs-3 fw-bold text-danger">{{ number_format($claimCards['total'] ?? 0, 2) }}</div>
+                    <div class="small text-muted">{{ __('Value of claims on required/raised contracts') }}</div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="kpi-icon"><i class="bi bi-cash-stack fs-5 text-success"></i></div>
+                        <div class="fw-bold text-muted">{{ __('Claims Paid') }}</div>
+                    </div>
+                    <div class="fs-3 fw-bold text-success">{{ number_format($claimCards['paid'] ?? 0, 2) }}</div>
+                    <div class="small text-muted">{{ __('Collected to date (investor + office)') }}</div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="kpi-icon"><i class="bi bi-bullseye fs-5 text-primary"></i></div>
+                        <div class="fw-bold text-muted">{{ __('Claims Remaining') }}</div>
+                    </div>
+                    @php $claimsRemain = (float) ($claimCards['remaining'] ?? 0); @endphp
+                    <div class="fs-3 fw-bold {{ $claimsRemain > 0 ? 'text-danger' : 'text-muted' }}">{{ number_format($claimsRemain, 2) }}</div>
+                    <div class="small text-muted">{{ __('Outstanding balance on required/raised contracts') }}</div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- ====== Contracts and installments cards (from customer details service) ====== --}}
     @php
         $cs_active   = (int)($cs['active']   ?? 0);
