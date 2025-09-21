@@ -7,19 +7,14 @@
     $cs = $currencySymbol ?? 'ر.س';
 
     $filters = (array) ($filters ?? []);
-    $q = (string) ($filters['q'] ?? '');
-    $perPage = (int) ($filters['per_page'] ?? 25);
+    $selectedInvestor = (string) ($filters['investor_id'] ?? '');
 
-    $isPaginated = $rows instanceof \Illuminate\Pagination\LengthAwarePaginator;
-    $items = $isPaginated ? $rows->items() : (is_iterable($rows) ? $rows : []);
-    $items = collect($items);
-
-    $countAll = $isPaginated ? $rows->total() : $items->count();
+    $items = collect(is_iterable($rows ?? []) ? $rows : []);
+    $countAll = $items->count();
 
     $pageTotals = (array) ($pageTotals ?? ['in' => 0.0, 'out' => 0.0, 'net' => 0.0]);
     $overallTotals = (array) ($overallTotals ?? ['in' => 0.0, 'out' => 0.0, 'net' => 0.0]);
-
-    $perPageOptions = [10, 25, 50, 100];
+    $investorOptions = collect($investors ?? []);
 @endphp
 
 @push('styles')
@@ -36,19 +31,18 @@
 
     <div class="toolbar soft p-3 mb-3 no-print">
         <form method="GET" class="row g-2 align-items-end">
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label mb-1 small">@lang('reports.Search by name')</label>
-                <input type="text" name="q" class="form-control" value="{{ e($q) }}" placeholder="@lang('investors::investors.Type investor name...')">
-            </div>
-            <div class="col-6 col-md-2">
-                <label class="form-label mb-1 small">@lang('reports.Per Page')</label>
-                <select name="per_page" class="form-select">
-                    <?php foreach ($perPageOptions as $n) { ?>
-                        <option value="{{ $n }}" @selected($perPage === $n)>{{ $n }}</option>
-                    <?php } ?>
+                <select name="investor_id" class="form-select">
+                    <option value="">@lang('reports.All Investors')</option>
+                    @foreach ($investorOptions as $investor)
+                        <option value="{{ $investor->id }}" @selected((string) $selectedInvestor === (string) $investor->id)>
+                            {{ $investor->name }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
-            <div class="col-6 col-md-4 d-flex gap-2">
+            <div class="col-12 col-md-6 col-lg-4 d-flex gap-2">
                 <x-button.action type="submit" variant="primary" class="flex-fill">
                     <i class="bi bi-search"></i> {{ __('Search') }}
                 </x-button.action>
@@ -103,40 +97,38 @@
                 <th>@lang('investors::investors.Net Liquidity')</th>
             </tr>
         </x-slot>
-        <?php if ($items->isEmpty()): ?>
-            <tr>
-                <td colspan="5" class="py-5 text-muted">@lang('reports.No matching data.')</td>
-            </tr>
-        <?php else: ?>
-            <?php foreach ($items as $i => $investor) {
-                $rowNumber = $isPaginated ? ($rows->firstItem() + $i) : ($i + 1);
+        @forelse ($items as $investor)
+            @php
                 $totalIn = (float) ($investor->total_in ?? 0);
                 $totalOut = (float) ($investor->total_out ?? 0);
                 $net = (float) ($investor->net_liquidity ?? 0);
-            ?>
-                <tr>
-                    <td>{{ $rowNumber }}</td>
-                    <td class="text-start">
-                        @if (Route::has('investors.show'))
-                            <a href="{{ route('investors.show', $investor->id) }}" class="fw-bold text-dark text-decoration-none hover-primary">
-                                {{ $investor->name }}
-                            </a>
-                        @else
-                            <span class="fw-bold text-dark">{{ $investor->name }}</span>
-                        @endif
-                    </td>
-                    <td class="text-success fw-semibold">
-                        {{ number_format($totalIn, 2) }} <span class="small-muted">{{ $cs }}</span>
-                    </td>
-                    <td class="text-danger fw-semibold">
-                        {{ number_format($totalOut, 2) }} <span class="small-muted">{{ $cs }}</span>
-                    </td>
-                    <td class="fw-bold {{ $net >= 0 ? 'text-success' : 'text-danger' }}">
-                        {{ number_format($net, 2) }} <span class="small-muted">{{ $cs }}</span>
-                    </td>
-                </tr>
-            <?php } ?>
-        <?php endif; ?>
+            @endphp
+            <tr>
+                <td>{{ $loop->iteration }}</td>
+                <td class="text-start">
+                    @if (Route::has('investors.show'))
+                        <a href="{{ route('investors.show', $investor->id) }}" class="fw-bold text-dark text-decoration-none hover-primary">
+                            {{ $investor->name }}
+                        </a>
+                    @else
+                        <span class="fw-bold text-dark">{{ $investor->name }}</span>
+                    @endif
+                </td>
+                <td class="text-success fw-semibold">
+                    {{ number_format($totalIn, 2) }} <span class="small-muted">{{ $cs }}</span>
+                </td>
+                <td class="text-danger fw-semibold">
+                    {{ number_format($totalOut, 2) }} <span class="small-muted">{{ $cs }}</span>
+                </td>
+                <td class="fw-bold {{ $net >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ number_format($net, 2) }} <span class="small-muted">{{ $cs }}</span>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="5" class="py-5 text-muted">@lang('reports.No matching data.')</td>
+            </tr>
+        @endforelse
         <x-slot name="footer">
             <tr class="table-light fw-semibold">
                 <td colspan="2" class="text-start">@lang('reports.Page Totals')</td>
@@ -152,9 +144,4 @@
             </tr>
         </x-slot>
     </x-table>
-    @if ($isPaginated)
-        <div class="no-print d-flex justify-content-center p-2 mt-2">
-            {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}
-        </div>
-    @endif
 @endsection

@@ -14,6 +14,7 @@ return [
     'Investors Outstanding Report' => 'Investors Outstanding Report',
     'Based on active contracts remaining balances for each investor.' => 'Based on active contracts remaining balances for each investor.',
     'Search by name' => 'Search by name',
+    'All Investors' => 'All Investors',
     'Per Page' => 'Per Page',
     'Total Investors (All)' => 'Total Investors (All)',
     'Total Liquidity (All)' => 'Total Liquidity (All)',

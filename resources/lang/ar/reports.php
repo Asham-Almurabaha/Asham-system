@@ -14,6 +14,7 @@ return [
     'Investors Outstanding Report' => 'تقرير المتبقي على العملاء للمستثمرين',
     'Based on active contracts remaining balances for each investor.' => 'يعتمد على المتبقي في العقود النشطة لكل مستثمر.',
     'Search by name' => 'بحث بالاسم',
+    'All Investors' => 'جميع المستثمرين',
     'Per Page' => 'لكل صفحة',
     'Total Investors (All)' => 'عدد المستثمرين (الكل)',
     'Total Liquidity (All)' => 'إجمالي السيولة (الكل)',

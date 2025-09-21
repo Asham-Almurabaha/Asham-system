@@ -6,19 +6,17 @@
 @php
   $cs = $currencySymbol ?? 'ر.س';
 
-  $isPaginated = $rows instanceof \Illuminate\Pagination\LengthAwarePaginator;
-  $items = $isPaginated ? $rows->items() : (is_iterable($rows) ? $rows : []);
-  $items = collect($items);
+  $filters = (array) ($filters ?? []);
+  $selectedInvestor = (string) data_get($filters, 'investor_id', '');
+  $items = collect(is_iterable($rows ?? []) ? $rows : []);
 
-  $countAll      = $isPaginated ? $rows->total() : $items->count();
+  $countAll      = $items->count();
   $grandTotals   = collect($grandTotals ?? []);
   $grandWith     = (float) $grandTotals->get('with_office', 0);
   $grandWithout  = (float) $grandTotals->get('without_office', 0);
   $grandOffice   = (float) $grandTotals->get('office_share', max(0, $grandWith - $grandWithout));
   $avgRemaining  = $countAll > 0 ? ($grandWith / $countAll) : 0;
-
-  $q        = data_get($filters ?? [], 'q', '');
-  $perPage  = (int) data_get($filters ?? [], 'per_page', 25);
+  $investorOptions = collect($investors ?? []);
 @endphp
 
 @push('styles')
@@ -35,19 +33,16 @@
 
   <div class="toolbar soft p-3 mb-3 no-print">
     <form method="GET" class="row g-2 align-items-end">
-      <div class="col-12 col-md-6">
+      <div class="col-12 col-md-6 col-lg-4">
         <label class="form-label mb-1 small">@lang('reports.Search by name')</label>
-        <input type="text" name="q" class="form-control" value="{{ e($q) }}" placeholder="@lang('investors::investors.Type investor name...')">
-      </div>
-      <div class="col-6 col-md-2">
-        <label class="form-label mb-1 small">@lang('reports.Per Page')</label>
-        <select name="per_page" class="form-select">
-          @foreach([10,25,50,100] as $n)
-            <option value="{{ $n }}" @selected($perPage==$n)>{{ $n }}</option>
+        <select name="investor_id" class="form-select">
+          <option value="">@lang('reports.All Investors')</option>
+          @foreach($investorOptions as $investor)
+            <option value="{{ $investor->id }}" @selected((string) $selectedInvestor === (string) $investor->id)>{{ $investor->name }}</option>
           @endforeach
         </select>
       </div>
-      <div class="col-6 col-md-4 d-flex gap-2">
+      <div class="col-12 col-md-6 col-lg-4 d-flex gap-2">
         <x-button.action type="submit" variant="primary" class="flex-fill"><i class="bi bi-search"></i> {{ __('Search') }}</x-button.action>
         <x-button.action href="{{ url()->current() }}" variant="secondary" :outline="true" class="flex-fill">{{ __('Clear') }}</x-button.action>
       </div>
@@ -106,14 +101,14 @@
             <th>@lang('reports.Remaining (Excluding Office Share)')</th>
           </tr>
       </x-slot>
-      @forelse($items as $i => $r)
+      @forelse($items as $r)
         @php
           $withOffice = (float) ($r->remaining_with_office ?? 0);
           $withoutOffice = (float) ($r->remaining_without_office ?? 0);
           $officeShare = (float) ($r->remaining_office_share ?? max(0, $withOffice - $withoutOffice));
         @endphp
         <tr>
-          <td>{{ $isPaginated ? ($rows->firstItem() + $i) : ($i + 1) }}</td>
+          <td>{{ $loop->iteration }}</td>
           <td class="text-start">
             @if(Route::has('investors.show'))
               <a href="{{ route('investors.show', $r->id) }}" class="fw-bold link-dark text-decoration-none">{{ $r->name }}</a>
@@ -137,10 +132,5 @@
         </tr>
       @endforelse
   </x-table>
-  @if($isPaginated)
-    <div class="no-print d-flex justify-content-center p-2">
-      {{ $rows->withQueryString()->links('pagination::bootstrap-5') }}
-    </div>
-  @endif
 @endsection
 

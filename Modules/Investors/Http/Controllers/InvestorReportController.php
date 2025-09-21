@@ -68,45 +68,42 @@ class InvestorReportController extends Controller
 
     public function depositsWithdrawalsReport(Request $request)
     {
+        $investorId = $request->query('investor_id');
         $filters = [
-            'q'        => $request->query('q'),
-            'per_page' => (int) $request->query('per_page', 25),
+            'investor_id' => $investorId !== null && $investorId !== ''
+                ? (int) $investorId
+                : null,
         ];
 
-        $query = Investor::query()
+        $investorOptions = Investor::query()
             ->select(['id', 'name'])
-            ->when($filters['q'], function ($q, $v) {
-                $q->where('name', 'like', "%{$v}%");
-            })
-            ->orderBy('name');
+            ->orderBy('name')
+            ->get();
 
-        $rows = $query
-            ->paginate(max(1, $filters['per_page']))
-            ->withQueryString();
+        $rows = Investor::query()
+            ->select(['id', 'name'])
+            ->when($filters['investor_id'], fn ($query, $id) => $query->whereKey($id))
+            ->orderBy('name')
+            ->get();
 
         $pageIds = $rows->pluck('id');
         $pageLiquidity = $this->summarizeInvestorLiquidity($pageIds);
         $pageByInvestor = $pageLiquidity['perInvestor'];
         $pageTotals = $pageLiquidity['totals'];
 
-        $rows->getCollection()->transform(function ($investor) use ($pageByInvestor) {
+        $rows = $rows->map(function ($investor) use ($pageByInvestor) {
             $stats = $pageByInvestor->get($investor->id, ['in' => 0.0, 'out' => 0.0, 'net' => 0.0]);
             $investor->total_in = $stats['in'] ?? 0.0;
             $investor->total_out = $stats['out'] ?? 0.0;
             $investor->net_liquidity = $stats['net'] ?? 0.0;
 
             return $investor;
-        });
+        })->values();
 
-        $overallData = InvestorLiquidityCalculator::aggregateTotals(function ($query) use ($filters) {
-            $query->when($filters['q'], function ($q, $search) {
-                $q->whereIn('it.investor_id', function ($sub) use ($search) {
-                    $sub->select('id')
-                        ->from('investors')
-                        ->where('name', 'like', "%{$search}%");
-                });
-            });
-        });
+        $overallData = InvestorLiquidityCalculator::aggregateTotals(
+            null,
+            $filters['investor_id'] ? [$filters['investor_id']] : null
+        );
 
         $overallTotals = [
             'in'  => round((float) $overallData->sum(fn ($row) => (float) ($row['in'] ?? 0)), 2),
@@ -120,6 +117,7 @@ class InvestorReportController extends Controller
             'currencySymbol' => 'ر.س',
             'pageTotals'     => $pageTotals,
             'overallTotals'  => $overallTotals,
+            'investors'      => $investorOptions,
         ]);
     }
 
@@ -261,21 +259,23 @@ class InvestorReportController extends Controller
 
     public function outstanding(Request $request)
     {
+        $investorId = $request->query('investor_id');
         $filters = [
-            'q'        => $request->query('q'),
-            'per_page' => (int) $request->query('per_page', 25),
+            'investor_id' => $investorId !== null && $investorId !== ''
+                ? (int) $investorId
+                : null,
         ];
 
-        $query = Investor::query()
-            ->select(['id', 'name', 'office_share_percentage'])
-            ->when($filters['q'], function ($q, $v) {
-                $q->where('name', 'like', "%{$v}%");
-            })
-            ->orderBy('name');
+        $investorOptions = Investor::query()
+            ->select(['id', 'name'])
+            ->orderBy('name')
+            ->get();
 
-        $rows = $query
-            ->paginate(max(1, $filters['per_page']))
-            ->withQueryString();
+        $rows = Investor::query()
+            ->select(['id', 'name', 'office_share_percentage'])
+            ->when($filters['investor_id'], fn ($query, $id) => $query->whereKey($id))
+            ->orderBy('name')
+            ->get();
 
         $currencySymbol = 'ر.س';
         $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
@@ -396,9 +396,7 @@ class InvestorReportController extends Controller
             ->when(!empty($endedIds), function ($q) use ($endedIds) {
                 $q->whereNotIn('c.contract_status_id', $endedIds);
             })
-            ->when($filters['q'], function ($q, $v) {
-                $q->where('inv.name', 'like', "%{$v}%");
-            })
+            ->when($filters['investor_id'], fn ($q, $id) => $q->where('inv.id', $id))
             ->selectRaw(
                 "SUM(ROUND($remainingWithExpr, 2)) AS remaining_with_office, " .
                 "SUM(ROUND($remainingWithoutExpr, 2)) AS remaining_without_office, " .
@@ -412,14 +410,7 @@ class InvestorReportController extends Controller
         ];
         $grandTotals['office_share'] = $totalsRow ? round((float) ($totalsRow->remaining_office_share ?? 0), 2) : 0.0;
 
-        $items = $rows->getCollection();
-        $ids = $items->pluck('id');
-
-        $pageTotals = [
-            'with_office'    => 0.0,
-            'without_office' => 0.0,
-            'office_share'   => 0.0,
-        ];
+        $ids = $rows->pluck('id');
 
         if ($ids->isNotEmpty()) {
             $contractRows = DB::table('contract_investor as ci')
@@ -500,21 +491,23 @@ class InvestorReportController extends Controller
                 }
             }
 
-            $items->transform(function ($investor) use (
+            $rows = $rows->map(function ($investor) use (
                 $contractsByInvestor,
                 $paidByInvestor,
                 $officePaidByInvestor,
                 $claimPaidByInvestor,
-                &$pageTotals,
                 $claimStatusIds,
                 $raisedStatusIds
             ) {
-                $id = $investor->id;
+                $investorId = (int) ($investor->id ?? 0);
                 $pctOffice = (float) ($investor->office_share_percentage ?? 0);
-                $contracts = $contractsByInvestor->get($id, collect());
-                $paidMap = $paidByInvestor->get($id, collect());
-                $officePaidMap = $officePaidByInvestor->get($id, collect());
-                $claimPaidMap = $claimPaidByInvestor->get($id, collect());
+                $contracts = $contractsByInvestor->get($investorId, collect());
+                $contracts = $contracts instanceof \Illuminate\Support\Collection
+                    ? $contracts
+                    : collect($contracts);
+                $paidMap = $paidByInvestor->get($investorId, collect());
+                $officePaidMap = $officePaidByInvestor->get($investorId, collect());
+                $claimPaidMap = $claimPaidByInvestor->get($investorId, collect());
 
                 $withOffice = 0.0;
                 $withoutOffice = 0.0;
@@ -596,18 +589,16 @@ class InvestorReportController extends Controller
                 $investor->remaining_without_office = round($withoutOffice, 2);
                 $investor->remaining_office_share = round($officeShare, 2);
 
-                $pageTotals['with_office'] += $investor->remaining_with_office;
-                $pageTotals['without_office'] += $investor->remaining_without_office;
-                $pageTotals['office_share'] += $investor->remaining_office_share;
-
                 return $investor;
-            });
+            })->values();
+        } else {
+            $rows = collect();
         }
 
         $pageTotals = [
-            'with_office'    => round($pageTotals['with_office'], 2),
-            'without_office' => round($pageTotals['without_office'], 2),
-            'office_share'   => round(max(0.0, $pageTotals['office_share']), 2),
+            'with_office'    => round((float) $rows->sum(fn ($investor) => (float) ($investor->remaining_with_office ?? 0)), 2),
+            'without_office' => round((float) $rows->sum(fn ($investor) => (float) ($investor->remaining_without_office ?? 0)), 2),
+            'office_share'   => round((float) $rows->sum(fn ($investor) => max(0.0, (float) ($investor->remaining_office_share ?? 0))), 2),
         ];
 
         return view('investors::reports.outstanding', [
@@ -616,6 +607,7 @@ class InvestorReportController extends Controller
             'currencySymbol' => $currencySymbol,
             'grandTotals'    => $grandTotals,
             'pageTotals'     => $pageTotals,
+            'investors'      => $investorOptions,
         ]);
     }
 
@@ -710,21 +702,23 @@ class InvestorReportController extends Controller
 
     public function allliquidity(Request $request)
     {
+        $investorId = $request->query('investor_id');
         $filters = [
-            'q'        => $request->query('q'),
-            'per_page' => (int) $request->query('per_page', 25),
+            'investor_id' => $investorId !== null && $investorId !== ''
+                ? (int) $investorId
+                : null,
         ];
 
-        $query = Investor::query()
+        $investorOptions = Investor::query()
             ->select(['id', 'name'])
-            ->when($filters['q'], function ($q, $v) {
-                $q->where('name', 'like', "%{$v}%");
-            })
-            ->orderBy('name');
+            ->orderBy('name')
+            ->get();
 
-        $rows = $query
-            ->paginate(max(1, $filters['per_page']))
-            ->withQueryString();
+        $rows = Investor::query()
+            ->select(['id', 'name'])
+            ->when($filters['investor_id'], fn ($query, $id) => $query->whereKey($id))
+            ->orderBy('name')
+            ->get();
 
         $currencySymbol = 'ر.س';
         $ids = $rows->pluck('id');
@@ -777,7 +771,7 @@ class InvestorReportController extends Controller
                 ->map(fn ($rows) => $rows->pluck('contract_number')->unique()->values());
         }
 
-        $rows->getCollection()->transform(function ($r) use ($liquidityByInvestor, $contractStats, $activeContractNumbers) {
+        $rows = $rows->map(function ($r) use ($liquidityByInvestor, $contractStats, $activeContractNumbers) {
             $id = $r->id;
             $stats = $contractStats[$id] ?? null;
             $r->liquidity        = (float) ($liquidityByInvestor[$id] ?? 0);
@@ -789,15 +783,16 @@ class InvestorReportController extends Controller
                 $r->contracts_active = $contracts->count();
             }
             return $r;
-        });
+        })->values();
 
-        $grandTotal = (float) $rows->getCollection()->sum('liquidity');
+        $grandTotal = (float) $rows->sum(fn ($row) => (float) ($row->liquidity ?? 0));
 
         return view('investors::reports.allliquidity', [
             'rows'           => $rows,
             'grandTotal'     => $grandTotal,
             'filters'        => $filters,
             'currencySymbol' => $currencySymbol,
+            'investors'      => $investorOptions,
         ]);
     }
 
