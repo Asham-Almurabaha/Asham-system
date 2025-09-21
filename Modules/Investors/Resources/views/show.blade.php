@@ -70,7 +70,7 @@
         $totalPaidPortionToInvestor = (float)($totalPaidPortionToInvestor ?? 0);
 
         // المتبقي على العملاء لصالح المستثمر
-        $totalRemainingOnCustomers  = (float)($totalRemainingOnCustomers  ?? max(($totalCapitalShare + $totalProfitNet) - $totalPaidPortionToInvestor, 0));
+        $totalRemainingOnCustomers  = (float)($totalRemainingOnCustomers  ?? round(($totalCapitalShare + $totalProfitNet) - $totalPaidPortionToInvestor, 2));
 
         // مجاميع "كل العقود" (نشِط + منتهي)
         $totalCapitalShareAll = (float)($totalCapitalShareAll ?? 0);
@@ -724,9 +724,35 @@
                             <td dir="ltr">{{ number_format($r['share_percentage'] ?? 0,2) }}</td>
                             <td dir="ltr">{{ number_format($r['share_value'],2) }}</td>
                             <td dir="ltr">{{ number_format($r['profit_gross'],2) }}</td>
-                            <td class="text-neg" dir="ltr">{{ number_format($r['office_cut'],2) }}</td>
+                            <td class="text-neg" dir="ltr">
+                                {{ number_format($r['office_cut'],2) }}
+                                @if(array_key_exists('office_cut_paid', $r))
+                                    <div class="small text-muted" dir="ltr">
+                                        {{ __('reports.Paid from Office Share') }}:
+                                        <span class="fw-semibold">{{ number_format($r['office_cut_paid'], 2) }}</span>
+                                    </div>
+                                @endif
+                            </td>
                             <td dir="ltr">{{ number_format($r['profit_net'],2) }}</td>
-                            <td dir="ltr">{{ number_format($r['paid_to_investor_from_customer'] ?? 0,2) }}</td>
+                            @php
+                                $normalizedStatus = mb_strtolower((string)($r['status_name'] ?? ''), 'UTF-8');
+                                $isRaisedStatus = $normalizedStatus === mb_strtolower('مرفوع فيه', 'UTF-8');
+                                $paidInstallments = (float)($r['paid_to_investor_from_installments'] ?? 0);
+                                $paidClaims = (float)($r['paid_to_investor_from_claims'] ?? 0);
+                            @endphp
+                            <td dir="ltr">
+                                {{ number_format($r['paid_to_investor_from_customer'] ?? 0,2) }}
+                                @if($isRaisedStatus)
+                                    <div class="small text-muted" dir="ltr">
+                                        {{ __('reports.Paid via Installments') }}:
+                                        <span class="fw-semibold">{{ number_format($paidInstallments, 2) }}</span>
+                                    </div>
+                                    <div class="small text-muted" dir="ltr">
+                                        {{ __('reports.Paid via Claims') }}:
+                                        <span class="fw-semibold">{{ number_format($paidClaims, 2) }}</span>
+                                    </div>
+                                @endif
+                            </td>
                             <td class="fw-semibold {{ ($r['remaining_on_customers'] ?? 0) >= 0 ? 'text-pos' : 'text-neg' }}" dir="ltr">
                                 {{ number_format($r['remaining_on_customers'] ?? 0,2) }}
                             </td>

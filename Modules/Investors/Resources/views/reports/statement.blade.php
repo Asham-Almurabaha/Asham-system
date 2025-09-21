@@ -129,7 +129,30 @@
           <td>{{ number_format($row['share_pct'] ?? 0, 2) }}</td>
           <td>{{ number_format($row['share_value'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
           <td>{{ number_format($row['profit_net'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
-          <td>{{ number_format($row['paid_to_investor_from_customer'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
+          <td class="text-start">
+            @php
+              $normalizedStatus = mb_strtolower((string)($row['status_name'] ?? ''), 'UTF-8');
+              $isRaisedStatus = $normalizedStatus === mb_strtolower('مرفوع فيه', 'UTF-8');
+              $paidInstallments = (float)($row['paid_to_investor_from_installments'] ?? 0);
+              $paidClaims = (float)($row['paid_to_investor_from_claims'] ?? 0);
+            @endphp
+            <div>
+              {{ number_format($row['paid_to_investor_from_customer'] ?? 0, 2) }}
+              <span class="small-muted">{{ $cs }}</span>
+            </div>
+            @if($isRaisedStatus)
+              <div class="small-muted">
+                {{ __('reports.Paid via Installments') }}:
+                <span class="fw-semibold">{{ number_format($paidInstallments, 2) }}</span>
+                <span class="small-muted">{{ $cs }}</span>
+              </div>
+              <div class="small-muted">
+                {{ __('reports.Paid via Claims') }}:
+                <span class="fw-semibold">{{ number_format($paidClaims, 2) }}</span>
+                <span class="small-muted">{{ $cs }}</span>
+              </div>
+            @endif
+          </td>
           <td>{{ number_format(max(0, $row['remaining_on_customers'] ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span></td>
         </tr>
       @empty

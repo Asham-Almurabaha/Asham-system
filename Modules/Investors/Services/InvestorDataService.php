@@ -5,8 +5,10 @@ namespace Modules\Investors\Services;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 use App\Models\LedgerEntry;
+use App\Models\OfficeTransaction;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
 use Modules\Investors\Entities\InvestorTransaction;
+use Modules\Lookups\Entities\TransactionStatus;
 
 class InvestorDataService
 {
@@ -115,22 +117,25 @@ class InvestorDataService
 
         // ===== التحصيل الفعلي لكل عقد لهذا المستثمر (بدون Pro-Rata) =====
         $activeIds = $activeContracts->pluck('id')->filter()->values();
-        $paidToInvestorByContract = collect(); // [contract_id => sum(amount)]
-        $depositTypeIds = InvestorLiquidityCalculator::transactionTypeBuckets()['in'] ?? [];
 
-        if ($activeIds->isNotEmpty() && !empty($depositTypeIds)) {
-            $paidToInvestorByContract = InvestorTransaction::query()
+        $statusBuckets = $this->transactionStatusBuckets();
+        $installmentStatusIds = $statusBuckets['installment'] ?? [];
+        $claimStatusIds = $statusBuckets['claim'] ?? [];
+        $officeStatusIds = $statusBuckets['office'] ?? [];
+
+        $paidInstallmentsByContract = collect();
+        if ($activeIds->isNotEmpty() && !empty($installmentStatusIds)) {
+            $paidInstallmentsByContract = InvestorTransaction::query()
                 ->from('investor_transactions as it')
-                ->join('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
                 ->whereIn('it.contract_id', $activeIds)
                 ->where('it.investor_id', $investor->id)
-                ->whereIn('ts.transaction_type_id', $depositTypeIds)
+                ->whereIn('it.status_id', $installmentStatusIds)
                 ->groupBy('it.contract_id')
-                ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_in')
-                ->pluck('paid_in', 'contract_id');
+                ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_installments')
+                ->pluck('paid_installments', 'contract_id');
         }
 
-        $claimPaidToInvestorByContract = collect();
+        $paidClaimsByContract = collect();
         $raisedContractIds = $activeContracts
             ->filter(function ($contract) {
                 $statusName = $this->normalizeStatusName($contract->contractStatus->name ?? null);
@@ -141,22 +146,32 @@ class InvestorDataService
             ->filter()
             ->values();
 
-        if ($raisedContractIds->isNotEmpty()) {
-            $claimPaidQuery = InvestorTransaction::query()
+        if ($raisedContractIds->isNotEmpty() && !empty($claimStatusIds)) {
+            $paidClaimsByContract = InvestorTransaction::query()
                 ->from('investor_transactions as it')
-                ->join('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
                 ->whereIn('it.contract_id', $raisedContractIds)
                 ->where('it.investor_id', $investor->id)
-                ->whereNotNull('it.contract_claim_payment_id');
-
-            if (!empty($depositTypeIds)) {
-                $claimPaidQuery->whereNotIn('ts.transaction_type_id', $depositTypeIds);
-            }
-
-            $claimPaidToInvestorByContract = $claimPaidQuery
+                ->whereIn('it.status_id', $claimStatusIds)
                 ->groupBy('it.contract_id')
                 ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_from_claims')
                 ->pluck('paid_from_claims', 'contract_id');
+        }
+
+        $officeCutPaidByContract = collect();
+        if ($activeIds->isNotEmpty()) {
+            $officePaidQuery = OfficeTransaction::query()
+                ->from('office_transactions as ot')
+                ->whereIn('ot.contract_id', $activeIds)
+                ->where('ot.investor_id', $investor->id);
+
+            if (!empty($officeStatusIds)) {
+                $officePaidQuery->whereIn('ot.status_id', $officeStatusIds);
+            }
+
+            $officeCutPaidByContract = $officePaidQuery
+                ->groupBy('ot.contract_id')
+                ->selectRaw('ot.contract_id as contract_id, SUM(ot.amount) as office_cut_paid')
+                ->pluck('office_cut_paid', 'contract_id');
         }
 
         // مجاميع (للعقود النشطة فقط)
@@ -192,31 +207,28 @@ class InvestorDataService
             $officeCut = round($profitGross * $pctOffice / 100, 2);
             $profitNet = round($profitGross - $officeCut, 2);
 
-            $paidFromInstallments = (float) ($paidToInvestorByContract[$c->id] ?? 0);
+            $paidFromInstallments = (float) ($paidInstallmentsByContract[$c->id] ?? 0);
             $statusName = $this->normalizeStatusName($c->contractStatus->name ?? null);
 
             $paidFromClaims = 0.0;
             if ($statusName === 'مرفوع فيه') {
-                $paidFromClaims = (float) ($claimPaidToInvestorByContract[$c->id] ?? 0);
+                $paidFromClaims = (float) ($paidClaimsByContract[$c->id] ?? 0);
             }
 
+            $paidFromInstallments = round($paidFromInstallments, 2);
+            $paidFromClaims = round($paidFromClaims, 2);
             $paidIn = round($paidFromInstallments + $paidFromClaims, 2);
 
             $customerName = $c->customer->name ?? null;
             $customerId = $c->customer_id ?? ($c->customer->id ?? null);
 
-            $capitalAndProfitGross = round($shareVal + $profitGross, 2);
-            $officeCutRounded = round($officeCut, 2);
-            $paidForRemaining = $paidIn;
+            $officeCutPaidRaw = (float) ($officeCutPaidByContract[$c->id] ?? 0.0);
+            $officeCutPaid = round(max(0.0, $officeCutPaidRaw), 2);
 
-            if ($paidForRemaining > $officeCutRounded) {
-                $remaining = $capitalAndProfitGross - $paidForRemaining;
-            } else {
-                $officeRemaining = max(0.0, round($officeCutRounded - $paidForRemaining, 2));
-                $remaining = $capitalAndProfitGross - $paidForRemaining - $officeRemaining;
+            $remaining = round(($shareVal + $profitNet) - $paidIn, 2);
+            if (abs($remaining) < 0.005) {
+                $remaining = 0.0;
             }
-
-            $remaining = max(0.0, round($remaining, 2));
 
             $totalCapitalShare += $shareVal;
             $totalProfitGross  += $profitGross;
@@ -235,9 +247,12 @@ class InvestorDataService
                 'share_value'              => $shareVal,
                 'profit_gross'             => $profitGross,
                 'office_cut'               => $officeCut,
+                'office_cut_paid'          => $officeCutPaid,
                 'profit_net'               => $profitNet,
                 'paid_to_investor'         => $paidIn,
                 'paid_to_investor_from_customer' => $paidIn,
+                'paid_to_investor_from_installments' => $paidFromInstallments,
+                'paid_to_investor_from_claims' => $paidFromClaims,
                 'remaining_on_customers'   => $remaining,
                 'total_contract_value'     => $c->contract_value,
                 'total_contract_profit'    => $c->investor_profit,
@@ -260,6 +275,9 @@ class InvestorDataService
             static fn ($row) => (float) ($row['remaining_on_customers'] ?? 0.0),
             $contractBreakdown
         )), 2);
+        if (abs($totalRemainingOnCustomers) < 0.005) {
+            $totalRemainingOnCustomers = 0.0;
+        }
 
         // صافي السيولة الحالية = إجمالي الداخل - إجمالي الخارج (باستثناء قيود المكتب)
         $liquiditySummary = InvestorLiquidityCalculator::summarizeForInvestor($investor->id);
@@ -358,6 +376,87 @@ class InvestorDataService
                 'paid_to_investor'  => $totalPaidPortionToInvestor,
                 'remaining_on_customers' => $totalRemainingOnCustomers,
             ],
+        ];
+    }
+
+    private function transactionStatusBuckets(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $normalize = static fn ($value) => mb_strtolower(trim((string) $value), 'UTF-8');
+
+        $installmentKeys = array_unique(array_map($normalize, $this->installmentStatusNames()));
+        $claimKeys = array_unique(array_map($normalize, $this->claimStatusNames()));
+        $officeKeys = array_unique(array_map($normalize, $this->officeStatusNames()));
+
+        if (empty($installmentKeys) && empty($claimKeys) && empty($officeKeys)) {
+            return $cache = ['installment' => [], 'claim' => [], 'office' => []];
+        }
+
+        $statuses = TransactionStatus::query()->select(['id', 'name'])->get();
+
+        $installmentIds = [];
+        $claimIds = [];
+        $officeIds = [];
+
+        foreach ($statuses as $status) {
+            $key = $normalize($status->name ?? '');
+
+            if (in_array($key, $installmentKeys, true)) {
+                $installmentIds[] = (int) $status->id;
+            }
+
+            if (in_array($key, $claimKeys, true)) {
+                $claimIds[] = (int) $status->id;
+            }
+
+            if (in_array($key, $officeKeys, true)) {
+                $officeIds[] = (int) $status->id;
+            }
+        }
+
+        return $cache = [
+            'installment' => array_values(array_unique($installmentIds)),
+            'claim'       => array_values(array_unique($claimIds)),
+            'office'      => array_values(array_unique($officeIds)),
+        ];
+    }
+
+    private function installmentStatusNames(): array
+    {
+        return [
+            'سداد قسط',
+            'تحصيل قسط',
+            'تحصيل',
+            'installment payment',
+            'installment',
+            'installment settlement',
+        ];
+    }
+
+    private function claimStatusNames(): array
+    {
+        return [
+            'سداد مطالبة',
+            'سداد مطالبه',
+            'سداد مطالبة للمستثمرين',
+            'سداد مطالبه للمستثمرين',
+            'claim payment',
+            'claim settlement',
+            'claim investor payment',
+        ];
+    }
+
+    private function officeStatusNames(): array
+    {
+        return [
+            'ربح المكتب',
+            'office profit',
+            'office share',
         ];
     }
 
