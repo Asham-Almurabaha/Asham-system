@@ -27,7 +27,7 @@
           </x-button.action>
         @endif
         <x-button.action href="{{ route('contracts.export.investors') }}" variant="secondary" :outline="true" size="sm">
-          <i class="bi bi-download me-1"></i> تصدير العقود غير المتطابقة
+          <i class="bi bi-download me-1"></i> تصدير العقود بدون مستثمر
         </x-button.action>
       </div>
     </div>

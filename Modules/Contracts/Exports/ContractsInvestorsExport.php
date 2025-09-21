@@ -8,26 +8,32 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Support\ContractStatusNames;
+use Modules\Lookups\Entities\ContractStatus;
 
 class ContractsInvestorsExport implements FromCollection, WithHeadings, ShouldAutoSize
 {
     public function collection(): Collection
     {
-        $rows = collect();
+        $statusId = ContractStatus::where('name', ContractStatusNames::NO_INVESTORS)->value('id');
 
-        $contracts = Contract::with('investors')->get();
+        if (! $statusId) {
+            return collect();
+        }
 
-        foreach ($contracts as $contract) {
+        $contracts = Contract::with(['investors', 'contractStatus'])
+            ->where('contract_status_id', $statusId)
+            ->orderBy('contract_number')
+            ->get();
+
+        return $contracts->map(function (Contract $contract) {
             $total = $contract->investors->sum(function ($inv) {
                 return (float) $inv->pivot->share_percentage;
             });
 
-            if ((float) $total == 100.0) {
-                continue;
-            }
-
             $row = [
                 'contract_number'        => $contract->contract_number,
+                'contract_status'        => optional($contract->contractStatus)->name,
                 'total_share_percentage' => $total,
             ];
 
@@ -38,16 +44,15 @@ class ContractsInvestorsExport implements FromCollection, WithHeadings, ShouldAu
                 $row["investor{$i}_pct"]  = $investor->pivot->share_percentage ?? '';
             }
 
-            $rows->push($row);
-        }
-
-        return $rows;
+            return $row;
+        });
     }
 
     public function headings(): array
     {
         $base = [
             'contract_number',
+            'contract_status',
             'total_share_percentage',
         ];
 

@@ -25,9 +25,6 @@
             <i class="bi bi-filetype-xlsx me-1"></i> @lang('contracts::contracts_import.Download template')
           </x-button.action>
         @endif
-        <x-button.action href="{{ route('contracts.export.basic') }}" variant="secondary" :outline="true" size="sm">
-          <i class="bi bi-download me-1"></i> تصدير البيانات الأساسية كمثال
-        </x-button.action>
       </div>
     </div>
   </div>

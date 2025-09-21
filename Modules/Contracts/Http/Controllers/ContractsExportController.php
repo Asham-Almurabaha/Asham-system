@@ -22,7 +22,7 @@ class ContractsExportController extends Controller
 
     public function investors()
     {
-        return Excel::download(new ContractsInvestorsExport(), 'contracts_investors_mismatch.xlsx');
+        return Excel::download(new ContractsInvestorsExport(), 'contracts_without_investor.xlsx');
     }
 
     public function payments()

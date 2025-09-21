@@ -54,6 +54,7 @@ return [
         'start_date' => 'Start Date',
         'first_installment_date' => 'First Installment Date',
         'contract_number' => 'Contract Number',
+        'contract_status' => 'Contract Status',
         'investors' => 'Investors',
         'payments' => 'Payments',
         'down_payment' => 'Down Payment',

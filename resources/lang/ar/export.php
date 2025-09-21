@@ -54,6 +54,7 @@ return [
         'start_date' => 'تاريخ البداية',
         'first_installment_date' => 'تاريخ أول قسط',
         'contract_number' => 'رقم العقد',
+        'contract_status' => 'حالة العقد',
         'investors' => 'المستثمرون',
         'payments' => 'السدادات',
         'down_payment' => 'دفعة مقدمة',
