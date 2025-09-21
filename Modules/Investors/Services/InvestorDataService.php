@@ -307,6 +307,19 @@ class InvestorDataService
 
     private function endedNames(): array
     {
-        return ['مكتمل','منتهي','سداد مبكر','إلغاء','Closed','Completed','Early Settlement','Inactive'];
+        return [
+            'مكتمل',
+            'منتهي',
+            'سداد مبكر',
+            'إلغاء',
+            'Closed',
+            'Completed',
+            'Early Settlement',
+            'Inactive',
+            'منتهي بمطالبة',
+            'منتهى بمطالبة',
+            'مُنتهي بمطالبة',
+            'مُنتهى بمطالبة',
+        ];
     }
 }

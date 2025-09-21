@@ -279,7 +279,20 @@ class InvestorReportController extends Controller
 
         $currencySymbol = 'ر.س';
         $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
-        $endedNames = ['مكتمل', 'منتهي', 'سداد مبكر', 'إلغاء', 'Closed', 'Completed', 'Early Settlement', 'Inactive'];
+        $endedNames = [
+            'مكتمل',
+            'منتهي',
+            'سداد مبكر',
+            'إلغاء',
+            'Closed',
+            'Completed',
+            'Early Settlement',
+            'Inactive',
+            'منتهي بمطالبة',
+            'منتهى بمطالبة',
+            'مُنتهي بمطالبة',
+            'مُنتهى بمطالبة',
+        ];
         $endedIds = ContractStatus::whereIn('name', $endedNames)->pluck('id')->all();
 
         $ledgerSub = DB::table('ledger_entries')
@@ -513,7 +526,18 @@ class InvestorReportController extends Controller
                 ->map(fn ($row) => (float) ($row['net'] ?? 0.0));
 
             $endedIds = ContractStatus::whereIn('name', [
-                'مكتمل','منتهي','سداد مبكر','إلغاء','Closed','Completed','Early Settlement','Inactive'
+                'مكتمل',
+                'منتهي',
+                'سداد مبكر',
+                'إلغاء',
+                'Closed',
+                'Completed',
+                'Early Settlement',
+                'Inactive',
+                'منتهي بمطالبة',
+                'منتهى بمطالبة',
+                'مُنتهي بمطالبة',
+                'مُنتهى بمطالبة',
             ])->pluck('id')->all();
 
             $notIn = empty($endedIds) ? '0' : implode(',', $endedIds);
