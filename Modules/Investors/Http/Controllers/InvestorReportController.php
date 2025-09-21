@@ -15,6 +15,7 @@ use Modules\Lookups\Entities\TransactionType;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
+use Modules\Investors\Support\InvestorLiquidityCalculator;
 
 class InvestorReportController extends Controller
 {
@@ -97,25 +98,19 @@ class InvestorReportController extends Controller
             return $investor;
         });
 
-        $overallRow = LedgerEntry::query()
-            ->whereNotNull('investor_id')
-            ->where('is_office', false)
-            ->when($filters['q'], function ($query, $search) {
-                $query->whereIn('investor_id', function ($sub) use ($search) {
+        $overallData = InvestorLiquidityCalculator::aggregateTotals(function ($query) use ($filters) {
+            $query->when($filters['q'], function ($q, $search) {
+                $q->whereIn('it.investor_id', function ($sub) use ($search) {
                     $sub->select('id')
                         ->from('investors')
                         ->where('name', 'like', "%{$search}%");
                 });
-            })
-            ->selectRaw(<<<SQL
-                COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in,
-                COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out
-            SQL)
-            ->first();
+            });
+        });
 
         $overallTotals = [
-            'in'  => round((float) (optional($overallRow)->total_in ?? 0), 2),
-            'out' => round((float) (optional($overallRow)->total_out ?? 0), 2),
+            'in'  => round((float) $overallData->sum(fn ($row) => (float) ($row['in'] ?? 0)), 2),
+            'out' => round((float) $overallData->sum(fn ($row) => (float) ($row['out'] ?? 0)), 2),
         ];
         $overallTotals['net'] = round($overallTotals['in'] - $overallTotals['out'], 2);
 
@@ -514,13 +509,8 @@ class InvestorReportController extends Controller
         $contractStats = collect();
         $activeContractNumbers = collect();
         if ($ids->isNotEmpty()) {
-            $liquidityByInvestor = LedgerEntry::query()
-                ->whereIn('investor_id', $ids)
-                ->where('is_office', false)
-                ->groupBy('investor_id')
-                ->selectRaw("investor_id, COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END),0) AS in_sum, COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END),0) AS out_sum")
-                ->get()
-                ->mapWithKeys(fn ($r) => [$r->investor_id => ((float) $r->in_sum - (float) $r->out_sum)]);
+            $liquidityByInvestor = InvestorLiquidityCalculator::aggregateTotals(null, $ids)
+                ->map(fn ($row) => (float) ($row['net'] ?? 0.0));
 
             $endedIds = ContractStatus::whereIn('name', [
                 'مكتمل','منتهي','سداد مبكر','إلغاء','Closed','Completed','Early Settlement','Inactive'

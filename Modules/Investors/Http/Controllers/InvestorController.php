@@ -3,7 +3,6 @@
 namespace Modules\Investors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use App\Services\InstallmentsMonthlyService;
@@ -18,6 +17,7 @@ use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
+use Modules\Investors\Support\InvestorLiquidityCalculator;
 
 class InvestorController extends Controller
 {
@@ -51,12 +51,8 @@ class InvestorController extends Controller
 
         if (!empty($ids)) {
             // Liquidity: sum(in) - sum(out) for non-office entries
-            $liquidityByInvestor = LedgerEntry::query()
-                ->whereIn('investor_id', $ids)
-                ->where('is_office', false)
-                ->groupBy('investor_id')
-                ->selectRaw("investor_id, COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END),0) - COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END),0) AS bal")
-                ->pluck('bal', 'investor_id');
+            $liquidityByInvestor = InvestorLiquidityCalculator::aggregateTotals(null, $ids)
+                ->map(fn ($row) => (float) ($row['net'] ?? 0.0));
 
             // Active contracts per investor + remaining amount
             $endedStatusIds = $this->endedContractStatusIds();

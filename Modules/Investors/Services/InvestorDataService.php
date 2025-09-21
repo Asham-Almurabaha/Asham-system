@@ -2,9 +2,10 @@
 
 namespace Modules\Investors\Services;
 
-use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
+use App\Models\LedgerEntry;
+use Modules\Investors\Support\InvestorLiquidityCalculator;
 
 class InvestorDataService
 {
@@ -205,20 +206,8 @@ class InvestorDataService
         $totalRemainingOnCustomers  = round(($totalCapitalShare + $totalProfitNet) - $totalPaidPortionToInvestor, 2);
 
         // صافي السيولة الحالية = إجمالي الداخل - إجمالي الخارج (باستثناء قيود المكتب)
-        $liquidityRow = LedgerEntry::query()
-            ->where('investor_id', $investor->id)
-            ->where('is_office', false)
-            ->selectRaw(
-                "COALESCE(SUM(CASE WHEN direction = 'in' THEN amount ELSE 0 END), 0) AS total_in, " .
-                "COALESCE(SUM(CASE WHEN direction = 'out' THEN amount ELSE 0 END), 0) AS total_out"
-            )
-            ->first();
-
-        $liquidity = 0.0;
-        if ($liquidityRow) {
-            $liquidity = (float) ($liquidityRow->total_in ?? 0) - (float) ($liquidityRow->total_out ?? 0);
-            $liquidity = round($liquidity, 2);
-        }
+        $liquiditySummary = InvestorLiquidityCalculator::summarizeForInvestor($investor->id);
+        $liquidity = round((float) ($liquiditySummary['net'] ?? 0), 2);
 
         // ===== زكاة المال =====
         $lastZakatEntry = LedgerEntry::query()
