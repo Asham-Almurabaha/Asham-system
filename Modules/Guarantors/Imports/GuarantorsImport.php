@@ -2,6 +2,7 @@
 
 namespace Modules\Guarantors\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use Modules\Guarantors\Entities\Guarantor;
 use Modules\Lookups\Entities\GuarantorStatus;
 use Modules\Lookups\Entities\Nationality;
@@ -31,6 +32,7 @@ class GuarantorsImport implements
     use Importable;
     use \Maatwebsite\Excel\Concerns\SkipsFailures { onFailure as traitOnFailure; }
     use SkipsErrors;
+    use DetectsEmptyRows;
 
     protected int $rows      = 0;
     protected int $inserted  = 0;
@@ -48,10 +50,26 @@ class GuarantorsImport implements
 
     public function onFailure(Failure ...$failures): void
     {
-        $this->failedByValidation += count($failures);
-        $this->traitOnFailure(...$failures);
+        $filtered = [];
 
-        foreach ($failures as $f) {
+        foreach ($failures as $failure) {
+            $values = (array) $failure->values();
+
+            if ($this->isRowEmpty($values)) {
+                continue;
+            }
+
+            $filtered[] = $failure;
+        }
+
+        if ($filtered === []) {
+            return;
+        }
+
+        $this->failedByValidation += count($filtered);
+        $this->traitOnFailure(...$filtered);
+
+        foreach ($filtered as $f) {
             $this->skipped++;
             $this->skippedSimple[] = [
                 'row'    => (int)$f->row(),
@@ -63,6 +81,10 @@ class GuarantorsImport implements
 
     public function model(array $row)
     {
+        if ($this->isRowEmpty($row)) {
+            return null;
+        }
+
         $this->rows++;
 
         $name       = $this->safeStr($row['name'] ?? $row['الاسم'] ?? null);

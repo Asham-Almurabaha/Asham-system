@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Lookups\Entities\ContractStatus;
@@ -21,7 +22,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ContractsBasicImport implements ToCollection, WithHeadingRow
 {
-    use SkipsErrors, SkipsFailures;
+    use SkipsErrors, SkipsFailures, DetectsEmptyRows;
 
     private int $rows = 0;
     private int $inserted = 0;
@@ -36,10 +37,14 @@ class ContractsBasicImport implements ToCollection, WithHeadingRow
     public function collection(Collection $rows)
     {
         foreach ($rows as $i => $raw) {
-            $this->rows++;
-
             $rowNum = $i + 2; // مع صف العناوين
             $data   = $this->normalize($raw->toArray());
+
+            if ($this->isRowEmpty($data)) {
+                continue;
+            }
+
+            $this->rows++;
 
             try {
                 DB::transaction(function () use ($data, $rowNum) {

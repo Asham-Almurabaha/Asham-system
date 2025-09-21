@@ -2,6 +2,7 @@
 
 namespace Modules\Investors\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use App\Models\LedgerEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -17,6 +18,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Validators\Failure;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
@@ -35,8 +37,9 @@ class InvestorLedgerEntriesImport implements
     SkipsOnError
 {
     use Importable;
-    use SkipsFailures;
+    use SkipsFailures { onFailure as traitOnFailure; }
     use SkipsErrors;
+    use DetectsEmptyRows;
 
     protected int $rowCount = 0;
     protected int $insertedCount = 0;
@@ -116,6 +119,10 @@ class InvestorLedgerEntriesImport implements
 
     public function model(array $row)
     {
+        if ($this->isRowEmpty($row)) {
+            return null;
+        }
+
         $this->rowCount++;
 
         try {
@@ -253,6 +260,27 @@ class InvestorLedgerEntriesImport implements
             $this->skippedCount++;
             throw $e;
         }
+    }
+
+    public function onFailure(Failure ...$failures): void
+    {
+        $filtered = [];
+
+        foreach ($failures as $failure) {
+            $values = (array) $failure->values();
+
+            if ($this->isRowEmpty($values)) {
+                continue;
+            }
+
+            $filtered[] = $failure;
+        }
+
+        if ($filtered === []) {
+            return;
+        }
+
+        $this->traitOnFailure(...$filtered);
     }
 
     public function rules(): array

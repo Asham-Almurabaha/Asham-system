@@ -2,6 +2,7 @@
 
 namespace Modules\Customers\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use Modules\Customers\Entities\Customer;
 use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\Nationality;
@@ -31,6 +32,7 @@ class CustomersImport implements
     use Importable;
     use \Maatwebsite\Excel\Concerns\SkipsFailures { onFailure as traitOnFailure; }
     use SkipsErrors;
+    use DetectsEmptyRows;
 
     protected int $rows      = 0;
     protected int $inserted  = 0;
@@ -51,11 +53,27 @@ class CustomersImport implements
 
     public function onFailure(Failure ...$failures): void
     {
-        $this->failedByValidation += count($failures);
+        $filtered = [];
 
-        $this->traitOnFailure(...$failures);
+        foreach ($failures as $failure) {
+            $values = (array) $failure->values();
 
-        foreach ($failures as $f) {
+            if ($this->isRowEmpty($values)) {
+                continue;
+            }
+
+            $filtered[] = $failure;
+        }
+
+        if ($filtered === []) {
+            return;
+        }
+
+        $this->failedByValidation += count($filtered);
+
+        $this->traitOnFailure(...$filtered);
+
+        foreach ($filtered as $f) {
             $this->skipped++;
             $this->skippedSimple[] = [
                 'row'    => (int)$f->row(),
@@ -67,6 +85,10 @@ class CustomersImport implements
 
     public function model(array $row)
     {
+        if ($this->isRowEmpty($row)) {
+            return null;
+        }
+
         $this->rows++;
 
         // خرائط عربي/إنجليزي

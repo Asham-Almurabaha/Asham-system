@@ -2,6 +2,7 @@
 
 namespace Modules\Investors\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Modules\Investors\Entities\Investor;
@@ -32,6 +33,7 @@ class InvestorsImport implements
     use Importable;
     use \Maatwebsite\Excel\Concerns\SkipsFailures { onFailure as traitOnFailure; }
     use SkipsErrors;
+    use DetectsEmptyRows;
 
     protected int $rows      = 0;
     protected int $inserted  = 0;
@@ -76,13 +78,29 @@ class InvestorsImport implements
      */
     public function onFailure(Failure ...$failures): void
     {
-        $this->failedByValidation += count($failures);
+        $filtered = [];
+
+        foreach ($failures as $failure) {
+            $values = (array) $failure->values();
+
+            if ($this->isRowEmpty($values)) {
+                continue;
+            }
+
+            $filtered[] = $failure;
+        }
+
+        if ($filtered === []) {
+            return;
+        }
+
+        $this->failedByValidation += count($filtered);
 
         // احتفظ بنسخة كاملة عبر الـ trait
-        $this->traitOnFailure(...$failures);
+        $this->traitOnFailure(...$filtered);
 
         // وأضف نسخة مبسطة للمتخطّي
-        foreach ($failures as $f) {
+        foreach ($filtered as $f) {
             $this->skipped++;
             $this->skippedSimple[] = [
                 'row'    => (int)$f->row(),
@@ -94,9 +112,13 @@ class InvestorsImport implements
 
     public function model(array $row)
     {
-        $this->rows++;
-
         $row = $this->normalizeRowKeys($row);
+
+        if ($this->isRowEmpty($row)) {
+            return null;
+        }
+
+        $this->rows++;
 
         // خرائط عربي/إنجليزي
         $name       = $this->safeStr($row['name'] ?? $row['الاسم'] ?? null);

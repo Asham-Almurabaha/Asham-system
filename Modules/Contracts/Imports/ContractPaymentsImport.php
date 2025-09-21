@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Imports\Concerns\HandlesContractPayments;
 use Carbon\Carbon;
@@ -16,7 +17,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkReading, WithBatchInserts
 {
-    use SkipsErrors, SkipsFailures, HandlesContractPayments;
+    use SkipsErrors, SkipsFailures, HandlesContractPayments, DetectsEmptyRows;
 
     private int $rows = 0;
     private int $inserted = 0;
@@ -33,9 +34,14 @@ class ContractPaymentsImport implements ToCollection, WithHeadingRow, WithChunkR
     public function collection(Collection $rows)
     {
         foreach ($rows as $i => $raw) {
-            $this->rows++;
             $rowNum = $i + 2; // مع صف العناوين
             $data   = $raw->toArray();
+
+            if ($this->isRowEmpty($data)) {
+                continue;
+            }
+
+            $this->rows++;
 
             try {
                 $number = $data['contract_number'] ?? null;

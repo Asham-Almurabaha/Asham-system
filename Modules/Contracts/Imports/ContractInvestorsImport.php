@@ -2,6 +2,7 @@
 
 namespace Modules\Contracts\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use Modules\Contracts\Entities\Contract;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,7 @@ use Modules\Contracts\Imports\Concerns\HandlesContractInvestors;
 
 class ContractInvestorsImport implements ToCollection, WithHeadingRow
 {
-    use SkipsErrors, SkipsFailures, HandlesContractInvestors;
+    use SkipsErrors, SkipsFailures, HandlesContractInvestors, DetectsEmptyRows;
 
     private int $rows = 0;
     private int $updated = 0;
@@ -29,9 +30,14 @@ class ContractInvestorsImport implements ToCollection, WithHeadingRow
     public function collection(Collection $rows)
     {
         foreach ($rows as $i => $raw) {
-            $this->rows++;
             $rowNum = $i + 2;
             $data = $raw->toArray();
+
+            if ($this->isRowEmpty($data)) {
+                continue;
+            }
+
+            $this->rows++;
 
             try {
                 DB::transaction(function () use ($data, $rowNum) {

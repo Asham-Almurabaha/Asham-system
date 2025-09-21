@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Imports\Concerns\DetectsEmptyRows;
 use App\Models\LedgerEntry;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
@@ -16,6 +17,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Validators\Failure;
 
 class LedgerEntriesImport implements
     ToModel,
@@ -25,7 +27,10 @@ class LedgerEntriesImport implements
     SkipsOnFailure,
     SkipsOnError
 {
-    use Importable, SkipsFailures, SkipsErrors;
+    use Importable;
+    use SkipsFailures { onFailure as traitOnFailure; }
+    use SkipsErrors;
+    use DetectsEmptyRows;
 
     protected int $rowCount      = 0;
     protected int $insertedCount = 0;
@@ -33,6 +38,10 @@ class LedgerEntriesImport implements
 
     public function model(array $row)
     {
+        if ($this->isRowEmpty($row)) {
+            return null;
+        }
+
         $this->rowCount++;
 
         try {
@@ -108,6 +117,27 @@ class LedgerEntriesImport implements
             $this->skippedCount++;
             throw $e;
         }
+    }
+
+    public function onFailure(Failure ...$failures): void
+    {
+        $filtered = [];
+
+        foreach ($failures as $failure) {
+            $values = (array) $failure->values();
+
+            if ($this->isRowEmpty($values)) {
+                continue;
+            }
+
+            $filtered[] = $failure;
+        }
+
+        if ($filtered === []) {
+            return;
+        }
+
+        $this->traitOnFailure(...$filtered);
     }
 
     public function rules(): array
