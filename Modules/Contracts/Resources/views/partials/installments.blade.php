@@ -139,7 +139,7 @@
                         @unless($isEarlySettlement)
                             {{-- زر التأجيل --}}
                             @if($isThisMonth && $inst->payment_amount < $inst->due_amount && $statusName !== 'مؤجل' && $statusName !== 'معتذر')
-                                <x-button.action type="button" variant="warning" :outline="true" size="sm" class="defer-btn" data-id="{{ $inst-">id }}">
+                                <x-button.action type="button" variant="warning" :outline="true" size="sm" class="defer-btn" data-id="{{ $inst->id }}">
                                     ⏳ تأجيل
                                 </x-button.action>
                             @endif
@@ -153,7 +153,7 @@
                                 $statusName !== 'معتذر' &&
                                 $daysDiff >= -15
                             )
-                                <x-button.action type="button" variant="secondary" :outline="true" size="sm" class="excuse-btn" data-id="{{ $inst-">id }}">
+                                <x-button.action type="button" variant="secondary" :outline="true" size="sm" class="excuse-btn" data-id="{{ $inst->id }}">
                                     🙏 معتذر
                                 </x-button.action>
                             @endif
