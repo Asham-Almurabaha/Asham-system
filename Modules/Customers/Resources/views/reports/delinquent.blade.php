@@ -9,6 +9,34 @@
   /** @var \Illuminate\Support\Collection|\Illuminate\Pagination\LengthAwarePaginator $rows */
   $rows  = $rows ?? collect();
   $count = $rows->count();
+
+  $computedRows        = [];
+  $totalDelqRemaining  = 0.0;
+
+  foreach ($rows as $key => $customer) {
+    $delqContracts = $customer->contracts()
+      ->whereHas('contractStatus', fn($q) => $q->where('name', 'متعثر'))
+      ->with('installments')
+      ->get();
+
+    $delqCount     = $delqContracts->count();
+    $delqRemaining = 0.0;
+
+    foreach ($delqContracts as $ct) {
+      $items        = $ct->installments ?? collect();
+      $contractTotal = (float) ($items->sum(fn($i) => (float) ($i->due_amount ?? 0)) ?: ($ct->total_value ?? 0));
+      $totalPaid     = (float) $items->sum(fn($i) => (float) ($i->payment_amount ?? 0));
+      $delqRemaining += max(0.0, $contractTotal - $totalPaid);
+    }
+
+    $totalDelqRemaining += $delqRemaining;
+
+    $computedRows[$key] = [
+      'customer'       => $customer,
+      'delq_count'     => $delqCount,
+      'delq_remaining' => $delqRemaining,
+    ];
+  }
 @endphp
 
 @push('styles')
@@ -29,6 +57,14 @@
         </div>
       </div>
     </div>
+    <div class="col-12 col-md-4">
+      <div class="card">
+        <div class="card-body p-3 text-center">
+          <div class="small-muted">@lang('reports.Total Remaining in Delinquent Contracts')</div>
+          <div class="fs-4 fw-bold">{{ number_format($totalDelqRemaining, 2) }}</div>
+        </div>
+      </div>
+    </div>
   </div>
   <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
       <x-slot name="head">
@@ -40,27 +76,19 @@
             <th>{{ __('reports.Total Remaining in Delinquent Contracts') }}</th>
           </tr>
       </x-slot>
-      @forelse($rows as $i => $c)
+      @forelse($computedRows as $i => $row)
+        @php
+          /** @var \Modules\Customers\Entities\Customer $c */
+          $c             = $row['customer'];
+          $delqCount     = $row['delq_count'];
+          $delqRemaining = $row['delq_remaining'];
+        @endphp
         <tr>
           <td>{{ is_int($i) ? $i + 1 : $loop->iteration }}</td>
           <td class="text-start">
             <a href="{{ route('customers.show', $c) }}" class="text-decoration-none fw-bold text-dark hover-primary">{{ $c->name }}</a>
           </td>
           <td>{{ $c->phone }}</td>
-          @php
-            $delqContracts = $c->contracts()
-              ->whereHas('contractStatus', fn($q) => $q->where('name', 'متعثر'))
-              ->with('installments')
-              ->get();
-            $delqCount = $delqContracts->count();
-            $delqRemaining = 0.0;
-            foreach ($delqContracts as $ct) {
-              $items = $ct->installments ?? collect();
-              $contractTotal = (float) ($items->sum(fn($i) => (float) ($i->due_amount ?? 0)) ?: ($ct->total_value ?? 0));
-              $totalPaid     = (float) $items->sum(fn($i) => (float) ($i->payment_amount ?? 0));
-              $delqRemaining += max(0.0, $contractTotal - $totalPaid);
-            }
-          @endphp
           <td>{{ $delqCount }}</td>
           <td>{{ number_format($delqRemaining, 2) }}</td>
         </tr>
