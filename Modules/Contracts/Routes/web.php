@@ -15,11 +15,14 @@ Route::prefix('contracts/import')->name('contracts.')->group(function () {
     Route::post('/', [ContractsImportController::class, 'store'])->name('import');
     Route::get('/basic', [ContractsImportController::class, 'createBasic'])->name('import.basic.form');
     Route::post('/basic', [ContractsImportController::class, 'storeBasic'])->name('import.basic');
+    Route::get('/basic/template', [ContractsImportController::class, 'basicTemplate'])->name('import.basic.template');
     Route::get('/investors', [ContractsImportController::class, 'createInvestors'])->name('import.investors.form');
     Route::post('/investors', [ContractsImportController::class, 'storeInvestors'])->name('import.investors');
+    Route::get('/investors/template', [ContractsImportController::class, 'investorsTemplate'])->name('import.investors.template');
     Route::get('/investors/failures/fix', [ContractsImportController::class, 'exportInvestorsFailuresFix'])->name('import.investors.failures.fix');
     Route::get('/payments', [ContractsImportController::class, 'createPayments'])->name('import.payments.form');
     Route::post('/payments', [ContractsImportController::class, 'storePayments'])->name('import.payments');
+    Route::get('/payments/template', [ContractsImportController::class, 'paymentsTemplate'])->name('import.payments.template');
     Route::get('/payments/failures/fix', [ContractsImportController::class, 'exportPaymentsFailuresFix'])->name('import.payments.failures.fix');
     Route::get('/payments/skipped/export', [ContractsImportController::class, 'exportPaymentsSkipped'])->name('import.payments.skipped.export');
 

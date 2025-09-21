@@ -2,11 +2,14 @@
 
 namespace Modules\Contracts\Http\Controllers;
 
+use Modules\Contracts\Exports\ContractsBasicExport;
 use Modules\Contracts\Exports\ContractsFailuresFixExport;
 use Modules\Contracts\Exports\ContractsTemplateExport;
 use Modules\Contracts\Exports\ContractsBasicFailuresFixExport;
 use Modules\Contracts\Exports\ContractsInvestorsFailuresFixExport;
+use Modules\Contracts\Exports\ContractsInvestorsTemplateExport;
 use Modules\Contracts\Exports\ContractsPaymentsFailuresFixExport;
+use Modules\Contracts\Exports\ContractsPaymentsTemplateExport;
 use App\Http\Controllers\Controller;
 use Modules\Contracts\Imports\ContractsImport;
 use Modules\Contracts\Imports\ContractsBasicImport;
@@ -471,6 +474,30 @@ class ContractsImportController extends Controller
     public function template()
     {
         return Excel::download(new ContractsTemplateExport(), 'contracts_template.xlsx');
+    }
+
+    /**
+     * تنزيل نموذج الاستيراد للبيانات الأساسية.
+     */
+    public function basicTemplate()
+    {
+        return Excel::download(new ContractsBasicExport(), 'contracts_basic_template.xlsx');
+    }
+
+    /**
+     * تنزيل نموذج استيراد مستثمري العقود.
+     */
+    public function investorsTemplate()
+    {
+        return Excel::download(new ContractsInvestorsTemplateExport(), 'contracts_investors_template.xlsx');
+    }
+
+    /**
+     * تنزيل نموذج استيراد سدادات العقود.
+     */
+    public function paymentsTemplate()
+    {
+        return Excel::download(new ContractsPaymentsTemplateExport(), 'contracts_payments_template.xlsx');
     }
 
     /**

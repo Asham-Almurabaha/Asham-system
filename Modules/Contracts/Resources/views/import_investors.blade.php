@@ -20,7 +20,12 @@
           الصف الأول عناوين.
         </p>
       </div>
-      <div class="ms-auto d-none d-md-block">
+      <div class="ms-auto d-none d-md-flex align-items-center gap-2">
+        @if (Route::has('contracts.import.investors.template'))
+          <x-button.action href="{{ route('contracts.import.investors.template') }}" variant="secondary" :outline="true" size="sm">
+            <i class="bi bi-filetype-xlsx me-1"></i> @lang('contracts::contracts_import.Download template')
+          </x-button.action>
+        @endif
         <x-button.action href="{{ route('contracts.export.investors') }}" variant="secondary" :outline="true" size="sm">
           <i class="bi bi-download me-1"></i> تصدير العقود غير المتطابقة
         </x-button.action>
