@@ -14,7 +14,7 @@
   $pendingLabel = $labels->get('pending', '—');
 
   $classificationLabels = [
-      'active'   => __('contracts::contracts.Active Contracts'),
+      'active'   => null,
       'raised'   => __('contracts::contracts.Raised Status Contracts'),
       'required' => __('contracts::contracts.Required Status Contracts'),
       'pending'  => __('contracts::contracts.Pending Contracts'),
@@ -42,29 +42,43 @@
   <style>
     thead { display: table-header-group; }
     tr { page-break-inside: avoid; }
+    .remaining-summary-kpi > [class^="col"],
+    .remaining-summary-kpi > [class*=" col"] {
+      display: flex;
+    }
+    .remaining-summary-kpi .card {
+      height: 100%;
+    }
+    .remaining-summary-kpi__body {
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.5rem;
+    }
   </style>
 @endpush
 
 @section('content')
   <div class="mb-3 small text-muted">{{ __('contracts::contracts.Remaining Amount Printable Report Hint') }}</div>
 
-  <div class="row g-3 kpi mb-4">
-    <div class="col-12 col-md-4 col-xl-3">
-      <div class="card"><div class="card-body p-3 text-center">
+  <div class="row g-3 kpi mb-4 remaining-summary-kpi">
+    <div class="col-12 col-md-4 col-xl-3 d-flex">
+      <div class="card flex-fill h-100"><div class="card-body p-3 text-center remaining-summary-kpi__body">
         <div class="small-muted">{{ __('contracts::contracts.Total Contracts — Entire System') }}</div>
         <div class="fs-5 fw-bold">{{ number_format($counts->get('total', 0)) }}</div>
       </div></div>
     </div>
-    <div class="col-12 col-md-4 col-xl-3">
-      <div class="card"><div class="card-body p-3 text-center">
+    <div class="col-12 col-md-4 col-xl-3 d-flex">
+      <div class="card flex-fill h-100"><div class="card-body p-3 text-center remaining-summary-kpi__body">
         <div class="small-muted">{{ __('contracts::contracts.Total Remaining Amount') }}</div>
         <div class="fs-5 fw-bold text-primary">
           {{ number_format($remainingTotal, 2) }} <span class="small-muted">{{ $currencySymbol }}</span>
         </div>
       </div></div>
     </div>
-    <div class="col-12 col-md-4 col-xl-3">
-      <div class="card"><div class="card-body p-3 text-center">
+    <div class="col-12 col-md-4 col-xl-3 d-flex">
+      <div class="card flex-fill h-100"><div class="card-body p-3 text-center remaining-summary-kpi__body">
         <div class="small-muted">{{ __('contracts::contracts.Active Contracts Remaining') }}</div>
         <div class="fs-5 fw-bold text-primary">
           {{ number_format($summary->get('active', 0), 2) }} <span class="small-muted">{{ $currencySymbol }}</span>
@@ -77,8 +91,8 @@
         </div>
       </div></div>
     </div>
-    <div class="col-12 col-md-4 col-xl-3">
-      <div class="card"><div class="card-body p-3 text-center">
+    <div class="col-12 col-md-4 col-xl-3 d-flex">
+      <div class="card flex-fill h-100"><div class="card-body p-3 text-center remaining-summary-kpi__body">
         <div class="small-muted">{{ __('contracts::contracts.Raised Contracts Remaining') }}</div>
         <div class="fs-5 fw-bold text-danger">
           {{ number_format($summary->get('raised', 0), 2) }} <span class="small-muted">{{ $currencySymbol }}</span>
@@ -91,8 +105,8 @@
         </div>
       </div></div>
     </div>
-    <div class="col-12 col-md-4 col-xl-3">
-      <div class="card"><div class="card-body p-3 text-center">
+    <div class="col-12 col-md-4 col-xl-3 d-flex">
+      <div class="card flex-fill h-100"><div class="card-body p-3 text-center remaining-summary-kpi__body">
         <div class="small-muted">{{ __('contracts::contracts.Required Contracts Remaining') }}</div>
         <div class="fs-5 fw-bold text-warning">
           {{ number_format($summary->get('required', 0), 2) }} <span class="small-muted">{{ $currencySymbol }}</span>
