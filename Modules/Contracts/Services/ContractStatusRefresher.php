@@ -65,12 +65,12 @@ class ContractStatusRefresher
         });
     }
 
-    public function refreshContract(Contract $contract): void
+    public function refreshContract(Contract $contract, bool $allowExcluded = false): void
     {
-        $this->updateInstallmentsStatuses($contract);
+        $this->updateInstallmentsStatuses($contract, $allowExcluded);
     }
 
-    private function updateInstallmentsStatuses(Contract $contract): void
+    private function updateInstallmentsStatuses(Contract $contract, bool $allowExcluded = false): void
     {
         $contract->loadMissing('investors', 'installments.installmentStatus', 'contractStatus');
 
@@ -82,7 +82,7 @@ class ContractStatusRefresher
         }
 
         $excludedContractStatuses = ['منتهي', 'سداد مبكر', 'مطلوب', 'مرفوع فيه', 'منتهي بمطالبة'];
-        if (in_array($contract->contractStatus->name ?? '', $excludedContractStatuses, true)) {
+        if (! $allowExcluded && in_array($contract->contractStatus->name ?? '', $excludedContractStatuses, true)) {
             return;
         }
 

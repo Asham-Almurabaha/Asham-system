@@ -11,6 +11,7 @@ use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
 use Modules\Contracts\Entities\ContractClaimPayment;
 use Modules\Contracts\Services\ClaimPaymentDistributionService;
+use Modules\Contracts\Services\ContractStatusRefresher;
 use Modules\Contracts\Http\Requests\ApplyContractClaimDiscountRequest;
 use Modules\Contracts\Http\Requests\StoreContractClaimPaymentRequest;
 use Modules\Contracts\Http\Requests\StoreContractClaimRequest;
@@ -35,8 +36,12 @@ class ContractClaimController extends Controller
     private ?int $paidInFullClaimStatusId = null;
     private ?int $raisedContractStatusId = null;
     private ?int $finishedWithClaimContractStatusId = null;
+    private ?int $rejectedClaimStatusId = null;
 
-    public function __construct(private ClaimPaymentDistributionService $claimPaymentDistribution)
+    public function __construct(
+        private ClaimPaymentDistributionService $claimPaymentDistribution,
+        private ContractStatusRefresher $contractStatusRefresher
+    )
     {
     }
 
@@ -338,6 +343,8 @@ class ContractClaimController extends Controller
             $this->updateContractStatusToFinishedWithClaim($contract);
         } elseif ($this->isClaimAccepted($claim)) {
             $this->updateContractStatusToRaised($contract);
+        } elseif ($this->shouldRestoreContractStatus($contract, $claim)) {
+            $this->restoreContractStatus($contract);
         } else {
             $hasPreviousClaims = ContractClaim::query()
                 ->where('contract_id', $contract->id)
@@ -425,6 +432,54 @@ class ContractClaimController extends Controller
         return $statusId !== null && (int) $claim->claim_status_id === $statusId;
     }
 
+    private function isClaimRejected(ContractClaim $claim): bool
+    {
+        $statusId = $this->rejectedClaimStatusId();
+
+        return $statusId !== null && (int) $claim->claim_status_id === $statusId;
+    }
+
+    private function shouldRestoreContractStatus(Contract $contract, ContractClaim $claim): bool
+    {
+        $requiredStatusId = $this->contractClaimStatusId();
+
+        if (! $requiredStatusId) {
+            return false;
+        }
+
+        if ((int) ($contract->contract_status_id ?? 0) !== $requiredStatusId) {
+            return false;
+        }
+
+        if (! $this->isClaimRejected($claim)) {
+            return false;
+        }
+
+        return ! $this->contractHasNonRejectedClaims($contract, $claim);
+    }
+
+    private function restoreContractStatus(Contract $contract): void
+    {
+        $this->contractStatusRefresher->refreshContract($contract, true);
+    }
+
+    private function contractHasNonRejectedClaims(Contract $contract, ContractClaim $excludedClaim): bool
+    {
+        $contract->loadMissing('claims');
+
+        foreach ($contract->claims as $contractClaim) {
+            if ((int) $contractClaim->id === (int) $excludedClaim->id) {
+                continue;
+            }
+
+            if (! $this->isClaimRejected($contractClaim)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function customerClaimStatusId(): ?int
     {
         if ($this->customerClaimStatusId === null) {
@@ -483,6 +538,16 @@ class ContractClaimController extends Controller
         }
 
         return $this->acceptedClaimStatusId ?: null;
+    }
+
+    private function rejectedClaimStatusId(): ?int
+    {
+        if ($this->rejectedClaimStatusId === null) {
+            $id = ClaimStatus::where('name', 'مرفوض')->value('id');
+            $this->rejectedClaimStatusId = $id ? (int) $id : 0;
+        }
+
+        return $this->rejectedClaimStatusId ?: null;
     }
 
     private function paidWithDiscountClaimStatusId(): ?int

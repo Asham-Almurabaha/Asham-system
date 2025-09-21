@@ -122,6 +122,123 @@ class ContractClaimControllerTest extends TestCase
         );
     }
 
+    public function test_rejected_claim_restores_contract_status_using_natural_logic(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractNewStatus = ContractStatus::where('name', 'جديد')->firstOrFail();
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $claimRejectedStatus = ClaimStatus::where('name', 'مرفوض')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+        $installmentStatus = InstallmentStatus::where('name', 'لم يحل')->firstOrFail();
+        $nationality = Nationality::query()->firstOrFail();
+        $title = Title::query()->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Reject Example',
+            'national_id' => '13579135791357',
+            'phone' => '0500000300',
+            'email' => 'customer-reject@example.test',
+            'address' => 'Customer Reject Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Reject Example',
+            'national_id' => '24680246802468',
+            'phone' => '0500000301',
+            'email' => 'guarantor-reject@example.test',
+            'address' => 'Guarantor Reject Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $investor = Investor::create([
+            'name' => 'Investor Reject Example',
+            'national_id' => '55566677788899',
+            'phone' => '0500000302',
+            'email' => 'investor-reject@example.test',
+            'address' => 'Investor Reject Address',
+            'nationality_id' => $nationality->id,
+            'title_id' => $title->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-2001',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractNewStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 1500,
+            'sale_price' => 1800,
+            'contract_value' => 1800,
+            'investor_profit' => 300,
+            'total_value' => 1800,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 150,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $contract->investors()->attach($investor->id, [
+            'share_percentage' => 100,
+            'share_value' => 1800,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        ContractInstallment::create([
+            'contract_id' => $contract->id,
+            'installment_number' => 1,
+            'due_date' => now()->addDays(30)->toDateString(),
+            'due_amount' => 1800,
+            'payment_amount' => 0,
+            'installment_status_id' => $installmentStatus->id,
+        ]);
+
+        $storeResponse = $this->post(route('contract-claims.store'), [
+            'contract_id' => $contract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 500,
+            'claim_date' => now()->toDateString(),
+            'document_number' => 'DOC-REJECT-001',
+        ]);
+
+        $storeResponse->assertRedirect(route('contract-claims.index'));
+
+        $this->assertSame(
+            $contractRequiredStatus->id,
+            $contract->fresh()->contract_status_id,
+            'A new claim should move the contract to the required status.'
+        );
+
+        $claim = ContractClaim::where('contract_id', $contract->id)->firstOrFail();
+
+        $response = $this->patch(route('contract-claims.update-status', $claim), [
+            'claim_status_id' => $claimRejectedStatus->id,
+        ]);
+
+        $response->assertRedirect(route('contract-claims.index'));
+
+        $this->assertSame(
+            $contractNewStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Rejected claims should restore the contract status using the natural logic.'
+        );
+    }
+
     public function test_updating_claim_to_accepted_updates_contract_status_to_raised(): void
     {
         $this->seed(LookupsDatabaseSeeder::class);
