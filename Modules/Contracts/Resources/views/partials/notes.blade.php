@@ -21,7 +21,7 @@
                         name="note_date"
                         id="contract-note-date-{{ $contract->id }}"
                         value="{{ $defaultNoteDate }}"
-                        class="form-control @error('note_date') is-invalid @enderror"
+                        class="form-control js-date @error('note_date') is-invalid @enderror"
                         required
                     >
                     @error('note_date')
