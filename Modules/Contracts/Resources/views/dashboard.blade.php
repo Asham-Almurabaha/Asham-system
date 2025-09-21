@@ -40,6 +40,10 @@
     $statusTotal        = (int) ($contractStatusTotal ?? ($counts['total'] ?? 0));
     $raisedCount        = (int) ($raisedContractsCount ?? 0);
     $requiredCount      = (int) ($requiredContractsCount ?? 0);
+    $remainingSummaryData = (array) ($remainingSummary ?? []);
+    $activeRemainingAmount = (float) ($remainingSummaryData['active'] ?? ($activeContractsRemaining ?? 0));
+    $raisedRemainingAmount = (float) ($remainingSummaryData['raised'] ?? ($raisedContractsRemaining ?? 0));
+    $requiredRemainingAmount = (float) ($remainingSummaryData['required'] ?? ($requiredContractsRemaining ?? 0));
 
     $selectedInvestorName = $selectedInvestor->name ?? __('All Investors');
 
@@ -223,6 +227,50 @@
         ],
     ];
 
+    $remainingSummaryCards = [
+        [
+            'col_class'          => 'col-12 col-md-4',
+            'icon'               => 'bi bi-wallet',
+            'icon_class'         => 'fs-4 text-primary',
+            'title'              => __('contracts::contracts.Active Contracts Remaining'),
+            'value'              => number_format($activeRemainingAmount, 2),
+            'value_suffix'       => $currencySymbol,
+            'value_suffix_class' => 'fs-6 text-muted',
+            'meta'               => [
+                ['text' => __('contracts::contracts.Active Contracts Remaining Hint', [
+                    'ended'   => $labels['ended'] ?? '—',
+                    'pending' => $labels['pending'] ?? '—',
+                ])],
+            ],
+        ],
+        [
+            'col_class'          => 'col-12 col-md-4',
+            'icon'               => 'bi bi-exclamation-octagon',
+            'icon_class'         => 'fs-4 text-danger',
+            'title'              => __('contracts::contracts.Raised Contracts Remaining'),
+            'value'              => number_format($raisedRemainingAmount, 2),
+            'value_suffix'       => $currencySymbol,
+            'value_suffix_class' => 'fs-6 text-muted',
+            'value_class'        => 'fw-bold text-danger',
+            'meta'               => [
+                ['text' => __('contracts::contracts.Raised Contracts Remaining Hint')],
+            ],
+        ],
+        [
+            'col_class'          => 'col-12 col-md-4',
+            'icon'               => 'bi bi-exclamation-triangle',
+            'icon_class'         => 'fs-4 text-warning',
+            'title'              => __('contracts::contracts.Required Contracts Remaining'),
+            'value'              => number_format($requiredRemainingAmount, 2),
+            'value_suffix'       => $currencySymbol,
+            'value_suffix_class' => 'fs-6 text-muted',
+            'value_class'        => 'fw-bold text-warning',
+            'meta'               => [
+                ['text' => __('contracts::contracts.Required Contracts Remaining Hint')],
+            ],
+        ],
+    ];
+
     $statusMetricsMap = $statusMetrics
         ->filter(fn($row) => is_array($row) && isset($row['id']))
         ->mapWithKeys(fn($row) => [
@@ -373,6 +421,12 @@
                     <span>{{ __('Office Outstanding Report') }}</span>
                 </a>
             </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('reports.contracts.remaining_summary') }}" target="_blank" rel="noopener">
+                    <i class="bi bi-printer text-primary"></i>
+                    <span>{{ __('contracts::contracts.Remaining Amount Summary (Print)') }}</span>
+                </a>
+            </li>
         </ul>
     </div>
 </div>
@@ -384,6 +438,35 @@
         </div>
     @endforeach
 </div> --}}
+
+<div class="card shadow-sm mb-4" dir="rtl">
+    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h6 class="mb-1">{{ __('contracts::contracts.Remaining Amount Summary') }}</h6>
+            <div class="small text-muted">{{ __('contracts::contracts.Remaining Amount Summary Hint') }}</div>
+        </div>
+        <x-button.print
+            href="{{ route('reports.contracts.remaining_summary') }}"
+            variant="secondary"
+            :outline="true"
+            size="sm"
+            class="d-inline-flex align-items-center gap-2"
+            target="_blank"
+            rel="noopener"
+        >
+            {{ __('contracts::contracts.Print Remaining Summary') }}
+        </x-button.print>
+    </div>
+    <div class="card-body p-20">
+        <div class="row g-3">
+            @foreach($remainingSummaryCards as $card)
+                <div class="{{ $card['col_class'] }}">
+                    @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
 
 @if(!empty($statusKpiCards))
     <div class="card shadow-sm mb-4" dir="rtl">

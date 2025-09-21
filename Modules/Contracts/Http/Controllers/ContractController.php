@@ -25,6 +25,7 @@ use Modules\Contracts\Support\ContractStatusNames;
 use Modules\Contracts\Support\InvestorShareValidationException;
 use Modules\Contracts\Support\InvestorShareValidator;
 use Modules\Contracts\Services\ContractStatusRefresher;
+use Modules\Contracts\Services\ContractStatusSummaryService;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
@@ -45,7 +46,8 @@ class ContractController extends Controller
     public function __construct(
         private InvestorTransactionLogger $investorTransactionLogger,
         private InvestorShareValidator $investorShareValidator,
-        private ContractStatusRefresher $contractStatusRefresher
+        private ContractStatusRefresher $contractStatusRefresher,
+        private ContractStatusSummaryService $contractStatusSummary
     )
     {
     }
@@ -211,7 +213,7 @@ class ContractController extends Controller
 
         $installmentsMonthly = $this->buildInstallmentsMonthly($request, $installmentsSvc, $investorIdForMonthly);
         $dashboardStats      = $this->buildContractDashboardStats();
-        $statusDistribution  = $this->buildContractStatusDistribution();
+        $statusDistribution  = $this->contractStatusSummary->buildDistribution();
 
         $selectedInvestor = $investorIdForMonthly
             ? $investors->firstWhere('id', $investorIdForMonthly)
@@ -232,6 +234,10 @@ class ContractController extends Controller
             'contractStatusTotal'      => $statusDistribution['total'] ?? 0,
             'raisedContractsCount'     => $statusDistribution['raised'] ?? 0,
             'requiredContractsCount'   => $statusDistribution['required'] ?? 0,
+            'activeContractsRemaining' => $statusDistribution['active_remaining'] ?? 0.0,
+            'raisedContractsRemaining' => $statusDistribution['raised_remaining'] ?? 0.0,
+            'requiredContractsRemaining' => $statusDistribution['required_remaining'] ?? 0.0,
+            'remainingSummary'          => $statusDistribution['remaining_summary'] ?? [],
         ]);
     }
 
@@ -1019,63 +1025,4 @@ class ContractController extends Controller
         ];
     }
 
-    private function buildContractStatusDistribution(): array
-    {
-        $contractsTotal = Contract::count();
-
-        $statusCounts = Contract::select('contract_status_id', DB::raw('COUNT(*) as cnt'))
-            ->groupBy('contract_status_id')
-            ->get();
-
-        $statusNames = ContractStatus::pluck('name', 'id');
-
-        $statuses = $statusCounts->map(function ($row) use ($statusNames, $contractsTotal) {
-            $name = $statusNames[$row->contract_status_id] ?? 'غير محدد';
-            $cnt  = (int) $row->cnt;
-            $pct  = $contractsTotal > 0 ? round(($cnt / $contractsTotal) * 100, 2) : 0.0;
-
-            return [
-                'id'    => (int) $row->contract_status_id,
-                'name'  => $name,
-                'count' => $cnt,
-                'pct'   => $pct,
-            ];
-        })->sortByDesc('count')->values();
-
-        $chartLabels = $statuses->pluck('name')->values()->all();
-        $chartData   = $statuses->pluck('count')->values()->all();
-
-        $normalize = static function ($value): string {
-            return mb_strtolower(trim((string) $value), 'UTF-8');
-        };
-
-        $raisedNames    = array_map($normalize, ['مرفوع فيه', 'مرفوع', 'raised', 'raised status']);
-        $requiredNames  = array_map($normalize, ['مطلوب', 'required']);
-
-        $raisedCount = 0;
-        $requiredCount = 0;
-
-        foreach ($statuses as $status) {
-            $name = $normalize($status['name'] ?? '');
-
-            if (in_array($name, $raisedNames, true)) {
-                $raisedCount += (int) ($status['count'] ?? 0);
-            }
-
-            if (in_array($name, $requiredNames, true)) {
-                $requiredCount += (int) ($status['count'] ?? 0);
-            }
-        }
-
-        return [
-            'total'    => $contractsTotal,
-            'statuses' => $statuses->toArray(),
-            'chart'    => [
-                'labels' => $chartLabels,
-                'data'   => $chartData,
-            ],
-            'raised'   => $raisedCount,
-            'required' => $requiredCount,
-        ];
-    }
 }

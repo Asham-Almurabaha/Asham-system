@@ -10,13 +10,17 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Services\ContractStatusSummaryService;
 use Modules\Contracts\Services\ContractStatusUpdater;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\TransactionStatus;
 
 class ContractReportController extends Controller
 {
-    public function __construct(private ContractStatusUpdater $contractStatusUpdater)
+    public function __construct(
+        private ContractStatusUpdater $contractStatusUpdater,
+        private ContractStatusSummaryService $contractStatusSummary
+    )
     {
     }
 
@@ -133,6 +137,52 @@ SQL;
             'rows'           => $rows,
             'currencySymbol' => $currencySymbol,
             'totals'         => $totals,
+        ]);
+    }
+
+    public function remainingSummary()
+    {
+        $this->contractStatusUpdater->refresh();
+
+        $distribution = $this->contractStatusSummary->buildDistribution();
+
+        $statusesCollection = collect($distribution['statuses'] ?? [])
+            ->map(function ($row) {
+                return [
+                    'id'             => (int) ($row['id'] ?? 0),
+                    'name'           => (string) ($row['name'] ?? ''),
+                    'count'          => (int) ($row['count'] ?? 0),
+                    'pct'            => isset($row['pct']) ? (float) $row['pct'] : null,
+                    'remaining'      => round((float) ($row['remaining'] ?? 0.0), 2),
+                    'classification' => $row['classification'] ?? null,
+                ];
+            })
+            ->sortByDesc(fn ($row) => $row['remaining'])
+            ->values();
+
+        $summary = [
+            'active'   => round((float) ($distribution['active_remaining'] ?? 0.0), 2),
+            'raised'   => round((float) ($distribution['raised_remaining'] ?? 0.0), 2),
+            'required' => round((float) ($distribution['required_remaining'] ?? 0.0), 2),
+        ];
+
+        $counts = [
+            'total'    => (int) ($distribution['total'] ?? 0),
+            'active'   => (int) ($distribution['active'] ?? 0),
+            'raised'   => (int) ($distribution['raised'] ?? 0),
+            'required' => (int) ($distribution['required'] ?? 0),
+        ];
+
+        $currencySymbol = 'ر.س';
+        $remainingTotal = round((float) ($distribution['remaining_total'] ?? $statusesCollection->sum('remaining')), 2);
+
+        return view('contracts::reports.remaining-summary', [
+            'summary'         => $summary,
+            'counts'          => $counts,
+            'statuses'        => $statusesCollection->all(),
+            'currencySymbol'  => $currencySymbol,
+            'remainingTotal'  => $remainingTotal,
+            'labels'          => $distribution['labels'] ?? [],
         ]);
     }
 
