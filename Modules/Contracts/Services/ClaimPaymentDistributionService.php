@@ -119,10 +119,18 @@ class ClaimPaymentDistributionService
         $officeTypeId = $officeStatus->transaction_type_id
             ?: $this->resolveTypeId('محاماة مطالبة', ['وارد', 'إيداع']);
 
-        $legacyOfficeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
+        $officeProfitStatus = TransactionStatus::where('name', 'ربح المكتب')->first();
+        if ($officeProfitStatus) {
+            $officeProfitTypeId = $officeProfitStatus->transaction_type_id
+                ?: $this->resolveTypeId('ربح المكتب', ['أرباح', 'تحصيل', 'وارد']);
+        } else {
+            $officeProfitStatus = $officeStatus;
+            $officeProfitTypeId = $officeTypeId;
+        }
+
         $officeStatusIds = array_values(array_unique(array_filter([
             $officeStatus->id,
-            $legacyOfficeStatusId ? (int) $legacyOfficeStatusId : null,
+            $officeProfitStatus->id,
         ])));
 
         $collectedOfficeByInvestor = OfficeTransaction::where('contract_id', $contract->id)
@@ -185,7 +193,7 @@ class ClaimPaymentDistributionService
                                 'investor_id'      => $investorId,
                                 'contract_id'      => $contract->id,
                                 'installment_id'   => null,
-                                'status_id'        => $officeStatus->id,
+                                'status_id'        => $officeProfitStatus->id,
                                 'amount'           => $officeTake,
                                 'transaction_date' => $paymentDate,
                                 'notes'            => "تحصيل ربح المكتب من {$investorMeta[$investorId]['name']} - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
@@ -195,8 +203,8 @@ class ClaimPaymentDistributionService
                                 'entry_date'            => $entryDate,
                                 'investor_id'           => null,
                                 'is_office'             => true,
-                                'transaction_status_id' => $officeStatus->id,
-                                'transaction_type_id'   => $officeTypeId,
+                                'transaction_status_id' => $officeProfitStatus->id,
+                                'transaction_type_id'   => $officeProfitTypeId,
                                 'contract_id'           => $contract->id,
                                 'installment_id'        => null,
                                 'amount'                => $officeTake,
@@ -265,7 +273,7 @@ class ClaimPaymentDistributionService
                             'investor_id'      => $investorId,
                             'contract_id'      => $contract->id,
                             'installment_id'   => null,
-                            'status_id'        => $officeStatus->id,
+                            'status_id'        => $officeProfitStatus->id,
                             'amount'           => $allocation,
                             'transaction_date' => $paymentDate,
                             'notes'            => "تحصيل ربح المكتب من {$investorMeta[$investorId]['name']} - {$claimLabel} - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
@@ -275,8 +283,8 @@ class ClaimPaymentDistributionService
                             'entry_date'            => $entryDate,
                             'investor_id'           => null,
                             'is_office'             => true,
-                            'transaction_status_id' => $officeStatus->id,
-                            'transaction_type_id'   => $officeTypeId,
+                            'transaction_status_id' => $officeProfitStatus->id,
+                            'transaction_type_id'   => $officeProfitTypeId,
                             'contract_id'           => $contract->id,
                             'installment_id'        => null,
                             'amount'                => $allocation,
