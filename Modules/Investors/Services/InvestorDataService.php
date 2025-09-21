@@ -6,8 +6,7 @@ use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 use App\Models\LedgerEntry;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
-use Modules\Contracts\Entities\ContractInstallment;
-use Modules\Contracts\Entities\ContractClaimPayment;
+use Modules\Investors\Entities\InvestorTransaction;
 
 class InvestorDataService
 {
@@ -117,29 +116,20 @@ class InvestorDataService
         // ===== التحصيل الفعلي لكل عقد لهذا المستثمر (بدون Pro-Rata) =====
         $activeIds = $activeContracts->pluck('id')->filter()->values();
         $paidToInvestorByContract = collect(); // [contract_id => sum(amount)]
-        $installmentsPaidByContract = collect();
-        $claimPaymentsByContract = collect();
         if ($activeIds->isNotEmpty()) {
-            $paidToInvestorByContract = LedgerEntry::query()
-                ->whereIn('contract_id', $activeIds)
-                ->where('investor_id', $investor->id) // <<< أهم شرط
-                ->where('direction', 'in')            // دفعات داخلة تخص المستثمر لهذا العقد
-                ->groupBy('contract_id')
-                ->selectRaw('contract_id, SUM(amount) as paid_in')
-                ->pluck('paid_in', 'contract_id');
+            $depositTypeIds = InvestorLiquidityCalculator::transactionTypeBuckets()['in'] ?? [];
 
-            $installmentsPaidByContract = ContractInstallment::query()
-                ->whereIn('contract_id', $activeIds)
-                ->groupBy('contract_id')
-                ->selectRaw('contract_id, COALESCE(SUM(payment_amount), 0) as total_paid')
-                ->pluck('total_paid', 'contract_id');
-
-            $claimPaymentsByContract = ContractClaimPayment::query()
-                ->join('contract_claims', 'contract_claims.id', '=', 'contract_claim_payments.contract_claim_id')
-                ->whereIn('contract_claims.contract_id', $activeIds)
-                ->groupBy('contract_claims.contract_id')
-                ->selectRaw('contract_claims.contract_id as contract_id, COALESCE(SUM(contract_claim_payments.amount), 0) as total_paid')
-                ->pluck('total_paid', 'contract_id');
+            if (!empty($depositTypeIds)) {
+                $paidToInvestorByContract = InvestorTransaction::query()
+                    ->from('investor_transactions as it')
+                    ->join('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
+                    ->whereIn('it.contract_id', $activeIds)
+                    ->where('it.investor_id', $investor->id)
+                    ->whereIn('ts.transaction_type_id', $depositTypeIds)
+                    ->groupBy('it.contract_id')
+                    ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_in')
+                    ->pluck('paid_in', 'contract_id');
+            }
         }
 
         // مجاميع (للعقود النشطة فقط)
@@ -176,8 +166,6 @@ class InvestorDataService
             $profitNet = round($profitGross - $officeCut, 2);
 
             $paidIn = (float) ($paidToInvestorByContract[$c->id] ?? 0);
-            $paidInstallments = (float) ($installmentsPaidByContract[$c->id] ?? 0);
-            $paidClaims = (float) ($claimPaymentsByContract[$c->id] ?? 0);
 
             $customerName = $c->customer->name ?? null;
             $customerId = $c->customer_id ?? ($c->customer->id ?? null);
@@ -186,9 +174,7 @@ class InvestorDataService
 
             $capitalAndProfitGross = round($shareVal + $profitGross, 2);
             $officeCutRounded = round($officeCut, 2);
-            $paidForRemaining = $statusName === 'مرفوع فيه'
-                ? round($paidInstallments + $paidClaims, 2)
-                : round($paidIn, 2);
+            $paidForRemaining = round($paidIn, 2);
 
             if ($paidForRemaining > $officeCutRounded) {
                 $remaining = $capitalAndProfitGross - $paidForRemaining;

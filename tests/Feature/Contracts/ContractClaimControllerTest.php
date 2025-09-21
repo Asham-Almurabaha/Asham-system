@@ -122,6 +122,120 @@ class ContractClaimControllerTest extends TestCase
         );
     }
 
+    public function test_storing_claim_moves_regular_or_finished_contract_to_required(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $contractRegularStatus = ContractStatus::where('name', 'منتظم')->firstOrFail();
+        $contractFinishedStatus = ContractStatus::where('name', 'منتهي')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Status Check',
+            'national_id' => '22222222222222',
+            'phone' => '0500000400',
+            'email' => 'customer-status@example.test',
+            'address' => 'Customer Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Status Check',
+            'national_id' => '33333333333333',
+            'phone' => '0500000401',
+            'email' => 'guarantor-status@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $regularContract = Contract::create([
+            'contract_number' => 'CNT-5001',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractRegularStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 1000,
+            'sale_price' => 1200,
+            'contract_value' => 1200,
+            'investor_profit' => 200,
+            'total_value' => 1200,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 100,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $finishedContract = Contract::create([
+            'contract_number' => 'CNT-5002',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractFinishedStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 1500,
+            'sale_price' => 1700,
+            'contract_value' => 1700,
+            'investor_profit' => 200,
+            'total_value' => 1700,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 150,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $storeRegularResponse = $this->post(route('contract-claims.store'), [
+            'contract_id' => $regularContract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 300,
+            'claim_date' => now()->toDateString(),
+            'document_number' => 'DOC-REG-001',
+        ]);
+
+        $storeRegularResponse->assertRedirect(route('contract-claims.index'));
+
+        $this->assertSame(
+            $contractRequiredStatus->id,
+            $regularContract->fresh()->contract_status_id,
+            'Regular contracts should become required after storing a claim.'
+        );
+
+        $storeFinishedResponse = $this->post(route('contract-claims.store'), [
+            'contract_id' => $finishedContract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 450,
+            'claim_date' => now()->toDateString(),
+            'document_number' => 'DOC-FIN-001',
+        ]);
+
+        $storeFinishedResponse->assertRedirect(route('contract-claims.index'));
+
+        $this->assertSame(
+            $contractRequiredStatus->id,
+            $finishedContract->fresh()->contract_status_id,
+            'Finished contracts should become required after storing a claim.'
+        );
+    }
+
     public function test_rejected_claim_restores_contract_status_using_natural_logic(): void
     {
         $this->seed(LookupsDatabaseSeeder::class);
@@ -236,6 +350,137 @@ class ContractClaimControllerTest extends TestCase
             $contractNewStatus->id,
             $contract->fresh()->contract_status_id,
             'Rejected claims should restore the contract status using the natural logic.'
+        );
+    }
+
+    public function test_rejecting_raised_claim_restores_finished_status(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractFinishedStatus = ContractStatus::where('name', 'منتهي')->firstOrFail();
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $contractRaisedStatus = ContractStatus::where('name', 'مرفوع فيه')->firstOrFail();
+        $claimAcceptedStatus = ClaimStatus::where('name', 'مقبول')->firstOrFail();
+        $claimRejectedStatus = ClaimStatus::where('name', 'مرفوض')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+        $installmentStatus = InstallmentStatus::where('name', 'مدفوع كامل')->firstOrFail();
+        $nationality = Nationality::query()->firstOrFail();
+        $title = Title::query()->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Raised Reject',
+            'national_id' => '42424242424242',
+            'phone' => '0500000410',
+            'email' => 'customer-raised-reject@example.test',
+            'address' => 'Customer Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Raised Reject',
+            'national_id' => '64646464646464',
+            'phone' => '0500000411',
+            'email' => 'guarantor-raised-reject@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $investor = Investor::create([
+            'name' => 'Investor Raised Reject',
+            'national_id' => '42426688442266',
+            'phone' => '0500000412',
+            'email' => 'investor-raised-reject@example.test',
+            'address' => 'Investor Address',
+            'nationality_id' => $nationality->id,
+            'title_id' => $title->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-5050',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractFinishedStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 1000,
+            'sale_price' => 1200,
+            'contract_value' => 1200,
+            'investor_profit' => 200,
+            'total_value' => 1200,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 100,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $contract->investors()->attach($investor->id, [
+            'share_percentage' => 100,
+            'share_value' => $contract->total_value,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        ContractInstallment::create([
+            'contract_id' => $contract->id,
+            'installment_number' => 1,
+            'due_date' => now()->subMonth()->toDateString(),
+            'due_amount' => 1200,
+            'payment_amount' => 1200,
+            'installment_status_id' => $installmentStatus->id,
+        ]);
+
+        $storeResponse = $this->post(route('contract-claims.store'), [
+            'contract_id' => $contract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 600,
+            'claim_date' => now()->toDateString(),
+            'document_number' => 'DOC-RR-001',
+        ]);
+
+        $storeResponse->assertRedirect(route('contract-claims.index'));
+
+        $claim = ContractClaim::where('contract_id', $contract->id)->firstOrFail();
+
+        $this->assertSame(
+            $contractRequiredStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Storing the claim should move the contract to the required status.'
+        );
+
+        $acceptResponse = $this->patch(route('contract-claims.update-status', $claim), [
+            'claim_status_id' => $claimAcceptedStatus->id,
+        ]);
+
+        $acceptResponse->assertRedirect(route('contract-claims.index'));
+
+        $this->assertSame(
+            $contractRaisedStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Accepting the claim should raise the contract.'
+        );
+
+        $rejectResponse = $this->patch(route('contract-claims.update-status', $claim), [
+            'claim_status_id' => $claimRejectedStatus->id,
+        ]);
+
+        $rejectResponse->assertRedirect(route('contract-claims.index'));
+
+        $this->assertSame(
+            $contractFinishedStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Rejecting the raised claim should restore the finished status.'
         );
     }
 
@@ -417,6 +662,196 @@ class ContractClaimControllerTest extends TestCase
             'claim_payer_id' => $claimPayer->id,
             'amount' => '449.25',
         ]);
+    }
+
+    public function test_partial_payment_that_covers_outstanding_finishes_contract(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $contractFinishedWithClaimStatus = ContractStatus::where('name', 'منتهي بمطالبة')->firstOrFail();
+        $partialStatus = ClaimStatus::where('name', 'مدفوع جزئي')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+        $claimPayer = ClaimPayer::where('name', 'المحكمة')->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Partial Complete',
+            'national_id' => '12121212121212',
+            'phone' => '0500000500',
+            'email' => 'customer-partial-complete@example.test',
+            'address' => 'Customer Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Partial Complete',
+            'national_id' => '34343434343434',
+            'phone' => '0500000501',
+            'email' => 'guarantor-partial-complete@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-5101',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractRequiredStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 200,
+            'sale_price' => 500,
+            'contract_value' => 500,
+            'investor_profit' => 50,
+            'total_value' => 400,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 100,
+            'installments_count' => 4,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $storeResponse = $this->post(route('contract-claims.store'), [
+            'contract_id' => $contract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 500,
+            'claim_date' => now()->toDateString(),
+            'document_number' => 'DOC-PART-001',
+        ]);
+
+        $storeResponse->assertRedirect(route('contract-claims.index'));
+
+        $claim = ContractClaim::where('contract_id', $contract->id)->firstOrFail();
+
+        $paymentResponse = $this->post(route('contract-claims.payments.store', $claim), [
+            'claim_payer_id' => $claimPayer->id,
+            'amount' => 400,
+            'paid_at' => now()->toDateString(),
+        ]);
+
+        $paymentResponse->assertRedirect(route('contract-claims.index'));
+
+        $claim->refresh();
+
+        $this->assertSame(
+            $partialStatus->id,
+            $claim->claim_status_id,
+            'Partial payments should keep the claim on the partial-paid status.'
+        );
+
+        $this->assertEqualsWithDelta(100.0, $claim->remaining_amount, 0.01);
+
+        $this->assertSame(
+            $contractFinishedWithClaimStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Covering the outstanding amount with a partial claim should finish the contract with claim.'
+        );
+    }
+
+    public function test_partial_payment_that_leaves_outstanding_raises_contract(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $contractRaisedStatus = ContractStatus::where('name', 'مرفوع فيه')->firstOrFail();
+        $partialStatus = ClaimStatus::where('name', 'مدفوع جزئي')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+        $claimPayer = ClaimPayer::where('name', 'المحكمة')->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Partial Raised',
+            'national_id' => '56565656565656',
+            'phone' => '0500000502',
+            'email' => 'customer-partial-raised@example.test',
+            'address' => 'Customer Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Partial Raised',
+            'national_id' => '78787878787878',
+            'phone' => '0500000503',
+            'email' => 'guarantor-partial-raised@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-5102',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractRequiredStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 200,
+            'sale_price' => 500,
+            'contract_value' => 500,
+            'investor_profit' => 50,
+            'total_value' => 400,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 100,
+            'installments_count' => 4,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $storeResponse = $this->post(route('contract-claims.store'), [
+            'contract_id' => $contract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 500,
+            'claim_date' => now()->toDateString(),
+            'document_number' => 'DOC-PART-002',
+        ]);
+
+        $storeResponse->assertRedirect(route('contract-claims.index'));
+
+        $claim = ContractClaim::where('contract_id', $contract->id)->firstOrFail();
+
+        $paymentResponse = $this->post(route('contract-claims.payments.store', $claim), [
+            'claim_payer_id' => $claimPayer->id,
+            'amount' => 150,
+            'paid_at' => now()->toDateString(),
+        ]);
+
+        $paymentResponse->assertRedirect(route('contract-claims.index'));
+
+        $claim->refresh();
+
+        $this->assertSame(
+            $partialStatus->id,
+            $claim->claim_status_id,
+            'Partial payments should update the claim to the partial status.'
+        );
+
+        $this->assertGreaterThan(0.0, $claim->remaining_amount);
+
+        $this->assertSame(
+            $contractRaisedStatus->id,
+            $contract->fresh()->contract_status_id,
+            'Uncovered partial payments should keep the contract raised.'
+        );
     }
 
     public function test_recording_claim_payment_creates_entry_with_claim_payer(): void

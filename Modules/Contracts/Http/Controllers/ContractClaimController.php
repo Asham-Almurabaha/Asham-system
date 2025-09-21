@@ -332,28 +332,37 @@ class ContractClaimController extends Controller
         $contract = $claim->contract()->with([
             'customer',
             'guarantor',
-            'claims.payments',
+            'installments',
+            'claims' => fn ($query) => $query->with('payments'),
         ])->first();
 
         if (! $contract) {
             return;
         }
 
-        if ($this->isClaimSettled($claim) && ! $this->contractHasOutstandingClaims($contract)) {
-            $this->updateContractStatusToFinishedWithClaim($contract);
+        $contractOutstanding = $this->calculateContractOutstanding($contract);
+        $outstandingCleared = $contractOutstanding <= 0.009;
+
+        if ($this->isClaimSettled($claim)) {
+            if ($outstandingCleared) {
+                $this->updateContractStatusToFinishedWithClaim($contract);
+            } else {
+                $this->updateContractStatusToRaised($contract);
+            }
+        } elseif ($this->isClaimPartiallyPaid($claim)) {
+            $claimCoverage = round((float) $claim->paid_amount + (float) $claim->discount_amount, 2);
+
+            if ($outstandingCleared || $claimCoverage >= $contractOutstanding) {
+                $this->updateContractStatusToFinishedWithClaim($contract);
+            } else {
+                $this->updateContractStatusToRaised($contract);
+            }
         } elseif ($this->isClaimAccepted($claim)) {
             $this->updateContractStatusToRaised($contract);
         } elseif ($this->shouldRestoreContractStatus($contract, $claim)) {
             $this->restoreContractStatus($contract);
         } else {
-            $hasPreviousClaims = ContractClaim::query()
-                ->where('contract_id', $contract->id)
-                ->where('id', '!=', $claim->id)
-                ->exists();
-
-            if (! $hasPreviousClaims) {
-                $this->updateContractStatus($contract);
-            }
+            $this->updateContractStatus($contract);
         }
 
         if ($claim->filed_party_role === ContractClaim::FILED_PARTY_CUSTOMER) {
@@ -366,8 +375,15 @@ class ContractClaimController extends Controller
     private function updateContractStatus(Contract $contract): void
     {
         $statusId = $this->contractClaimStatusId();
+        $raisedStatusId = $this->raisedContractStatusId();
 
-        if (! $statusId || $contract->contract_status_id === $statusId) {
+        $currentStatusId = (int) ($contract->contract_status_id ?? 0);
+
+        if (! $statusId || $currentStatusId === (int) $statusId) {
+            return;
+        }
+
+        if ($raisedStatusId && $currentStatusId === (int) $raisedStatusId) {
             return;
         }
 
@@ -441,17 +457,21 @@ class ContractClaimController extends Controller
 
     private function shouldRestoreContractStatus(Contract $contract, ContractClaim $claim): bool
     {
-        $requiredStatusId = $this->contractClaimStatusId();
-
-        if (! $requiredStatusId) {
-            return false;
-        }
-
-        if ((int) ($contract->contract_status_id ?? 0) !== $requiredStatusId) {
-            return false;
-        }
-
         if (! $this->isClaimRejected($claim)) {
+            return false;
+        }
+
+        $eligibleStatuses = array_filter([
+            $this->contractClaimStatusId(),
+            $this->raisedContractStatusId(),
+            $this->finishedWithClaimContractStatusId(),
+        ]);
+
+        if (empty($eligibleStatuses)) {
+            return false;
+        }
+
+        if (! in_array((int) ($contract->contract_status_id ?? 0), $eligibleStatuses, true)) {
             return false;
         }
 
@@ -598,19 +618,6 @@ class ContractClaimController extends Controller
         return $this->defaultClaimStatusId ?: null;
     }
 
-    private function contractHasOutstandingClaims(Contract $contract): bool
-    {
-        $contract->loadMissing(['claims.payments']);
-
-        foreach ($contract->claims as $contractClaim) {
-            if (round((float) $contractClaim->remaining_amount, 2) > 0.009) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private function isClaimSettled(ContractClaim $claim): bool
     {
         $settledStatusIds = array_filter([
@@ -632,6 +639,60 @@ class ContractClaimController extends Controller
         $discountAmount = round((float) $claim->discount_amount, 2);
 
         return $paidAmount > 0 || $discountAmount > 0;
+    }
+
+    private function isClaimPartiallyPaid(ContractClaim $claim): bool
+    {
+        $statusId = $this->partialPaidClaimStatusId();
+
+        return $statusId !== null && (int) $claim->claim_status_id === $statusId;
+    }
+
+    private function calculateContractOutstanding(Contract $contract): float
+    {
+        $contract->loadMissing([
+            'installments:id,contract_id,payment_amount',
+            'claims:id,contract_id,discount_amount',
+            'claims.payments:id,contract_claim_id,amount',
+        ]);
+
+        $totalValue = round((float) ($contract->total_value ?? 0), 2);
+
+        $installmentPayments = 0.0;
+        if ($contract->relationLoaded('installments')) {
+            $installmentPayments = (float) $contract->installments
+                ->sum(fn ($installment) => (float) ($installment->payment_amount ?? 0));
+        } else {
+            $installmentPayments = (float) $contract->installments()->sum('payment_amount');
+        }
+
+        $claimPayments = 0.0;
+        $claimDiscounts = 0.0;
+
+        if ($contract->relationLoaded('claims')) {
+            foreach ($contract->claims as $contractClaim) {
+                $claimDiscounts += (float) ($contractClaim->discount_amount ?? 0);
+
+                if ($contractClaim->relationLoaded('payments')) {
+                    $claimPayments += (float) $contractClaim->payments
+                        ->sum(fn ($payment) => (float) ($payment->amount ?? 0));
+                } else {
+                    $claimPayments += (float) $contractClaim->payments()->sum('amount');
+                }
+            }
+        } else {
+            $claimPayments = (float) ContractClaimPayment::query()
+                ->whereHas('claim', fn ($query) => $query->where('contract_id', $contract->id))
+                ->sum('amount');
+
+            $claimDiscounts = (float) ContractClaim::query()
+                ->where('contract_id', $contract->id)
+                ->sum('discount_amount');
+        }
+
+        $outstanding = round($totalValue - $installmentPayments - $claimPayments - $claimDiscounts, 2);
+
+        return $outstanding > 0 ? $outstanding : 0.0;
     }
 
     private function resolveClaimStatusId(array $names): int
