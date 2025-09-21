@@ -3,7 +3,7 @@
     <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
         <strong class="mb-0">{{ __('Images') }}</strong>
         <x-button.action type="button" variant="light" size="sm" data-bs-toggle="modal" data-bs-target="#contract-images-modal">
-            <i class="bi bi-plus-circle me-1"></i>
+            <i class="bi bi-plus-lg"></i>
             {{ __('Add Images') }}
         </x-button.action>
     </div>
