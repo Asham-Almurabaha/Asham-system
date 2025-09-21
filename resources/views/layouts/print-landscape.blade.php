@@ -7,14 +7,36 @@
 @endphp
 <html lang="{{ str_replace('_', '-', $locale) }}" dir="{{ $isRtl ? 'rtl' : 'ltr' }}">
 <head>
+  @php
+    $reportLabel = trim(__('reports.Report'));
+    if ($reportLabel === 'reports.Report') {
+        $reportLabel = trim(__('app.Report'));
+    }
+
+    $rawTitle       = trim((string) $__env->yieldContent('title'));
+    $rawReportTitle = trim((string) $__env->yieldContent('report_title'));
+    $effectiveTitle = $rawTitle !== '' ? $rawTitle : $rawReportTitle;
+
+    if ($effectiveTitle !== '') {
+        $effectiveTitle = trim($effectiveTitle);
+
+        if (\Illuminate\Support\Str::startsWith($effectiveTitle, $reportLabel)) {
+            $afterLabel    = \Illuminate\Support\Str::after($effectiveTitle, $reportLabel);
+            $effectiveTitle = preg_replace('/^[\s\-:ـ–—]+/u', '', $afterLabel) ?? '';
+        }
+    }
+
+    $documentTitle = $reportLabel.($effectiveTitle !== '' ? ' - '.$effectiveTitle : '');
+
+    $faviconPath = $setting->favicon ?? null;
+    $faviconUrl  = $faviconPath ? asset('storage/'.$faviconPath) : asset('assets/img/favicon.png');
+  @endphp
+
   <meta charset="utf-8">
-  <title>@yield('title', __('reports.Report'))</title>
+  <title>{{ $documentTitle }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  {{-- Favicon (اختياري) --}}
-  @isset($setting->favicon)
-    <link rel="icon" href="{{ asset('storage/'.$setting->favicon) }}">
-  @endisset
+  <link rel="icon" href="{{ $faviconUrl }}" type="image/x-icon">
 
   {{-- Bootstrap RTL/LTR تلقائي --}}
   @if($isRtl)
