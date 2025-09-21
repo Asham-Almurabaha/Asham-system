@@ -78,6 +78,11 @@
         $totalOfficeCutAll    = (float)($totalOfficeCutAll    ?? 0);
         $totalProfitNetAll    = (float)($totalProfitNetAll    ?? ($totalProfitGrossAll - $totalOfficeCutAll));
 
+        $officeProfitCollectedAll = (float) ($officeProfitCollectedAll ?? 0);
+        $officeProfitCollectedActive = (float) ($officeProfitCollectedActive ?? 0);
+        $officeProfitRemainingAll = (float) ($officeProfitRemainingAll ?? max(0, round($totalOfficeCutAll - $officeProfitCollectedAll, 2)));
+        $officeProfitCollectionPct = (float) ($officeProfitCollectionPct ?? ($totalOfficeCutAll > 0 ? round(($officeProfitCollectedAll / $totalOfficeCutAll) * 100, 2) : 0));
+
         $contractBreakdown = $contractBreakdown ?? [];
         $liquidity         = isset($liquidity) ? (float)$liquidity : 0.0;
         $liquiditySummaryData = (array) ($liquiditySummary ?? []);
@@ -673,6 +678,24 @@
                 <div class="fs-2 fw-bold text-neg">
                     {{ number_format($totalOfficeCutAll, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
                 </div>
+                <div class="stat-sub">
+                    {{ __('reports.Paid from Office Share') }}:
+                    {{ number_format($officeProfitCollectedAll, 2) }}
+                    <span class="text-muted">{{ $currencySymbol }}</span>
+                    <span class="badge bg-light text-dark ms-1">{{ number_format($officeProfitCollectionPct, 2) }}%</span>
+                </div>
+                <div class="stat-sub">
+                    {{ __('reports.Office Share Portion Pending') }}:
+                    {{ number_format($officeProfitRemainingAll, 2) }}
+                    <span class="text-muted">{{ $currencySymbol }}</span>
+                </div>
+                @if($officeProfitCollectedActive > 0 && abs($officeProfitCollectedAll - $officeProfitCollectedActive) > 0.005)
+                    <div class="stat-sub small text-muted">
+                        {{ __('reports.Paid from Office Share') }} ({{ trans('investors::investors.Active Contracts') }}):
+                        {{ number_format($officeProfitCollectedActive, 2) }}
+                        <span class="text-muted">{{ $currencySymbol }}</span>
+                    </div>
+                @endif
             </div>
         </div>
         <div class="col-12 col-md-3">

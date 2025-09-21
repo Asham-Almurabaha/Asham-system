@@ -158,6 +158,7 @@ class InvestorDataService
         $totalCapitalShare = 0.0;
         $totalProfitGross  = 0.0;
         $totalOfficeCut    = 0.0;
+        $totalOfficeCutPaidActive = 0.0;
         $totalProfitNet    = 0.0;
         $totalPaidPortionToInvestor = 0.0;
 
@@ -207,6 +208,7 @@ class InvestorDataService
             $totalCapitalShare += $shareVal;
             $totalProfitGross  += $profitGross;
             $totalOfficeCut    += $officeCut;
+            $totalOfficeCutPaidActive += $officeCutPaid;
             $totalProfitNet    += $profitNet;
             $totalPaidPortionToInvestor += $paidIn;
 
@@ -244,6 +246,18 @@ class InvestorDataService
         $totalProfitGross     = round($totalProfitGross, 2);
         $totalOfficeCut       = round($totalOfficeCut, 2);
         $totalProfitNet       = round($totalProfitNet, 2);
+        $totalOfficeCutPaidActive = round($totalOfficeCutPaidActive, 2);
+
+        $officeProfitCollectedAll = (float) OfficeTransaction::query()
+            ->where('investor_id', $investor->id)
+            ->when(!empty($officeStatusIds), fn ($q) => $q->whereIn('status_id', $officeStatusIds))
+            ->sum('amount');
+        $officeProfitCollectedAll = round($officeProfitCollectedAll, 2);
+
+        $officeProfitRemainingAll = max(0.0, round($totalOfficeCutAll - $officeProfitCollectedAll, 2));
+        $officeProfitCollectionPct = $totalOfficeCutAll > 0
+            ? round(($officeProfitCollectedAll / $totalOfficeCutAll) * 100, 2)
+            : 0.0;
         $totalPaidPortionToInvestor = round($totalPaidPortionToInvestor, 2);
         $totalRemainingOnCustomers  = round(array_sum(array_map(
             static fn ($row) => (float) ($row['remaining_on_customers'] ?? 0.0),
@@ -341,6 +355,10 @@ class InvestorDataService
             'totalProfitGross'          => $totalProfitGross,
             'totalOfficeCut'            => $totalOfficeCut,
             'totalProfitNet'            => $totalProfitNet,
+            'officeProfitCollectedAll'  => $officeProfitCollectedAll,
+            'officeProfitCollectedActive' => $totalOfficeCutPaidActive,
+            'officeProfitRemainingAll'  => $officeProfitRemainingAll,
+            'officeProfitCollectionPct' => $officeProfitCollectionPct,
             'totalPaidPortionToInvestor'=> $totalPaidPortionToInvestor,
             'totalRemainingOnCustomers' => $totalRemainingOnCustomers,
             'contractStatusMetrics'     => $statusMetrics,
@@ -358,6 +376,10 @@ class InvestorDataService
                 'office_cut'        => $totalOfficeCut,
                 'profit_net'        => $totalProfitNet,
                 'paid_to_investor'  => $totalPaidPortionToInvestor,
+                'office_cut_paid_active' => $totalOfficeCutPaidActive,
+                'office_cut_collected_all' => $officeProfitCollectedAll,
+                'office_cut_remaining_all' => $officeProfitRemainingAll,
+                'office_cut_collection_pct' => $officeProfitCollectionPct,
                 'remaining_on_customers' => $totalRemainingOnCustomers,
             ],
         ];
