@@ -112,7 +112,7 @@ class LedgerEntriesImportController extends Controller
         }
     }
 
-    // تنزيل تمبليت الأعمدة
+    // تنزيل نموذج الأعمدة
     public function template()
     {
         return Excel::download(new LedgerEntriesTemplateExport(), 'ledger_import_template.xlsx');

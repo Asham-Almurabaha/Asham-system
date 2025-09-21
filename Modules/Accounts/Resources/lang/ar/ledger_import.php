@@ -5,7 +5,7 @@ return array (
   'Import Ledger Entries' => 'استيراد قيود الدفتر',
   'Upload an Excel/CSV file with specs:' => 'ارفع ملف Excel/CSV بالمواصفات:',
   'First row is headers.' => 'الصف الأول عناوين الأعمدة.',
-  'Download template' => 'تنزيل تمبليت',
+  'Download template' => 'تنزيل نموذج',
   'Operation failed:' => 'تعذّر تنفيذ العملية:',
   'Total Rows' => 'إجمالي الصفوف',
   'Saved' => 'المحفوظ فعليًا',

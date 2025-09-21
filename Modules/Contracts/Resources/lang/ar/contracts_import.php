@@ -4,7 +4,7 @@ return array (
   'Import Contracts from Excel' => 'استيراد العقود من Excel',
   'Import Contracts' => 'استيراد العقود',
   'Upload an Excel/CSV file with specs:' => 'ارفع ملف Excel/CSV بالمواصفات:',
-  'Download template' => 'تنزيل تمبليت',
+  'Download template' => 'تنزيل نموذج',
   'Operation failed:' => 'تعذّر تنفيذ العملية:',
   'Total Rows' => 'إجمالي الصفوف',
   'Saved' => 'المحفوظ فعليًا',

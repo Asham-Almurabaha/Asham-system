@@ -466,7 +466,7 @@ class ContractsImportController extends Controller
     }
 
     /**
-     * تنزيل تمبليت الاستيراد.
+     * تنزيل نموذج الاستيراد.
      */
     public function template()
     {

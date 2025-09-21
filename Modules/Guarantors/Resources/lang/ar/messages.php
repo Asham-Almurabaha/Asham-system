@@ -131,7 +131,7 @@ return [
     'Import Guarantors from Excel' => 'استيراد الكُفلاء من Excel',
     'Import Guarantors' => 'استيراد الكُفلاء',
     'Upload an Excel/CSV file with specifications:' => 'قم برفع ملف Excel/CSV بالمواصفات التالية:',
-    'Download Template' => 'تنزيل تمبليت',
+    'Download Template' => 'تنزيل نموذج',
     'Failed to execute the operation:' => 'تعذّر تنفيذ العملية:',
     'Total Rows' => 'إجمالي الصفوف',
     'Actually Saved' => 'المحفوظ فعليًا',
