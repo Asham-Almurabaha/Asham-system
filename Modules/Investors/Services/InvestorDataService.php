@@ -6,6 +6,8 @@ use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
 use App\Models\LedgerEntry;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
+use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Contracts\Entities\ContractClaimPayment;
 
 class InvestorDataService
 {
@@ -115,6 +117,8 @@ class InvestorDataService
         // ===== التحصيل الفعلي لكل عقد لهذا المستثمر (بدون Pro-Rata) =====
         $activeIds = $activeContracts->pluck('id')->filter()->values();
         $paidToInvestorByContract = collect(); // [contract_id => sum(amount)]
+        $installmentsPaidByContract = collect();
+        $claimPaymentsByContract = collect();
         if ($activeIds->isNotEmpty()) {
             $paidToInvestorByContract = LedgerEntry::query()
                 ->whereIn('contract_id', $activeIds)
@@ -123,6 +127,19 @@ class InvestorDataService
                 ->groupBy('contract_id')
                 ->selectRaw('contract_id, SUM(amount) as paid_in')
                 ->pluck('paid_in', 'contract_id');
+
+            $installmentsPaidByContract = ContractInstallment::query()
+                ->whereIn('contract_id', $activeIds)
+                ->groupBy('contract_id')
+                ->selectRaw('contract_id, COALESCE(SUM(payment_amount), 0) as total_paid')
+                ->pluck('total_paid', 'contract_id');
+
+            $claimPaymentsByContract = ContractClaimPayment::query()
+                ->join('contract_claims', 'contract_claims.id', '=', 'contract_claim_payments.contract_claim_id')
+                ->whereIn('contract_claims.contract_id', $activeIds)
+                ->groupBy('contract_claims.contract_id')
+                ->selectRaw('contract_claims.contract_id as contract_id, COALESCE(SUM(contract_claim_payments.amount), 0) as total_paid')
+                ->pluck('total_paid', 'contract_id');
         }
 
         // مجاميع (للعقود النشطة فقط)
@@ -159,25 +176,25 @@ class InvestorDataService
             $profitNet = round($profitGross - $officeCut, 2);
 
             $paidIn = (float) ($paidToInvestorByContract[$c->id] ?? 0);
+            $paidInstallments = (float) ($installmentsPaidByContract[$c->id] ?? 0);
+            $paidClaims = (float) ($claimPaymentsByContract[$c->id] ?? 0);
 
-            $expectedTotal = round($shareVal + $profitNet, 2);
-            $remaining = $expectedTotal - $paidIn;
             $customerName = $c->customer->name ?? null;
             $customerId = $c->customer_id ?? ($c->customer->id ?? null);
 
             $statusName = $this->normalizeStatusName($c->contractStatus->name ?? null);
 
-            $remainingAdjustment = 0.0;
-            if ($this->isClaimStatus($statusName)) {
-                $profitNetPositive = max(0.0, $profitNet);
-                $profitPaid = max(0.0, $paidIn - $shareVal);
-                $profitPaid = min($profitPaid, $profitNetPositive);
-                $remainingProfit = max(0.0, round($profitNetPositive - $profitPaid, 2));
-                $remainingAdjustment = $remainingProfit;
-            }
+            $capitalAndProfitGross = round($shareVal + $profitGross, 2);
+            $officeCutRounded = round($officeCut, 2);
+            $paidForRemaining = $statusName === 'مرفوع فيه'
+                ? round($paidInstallments + $paidClaims, 2)
+                : round($paidIn, 2);
 
-            if ($remainingAdjustment > 0.0) {
-                $remaining -= $remainingAdjustment;
+            if ($paidForRemaining > $officeCutRounded) {
+                $remaining = $capitalAndProfitGross - $paidForRemaining;
+            } else {
+                $officeRemaining = max(0.0, round($officeCutRounded - $paidForRemaining, 2));
+                $remaining = $capitalAndProfitGross - $paidForRemaining - $officeRemaining;
             }
 
             $remaining = max(0.0, round($remaining, 2));
@@ -407,16 +424,6 @@ class InvestorDataService
         }
 
         return $label;
-    }
-
-    private function isClaimStatus(string $statusName): bool
-    {
-        return in_array($statusName, $this->claimStatusNames(), true);
-    }
-
-    private function claimStatusNames(): array
-    {
-        return ['مطلوب', 'مرفوع فيه'];
     }
 
     private function endedNames(): array
