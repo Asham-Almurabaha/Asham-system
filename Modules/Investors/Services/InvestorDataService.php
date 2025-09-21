@@ -156,14 +156,31 @@ class InvestorDataService
             }
 
             $officeCut = round($profitGross * $pctOffice / 100, 2);
-            $profitNet = $profitGross - $officeCut;
+            $profitNet = round($profitGross - $officeCut, 2);
 
             $paidIn = (float) ($paidToInvestorByContract[$c->id] ?? 0);
 
-            $expectedTotal = $shareVal + $profitNet;
+            $expectedTotal = round($shareVal + $profitNet, 2);
             $remaining = $expectedTotal - $paidIn;
             $customerName = $c->customer->name ?? null;
             $customerId = $c->customer_id ?? ($c->customer->id ?? null);
+
+            $statusName = $this->normalizeStatusName($c->contractStatus->name ?? null);
+
+            $remainingAdjustment = 0.0;
+            if ($this->isClaimStatus($statusName)) {
+                $profitNetPositive = max(0.0, $profitNet);
+                $profitPaid = max(0.0, $paidIn - $shareVal);
+                $profitPaid = min($profitPaid, $profitNetPositive);
+                $remainingProfit = max(0.0, round($profitNetPositive - $profitPaid, 2));
+                $remainingAdjustment = $remainingProfit;
+            }
+
+            if ($remainingAdjustment > 0.0) {
+                $remaining -= $remainingAdjustment;
+            }
+
+            $remaining = max(0.0, round($remaining, 2));
 
             $totalCapitalShare += $shareVal;
             $totalProfitGross  += $profitGross;
@@ -189,7 +206,7 @@ class InvestorDataService
                 'total_contract_value'     => $c->contract_value,
                 'total_contract_profit'    => $c->investor_profit,
                 'contract_status_id'       => $c->contract_status_id,
-                'status_name'              => $c->contractStatus->name ?? null,
+                'status_name'              => $statusName,
             ];
         }
 
@@ -203,7 +220,10 @@ class InvestorDataService
         $totalOfficeCut       = round($totalOfficeCut, 2);
         $totalProfitNet       = round($totalProfitNet, 2);
         $totalPaidPortionToInvestor = round($totalPaidPortionToInvestor, 2);
-        $totalRemainingOnCustomers  = round(($totalCapitalShare + $totalProfitNet) - $totalPaidPortionToInvestor, 2);
+        $totalRemainingOnCustomers  = round(array_sum(array_map(
+            static fn ($row) => (float) ($row['remaining_on_customers'] ?? 0.0),
+            $contractBreakdown
+        )), 2);
 
         // صافي السيولة الحالية = إجمالي الداخل - إجمالي الخارج (باستثناء قيود المكتب)
         $liquiditySummary = InvestorLiquidityCalculator::summarizeForInvestor($investor->id);
@@ -303,6 +323,100 @@ class InvestorDataService
                 'remaining_on_customers' => $totalRemainingOnCustomers,
             ],
         ];
+    }
+
+    private function normalizeStatusName(?string $statusName): string
+    {
+        $label = trim((string) ($statusName ?? ''));
+        if ($label === '') {
+            return 'غير محدد';
+        }
+
+        $normalize = static fn ($value) => mb_strtolower(trim((string) $value), 'UTF-8');
+
+        static $canonicalMap = null;
+        static $aliasMap = null;
+
+        if ($canonicalMap === null) {
+            $canonicalNames = [
+                'بدون مستثمر',
+                'معلق',
+                'جديد',
+                'منتهي',
+                'سداد مبكر',
+                'مطلوب',
+                'منتظم',
+                'غير منتظم',
+                'متأخر',
+                'متعثر',
+                'مرفوع فيه',
+                'منتهي بمطالبة',
+            ];
+
+            $canonicalMap = [];
+            foreach ($canonicalNames as $name) {
+                $canonicalMap[$normalize($name)] = $name;
+            }
+
+            $aliasPairs = [
+                'without investor'   => 'بدون مستثمر',
+                'no investor'        => 'بدون مستثمر',
+                'pending'            => 'معلق',
+                'on hold'            => 'معلق',
+                'waiting'            => 'معلق',
+                'new'                => 'جديد',
+                'fresh'              => 'جديد',
+                'ended'              => 'منتهي',
+                'closed'             => 'منتهي',
+                'complete'           => 'منتهي',
+                'completed'          => 'منتهي',
+                'early settlement'   => 'سداد مبكر',
+                'paid off'           => 'سداد مبكر',
+                'required'           => 'مطلوب',
+                'demand'             => 'مطلوب',
+                'active'             => 'منتظم',
+                'regular'            => 'منتظم',
+                'irregular'          => 'غير منتظم',
+                'non-regular'        => 'غير منتظم',
+                'late'               => 'متأخر',
+                'overdue'            => 'متأخر',
+                'delayed'            => 'متأخر',
+                'delinquent'         => 'متعثر',
+                'defaulted'          => 'متعثر',
+                'raised'             => 'مرفوع فيه',
+                'raised status'      => 'مرفوع فيه',
+                'ended with claim'   => 'منتهي بمطالبة',
+                'under claim'        => 'منتهي بمطالبة',
+                'claim closed'       => 'منتهي بمطالبة',
+            ];
+
+            $aliasMap = [];
+            foreach ($aliasPairs as $alias => $canonical) {
+                $aliasMap[$normalize($alias)] = $canonical;
+            }
+        }
+
+        $normalizedInput = $normalize($label);
+
+        if (isset($canonicalMap[$normalizedInput])) {
+            return $canonicalMap[$normalizedInput];
+        }
+
+        if (isset($aliasMap[$normalizedInput])) {
+            return $aliasMap[$normalizedInput];
+        }
+
+        return $label;
+    }
+
+    private function isClaimStatus(string $statusName): bool
+    {
+        return in_array($statusName, $this->claimStatusNames(), true);
+    }
+
+    private function claimStatusNames(): array
+    {
+        return ['مطلوب', 'مرفوع فيه'];
     }
 
     private function endedNames(): array

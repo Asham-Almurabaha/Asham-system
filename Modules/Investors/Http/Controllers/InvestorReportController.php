@@ -295,6 +295,18 @@ class InvestorReportController extends Controller
         ];
         $endedIds = ContractStatus::whereIn('name', $endedNames)->pluck('id')->all();
 
+        $claimStatusIds = ContractStatus::query()
+            ->select(['id', 'name'])
+            ->get()
+            ->filter(function ($status) {
+                $normalized = $this->normalizeStatusName($status->name ?? null);
+
+                return in_array($normalized, $this->claimStatusNames(), true);
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
         $ledgerSub = DB::table('ledger_entries')
             ->selectRaw('investor_id, contract_id, SUM(amount) AS paid_in')
             ->where('direction', 'in')
@@ -315,11 +327,20 @@ class InvestorReportController extends Controller
         $officePctExpr = 'COALESCE(inv.office_share_percentage, 0)';
         $officeCutExpr = "ROUND($profitGrossExpr * $officePctExpr / 100, 2)";
         $paidExpr = 'COALESCE(le.paid_in, 0)';
+        $profitNetExpr = "GREATEST(ROUND($profitGrossExpr - $officeCutExpr, 2), 0)";
+        $profitPaidExpr = "LEAST(GREATEST($paidExpr - $capitalExpr, 0), $profitNetExpr)";
+        $unpaidProfitExpr = "GREATEST($profitNetExpr - $profitPaidExpr, 0)";
         $expectedWithExpr = "($capitalExpr + $profitGrossExpr)";
-        $remainingWithExpr = "GREATEST($expectedWithExpr - $paidExpr, 0)";
+        $remainingWithBaseExpr = "GREATEST($expectedWithExpr - $paidExpr, 0)";
         $officePaidExpr = "LEAST(COALESCE(op.office_paid, 0), $officeCutExpr)";
         $remainingOfficeExpr = "GREATEST($officeCutExpr - $officePaidExpr, 0)";
-        $remainingWithoutExpr = "GREATEST($remainingWithExpr - $remainingOfficeExpr, 0)";
+        $claimAdjustmentExpr = '0';
+        if (!empty($claimStatusIds)) {
+            $claimIdList = implode(',', array_map('intval', $claimStatusIds));
+            $claimAdjustmentExpr = "CASE WHEN c.contract_status_id IN ($claimIdList) THEN $unpaidProfitExpr ELSE 0 END";
+        }
+        $remainingWithExpr = "GREATEST($remainingWithBaseExpr - $claimAdjustmentExpr, 0)";
+        $remainingWithoutExpr = "GREATEST($remainingWithBaseExpr - $remainingOfficeExpr - $claimAdjustmentExpr, 0)";
 
         $totalsRow = DB::table('contract_investor as ci')
             ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
@@ -374,6 +395,7 @@ class InvestorReportController extends Controller
                     'ci.share_value',
                     'c.contract_value',
                     'c.investor_profit',
+                    'c.contract_status_id',
                 ])
                 ->get();
 
@@ -411,7 +433,7 @@ class InvestorReportController extends Controller
                 });
             }
 
-            $items->transform(function ($investor) use ($contractsByInvestor, $paidByInvestor, $officePaidByInvestor, &$pageTotals) {
+            $items->transform(function ($investor) use ($contractsByInvestor, $paidByInvestor, $officePaidByInvestor, &$pageTotals, $claimStatusIds) {
                 $id = $investor->id;
                 $pctOffice = (float) ($investor->office_share_percentage ?? 0);
                 $contracts = $contractsByInvestor->get($id, collect());
@@ -462,8 +484,22 @@ class InvestorReportController extends Controller
                     $officePaid = min($officeCut, round($officePaid, 2));
                     $remainingOffice = max(0.0, round($officeCut - $officePaid, 2));
 
-                    $remainingWith = max(0.0, round($expectedWith - $paid, 2));
-                    $remainingWithout = max(0.0, round($remainingWith - $remainingOffice, 2));
+                    $remainingWithBase = max(0.0, round($expectedWith - $paid, 2));
+                    $remainingWithoutBase = max(0.0, round($remainingWithBase - $remainingOffice, 2));
+
+                    $profitNet = max(0.0, round($profitGross - $officeCut, 2));
+                    $profitPaidRaw = max(0.0, $paid - $shareVal);
+                    $profitPaid = min($profitPaidRaw, $profitNet);
+                    $profitPaid = round($profitPaid, 2);
+                    $unpaidProfit = max(0.0, round($profitNet - $profitPaid, 2));
+
+                    $remainingWith = $remainingWithBase;
+                    $remainingWithout = $remainingWithoutBase;
+
+                    if (!empty($claimStatusIds) && in_array((int) ($contract->contract_status_id ?? 0), $claimStatusIds, true)) {
+                        $remainingWith = max(0.0, round($remainingWith - $unpaidProfit, 2));
+                        $remainingWithout = max(0.0, round($remainingWithout - $unpaidProfit, 2));
+                    }
 
                     $withOffice += $remainingWith;
                     $withoutOffice += $remainingWithout;
@@ -495,6 +531,95 @@ class InvestorReportController extends Controller
             'grandTotals'    => $grandTotals,
             'pageTotals'     => $pageTotals,
         ]);
+    }
+
+    private function normalizeStatusName(?string $statusName): string
+    {
+        $label = trim((string) ($statusName ?? ''));
+        if ($label === '') {
+            return 'غير محدد';
+        }
+
+        $normalize = static fn ($value) => mb_strtolower(trim((string) $value), 'UTF-8');
+
+        static $canonicalMap = null;
+        static $aliasMap = null;
+
+        if ($canonicalMap === null) {
+            $canonicalNames = [
+                'بدون مستثمر',
+                'معلق',
+                'جديد',
+                'منتهي',
+                'سداد مبكر',
+                'مطلوب',
+                'منتظم',
+                'غير منتظم',
+                'متأخر',
+                'متعثر',
+                'مرفوع فيه',
+                'منتهي بمطالبة',
+            ];
+
+            $canonicalMap = [];
+            foreach ($canonicalNames as $name) {
+                $canonicalMap[$normalize($name)] = $name;
+            }
+
+            $aliasPairs = [
+                'without investor'   => 'بدون مستثمر',
+                'no investor'        => 'بدون مستثمر',
+                'pending'            => 'معلق',
+                'on hold'            => 'معلق',
+                'waiting'            => 'معلق',
+                'new'                => 'جديد',
+                'fresh'              => 'جديد',
+                'ended'              => 'منتهي',
+                'closed'             => 'منتهي',
+                'complete'           => 'منتهي',
+                'completed'          => 'منتهي',
+                'early settlement'   => 'سداد مبكر',
+                'paid off'           => 'سداد مبكر',
+                'required'           => 'مطلوب',
+                'demand'             => 'مطلوب',
+                'active'             => 'منتظم',
+                'regular'            => 'منتظم',
+                'irregular'          => 'غير منتظم',
+                'non-regular'        => 'غير منتظم',
+                'late'               => 'متأخر',
+                'overdue'            => 'متأخر',
+                'delayed'            => 'متأخر',
+                'delinquent'         => 'متعثر',
+                'defaulted'          => 'متعثر',
+                'raised'             => 'مرفوع فيه',
+                'raised status'      => 'مرفوع فيه',
+                'ended with claim'   => 'منتهي بمطالبة',
+                'under claim'        => 'منتهي بمطالبة',
+                'claim closed'       => 'منتهي بمطالبة',
+            ];
+
+            $aliasMap = [];
+            foreach ($aliasPairs as $alias => $canonical) {
+                $aliasMap[$normalize($alias)] = $canonical;
+            }
+        }
+
+        $normalizedInput = $normalize($label);
+
+        if (isset($canonicalMap[$normalizedInput])) {
+            return $canonicalMap[$normalizedInput];
+        }
+
+        if (isset($aliasMap[$normalizedInput])) {
+            return $aliasMap[$normalizedInput];
+        }
+
+        return $label;
+    }
+
+    private function claimStatusNames(): array
+    {
+        return ['مطلوب', 'مرفوع فيه'];
     }
 
     public function allliquidity(Request $request)
