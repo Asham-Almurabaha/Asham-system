@@ -221,11 +221,13 @@ class ClaimPaymentDistributionService
                         if ($investorTake > 0) {
                             $investorName   = $investorMeta[$investorId]['name'] ?? ('#' . $investorId);
                             $investorEntries[] = [
-                                'investor_id'       => $investorId,
-                                'amount'            => $investorTake,
-                                'transaction_notes' => "سداد {$claimLabel} بعد خصم المتبقّي من ربح المكتب - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
-                                'ledger_notes'      => "قيد سداد مطالبة للمستثمر {$investorName}" . $ledgerBaseNote . $accountNote . $notesSuffix,
-                                'transaction_date'  => $paymentDate,
+                                'investor_id'                  => $investorId,
+                                'amount'                       => $investorTake,
+                                'transaction_notes'            => "سداد {$claimLabel} بعد خصم المتبقّي من ربح المكتب - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
+                                'ledger_notes'                 => "قيد سداد مطالبة للمستثمر {$investorName}" . $ledgerBaseNote . $accountNote . $notesSuffix,
+                                'transaction_date'             => $paymentDate,
+                                'contract_claim_id'            => $claim->id,
+                                'contract_claim_payment_id'    => $payment->id,
                             ];
                         }
                     }
@@ -336,11 +338,13 @@ class ClaimPaymentDistributionService
 
                         $investorName     = $investorMeta[$investorId]['name'] ?? ('#' . $investorId);
                         $investorEntries[] = [
-                            'investor_id'       => $investorId,
-                            'amount'            => $allocation,
-                            'transaction_notes' => "سداد {$claimLabel} بعد سداد كامل ربح المكتب - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
-                            'ledger_notes'      => "قيد سداد مطالبة للمستثمر {$investorName}" . $ledgerBaseNote . $accountNote . $notesSuffix,
-                            'transaction_date'  => $paymentDate,
+                            'investor_id'                  => $investorId,
+                            'amount'                       => $allocation,
+                            'transaction_notes'            => "سداد {$claimLabel} بعد سداد كامل ربح المكتب - العقد رقم {$contractNumber}" . ($trimmedNotes !== '' ? " - {$trimmedNotes}" : ''),
+                            'ledger_notes'                 => "قيد سداد مطالبة للمستثمر {$investorName}" . $ledgerBaseNote . $accountNote . $notesSuffix,
+                            'transaction_date'             => $paymentDate,
+                            'contract_claim_id'            => $claim->id,
+                            'contract_claim_payment_id'    => $payment->id,
                         ];
                     }
 

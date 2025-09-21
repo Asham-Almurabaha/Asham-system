@@ -1227,6 +1227,120 @@ class ContractClaimControllerTest extends TestCase
         );
     }
 
+    public function test_discount_application_logs_investor_transaction_with_claim_references(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractRequiredStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $claimReviewStatus = ClaimStatus::where('name', 'قيد المراجعة')->firstOrFail();
+        $paidWithDiscountStatus = ClaimStatus::where('name', 'مدفوع بخصم')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+        $claimPayer = ClaimPayer::where('name', 'المحكمة')->firstOrFail();
+        $investorStatus = TransactionStatus::whereIn('name', ['سداد مطالبة', 'سداد مطالبه'])->firstOrFail();
+        $nationality = Nationality::query()->firstOrFail();
+        $title = Title::query()->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Customer Discount Investor',
+            'national_id' => '22223333444455',
+            'phone' => '0500000120',
+            'email' => 'customer-discount-investor@example.test',
+            'address' => 'Test Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Guarantor Discount Investor',
+            'national_id' => '66667777888899',
+            'phone' => '0500000121',
+            'email' => 'guarantor-discount-investor@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-4301',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractRequiredStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 1700,
+            'sale_price' => 2000,
+            'contract_value' => 2000,
+            'investor_profit' => 300,
+            'total_value' => 2000,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 180,
+            'installments_count' => 12,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $investor = Investor::create([
+            'name' => 'Investor Discount Claim',
+            'national_id' => '12312312312312',
+            'phone' => '0500000125',
+            'email' => 'investor-discount-claim@example.test',
+            'address' => 'Investor Address',
+            'nationality_id' => $nationality->id,
+            'title_id' => $title->id,
+            'office_share_percentage' => 0,
+        ]);
+
+        $contract->investors()->attach($investor->id, [
+            'share_percentage' => 100,
+            'share_value' => $contract->total_value,
+        ]);
+
+        $claim = ContractClaim::create([
+            'contract_id' => $contract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 600,
+            'claim_date' => now()->subDays(3)->toDateString(),
+            'document_number' => 'DOC-365',
+            'claim_status_id' => $claimReviewStatus->id,
+        ]);
+
+        $response = $this->patch(route('contract-claims.apply-discount', $claim), [
+            'discount_amount' => 150,
+            'claim_payer_id' => $claimPayer->id,
+            'paid_at' => now()->toDateString(),
+        ]);
+
+        $response->assertRedirect(route('contract-claims.index'));
+
+        $paymentRecord = ContractClaimPayment::where('contract_claim_id', $claim->id)->first();
+
+        $this->assertNotNull($paymentRecord, 'Discount application should create a claim payment when a balance remains.');
+        $this->assertSame(
+            $paidWithDiscountStatus->id,
+            $claim->fresh()->claim_status_id,
+            'Claim status should switch to paid with discount after applying the discount.'
+        );
+
+        $investorTransaction = InvestorTransaction::where('contract_id', $contract->id)
+            ->where('contract_claim_payment_id', $paymentRecord->id)
+            ->first();
+
+        $this->assertNotNull($investorTransaction, 'Investor transaction should be recorded for the discount payment.');
+        $this->assertSame($investor->id, $investorTransaction->investor_id);
+        $this->assertSame($investorStatus->id, $investorTransaction->status_id);
+        $this->assertSame($claim->id, $investorTransaction->contract_claim_id);
+        $this->assertSame($paymentRecord->id, $investorTransaction->contract_claim_payment_id);
+    }
+
     public function test_cannot_record_payment_exceeding_remaining_amount(): void
     {
         $this->seed(LookupsDatabaseSeeder::class);
