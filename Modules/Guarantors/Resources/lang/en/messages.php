@@ -130,7 +130,7 @@ return [
     // Import Page
     'Import Guarantors from Excel' => 'Import Guarantors from Excel',
     'Import Guarantors' => 'Import Guarantors',
-    'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.' => 'Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.',
+    'Upload an Excel/CSV file with specifications:' => 'Upload an Excel/CSV file with specifications:',
     'Download Template' => 'Download Template',
     'Failed to execute the operation:' => 'Failed to execute the operation:',
     'Total Rows' => 'Total Rows',

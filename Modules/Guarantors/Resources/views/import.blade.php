@@ -16,7 +16,9 @@
       <div>
         <h1 class="h4 mb-1">{{ __('guarantors::messages.Import Guarantors') }}</h1>
         <p class="text-muted mb-0">
-          {{ __('guarantors::messages.Upload an Excel/CSV file with specifications: name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image — first row is headers.') }}
+          {{ __('guarantors::messages.Upload an Excel/CSV file with specifications:') }}
+          <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image</code>
+          — @lang('accounts::ledger_import.First row is headers.')
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">
