@@ -34,7 +34,7 @@
                         name="note"
                         id="contract-note-content-{{ $contract->id }}"
                         class="form-control @error('note') is-invalid @enderror"
-                        rows="2"
+                        rows="1"
                         required>{{ $defaultNote }}</textarea>
                     @error('note')
                         <div class="invalid-feedback">{{ $message }}</div>
