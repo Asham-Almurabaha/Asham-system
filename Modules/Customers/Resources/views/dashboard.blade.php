@@ -23,6 +23,7 @@
     $topOutstanding       = collect($topOutstanding ?? []);
     $topNationalities     = collect($topNationalities ?? []);
     $recentCustomers      = collect($recentCustomers ?? []);
+    $financialTotals      = (array) ($financialTotals ?? ['unpaid_total' => 0, 'overdue_total' => 0, 'due_this_month_total' => 0]);
 
     $rangeFrom   = $monthlyRegistrations['range']['from'] ?? '—';
     $rangeTo     = $monthlyRegistrations['range']['to'] ?? '—';
@@ -105,6 +106,41 @@
             ],
         ],
     ];
+
+    $financialCards = [
+        [
+            'col_class'  => 'col-12 col-md-4',
+            'icon'       => 'bi bi-wallet2',
+            'icon_class' => 'fs-4 text-primary',
+            'title'      => __('customers::messages.Total Outstanding Amount'),
+            'value'      => number_format($financialTotals['unpaid_total'] ?? 0, 2),
+            'meta'       => [
+                ['text' => __('customers::messages.Customers With Active Contracts') . ': ' . number_format($totals['active'] ?? 0)],
+            ],
+        ],
+        [
+            'col_class'    => 'col-12 col-md-4',
+            'icon'         => 'bi bi-exclamation-octagon',
+            'icon_class'   => 'fs-4 text-danger',
+            'title'        => __('customers::messages.Total Overdue Amount'),
+            'value'        => number_format($financialTotals['overdue_total'] ?? 0, 2),
+            'value_class'  => 'text-danger fw-bold',
+            'meta'         => [
+                ['text' => __('customers::messages.Customers With Overdue Installments') . ': ' . number_format($totals['overdue'] ?? 0)],
+            ],
+        ],
+        [
+            'col_class'    => 'col-12 col-md-4',
+            'icon'         => 'bi bi-calendar-event',
+            'icon_class'   => 'fs-4 text-info',
+            'title'        => __('customers::messages.Due This Month Amount'),
+            'value'        => number_format($financialTotals['due_this_month_total'] ?? 0, 2),
+            'value_class'  => 'text-info fw-bold',
+            'meta'         => [
+                ['text' => __('customers::messages.Due This Month') . ': ' . number_format($totals['dueThisMonth'] ?? 0)],
+            ],
+        ],
+    ];
 @endphp
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -165,6 +201,26 @@
         <div class="card-body p-20">
             <div class="row g-3">
                 @foreach($summaryCards as $card)
+                    <div class="{{ $card['col_class'] }}">
+                        @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+@endif
+
+@if(!empty($financialCards))
+    <div class="card shadow-sm mb-4" dir="rtl">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+                <h6 class="mb-1">{{ __('customers::messages.Financial Snapshot') }}</h6>
+                <div class="small text-muted">{{ __('customers::messages.Financial Snapshot Hint') }}</div>
+            </div>
+        </div>
+        <div class="card-body p-20">
+            <div class="row g-3">
+                @foreach($financialCards as $card)
                     <div class="{{ $card['col_class'] }}">
                         @include('contracts::partials.kpi-card', array_merge(['dir' => 'rtl'], $card))
                     </div>

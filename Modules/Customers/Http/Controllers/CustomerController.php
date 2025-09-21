@@ -15,6 +15,7 @@ use Modules\Customers\Services\CustomerDetailsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use App\Models\OfficeTransaction;
@@ -178,6 +179,21 @@ class CustomerController extends Controller
             })
             ->where('inst.due_this_month_total', '>', 0)
             ->count();
+
+        $financialRow = DB::query()
+            ->fromSub($aggregationBuilder(), 'inst')
+            ->selectRaw(
+                'SUM(unpaid_total) as unpaid_sum, '
+                . 'SUM(overdue_total) as overdue_sum, '
+                . 'SUM(due_this_month_total) as due_this_month_sum'
+            )
+            ->first();
+
+        $financialTotals = [
+            'unpaid_total'        => round((float) ($financialRow->unpaid_sum ?? 0), 2),
+            'overdue_total'       => round((float) ($financialRow->overdue_sum ?? 0), 2),
+            'due_this_month_total'=> round((float) ($financialRow->due_this_month_sum ?? 0), 2),
+        ];
 
         $pct = static function (int $total, int $value): float {
             if ($total <= 0) {
@@ -360,6 +376,7 @@ class CustomerController extends Controller
             'topOutstanding'        => $topOutstanding,
             'topNationalities'      => $topNationalities,
             'recentCustomers'       => $recentCustomers,
+            'financialTotals'       => $financialTotals,
         ]);
     }
 
