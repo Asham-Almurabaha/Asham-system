@@ -116,20 +116,47 @@ class InvestorDataService
         // ===== التحصيل الفعلي لكل عقد لهذا المستثمر (بدون Pro-Rata) =====
         $activeIds = $activeContracts->pluck('id')->filter()->values();
         $paidToInvestorByContract = collect(); // [contract_id => sum(amount)]
-        if ($activeIds->isNotEmpty()) {
-            $depositTypeIds = InvestorLiquidityCalculator::transactionTypeBuckets()['in'] ?? [];
+        $depositTypeIds = InvestorLiquidityCalculator::transactionTypeBuckets()['in'] ?? [];
+
+        if ($activeIds->isNotEmpty() && !empty($depositTypeIds)) {
+            $paidToInvestorByContract = InvestorTransaction::query()
+                ->from('investor_transactions as it')
+                ->join('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
+                ->whereIn('it.contract_id', $activeIds)
+                ->where('it.investor_id', $investor->id)
+                ->whereIn('ts.transaction_type_id', $depositTypeIds)
+                ->groupBy('it.contract_id')
+                ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_in')
+                ->pluck('paid_in', 'contract_id');
+        }
+
+        $claimPaidToInvestorByContract = collect();
+        $raisedContractIds = $activeContracts
+            ->filter(function ($contract) {
+                $statusName = $this->normalizeStatusName($contract->contractStatus->name ?? null);
+
+                return $statusName === 'مرفوع فيه';
+            })
+            ->pluck('id')
+            ->filter()
+            ->values();
+
+        if ($raisedContractIds->isNotEmpty()) {
+            $claimPaidQuery = InvestorTransaction::query()
+                ->from('investor_transactions as it')
+                ->join('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
+                ->whereIn('it.contract_id', $raisedContractIds)
+                ->where('it.investor_id', $investor->id)
+                ->whereNotNull('it.contract_claim_payment_id');
 
             if (!empty($depositTypeIds)) {
-                $paidToInvestorByContract = InvestorTransaction::query()
-                    ->from('investor_transactions as it')
-                    ->join('transaction_statuses as ts', 'ts.id', '=', 'it.status_id')
-                    ->whereIn('it.contract_id', $activeIds)
-                    ->where('it.investor_id', $investor->id)
-                    ->whereIn('ts.transaction_type_id', $depositTypeIds)
-                    ->groupBy('it.contract_id')
-                    ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_in')
-                    ->pluck('paid_in', 'contract_id');
+                $claimPaidQuery->whereNotIn('ts.transaction_type_id', $depositTypeIds);
             }
+
+            $claimPaidToInvestorByContract = $claimPaidQuery
+                ->groupBy('it.contract_id')
+                ->selectRaw('it.contract_id as contract_id, SUM(it.amount) as paid_from_claims')
+                ->pluck('paid_from_claims', 'contract_id');
         }
 
         // مجاميع (للعقود النشطة فقط)
@@ -165,16 +192,22 @@ class InvestorDataService
             $officeCut = round($profitGross * $pctOffice / 100, 2);
             $profitNet = round($profitGross - $officeCut, 2);
 
-            $paidIn = (float) ($paidToInvestorByContract[$c->id] ?? 0);
+            $paidFromInstallments = (float) ($paidToInvestorByContract[$c->id] ?? 0);
+            $statusName = $this->normalizeStatusName($c->contractStatus->name ?? null);
+
+            $paidFromClaims = 0.0;
+            if ($statusName === 'مرفوع فيه') {
+                $paidFromClaims = (float) ($claimPaidToInvestorByContract[$c->id] ?? 0);
+            }
+
+            $paidIn = round($paidFromInstallments + $paidFromClaims, 2);
 
             $customerName = $c->customer->name ?? null;
             $customerId = $c->customer_id ?? ($c->customer->id ?? null);
 
-            $statusName = $this->normalizeStatusName($c->contractStatus->name ?? null);
-
             $capitalAndProfitGross = round($shareVal + $profitGross, 2);
             $officeCutRounded = round($officeCut, 2);
-            $paidForRemaining = round($paidIn, 2);
+            $paidForRemaining = $paidIn;
 
             if ($paidForRemaining > $officeCutRounded) {
                 $remaining = $capitalAndProfitGross - $paidForRemaining;
