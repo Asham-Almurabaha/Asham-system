@@ -8,11 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Support\TransactionDirection;
 use Modules\Lookups\Entities\Category;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 use Modules\Investors\Entities\Investor;
+use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
@@ -235,15 +237,44 @@ class InvestorReportController extends Controller
 
     public function transactions(Investor $investor)
     {
-        $transactions = LedgerEntry::query()
-            ->with(['status:id,name', 'type:id,name'])
+        $transactions = InvestorTransaction::query()
+            ->with([
+                'status:id,name,transaction_type_id',
+                'status.transactionType:id,name',
+            ])
             ->where('investor_id', $investor->id)
-            ->latest('entry_date')
+            ->latest('transaction_date')
             ->get();
 
+        $typeBuckets = InvestorLiquidityCalculator::transactionTypeBuckets();
+        $directionByType = collect($typeBuckets['in'] ?? [])
+            ->mapWithKeys(fn ($typeId) => [(int) $typeId => 'in'])
+            ->merge(collect($typeBuckets['out'] ?? [])
+                ->mapWithKeys(fn ($typeId) => [(int) $typeId => 'out']))
+            ->all();
+
+        $transactions = $transactions->map(function ($transaction) use ($directionByType) {
+            $status = $transaction->status;
+            $typeId = $status ? (int) ($status->transaction_type_id ?? 0) : 0;
+            $direction = $directionByType[$typeId] ?? null;
+
+            if ($direction === null) {
+                $typeName = $status?->transactionType?->name;
+                $direction = TransactionDirection::directionFromTypeName($typeName);
+            }
+
+            $transaction->setAttribute('cash_direction', $direction);
+
+            return $transaction;
+        });
+
         $transactionsCount = $transactions->count();
-        $depositsTotal    = $transactions->where('direction', 'in')->sum('amount');
-        $withdrawalsTotal = $transactions->where('direction', 'out')->sum('amount');
+        $depositsTotal = $transactions
+            ->filter(fn ($transaction) => $transaction->getAttribute('cash_direction') === 'in')
+            ->sum('amount');
+        $withdrawalsTotal = $transactions
+            ->filter(fn ($transaction) => $transaction->getAttribute('cash_direction') === 'out')
+            ->sum('amount');
 
         return view(
             'investors::reports.transactions',

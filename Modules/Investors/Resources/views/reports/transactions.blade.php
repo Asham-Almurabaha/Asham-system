@@ -80,6 +80,7 @@
             <th style="width:56px">#</th>
             <th>@lang('app.Date')</th>
             <th>@lang('app.Amount')</th>
+            <th>@lang('reports.Cash Direction')</th>
             <th>@lang('app.Type')</th>
             <th>@lang('app.Status')</th>
             <th class="text-start">@lang('app.Notes')</th>
@@ -87,30 +88,49 @@
       </x-slot>
       @forelse($items as $i => $e)
         @php
-          $statusName = optional($e->status)->name ?? optional($e->transactionStatus)->name ?? '—';
-          $typeName   = optional($e->type)->name   ?? optional($e->transactionType)->name   ?? '—';
-          $isDeposit  = (string)$e->direction === 'in';
-          $amountCls  = $isDeposit ? 'text-success' : 'text-danger';
+          $status      = $e->status;
+          $statusName  = optional($status)->name ?? '—';
+          $typeName    = optional(optional($status)->transactionType)->name ?? '—';
+          $direction   = $e->getAttribute('cash_direction');
+          $directionLabel = match($direction) {
+            'in'  => __('reports.Deposit'),
+            'out' => __('reports.Withdrawal'),
+            default => '—',
+          };
+          $amountCls = match($direction) {
+            'in'  => 'text-success',
+            'out' => 'text-danger',
+            default => '',
+          };
+          $dateValue = $e->transaction_date ?? null;
+          if ($dateValue instanceof Carbon) {
+            $dateFormatted = $dateValue->format('d-m-Y');
+          } elseif (!empty($dateValue)) {
+            $dateFormatted = Carbon::parse($dateValue)->format('d-m-Y');
+          } else {
+            $dateFormatted = '—';
+          }
         @endphp
         <tr>
           <td>{{ $i + 1 }}</td>
-          <td>{{ Carbon::parse($e->entry_date)->format('d-m-Y') }}</td>
+          <td>{{ $dateFormatted }}</td>
           <td class="fw-semibold {{ $amountCls }}">
             {{ number_format($e->amount, 2) }} <span class="small-muted">{{ $cs }}</span>
           </td>
+          <td>{{ $directionLabel }}</td>
           <td>{{ $typeName }}</td>
           <td>{{ $statusName }}</td>
           <td class="text-start">{{ $e->notes ?? '—' }}</td>
         </tr>
       @empty
         <tr>
-          <td colspan="6" class="py-5 text-muted">@lang('reports.No matching transactions in the report.')</td>
+          <td colspan="7" class="py-5 text-muted">@lang('reports.No matching transactions in the report.')</td>
         </tr>
       @endforelse
       <x-slot name="footer">
         @if($transactions instanceof \Illuminate\Pagination\LengthAwarePaginator)
           <tr>
-            <th colspan="6" class="bg-white">
+            <th colspan="7" class="bg-white">
               <div class="no-print d-flex justify-content-center p-2">
                 {{ $transactions->withQueryString()->links('pagination::bootstrap-5') }}
               </div>
