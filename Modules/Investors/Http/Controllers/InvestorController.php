@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Collection;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInvestor;
 use Modules\Lookups\Entities\ContractStatus;
@@ -18,6 +19,7 @@ use Modules\Investors\Entities\Investor;
 use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
+use Modules\Investors\Support\InvestorContractPaymentAggregator;
 
 class InvestorController extends Controller
 {
@@ -66,24 +68,73 @@ class InvestorController extends Controller
                 ->select('ci.investor_id','ci.contract_id','ci.share_percentage','ci.share_value','c.contract_value','c.investor_profit')
                 ->get();
 
+            $officeSharePctByInvestor = $investors->getCollection()
+                ->mapWithKeys(fn (Investor $inv) => [$inv->id => (float) ($inv->office_share_percentage ?? 0.0)])
+                ->all();
+
+            $contractIds = $rows->pluck('contract_id')->filter()->unique()->all();
+            $paidByInvestor = collect();
+
+            if (!empty($contractIds)) {
+                $paidByInvestor = InvestorContractPaymentAggregator::sumForInvestors($ids, $contractIds);
+            }
+
             // Count active contracts per investor
             $activeCountByInvestor = $rows->groupBy('investor_id')->map(function($g){
                 return $g->pluck('contract_id')->unique()->count();
             });
 
             // Remaining amount per investor
-            $remainingByInvestor = $rows->groupBy('investor_id')->map(function($g){
-                return $g->reduce(function($carry,$item){
-                    $shareVal = (float) ($item->share_value ?? 0);
-                    $sharePct = (float) ($item->share_percentage ?? 0);
-                    if ($shareVal <= 0 && $item->contract_value) {
-                        $shareVal = round(((float)$item->contract_value) * $sharePct / 100, 2);
+            $remainingByInvestor = $rows->groupBy('investor_id')->map(function($g, $investorId) use ($officeSharePctByInvestor, $paidByInvestor) {
+                $officePct = (float) ($officeSharePctByInvestor[$investorId] ?? 0.0);
+                $paymentsByContract = $paidByInvestor->get($investorId);
+                if (!$paymentsByContract instanceof Collection) {
+                    $paymentsByContract = Collection::make();
+                }
+
+                $totalRemaining = $g->reduce(function($carry, $item) use ($officePct, $paymentsByContract) {
+                    $contractId    = (int) ($item->contract_id ?? 0);
+                    $contractValue = (float) ($item->contract_value ?? 0.0);
+                    $sharePct      = (float) ($item->share_percentage ?? 0.0);
+                    $shareVal      = (float) ($item->share_value ?? 0.0);
+
+                    $shareRatio = 0.0;
+                    if ($sharePct > 0) {
+                        $shareRatio = $sharePct / 100;
+                        if ($shareVal <= 0 && $contractValue > 0) {
+                            $shareVal = round($contractValue * $shareRatio, 2);
+                        }
+                    } elseif ($shareVal > 0 && $contractValue > 0) {
+                        $shareRatio = $shareVal / $contractValue;
                     }
-                    $profitGross = isset($item->investor_profit)
-                        ? round(((float)$item->investor_profit) * $sharePct / 100, 2)
-                        : 0.0;
-                    return $carry + $shareVal + $profitGross;
-                }, 0);
+
+                    $shareVal = round($shareVal, 2);
+
+                    $profitGross = 0.0;
+                    if ($shareRatio > 0 && isset($item->investor_profit)) {
+                        $profitGross = round(((float)$item->investor_profit) * $shareRatio, 2);
+                    }
+
+                    $officeCut = round($profitGross * $officePct / 100, 2);
+
+                    $paymentRow = $paymentsByContract->get($contractId, []);
+                    $paidInstallments = (float) ($paymentRow['installments'] ?? 0.0);
+                    $paidClaims = (float) ($paymentRow['claims'] ?? 0.0);
+
+                    $remaining = round($shareVal + $profitGross - $officeCut - $paidInstallments - $paidClaims, 2);
+                    if (abs($remaining) < 0.005) {
+                        $remaining = 0.0;
+                    }
+
+                    return $carry + $remaining;
+                }, 0.0);
+
+                $totalRemaining = round($totalRemaining, 2);
+                if (abs($totalRemaining) < 0.005) {
+                    $totalRemaining = 0.0;
+                }
+
+                return $totalRemaining;
             });
         }
 
