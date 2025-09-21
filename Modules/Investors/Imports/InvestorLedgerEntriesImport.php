@@ -5,6 +5,7 @@ namespace Modules\Investors\Imports;
 use App\Models\LedgerEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\Importable;
@@ -22,6 +23,7 @@ use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Investors\Entities\Investor;
+use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 
@@ -200,21 +202,51 @@ class InvestorLedgerEntriesImport implements
                 throw new \RuntimeException(__('investors::investor_ledger_import.Direction missing'));
             }
 
-            $entry = new LedgerEntry([
-                'entry_date'            => $date,
-                'investor_id'           => $investorId,
-                'is_office'             => false,
-                'transaction_status_id' => $statusId,
-                'transaction_type_id'   => $typeId,
-                'bank_account_id'       => $bankAccountId ?: null,
-                'safe_id'               => $safeId ?: null,
-                'contract_id'           => $contractId ?: null,
-                'installment_id'        => $installmentId ?: null,
-                'amount'                => $amount,
-                'direction'             => $direction,
-                'ref'                   => $ref,
-                'notes'                 => $notes,
-            ]);
+            $notesValue = $this->valueIsFilled($notes) ? trim((string) $notes) : null;
+            $refValue   = $this->valueIsFilled($ref) ? trim((string) $ref) : null;
+
+            $entry = DB::transaction(function () use (
+                $date,
+                $investorId,
+                $statusId,
+                $typeId,
+                $bankAccountId,
+                $safeId,
+                $contractId,
+                $installmentId,
+                $amount,
+                $direction,
+                $refValue,
+                $notesValue
+            ) {
+                $ledgerEntry = LedgerEntry::create([
+                    'entry_date'            => $date,
+                    'investor_id'           => $investorId,
+                    'is_office'             => false,
+                    'transaction_status_id' => $statusId,
+                    'transaction_type_id'   => $typeId,
+                    'bank_account_id'       => $bankAccountId ?: null,
+                    'safe_id'               => $safeId ?: null,
+                    'contract_id'           => $contractId ?: null,
+                    'installment_id'        => $installmentId ?: null,
+                    'amount'                => $amount,
+                    'direction'             => $direction,
+                    'ref'                   => $refValue,
+                    'notes'                 => $notesValue,
+                ]);
+
+                InvestorTransaction::create([
+                    'investor_id'      => $investorId,
+                    'contract_id'      => $contractId ?: null,
+                    'installment_id'   => $installmentId ?: null,
+                    'status_id'        => $statusId,
+                    'amount'           => $amount,
+                    'transaction_date' => $date,
+                    'notes'            => $notesValue,
+                ]);
+
+                return $ledgerEntry;
+            });
 
             $this->insertedCount++;
 
