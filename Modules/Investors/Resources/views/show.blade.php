@@ -82,6 +82,11 @@
         $officeProfitCollectedActive = (float) ($officeProfitCollectedActive ?? 0);
         $officeProfitRemainingAll = (float) ($officeProfitRemainingAll ?? max(0, round($totalOfficeCutAll - $officeProfitCollectedAll, 2)));
         $officeProfitCollectionPct = (float) ($officeProfitCollectionPct ?? ($totalOfficeCutAll > 0 ? round(($officeProfitCollectedAll / $totalOfficeCutAll) * 100, 2) : 0));
+        $officeProfitRemainingActive = (float) ($officeProfitRemainingActive ?? max(0, round($totalOfficeCut - $officeProfitCollectedActive, 2)));
+        $totalRemainingIncludingOffice = (float) ($totalRemainingIncludingOffice ?? round($totalRemainingOnCustomers + $officeProfitRemainingActive, 2));
+        if (abs($totalRemainingIncludingOffice) < 0.005) {
+            $totalRemainingIncludingOffice = 0.0;
+        }
 
         $contractBreakdown = $contractBreakdown ?? [];
         $liquidity         = isset($liquidity) ? (float)$liquidity : 0.0;
@@ -547,9 +552,48 @@
 
    
 
-    {{-- ====== كروت "المتبقي على العملاء" + "سيولة المستثمر" ====== --}}
+    {{-- ====== الكروت المالية الأساسية ====== --}}
     <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="kpi-card p-3 h-100">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-kanban fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">إجمالي المتبقي في العقود</div>
+                </div>
+                <div class="fs-2 fw-bold {{ $totalRemainingIncludingOffice >= 0 ? 'text-pos' : 'text-neg' }}">
+                    {{ number_format($totalRemainingIncludingOffice, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                </div>
+                <div class="stat-sub">يشمل صافي المستثمر + ربح المكتب المتبقي</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="kpi-card p-3 h-100">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-building fs-5 text-warning"></i></div>
+                    <div class="fw-bold text-muted">إجمالي ربح المكتب المتبقي</div>
+                </div>
+                <div class="fs-2 fw-bold {{ $officeProfitRemainingActive >= 0 ? 'text-pos' : 'text-neg' }}">
+                    {{ number_format($officeProfitRemainingActive, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                </div>
+                <div class="stat-sub">نصيب المكتب غير المحصل من أرباح المستثمر</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="kpi-card p-3 h-100">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-cash-stack fs-5 text-success"></i></div>
+                    <div class="fw-bold text-muted">إجمالي المتبقي بدون ربح المكتب</div>
+                </div>
+                <div class="fs-2 fw-bold {{ $totalRemainingOnCustomers >= 0 ? 'text-pos' : 'text-neg' }}">
+                    {{ number_format($totalRemainingOnCustomers, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+                </div>
+                <div class="stat-sub">
+                    = رأس المال + (ربح المستثمر − نصيب المكتب) −
+                    <span title="نصيب المستثمر من مدفوعات العميل تناسبياً">المدفوع</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
             <div class="kpi-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-cash-coin fs-5 text-success"></i></div>
@@ -568,21 +612,6 @@
                     {{ __('investors::investors.Total Withdrawals') }}:
                     <span class="fw-semibold">{{ number_format($liquidityTotalOut, 2) }}</span>
                     <span class="text-muted">{{ $currencySymbol }}</span>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-6">
-            <div class="kpi-card p-3 h-100">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <div class="kpi-icon"><i class="bi bi-cash-stack fs-5 text-warning"></i></div>
-                    <div class="fw-bold text-muted">المتبقي على العملاء</div>
-                </div>
-                <div class="fs-2 fw-bold {{ $totalRemainingOnCustomers >= 0 ? 'text-pos' : 'text-neg' }}">
-                    {{ number_format($totalRemainingOnCustomers, 2) }} <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
-                </div>
-                <div class="stat-sub">
-                    = رأس المال + (ربح المستثمر − نصيب المكتب) −
-                    <span title="نصيب المستثمر من مدفوعات العميل تناسبياً">المدفوع</span>
                 </div>
             </div>
         </div>

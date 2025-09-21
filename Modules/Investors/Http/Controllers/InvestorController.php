@@ -3,6 +3,7 @@
 namespace Modules\Investors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\OfficeTransaction;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use App\Services\InstallmentsMonthlyService;
@@ -15,6 +16,7 @@ use Illuminate\Support\Collection;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInvestor;
 use Modules\Lookups\Entities\ContractStatus;
+use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
 use Modules\Investors\Services\InvestorDataService;
@@ -224,6 +226,9 @@ class InvestorController extends Controller
             ? round(($contractStats['active'] / $contractStats['total']) * 100, 1)
             : 0.0;
 
+        $currencySymbol = config('app.currency_symbol', 'ر.س');
+        $outstandingTotals = $this->summarizeOutstandingForInvestors();
+
         return view('investors::dashboard', [
             'investorsTotalAll'         => $investorsTotalAll,
             'activeInvestorsTotalAll'   => $activeInvestorsTotalAll,
@@ -240,6 +245,10 @@ class InvestorController extends Controller
             'investorsWithContracts'    => $investorsWithContracts,
             'avgOfficeShare'            => $avgOfficeShare,
             'contractStats'             => $contractStats,
+            'currencySymbol'            => $currencySymbol,
+            'totalRemainingOnCustomersAll'     => $outstandingTotals['remaining_on_customers'],
+            'officeProfitRemainingActiveAll'   => $outstandingTotals['office_profit_remaining'],
+            'totalRemainingIncludingOfficeAll' => $outstandingTotals['total_remaining_including_office'],
         ]);
     }
 
@@ -483,6 +492,268 @@ class InvestorController extends Controller
                 }
             })
             ->count();
+    }
+
+    protected function summarizeOutstandingForInvestors(): array
+    {
+        $defaults = [
+            'remaining_on_customers'           => 0.0,
+            'office_profit_total'              => 0.0,
+            'office_profit_collected'          => 0.0,
+            'office_profit_remaining'          => 0.0,
+            'total_remaining_including_office' => 0.0,
+        ];
+
+        $contractInvestorTable = (new ContractInvestor())->getTable();
+        $contractsTable = (new Contract())->getTable();
+        $investorsTable = (new Investor())->getTable();
+
+        if (
+            !Schema::hasTable($contractInvestorTable)
+            || !Schema::hasTable($contractsTable)
+            || !Schema::hasTable($investorsTable)
+        ) {
+            return $defaults;
+        }
+
+        $query = DB::table($contractInvestorTable . ' as ci')
+            ->join($contractsTable . ' as c', 'c.id', '=', 'ci.contract_id')
+            ->join($investorsTable . ' as i', 'i.id', '=', 'ci.investor_id')
+            ->select([
+                'ci.contract_id',
+                'ci.investor_id',
+                'ci.share_percentage',
+                'ci.share_value',
+                'c.contract_value',
+                'c.investor_profit',
+                'i.office_share_percentage',
+            ]);
+
+        $endedStatusIds = $this->endedContractStatusIds();
+
+        $statusIdColumn = null;
+        foreach (['contract_status_id', 'status_id', 'state_id'] as $column) {
+            if (Schema::hasColumn($contractsTable, $column)) {
+                $statusIdColumn = $column;
+                break;
+            }
+        }
+
+        if ($statusIdColumn && !empty($endedStatusIds)) {
+            $query->whereNotIn('c.' . $statusIdColumn, $endedStatusIds);
+        } else {
+            $statusNameColumn = null;
+            foreach (['status', 'state', 'contract_status'] as $column) {
+                if (Schema::hasColumn($contractsTable, $column)) {
+                    $statusNameColumn = $column;
+                    break;
+                }
+            }
+
+            if ($statusNameColumn) {
+                $query->whereNotIn('c.' . $statusNameColumn, $this->endedContractStatusNames());
+            }
+        }
+
+        if (Schema::hasColumn($contractInvestorTable, 'deleted_at')) {
+            $query->whereNull('ci.deleted_at');
+        }
+
+        if (Schema::hasColumn($contractsTable, 'deleted_at')) {
+            $query->whereNull('c.deleted_at');
+        }
+
+        if (Schema::hasColumn($investorsTable, 'deleted_at')) {
+            $query->whereNull('i.deleted_at');
+        }
+
+        $rows = $query->get();
+
+        if ($rows->isEmpty()) {
+            return $defaults;
+        }
+
+        $investorIds = $rows->pluck('investor_id')
+            ->filter(fn ($value) => !is_null($value))
+            ->map(fn ($value) => (int) $value)
+            ->filter(fn ($value) => $value > 0)
+            ->unique()
+            ->values();
+
+        $contractIds = $rows->pluck('contract_id')
+            ->filter(fn ($value) => !is_null($value))
+            ->map(fn ($value) => (int) $value)
+            ->filter(fn ($value) => $value > 0)
+            ->unique()
+            ->values();
+
+        $paymentsByInvestor = collect();
+        if ($investorIds->isNotEmpty() && $contractIds->isNotEmpty()) {
+            $paymentsByInvestor = InvestorContractPaymentAggregator::sumForInvestors($investorIds, $contractIds);
+        }
+
+        $officePaidLookup = [];
+        if ($investorIds->isNotEmpty() && $contractIds->isNotEmpty()) {
+            $officeStatusIds = $this->officeProfitStatusIds();
+
+            $officeQuery = OfficeTransaction::query()
+                ->from('office_transactions as ot')
+                ->whereIn('ot.contract_id', $contractIds)
+                ->whereIn('ot.investor_id', $investorIds);
+
+            if (!empty($officeStatusIds)) {
+                $officeQuery->whereIn('ot.status_id', $officeStatusIds);
+            }
+
+            $officeRows = $officeQuery
+                ->groupBy('ot.investor_id', 'ot.contract_id')
+                ->selectRaw('ot.investor_id as investor_id, ot.contract_id as contract_id, SUM(ot.amount) as amount')
+                ->get();
+
+            foreach ($officeRows as $row) {
+                $invId = (int) ($row->investor_id ?? 0);
+                $contractId = (int) ($row->contract_id ?? 0);
+
+                if ($invId <= 0 || $contractId <= 0) {
+                    continue;
+                }
+
+                $amount = round((float) ($row->amount ?? 0.0), 2);
+
+                if ($amount === 0.0) {
+                    continue;
+                }
+
+                if (!isset($officePaidLookup[$invId])) {
+                    $officePaidLookup[$invId] = [];
+                }
+
+                $officePaidLookup[$invId][$contractId] = $amount;
+            }
+        }
+
+        $totalRemainingOnCustomers = 0.0;
+        $totalOfficeCut = 0.0;
+        $totalOfficePaid = 0.0;
+
+        foreach ($rows as $row) {
+            $investorId = (int) ($row->investor_id ?? 0);
+            $contractId = (int) ($row->contract_id ?? 0);
+
+            if ($investorId <= 0 || $contractId <= 0) {
+                continue;
+            }
+
+            $contractValue = (float) ($row->contract_value ?? 0.0);
+            $sharePct = (float) ($row->share_percentage ?? 0.0);
+            $shareVal = (float) ($row->share_value ?? 0.0);
+            $officePct = (float) ($row->office_share_percentage ?? 0.0);
+            $investorProfit = (float) ($row->investor_profit ?? 0.0);
+
+            $shareRatio = 0.0;
+            if ($sharePct > 0) {
+                $shareRatio = $sharePct / 100;
+
+                if ($shareVal <= 0 && $contractValue > 0) {
+                    $shareVal = round($contractValue * $shareRatio, 2);
+                }
+            } elseif ($shareVal > 0 && $contractValue > 0) {
+                $shareRatio = $shareVal / $contractValue;
+            }
+
+            $shareVal = round($shareVal, 2);
+
+            $profitGross = 0.0;
+            if ($shareRatio > 0 && $investorProfit != 0.0) {
+                $profitGross = round($investorProfit * $shareRatio, 2);
+            }
+
+            $officeCut = round($profitGross * $officePct / 100, 2);
+            $profitNet = round($profitGross - $officeCut, 2);
+
+            $paidTotal = 0.0;
+            $paymentsForInvestor = $paymentsByInvestor->get($investorId);
+            if ($paymentsForInvestor instanceof Collection) {
+                $paymentRow = $paymentsForInvestor->get($contractId);
+                if (is_array($paymentRow)) {
+                    $paidTotal = (float) ($paymentRow['total'] ?? 0.0);
+                }
+            }
+            $paidTotal = round($paidTotal, 2);
+
+            $remaining = round($shareVal + $profitNet - $paidTotal, 2);
+            if (abs($remaining) < 0.005) {
+                $remaining = 0.0;
+            }
+
+            $totalRemainingOnCustomers += $remaining;
+            $totalOfficeCut += $officeCut;
+
+            $officePaid = (float) ($officePaidLookup[$investorId][$contractId] ?? 0.0);
+            $totalOfficePaid += $officePaid;
+        }
+
+        $totalRemainingOnCustomers = round($totalRemainingOnCustomers, 2);
+        if (abs($totalRemainingOnCustomers) < 0.005) {
+            $totalRemainingOnCustomers = 0.0;
+        }
+
+        $totalOfficeCut = round($totalOfficeCut, 2);
+        $totalOfficePaid = round($totalOfficePaid, 2);
+
+        $officeProfitRemaining = round($totalOfficeCut - $totalOfficePaid, 2);
+        if ($officeProfitRemaining < 0) {
+            $officeProfitRemaining = 0.0;
+        }
+
+        if (abs($officeProfitRemaining) < 0.005) {
+            $officeProfitRemaining = 0.0;
+        }
+
+        $totalIncludingOffice = round($totalRemainingOnCustomers + $officeProfitRemaining, 2);
+        if (abs($totalIncludingOffice) < 0.005) {
+            $totalIncludingOffice = 0.0;
+        }
+
+        return [
+            'remaining_on_customers'           => $totalRemainingOnCustomers,
+            'office_profit_total'              => $totalOfficeCut,
+            'office_profit_collected'          => $totalOfficePaid,
+            'office_profit_remaining'          => $officeProfitRemaining,
+            'total_remaining_including_office' => $totalIncludingOffice,
+        ];
+    }
+
+    protected function officeProfitStatusIds(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $names = ['ربح المكتب', 'office profit', 'office share'];
+        $normalize = static fn ($value) => mb_strtolower(trim((string) $value), 'UTF-8');
+        $targets = array_unique(array_map($normalize, $names));
+
+        if (empty($targets)) {
+            return $cache = [];
+        }
+
+        $ids = TransactionStatus::query()
+            ->select(['id', 'name'])
+            ->get()
+            ->reduce(function (array $carry, $status) use ($normalize, $targets) {
+                $name = $normalize($status->name ?? '');
+
+                if ($name !== '' && in_array($name, $targets, true)) {
+                    $carry[] = (int) $status->id;
+                }
+
+                return $carry;
+            }, []);
+
+        return $cache = array_values(array_unique($ids));
     }
 
     protected function endedInvestmentStatusNames(): array

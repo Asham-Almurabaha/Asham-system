@@ -22,6 +22,24 @@
     $topLiquidityCollection = collect($topLiquidity ?? []);
     $topLiquidityTotalNet = (float) ($topLiquidityTotalNet ?? $topLiquidityCollection->sum('net'));
 
+    $currencySymbol = $currencySymbol ?? 'ر.س';
+    $totalRemainingOnCustomersAll = isset($totalRemainingOnCustomersAll) ? round((float) $totalRemainingOnCustomersAll, 2) : 0.0;
+    if (abs($totalRemainingOnCustomersAll) < 0.005) {
+        $totalRemainingOnCustomersAll = 0.0;
+    }
+
+    $officeProfitRemainingActiveAll = isset($officeProfitRemainingActiveAll) ? round((float) $officeProfitRemainingActiveAll, 2) : 0.0;
+    if (abs($officeProfitRemainingActiveAll) < 0.005) {
+        $officeProfitRemainingActiveAll = 0.0;
+    }
+
+    $totalRemainingIncludingOfficeAll = isset($totalRemainingIncludingOfficeAll)
+        ? round((float) $totalRemainingIncludingOfficeAll, 2)
+        : round($totalRemainingOnCustomersAll + $officeProfitRemainingActiveAll, 2);
+    if (abs($totalRemainingIncludingOfficeAll) < 0.005) {
+        $totalRemainingIncludingOfficeAll = 0.0;
+    }
+
     $totalInvestors   = (int) ($investorsTotalAll ?? 0);
     $activeInvestors  = (int) ($activeInvestorsTotalAll ?? 0);
     $inactiveInvestors = (int) ($inactiveInvestorsTotalAll ?? max($totalInvestors - $activeInvestors, 0));
@@ -133,6 +151,57 @@
                     <div class="subnote">{{ __('investors::investors.This Week') }}: {{ number_format($newInvestorsThisWeekAll ?? 0) }}</div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4" dir="rtl">
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="kpi-icon"><i class="bi bi-kanban fs-5 text-primary"></i></div>
+                <div>
+                    <div class="fw-bold text-muted">إجمالي المتبقي في العقود</div>
+                    <div class="subnote text-muted">لكل المستثمرين</div>
+                </div>
+            </div>
+            <div class="fs-2 fw-bold {{ $totalRemainingIncludingOfficeAll >= 0 ? 'text-pos' : 'text-neg' }}">
+                {{ number_format($totalRemainingIncludingOfficeAll, 2) }}
+                <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+            </div>
+            <div class="subnote">يشمل صافي المستثمر + ربح المكتب المتبقي</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="kpi-icon"><i class="bi bi-building fs-5 text-warning"></i></div>
+                <div>
+                    <div class="fw-bold text-muted">إجمالي ربح المكتب المتبقي</div>
+                    <div class="subnote text-muted">لكل المستثمرين</div>
+                </div>
+            </div>
+            <div class="fs-2 fw-bold {{ $officeProfitRemainingActiveAll >= 0 ? 'text-pos' : 'text-neg' }}">
+                {{ number_format($officeProfitRemainingActiveAll, 2) }}
+                <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+            </div>
+            <div class="subnote">نصيب المكتب غير المحصل من أرباح المستثمرين</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-4">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="kpi-icon"><i class="bi bi-cash-stack fs-5 text-success"></i></div>
+                <div>
+                    <div class="fw-bold text-muted">إجمالي المتبقي بدون ربح المكتب</div>
+                    <div class="subnote text-muted">لكل المستثمرين</div>
+                </div>
+            </div>
+            <div class="fs-2 fw-bold {{ $totalRemainingOnCustomersAll >= 0 ? 'text-pos' : 'text-neg' }}">
+                {{ number_format($totalRemainingOnCustomersAll, 2) }}
+                <span class="fs-6 text-muted">{{ $currencySymbol }}</span>
+            </div>
+            <div class="subnote">رأس المال + صافي ربح المستثمر − المدفوع</div>
         </div>
     </div>
 </div>
