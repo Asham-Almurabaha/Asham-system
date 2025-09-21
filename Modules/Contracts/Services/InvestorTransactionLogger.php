@@ -76,6 +76,8 @@ class InvestorTransactionLogger
         $defaultLedgerNotes     = $options['ledger_notes'] ?? null;
         $bankAccountId          = $options['bank_account_id'] ?? null;
         $safeId                 = $options['safe_id'] ?? null;
+        $defaultClaimId         = $this->normalizeForeignId($options['contract_claim_id'] ?? null);
+        $defaultClaimPaymentId  = $this->normalizeForeignId($options['contract_claim_payment_id'] ?? null);
 
         DB::transaction(function () use (
             $entries,
@@ -89,7 +91,9 @@ class InvestorTransactionLogger
             $defaultTxnNotes,
             $defaultLedgerNotes,
             $bankAccountId,
-            $safeId
+            $safeId,
+            $defaultClaimId,
+            $defaultClaimPaymentId
         ) {
             foreach ($entries as $entry) {
                 $investorId = (int) ($entry['investor_id'] ?? $entry['id'] ?? 0);
@@ -112,11 +116,19 @@ class InvestorTransactionLogger
 
                 $entryBankAccountId = $entry['bank_account_id'] ?? $bankAccountId;
                 $entrySafeId        = $entry['safe_id'] ?? $safeId;
+                $claimId            = array_key_exists('contract_claim_id', $entry)
+                    ? $this->normalizeForeignId($entry['contract_claim_id'])
+                    : $defaultClaimId;
+                $claimPaymentId     = array_key_exists('contract_claim_payment_id', $entry)
+                    ? $this->normalizeForeignId($entry['contract_claim_payment_id'])
+                    : $defaultClaimPaymentId;
 
                 $transaction = InvestorTransaction::create([
                     'investor_id'      => $investorId,
                     'contract_id'      => $contract->id,
                     'installment_id'   => $installmentId,
+                    'contract_claim_id' => $claimId,
+                    'contract_claim_payment_id' => $claimPaymentId,
                     'status_id'        => $status->id,
                     'amount'           => $amount,
                     'transaction_date' => $transactionDate,
@@ -197,6 +209,17 @@ class InvestorTransactionLogger
 
         $typeName = $this->getTransactionTypeName($typeId);
         return $this->directionCache[$typeId] = TransactionDirection::directionFromTypeName($typeName);
+    }
+
+    private function normalizeForeignId(mixed $value): ?int
+    {
+        if ($value instanceof \Illuminate\Database\Eloquent\Model) {
+            $value = $value->getKey();
+        }
+
+        $id = (int) ($value ?? 0);
+
+        return $id > 0 ? $id : null;
     }
 
     private function getTransactionTypeName(int $typeId): ?string

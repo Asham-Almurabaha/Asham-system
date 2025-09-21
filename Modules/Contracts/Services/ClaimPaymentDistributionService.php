@@ -360,6 +360,8 @@ class ClaimPaymentDistributionService
                 'transaction_type_id' => $investorStatus->transaction_type_id ?: null,
                 'allow_type_fallback' => true,
                 'fallback_direction'  => 'in',
+                'contract_claim_id'   => $claim->id,
+                'contract_claim_payment_id' => $payment->id,
             ]);
         }
 

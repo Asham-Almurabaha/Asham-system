@@ -1009,14 +1009,15 @@ class ContractClaimControllerTest extends TestCase
         $this->assertStringContainsString('ملاحظات', $investorLedger->notes ?? '');
         $this->assertStringContainsString($notes, $investorLedger->notes ?? '');
 
-        $this->assertTrue(
-            InvestorTransaction::where('contract_id', $contract->id)
-                ->where('investor_id', $investor->id)
-                ->where('status_id', $investorStatus->id)
-                ->where('amount', '220.50')
-                ->exists(),
-            'Investor transaction should be created for the payment.'
-        );
+        $investorTransaction = InvestorTransaction::where('contract_id', $contract->id)
+            ->where('investor_id', $investor->id)
+            ->where('status_id', $investorStatus->id)
+            ->where('amount', '220.50')
+            ->first();
+
+        $this->assertNotNull($investorTransaction, 'Investor transaction should be created for the payment.');
+        $this->assertSame($claim->id, $investorTransaction->contract_claim_id);
+        $this->assertSame($paymentRecord->id, $investorTransaction->contract_claim_payment_id);
 
         $this->assertSame(
             $partialStatus->id,

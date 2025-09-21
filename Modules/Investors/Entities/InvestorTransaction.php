@@ -6,6 +6,8 @@ use Modules\Lookups\Entities\TransactionStatus;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Entities\ContractClaim;
+use Modules\Contracts\Entities\ContractClaimPayment;
 use Modules\Contracts\Entities\ContractInstallment;
 
 class InvestorTransaction extends Model
@@ -15,6 +17,8 @@ class InvestorTransaction extends Model
     protected $fillable = [
         'investor_id',
         'contract_id',
+        'contract_claim_id',
+        'contract_claim_payment_id',
         'installment_id',
         'status_id',
         'amount',
@@ -36,6 +40,18 @@ class InvestorTransaction extends Model
     public function contract()
     {
         return $this->belongsTo(Contract::class);
+    }
+
+    /** ربط بالمطالبة */
+    public function claim()
+    {
+        return $this->belongsTo(ContractClaim::class, 'contract_claim_id');
+    }
+
+    /** ربط بسداد المطالبة */
+    public function claimPayment()
+    {
+        return $this->belongsTo(ContractClaimPayment::class, 'contract_claim_payment_id');
     }
 
     /** العلاقة مع القسط */
