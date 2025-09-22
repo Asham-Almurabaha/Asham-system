@@ -25,6 +25,9 @@
     $recentCustomers      = collect($recentCustomers ?? []);
     $financialTotals      = (array) ($financialTotals ?? ['unpaid_total' => 0, 'overdue_total' => 0, 'due_this_month_total' => 0]);
 
+    $periodContext = (array) ($periodContext ?? []);
+    $periodLabel   = $periodContext['label'] ?? null;
+
     $rangeFrom   = $monthlyRegistrations['range']['from'] ?? '—';
     $rangeTo     = $monthlyRegistrations['range']['to'] ?? '—';
     $statusTotal = $statusBreakdown->sum(fn ($row) => (int) ($row['count'] ?? 0));
@@ -149,6 +152,12 @@
     <div>
         <p class="text-muted mb-0">{{ __('customers::messages.Dashboard Intro') }}</p>
         <span class="badge bg-light text-dark">{{ __('customers::messages.Total Customers') }}: {{ number_format($totals['total'] ?? 0) }}</span>
+        @if($periodLabel)
+            <span class="badge bg-light text-dark border ms-2 d-inline-flex align-items-center gap-1">
+                <i class="bi bi-calendar-event"></i>
+                <span>{{ $periodLabel }}</span>
+            </span>
+        @endif
     </div>
     <div class="btn-group" role="group">
         <x-button.action href="{{ route('customers.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">

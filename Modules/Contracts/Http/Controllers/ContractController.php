@@ -29,6 +29,7 @@ use Modules\Contracts\Services\ContractStatusSummaryService;
 use Modules\Contracts\Services\InvestorTransactionLogger;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
+use App\Support\InstallmentPeriod;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
@@ -211,7 +212,21 @@ class ContractController extends Controller
             ? (int) $request->investor_id
             : null;
 
-        $installmentsMonthly = $this->buildInstallmentsMonthly($request, $installmentsSvc, $investorIdForMonthly);
+        $periodContext       = $this->resolveInstallmentPeriodContext($request);
+        $requestedMonth      = $periodContext['requested_month'] ?? null;
+        $requestedYear       = $periodContext['requested_year'] ?? null;
+        $selectedPeriodMonth = (int) ($periodContext['month'] ?? now()->month);
+        $selectedPeriodYear  = (int) ($periodContext['year'] ?? now()->year);
+        $periodLabel         = $periodContext['label'] ?? null;
+        $periodMonths        = $this->periodMonthOptions();
+        $periodYears         = $this->periodYearOptions();
+
+        $installmentsMonthly = $this->buildInstallmentsMonthly(
+            $installmentsSvc,
+            $investorIdForMonthly,
+            $requestedMonth,
+            $requestedYear
+        );
         $dashboardStats      = $this->buildContractDashboardStats();
         $statusDistribution  = $this->contractStatusSummary->buildDistribution();
 
@@ -238,6 +253,12 @@ class ContractController extends Controller
             'raisedContractsRemaining' => $statusDistribution['raised_remaining'] ?? 0.0,
             'requiredContractsRemaining' => $statusDistribution['required_remaining'] ?? 0.0,
             'remainingSummary'          => $statusDistribution['remaining_summary'] ?? [],
+            'periodMonths'              => $periodMonths,
+            'periodYears'               => $periodYears,
+            'selectedPeriodMonth'       => $selectedPeriodMonth,
+            'selectedPeriodYear'        => $selectedPeriodYear,
+            'periodLabel'               => $periodLabel,
+            'periodContext'             => $periodContext,
         ]);
     }
 
@@ -938,12 +959,13 @@ class ContractController extends Controller
     }
 
     private function buildInstallmentsMonthly(
-        Request $request,
         InstallmentsMonthlyService $installmentsSvc,
-        ?int $investorIdForMonthly = null
+        ?int $investorIdForMonthly = null,
+        ?int $month = null,
+        ?int $year = null
     ): array {
-        $m = $request->integer('m') ?: null;
-        $y = $request->integer('y') ?: null;
+        $m = $month ?: null;
+        $y = $year ?: null;
         $exclude = ['مؤجل', 'معتذر'];
 
         try {
@@ -1058,4 +1080,78 @@ class ContractController extends Controller
         ];
     }
 
+    private function resolveInstallmentPeriodContext(Request $request): array
+    {
+        $month = $this->normalizeMonth($request->input('period_month'));
+        if ($month === null) {
+            $month = $this->normalizeMonth($request->input('m'));
+        }
+
+        $year = $this->normalizeYear($request->input('period_year'));
+        if ($year === null) {
+            $year = $this->normalizeYear($request->input('y'));
+        }
+
+        $resolved = InstallmentPeriod::resolve($month, $year, Carbon::now());
+
+        $start = $resolved['start']->copy();
+        $end   = $resolved['end']->copy();
+
+        return [
+            'start'           => $start,
+            'end'             => $end,
+            'month'           => (int) $start->month,
+            'year'            => (int) $start->year,
+            'label'           => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
+            'requested_month' => $month,
+            'requested_year'  => $year,
+        ];
+    }
+
+    private function normalizeMonth($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1 && $value <= 12 ? $value : null;
+    }
+
+    private function normalizeYear($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1900 && $value <= 2100 ? $value : null;
+    }
+
+    private function periodMonthOptions(): array
+    {
+        $months = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $months[$month] = Carbon::create(null, $month, 1)
+                ->locale(app()->getLocale())
+                ->translatedFormat('F');
+        }
+
+        return $months;
+    }
+
+    private function periodYearOptions(): array
+    {
+        $currentYear = Carbon::now()->year;
+        $years = [];
+
+        for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++) {
+            $years[$year] = (string) $year;
+        }
+
+        return $years;
+    }
 }

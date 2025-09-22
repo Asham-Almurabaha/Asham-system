@@ -24,6 +24,17 @@
     $topNationalities      = collect($topNationalities ?? []);
     $recentGuarantors      = collect($recentGuarantors ?? []);
 
+    $periodContext = (array) ($periodContext ?? []);
+    $periodMonths  = (array) ($periodMonths ?? []);
+    $periodYears   = (array) ($periodYears ?? []);
+    $selectedPeriodMonth = request()->filled('period_month')
+        ? (int) request('period_month')
+        : (int) ($periodContext['month'] ?? now()->month);
+    $selectedPeriodYear = request()->filled('period_year')
+        ? (int) request('period_year')
+        : (int) ($periodContext['year'] ?? now()->year);
+    $periodLabel = $periodContext['label'] ?? null;
+
     $rangeFrom   = $monthlyRegistrations['range']['from'] ?? '—';
     $rangeTo     = $monthlyRegistrations['range']['to'] ?? '—';
     $statusTotal = $statusBreakdown->sum(fn ($row) => (int) ($row['count'] ?? 0));
@@ -113,6 +124,12 @@
     <div>
         <p class="text-muted mb-0">{{ __('guarantors::messages.Dashboard Intro') }}</p>
         <span class="badge bg-light text-dark">{{ __('guarantors::messages.Total Guarantors') }}: {{ number_format($totals['total'] ?? 0) }}</span>
+        @if($periodLabel)
+            <span class="badge bg-light text-dark border ms-2 d-inline-flex align-items-center gap-1">
+                <i class="bi bi-calendar-event"></i>
+                <span>{{ $periodLabel }}</span>
+            </span>
+        @endif
     </div>
     <div class="btn-group" role="group">
         <x-button.action href="{{ route('guarantors.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
@@ -144,6 +161,23 @@
             </li>
         </ul>
     </div>
+    <form action="{{ route('guarantors.dashboard') }}" method="GET" class="d-flex flex-wrap align-items-center gap-2">
+        <select name="period_month" class="form-select form-select-sm">
+            @foreach($periodMonths as $value => $label)
+                <option value="{{ $value }}" @selected($selectedPeriodMonth === (int) $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <select name="period_year" class="form-select form-select-sm">
+            @foreach($periodYears as $value => $label)
+                <option value="{{ $value }}" @selected($selectedPeriodYear === (int) $value)>{{ $label }}</option>
+            @endforeach
+        </select>
+        <button type="submit" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1">
+            <i class="bi bi-search"></i>
+            <span>{{ __('Apply') }}</span>
+        </button>
+        <a href="{{ route('guarantors.dashboard') }}" class="btn btn-sm btn-link">{{ __('guarantors::messages.Clear') }}</a>
+    </form>
 </div>
 
 @if(!empty($summaryCards))

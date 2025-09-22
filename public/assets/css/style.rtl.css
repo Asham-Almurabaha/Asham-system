@@ -657,6 +657,18 @@ h6 {
   position: relative;
 }
 
+.header-nav .nav-icon.btn {
+  color: #012970;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.header-nav .nav-icon.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(1, 97, 255, 0.18);
+}
+
 .header-nav .nav-profile {
   color: #012970;
 }

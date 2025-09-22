@@ -12,6 +12,7 @@ use Modules\Lookups\Entities\CustomerStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Modules\Customers\Services\CustomerDetailsService;
+use App\Support\InstallmentPeriod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -29,6 +30,12 @@ class CustomerController extends Controller
     // عرض كل العملاء
     public function index(Request $request)
     {
+        $periodContext = $this->resolveInstallmentPeriodContext($request);
+        $periodStart   = $periodContext['start']->copy();
+        $periodEnd     = $periodContext['end']->copy();
+        $periodMonths  = $this->periodMonthOptions();
+        $periodYears   = $this->periodYearOptions();
+
         $query = Customer::query()->with(['customerStatus:id,name']);
 
         // ===== بحث باسم العميل فقط =====
@@ -47,7 +54,9 @@ class CustomerController extends Controller
         $customers = $query->latest()->paginate(20)->withQueryString();
 
         $listMetrics = $this->buildCustomersListMetrics(
-            $customers->getCollection()->pluck('id')->all()
+            $customers->getCollection()->pluck('id')->all(),
+            $periodStart,
+            $periodEnd
         );
 
         $customers->setCollection(
@@ -125,7 +134,10 @@ class CustomerController extends Controller
             'newCustomersThisMonthAll',
             'newCustomersThisWeekAll',
             'nationalities',
-            'titles'
+            'titles',
+            'periodContext',
+            'periodMonths',
+            'periodYears'
         ));
     }
 
@@ -134,6 +146,10 @@ class CustomerController extends Controller
         [$statusIdCol, $statusNameCol] = $this->detectContractStatusColumns();
         $endedStatusNames = $this->endedContractStatusNames();
         $endedStatusIds   = $this->resolveContractStatusIds($endedStatusNames);
+
+        $periodContext = $this->resolveInstallmentPeriodContext($request);
+        $periodStart   = $periodContext['start']->copy();
+        $periodEnd     = $periodContext['end']->copy();
 
         $totalCustomers = Customer::count();
 
@@ -158,8 +174,8 @@ class CustomerController extends Controller
 
         $aggregationBuilder = fn () => $this->buildCustomerInstallmentAggregation(
             $today,
-            $monthStart,
-            $monthEnd,
+            $periodStart,
+            $periodEnd,
             $statusIdCol,
             $statusNameCol,
             $endedStatusIds,
@@ -377,6 +393,7 @@ class CustomerController extends Controller
             'topNationalities'      => $topNationalities,
             'recentCustomers'       => $recentCustomers,
             'financialTotals'       => $financialTotals,
+            'periodContext'         => $periodContext,
         ]);
     }
 
@@ -605,7 +622,7 @@ class CustomerController extends Controller
         return redirect()->route('customers.index')->with('success', 'تم حذف العميل بنجاح.');
 }
 
-    private function buildCustomersListMetrics(array $customerIds): array
+    private function buildCustomersListMetrics(array $customerIds, Carbon $periodStart, Carbon $periodEnd): array
     {
         if (empty($customerIds)) {
             return [];
@@ -629,9 +646,6 @@ class CustomerController extends Controller
             ->values()
             ->all();
 
-        $monthStart = Carbon::now()->startOfMonth();
-        $monthEnd   = Carbon::now()->endOfMonth();
-
         $installmentsAgg = collect();
 
         if (!empty($activeContractIds)) {
@@ -642,10 +656,10 @@ class CustomerController extends Controller
                     SUM(CASE WHEN (payment_date IS NULL OR payment_amount < due_amount) AND due_date BETWEEN ? AND ? THEN (due_amount - COALESCE(payment_amount,0)) ELSE 0 END) as unpaid_month_sum,
                     SUM(CASE WHEN (payment_date IS NULL OR payment_amount < due_amount) AND due_date BETWEEN ? AND ? THEN 1 ELSE 0 END) as unpaid_month_count'
                 , [
-                    $monthStart->toDateString(),
-                    $monthEnd->toDateString(),
-                    $monthStart->toDateString(),
-                    $monthEnd->toDateString(),
+                    $periodStart->toDateString(),
+                    $periodEnd->toDateString(),
+                    $periodStart->toDateString(),
+                    $periodEnd->toDateString(),
                 ])
                 ->join('contracts', 'contracts.id', '=', 'contract_installments.contract_id')
                 ->whereIn('contracts.customer_id', $customerIds)
@@ -930,8 +944,8 @@ class CustomerController extends Controller
 
     private function buildCustomerInstallmentAggregation(
         Carbon $today,
-        Carbon $monthStart,
-        Carbon $monthEnd,
+        Carbon $periodStart,
+        Carbon $periodEnd,
         ?string $statusIdCol,
         ?string $statusNameCol,
         array $endedStatusIds,
@@ -945,8 +959,8 @@ class CustomerController extends Controller
                 SUM(CASE WHEN (payment_date IS NULL OR payment_amount < due_amount) AND due_date BETWEEN ? AND ? THEN (due_amount - COALESCE(payment_amount,0)) ELSE 0 END) as due_this_month_total'
             , [
                 $today->toDateString(),
-                $monthStart->toDateString(),
-                $monthEnd->toDateString(),
+                $periodStart->toDateString(),
+                $periodEnd->toDateString(),
             ])
             ->join('contracts', 'contracts.id', '=', 'contract_installments.contract_id');
 
@@ -1021,5 +1035,71 @@ class CustomerController extends Controller
         if (Schema::hasColumn('contracts', 'closed_at')) {
             $query->whereNull('closed_at');
         }
+    }
+
+    private function resolveInstallmentPeriodContext(Request $request): array
+    {
+        $month = $this->normalizeMonth($request->input('period_month'));
+        $year  = $this->normalizeYear($request->input('period_year'));
+
+        $resolved = InstallmentPeriod::resolve($month, $year, Carbon::now());
+
+        $start = $resolved['start']->copy();
+        $end   = $resolved['end']->copy();
+
+        return [
+            'start' => $start,
+            'end'   => $end,
+            'month' => $month ?? (int) $start->month,
+            'year'  => $year ?? (int) $start->year,
+            'label' => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
+        ];
+    }
+
+    private function normalizeMonth($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1 && $value <= 12 ? $value : null;
+    }
+
+    private function normalizeYear($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1900 && $value <= 2100 ? $value : null;
+    }
+
+    private function periodMonthOptions(): array
+    {
+        $months = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $months[$month] = Carbon::create(null, $month, 1)
+                ->locale(app()->getLocale())
+                ->translatedFormat('F');
+        }
+
+        return $months;
+    }
+
+    private function periodYearOptions(): array
+    {
+        $currentYear = Carbon::now()->year;
+        $years = [];
+
+        for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++) {
+            $years[$year] = (string) $year;
+        }
+
+        return $years;
     }
 }

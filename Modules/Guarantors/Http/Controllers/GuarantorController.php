@@ -8,6 +8,7 @@ use Modules\Lookups\Entities\GuarantorStatus;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use Modules\Contracts\Entities\ContractInstallment;
+use App\Support\InstallmentPeriod;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,12 @@ class GuarantorController extends Controller
         [$statusIdCol, $statusNameCol] = $this->detectContractStatusColumns();
         $endedStatusNames = $this->endedContractStatusNames();
         $endedStatusIds   = $this->resolveContractStatusIds($endedStatusNames);
+
+        $periodContext = $this->resolveInstallmentPeriodContext($request);
+        $periodStart   = $periodContext['start']->copy();
+        $periodEnd     = $periodContext['end']->copy();
+        $periodMonths  = $this->periodMonthOptions();
+        $periodYears   = $this->periodYearOptions();
 
         $report = trim((string) $request->input('report', '')) ?: null;
 
@@ -62,8 +69,8 @@ class GuarantorController extends Controller
         if ($report && in_array($report, $aggregationReports, true)) {
             $aggregationBuilder = $this->buildGuarantorInstallmentAggregation(
                 $today,
-                $monthStart,
-                $monthEnd,
+                $periodStart,
+                $periodEnd,
                 $statusIdCol,
                 $statusNameCol,
                 $endedStatusIds,
@@ -123,7 +130,10 @@ class GuarantorController extends Controller
             'activeGuarantorsTotalAll',
             'newGuarantorsThisMonthAll',
             'newGuarantorsThisWeekAll',
-            'report'
+            'report',
+            'periodContext',
+            'periodMonths',
+            'periodYears'
         ));
     }
 
@@ -132,6 +142,12 @@ class GuarantorController extends Controller
         [$statusIdCol, $statusNameCol] = $this->detectContractStatusColumns();
         $endedStatusNames = $this->endedContractStatusNames();
         $endedStatusIds   = $this->resolveContractStatusIds($endedStatusNames);
+
+        $periodContext = $this->resolveInstallmentPeriodContext($request);
+        $periodStart   = $periodContext['start']->copy();
+        $periodEnd     = $periodContext['end']->copy();
+        $periodMonths  = $this->periodMonthOptions();
+        $periodYears   = $this->periodYearOptions();
 
         $totalGuarantors = Guarantor::count();
 
@@ -157,8 +173,8 @@ class GuarantorController extends Controller
 
         $aggregationBuilder = fn () => $this->buildGuarantorInstallmentAggregation(
             $today,
-            $monthStart,
-            $monthEnd,
+            $periodStart,
+            $periodEnd,
             $statusIdCol,
             $statusNameCol,
             $endedStatusIds,
@@ -362,6 +378,9 @@ class GuarantorController extends Controller
             'topOutstanding'       => $topOutstanding,
             'topNationalities'     => $topNationalities,
             'recentGuarantors'     => $recentGuarantors,
+            'periodContext'        => $periodContext,
+            'periodMonths'         => $periodMonths,
+            'periodYears'          => $periodYears,
         ]);
     }
 
@@ -452,8 +471,8 @@ class GuarantorController extends Controller
 
     private function buildGuarantorInstallmentAggregation(
         Carbon $today,
-        Carbon $monthStart,
-        Carbon $monthEnd,
+        Carbon $periodStart,
+        Carbon $periodEnd,
         ?string $statusIdCol,
         ?string $statusNameCol,
         array $endedStatusIds,
@@ -467,8 +486,8 @@ class GuarantorController extends Controller
                 SUM(CASE WHEN (payment_date IS NULL OR payment_amount < due_amount) AND due_date BETWEEN ? AND ? THEN (due_amount - COALESCE(payment_amount,0)) ELSE 0 END) as due_this_month_total'
             , [
                 $today->toDateString(),
-                $monthStart->toDateString(),
-                $monthEnd->toDateString(),
+                $periodStart->toDateString(),
+                $periodEnd->toDateString(),
             ])
             ->join('contracts', 'contracts.id', '=', 'contract_installments.contract_id')
             ->whereNotNull('contracts.guarantor_id');
@@ -580,5 +599,71 @@ class GuarantorController extends Controller
         }
 
         return 0;
+    }
+
+    private function resolveInstallmentPeriodContext(Request $request): array
+    {
+        $month = $this->normalizeMonth($request->input('period_month'));
+        $year  = $this->normalizeYear($request->input('period_year'));
+
+        $resolved = InstallmentPeriod::resolve($month, $year, Carbon::now());
+
+        $start = $resolved['start']->copy();
+        $end   = $resolved['end']->copy();
+
+        return [
+            'start' => $start,
+            'end'   => $end,
+            'month' => $month ?? (int) $start->month,
+            'year'  => $year ?? (int) $start->year,
+            'label' => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
+        ];
+    }
+
+    private function normalizeMonth($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1 && $value <= 12 ? $value : null;
+    }
+
+    private function normalizeYear($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1900 && $value <= 2100 ? $value : null;
+    }
+
+    private function periodMonthOptions(): array
+    {
+        $months = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $months[$month] = Carbon::create(null, $month, 1)
+                ->locale(app()->getLocale())
+                ->translatedFormat('F');
+        }
+
+        return $months;
+    }
+
+    private function periodYearOptions(): array
+    {
+        $currentYear = Carbon::now()->year;
+        $years = [];
+
+        for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++) {
+            $years[$year] = (string) $year;
+        }
+
+        return $years;
     }
 }

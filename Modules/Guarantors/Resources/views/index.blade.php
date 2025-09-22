@@ -34,6 +34,17 @@
         ? __('guarantors::messages.Reports') . ' — ' . $reportOptions[$activeReport]
         : null;
     $showInstallmentMetrics = in_array($activeReport, ['overdue', 'due-this-month'], true);
+
+    $periodContext = (array) ($periodContext ?? []);
+    $periodMonths  = (array) ($periodMonths ?? []);
+    $periodYears   = (array) ($periodYears ?? []);
+    $selectedPeriodMonth = request()->filled('period_month')
+        ? (int) request('period_month')
+        : (int) ($periodContext['month'] ?? now()->month);
+    $selectedPeriodYear = request()->filled('period_year')
+        ? (int) request('period_year')
+        : (int) ($periodContext['year'] ?? now()->year);
+    $periodLabel = $periodContext['label'] ?? null;
 @endphp
 
 
@@ -126,16 +137,24 @@
         </span>
     @endif
 
-    <span class="ms-auto small text-muted">
-      {{ __('guarantors::messages.Results') }}: <strong>{{ $guarantors->total() }}</strong>
-    </span>
+    <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+      @if($periodLabel)
+        <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+          <i class="bi bi-calendar-event"></i>
+          <span>{{ $periodLabel }}</span>
+        </span>
+      @endif
+      <span class="small text-muted">
+        {{ __('guarantors::messages.Results') }}: <strong>{{ $guarantors->total() }}</strong>
+      </span>
+    </div>
 
     <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse" data-bs-target="#filterBar" aria-expanded="false" aria-controls="filterBar">
       {{ __('guarantors::messages.Filter') }}
     </x-button.action>
   </div>
 
-  <div class="collapse @if(request()->hasAny(['guarantor_q','national_id','phone'])) show @endif border-top" id="filterBar">
+  <div class="collapse @if(request()->hasAny(['guarantor_q','national_id','phone','period_month','period_year'])) show @endif border-top" id="filterBar">
     <div class="card-body">
       <form id="filterForm" action="{{ route('guarantors.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
         @if($activeReport)
@@ -160,6 +179,24 @@
           <label class="form-label mb-1">{{ __('guarantors::messages.Phone') }}</label>
           <input type="text" name="phone" value="{{ request('phone') }}"
                  class="form-control form-control-sm auto-submit-input" placeholder="{{ __('guarantors::messages.+9665XXXXXXXX') }}">
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">{{ __('Month') }}</label>
+          <select name="period_month" class="form-select form-select-sm auto-submit-input">
+            @foreach($periodMonths as $value => $label)
+              <option value="{{ $value }}" @selected($selectedPeriodMonth === (int) $value)>{{ $label }}</option>
+            @endforeach
+          </select>
+        </div>
+
+        <div class="col-6 col-md-2">
+          <label class="form-label mb-1">{{ __('Year') }}</label>
+          <select name="period_year" class="form-select form-select-sm auto-submit-input">
+            @foreach($periodYears as $value => $label)
+              <option value="{{ $value }}" @selected($selectedPeriodYear === (int) $value)>{{ $label }}</option>
+            @endforeach
+          </select>
         </div>
 
         <div class="col-12 col-md-2">

@@ -435,5 +435,35 @@
   });
 </script>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!window.bootstrap || !window.bootstrap.Dropdown) {
+      return;
+    }
+
+    const dropdownToggles = document.querySelectorAll('.header-nav [data-bs-toggle="dropdown"]');
+
+    dropdownToggles.forEach(function (toggle) {
+      const getDropdown = function () {
+        return window.bootstrap.Dropdown.getOrCreateInstance(toggle);
+      };
+
+      // Ensure the dropdown instance exists for pointer interaction
+      getDropdown();
+
+      toggle.addEventListener('keydown', function (event) {
+        if (event.defaultPrevented) {
+          return;
+        }
+
+        if (event.key === ' ' || event.key === 'Enter') {
+          event.preventDefault();
+          getDropdown().toggle();
+        }
+      });
+    });
+  });
+</script>
+
 @yield('js')
 @stack('scripts')

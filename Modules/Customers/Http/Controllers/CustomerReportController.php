@@ -3,6 +3,7 @@
 namespace Modules\Customers\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\InstallmentPeriod;
 use Modules\Customers\Entities\Customer;
 use Modules\Lookups\Entities\InstallmentStatus;
 use Illuminate\Support\Facades\Schema;
@@ -94,8 +95,9 @@ class CustomerReportController extends Controller
 
     public function unpaid()
     {
-        $start = now()->startOfMonth();
-        $end   = now()->endOfMonth();
+        $period = InstallmentPeriod::resolve(null, null, now());
+        $start  = $period['start'];
+        $end    = $period['end'];
         $rows = Customer::query()
             ->whereHas('contracts.installments', function ($q) use ($start, $end) {
                 $q->whereBetween('due_date', [$start, $end])

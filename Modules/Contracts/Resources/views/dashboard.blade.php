@@ -27,8 +27,24 @@
     $excludedStatuses = (array) ($monthly['excluded_status_names'] ?? ['مؤجل', 'معتذر']);
     $excludedStatusesTx = count($excludedStatuses) ? implode('، ', $excludedStatuses) : '—';
 
-    $mVal = (int) ($monthly['month'] ?? now()->month);
-    $yVal = (int) ($monthly['year'] ?? now()->year);
+    $periodMonths        = (array) ($periodMonths ?? []);
+    $periodYears         = (array) ($periodYears ?? []);
+    $selectedPeriodMonth = isset($selectedPeriodMonth)
+        ? (int) $selectedPeriodMonth
+        : (int) ($monthly['month'] ?? now()->month);
+    $selectedPeriodYear  = isset($selectedPeriodYear)
+        ? (int) $selectedPeriodYear
+        : (int) ($monthly['year'] ?? now()->year);
+    $periodLabel         = $periodLabel ?? null;
+    $periodContext       = (array) ($periodContext ?? []);
+    $periodStart         = $periodContext['start'] ?? null;
+    $periodEnd           = $periodContext['end'] ?? null;
+
+    if (!$periodLabel && $periodStart instanceof \Carbon\Carbon && $periodEnd instanceof \Carbon\Carbon) {
+        $periodLabel = $periodStart->format('Y-m-d') . ' — ' . $periodEnd->format('Y-m-d');
+    } elseif (!$periodLabel && !empty($monthly['period_start']) && !empty($monthly['period_end'])) {
+        $periodLabel = $monthly['period_start'] . ' — ' . $monthly['period_end'];
+    }
 
     $counts = (array) ($dashboardStats['counts'] ?? []);
     $pct    = (array) ($dashboardStats['percentages'] ?? []);
@@ -491,12 +507,20 @@
 
 <div class="card shadow-sm mb-4" dir="rtl">
     <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
+        <div class="d-flex flex-column gap-1">
             <h6 class="mb-1">{{ __('Monthly Installments Summary') }} <span class="text-muted">({{ $monthLabel }})</span></h6>
             <div class="small text-muted">
                 <i class="bi bi-filter"></i>
                 {{ __('Excludes statuses:') }} {{ $excludedStatusesTx }}
             </div>
+            @if($periodLabel)
+                <div class="small text-muted d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                        <i class="bi bi-calendar-event"></i>
+                        <span>{{ $periodLabel }}</span>
+                    </span>
+                </div>
+            @endif
         </div>
         <form action="{{ route('contracts.dashboard') }}" method="GET" class="row g-2 align-items-end flex-grow-1 flex-md-grow-0" dir="rtl">
             <div class="col-12 col-md-auto">
@@ -511,12 +535,20 @@
                 </select>
             </div>
             <div class="col-6 col-md-auto">
-                <label class="form-label small mb-1" for="month">{{ __('Month') }}</label>
-                <input type="number" name="m" id="month" min="1" max="12" class="form-control form-control-sm" value="{{ request('m', $mVal) }}">
+                <label class="form-label small mb-1" for="period_month">{{ __('Month') }}</label>
+                <select name="period_month" id="period_month" class="form-select form-select-sm">
+                    @foreach($periodMonths as $value => $label)
+                        <option value="{{ $value }}" @selected($selectedPeriodMonth === (int) $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="col-6 col-md-auto">
-                <label class="form-label small mb-1" for="year">{{ __('Year') }}</label>
-                <input type="number" name="y" id="year" min="2000" max="2100" class="form-control form-control-sm" value="{{ request('y', $yVal) }}">
+                <label class="form-label small mb-1" for="period_year">{{ __('Year') }}</label>
+                <select name="period_year" id="period_year" class="form-select form-select-sm">
+                    @foreach($periodYears as $value => $label)
+                        <option value="{{ $value }}" @selected($selectedPeriodYear === (int) $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="col-12 col-md-auto d-flex gap-2">
                 <x-button.action type="submit" variant="primary" :outline="true" size="sm">

@@ -57,14 +57,16 @@
 
     {{-- التنبيهات --}}
     <li class="nav-item dropdown">
-      <a class="nav-link nav-icon" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"
-         aria-label="{{ __('notifications.title') }}" title="{{ __('notifications.title') }}">
-        <i class="bi bi-bell"></i>
+      <button type="button" class="nav-link nav-icon btn btn-link p-0 border-0" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+         aria-expanded="false" aria-haspopup="true" aria-controls="header-notifications-menu"
+         aria-label="{{ __('notifications.title') }}" title="{{ __('notifications.title') }}" id="header-notifications-toggle">
+        <i class="bi bi-bell" aria-hidden="true"></i>
         @if($notificationsTotal > 0)
           <span class="badge bg-danger badge-number">{{ $notificationsTotal }}</span>
         @endif
-      </a>
-      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications shadow-sm">
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications shadow-sm" role="menu"
+          aria-labelledby="header-notifications-toggle" id="header-notifications-menu">
         <li class="dropdown-header notifications-header">
           <div>
             <span class="notifications-heading">{{ __('notifications.title') }}</span>

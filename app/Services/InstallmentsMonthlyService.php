@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\InstallmentPeriod;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -22,11 +23,12 @@ class InstallmentsMonthlyService
         array $excludeStatusNames = ['مؤجل','معتذر'],
         ?int $investorId = null
     ): array {
-        $now   = Carbon::now();
-        $m     = $month && $month >= 1 && $month <= 12 ? $month : (int)$now->month;
-        $y     = $year  && $year >= 2000 && $year <= 2100 ? $year : (int)$now->year;
-        $start = Carbon::create($y, $m, 1)->startOfDay();
-        $end   = (clone $start)->endOfMonth();
+        $now    = Carbon::now();
+        $period = InstallmentPeriod::resolve($month, $year, $now);
+        $start  = $period['start']->copy();
+        $end    = $period['end']->copy();
+        $m      = (int) $start->month;
+        $y      = (int) $start->year;
 
         // لو فيه جدول transaction_types نحدد "إيداع"
         $TYPE_IN = null;
@@ -146,6 +148,8 @@ class InstallmentsMonthlyService
             'month'                 => $m,
             'year'                  => $y,
             'month_label'           => sprintf('%04d-%02d', $y, $m),
+            'period_start'          => $start->toDateString(),
+            'period_end'            => $end->toDateString(),
             'excluded_status_names' => array_values($excludeStatusNames),
 
             'totals' => [
