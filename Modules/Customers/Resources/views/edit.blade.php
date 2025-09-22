@@ -27,6 +27,7 @@
             <form action="{{ route('customers.update', $customer->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="customer_status_id" value="{{ old('customer_status_id', $customer->customer_status_id) }}">
 
                 <div class="row g-3">
                     {{-- Name --}}
@@ -144,35 +145,15 @@
                         @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- Customer Status --}}
-                    <div class="col-md-6">
-                        <label for="customer_status_id" class="form-label">{{ __('customers::messages.Customer Status') }}</label>
-                        <select
-                            name="customer_status_id"
-                            id="customer_status_id"
-                            class="form-select @error('customer_status_id') is-invalid @enderror">
-                            <option value="">-- {{ __('Choose') }} --</option>
-                            @foreach (($customerStatuses ?? []) as $row)
-                                @php
-                                    $sid   = is_object($row) ? $row->id   : (is_array($row) ? ($row['id'] ?? null)   : null);
-                                    $sname = is_object($row) ? $row->name : (is_array($row) ? ($row['name'] ?? null) : null);
-                                @endphp
-                                @if($sid && $sname)
-                                    <option value="{{ $sid }}" @selected(old('customer_status_id', $customer->customer_status_id) == $sid)>{{ $sname }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                        @error('customer_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
                     {{-- Address --}}
                     <div class="col-12">
                         <label for="address" class="form-label">{{ __('Address') }}</label>
                         <textarea
                             name="address"
                             id="address"
-                            rows="3"
+                            rows="1"
                             class="form-control @error('address') is-invalid @enderror"
+                            style="height: calc(1.5em + 0.75rem + 2px); min-height: calc(1.5em + 0.75rem + 2px);"
                             placeholder="{{ __('Type the address in detail') }}">{{ old('address', $customer->address) }}</textarea>
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -213,8 +194,9 @@
                         <textarea
                             name="notes"
                             id="notes"
-                            rows="3"
+                            rows="1"
                             class="form-control @error('notes') is-invalid @enderror"
+                            style="height: calc(1.5em + 0.75rem + 2px); min-height: calc(1.5em + 0.75rem + 2px);"
                             placeholder="{{ __('customers::messages.Any additional information about the customer') }}">{{ old('notes', $customer->notes) }}</textarea>
                         @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
