@@ -141,6 +141,48 @@ class CustomerController extends Controller
         ));
     }
 
+    public function refreshStatuses(Request $request)
+    {
+        $statusIds = $this->resolveCustomerStatusIds();
+
+        if (!array_filter($statusIds)) {
+            return redirect()
+                ->route('customers.index')
+                ->withErrors([
+                    'customers-refresh' => __('customers::messages.Unable to refresh customer statuses because default statuses are missing.'),
+                ]);
+        }
+
+        $contractStatusLookup = $this->contractStatusNameLookup();
+        $contractStatusGroups = $this->contractStatusGroups();
+
+        $updatedCount = 0;
+
+        Customer::query()
+            ->select(['id', 'customer_status_id'])
+            ->with(['contracts:id,customer_id,contract_status_id'])
+            ->chunkById(200, function ($customers) use (&$updatedCount, $statusIds, $contractStatusLookup, $contractStatusGroups) {
+                foreach ($customers as $customer) {
+                    $newStatusId = $this->determineCustomerStatusId($customer, $statusIds, $contractStatusLookup, $contractStatusGroups);
+
+                    if ($newStatusId && $newStatusId !== (int) $customer->customer_status_id) {
+                        $customer->customer_status_id = $newStatusId;
+                        $customer->save();
+
+                        $updatedCount++;
+                    }
+                }
+            });
+
+        $messageKey = $updatedCount > 0
+            ? 'customers::messages.Customer statuses refreshed (:count updated).'
+            : 'customers::messages.Customer statuses refreshed (no changes).';
+
+        return redirect()
+            ->route('customers.index')
+            ->with('success', __($messageKey, ['count' => $updatedCount]));
+    }
+
     public function dashboard(Request $request)
     {
         [$statusIdCol, $statusNameCol] = $this->detectContractStatusColumns();
@@ -1054,6 +1096,230 @@ class CustomerController extends Controller
             'year'  => $year ?? (int) $start->year,
             'label' => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
         ];
+    }
+
+    private function resolveCustomerStatusIds(): array
+    {
+        $lookup = CustomerStatus::query()
+            ->select(['id', 'name'])
+            ->get()
+            ->mapWithKeys(function ($status) {
+                $normalized = $this->normalizeStatusName($status->name ?? '');
+
+                if ($normalized === '') {
+                    return [];
+                }
+
+                return [$normalized => (int) $status->id];
+            })
+            ->all();
+
+        return [
+            'new'        => $this->matchCustomerStatusId($lookup, ['جديد', 'new']),
+            'committed'  => $this->matchCustomerStatusId($lookup, ['ملتزم', 'compliant', 'ملتزم بالكامل', 'ملتزم تمامًا']),
+            'delinquent' => $this->matchCustomerStatusId($lookup, ['غير ملتزم', 'delinquent', 'non compliant', 'متخلف']),
+            'inactive'   => $this->matchCustomerStatusId($lookup, ['غير نشط', 'inactive', 'inactive customer']),
+            'raised'     => $this->matchCustomerStatusId($lookup, ['مرفوع فيه', 'raised']),
+            'blacklist'  => $this->matchCustomerStatusId($lookup, ['قائمة سوداء', 'blacklist', 'black-listed']),
+        ];
+    }
+
+    private function matchCustomerStatusId(array $lookup, array $candidates): ?int
+    {
+        foreach ($candidates as $candidate) {
+            $normalized = $this->normalizeStatusName($candidate);
+
+            if ($normalized !== '' && isset($lookup[$normalized])) {
+                return (int) $lookup[$normalized];
+            }
+        }
+
+        return null;
+    }
+
+    private function contractStatusNameLookup(): array
+    {
+        return ContractStatus::query()
+            ->select(['id', 'name'])
+            ->get()
+            ->mapWithKeys(function ($status) {
+                $normalized = $this->normalizeStatusName($status->name ?? '');
+
+                return [(int) $status->id => $normalized];
+            })
+            ->all();
+    }
+
+    private function contractStatusGroups(): array
+    {
+        return [
+            'blacklist' => $this->normalizeStatusArray([
+                'منتهي بمطالبة',
+                'منتهى بمطالبة',
+                'terminated with claim',
+                'ended with claim',
+                'claim terminated',
+                'claim ended',
+                'claim with lawsuit',
+            ]),
+            'raised' => $this->normalizeStatusArray([
+                'مرفوع فيه',
+                'مرفوع',
+                'raised',
+                'raised status',
+                'case filed',
+            ]),
+            'delinquent' => $this->normalizeStatusArray([
+                'مطلوب',
+                'غير منتظم',
+                'متأخر',
+                'متعثر',
+                'متأخر الدفع',
+                'delinquent',
+                'late',
+                'overdue',
+                'defaulted',
+                'irregular',
+                'required',
+            ]),
+            'finished' => $this->normalizeStatusArray([
+                'منتهي',
+                'منتهى',
+                'منتهية',
+                'سداد مبكر',
+                'سداد مُبكر',
+                'سداد مبكّر',
+                'completed',
+                'finished',
+                'closed',
+                'settled',
+                'settled early',
+                'early settlement',
+                'paid off',
+            ]),
+        ];
+    }
+
+    private function normalizeStatusArray(array $values): array
+    {
+        $normalized = [];
+
+        foreach ($values as $value) {
+            $name = $this->normalizeStatusName($value);
+
+            if ($name !== '') {
+                $normalized[$name] = true;
+            }
+        }
+
+        return array_keys($normalized);
+    }
+
+    private function normalizeStatusName(?string $value): string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        $value = preg_replace('/\s+/u', ' ', $value);
+
+        return mb_strtolower($value, 'UTF-8');
+    }
+
+    private function determineCustomerStatusId(Customer $customer, array $statusIds, array $contractStatusLookup, array $groups): ?int
+    {
+        $contracts = $customer->relationLoaded('contracts')
+            ? $customer->getRelation('contracts')
+            : collect();
+
+        if (! $contracts instanceof \Illuminate\Support\Collection) {
+            $contracts = collect($contracts);
+        }
+
+        if ($contracts->isEmpty()) {
+            return $statusIds['new'] ?? null;
+        }
+
+        $statusNames = [];
+
+        foreach ($contracts as $contract) {
+            $statusId = (int) ($contract->contract_status_id ?? 0);
+
+            if ($statusId <= 0) {
+                continue;
+            }
+
+            $name = $contractStatusLookup[$statusId] ?? '';
+
+            if ($name !== '') {
+                $statusNames[$name] = true;
+            }
+        }
+
+        $statusNames = array_keys($statusNames);
+
+        if (empty($statusNames)) {
+            return $statusIds['committed'] ?? null;
+        }
+
+        if ($this->containsAnyNormalized($statusNames, $groups['blacklist'] ?? [])) {
+            return $statusIds['blacklist']
+                ?? $statusIds['raised']
+                ?? $statusIds['delinquent']
+                ?? null;
+        }
+
+        if ($this->containsAnyNormalized($statusNames, $groups['raised'] ?? [])) {
+            return $statusIds['raised']
+                ?? $statusIds['delinquent']
+                ?? null;
+        }
+
+        if ($this->containsAnyNormalized($statusNames, $groups['delinquent'] ?? [])) {
+            return $statusIds['delinquent'] ?? null;
+        }
+
+        if (!empty($groups['finished']) && $this->allInSet($statusNames, $groups['finished'])) {
+            return $statusIds['inactive'] ?? null;
+        }
+
+        return $statusIds['committed'] ?? null;
+    }
+
+    private function containsAnyNormalized(array $haystack, array $needles): bool
+    {
+        if (empty($haystack) || empty($needles)) {
+            return false;
+        }
+
+        $needles = array_values(array_unique($needles));
+
+        foreach ($haystack as $value) {
+            if (in_array($value, $needles, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function allInSet(array $haystack, array $allowed): bool
+    {
+        if (empty($haystack)) {
+            return false;
+        }
+
+        $allowed = array_values(array_unique($allowed));
+
+        foreach ($haystack as $value) {
+            if (!in_array($value, $allowed, true)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function normalizeMonth($value): ?int

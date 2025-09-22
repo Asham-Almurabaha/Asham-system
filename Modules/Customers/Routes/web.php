@@ -22,6 +22,9 @@ Route::middleware(['web', 'auth'])->group(function () {
             ->name('import.pending.store-new');
     });
 
+    Route::post('customers/refresh-statuses', [CustomerController::class, 'refreshStatuses'])
+        ->name('customers.refresh-statuses');
+
     Route::resource('customers', CustomerController::class);
 
     Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])
