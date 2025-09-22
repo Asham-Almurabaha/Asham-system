@@ -303,8 +303,45 @@
         $excludedStatuses = (array)($monthly['excluded_status_names'] ?? ['مؤجل','معتذر']);
         $excludedStatusesTx = count($excludedStatuses) ? implode('، ', $excludedStatuses) : '—';
 
-        $mVal = (int)($monthly['month'] ?? now()->month);
-        $yVal = (int)($monthly['year']  ?? now()->year);
+        $periodMonthsOptions = (array)($periodMonths ?? []);
+        $periodYearsOptions  = (array)($periodYears ?? []);
+        $periodContextData   = (array)($periodContext ?? []);
+
+        $mVal = (int)($periodContextData['month'] ?? ($monthly['month'] ?? now()->month));
+        $yVal = (int)($periodContextData['year']  ?? ($monthly['year'] ?? now()->year));
+
+        $selectedPeriodMonth = isset($selectedPeriodMonth)
+            ? (int) $selectedPeriodMonth
+            : $mVal;
+        $selectedPeriodYear = isset($selectedPeriodYear)
+            ? (int) $selectedPeriodYear
+            : $yVal;
+
+        $periodLabel = $periodLabel ?? null;
+        if (!$periodLabel && !empty($periodContextData['label'])) {
+            $periodLabel = (string) $periodContextData['label'];
+        }
+
+        $periodStartValue = $periodContextData['start'] ?? ($monthly['period_start'] ?? null);
+        $periodEndValue   = $periodContextData['end'] ?? ($monthly['period_end'] ?? null);
+
+        $formatPeriodDate = function ($value) {
+            if ($value instanceof \Carbon\CarbonInterface) {
+                return $value->format('Y-m-d');
+            }
+            if ($value instanceof \DateTimeInterface) {
+                return $value->format('Y-m-d');
+            }
+
+            return $value ? (string) $value : null;
+        };
+
+        $periodStartLabel = $formatPeriodDate($periodStartValue);
+        $periodEndLabel   = $formatPeriodDate($periodEndValue);
+
+        if (!$periodLabel && $periodStartLabel && $periodEndLabel) {
+            $periodLabel = $periodStartLabel . ' — ' . $periodEndLabel;
+        }
 
         // لعرض الصور داخل التفاصيل
         $hasIdCard   = !empty($investor->id_card_image);
@@ -473,14 +510,24 @@
 
     {{-- ====== ملخص أقساط هذا الشهر (لـ {{ $investor->name }}) ====== --}}
     <div class="card shadow-soft mb-4">
-        <div class="card-header bg-white d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-3">
-                <div class="section-title">@lang('Monthly Installments Summary') <span class="text-muted">({{ $monthLabel }})</span></div>
-                <span class="stat-sub"><i class="bi bi-filter"></i> @lang('Excludes statuses:') {{ $excludedStatusesTx }}</span>
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="section-title">@lang('Monthly Installments Summary') <span class="text-muted">({{ $monthLabel }})</span></div>
+                    <span class="stat-sub"><i class="bi bi-filter"></i> @lang('Excludes statuses:') {{ $excludedStatusesTx }}</span>
+                </div>
+                @if($periodLabel)
+                    <div class="small text-muted d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>{{ $periodLabel }}</span>
+                        </span>
+                    </div>
+                @endif
             </div>
-            {{-- اختيار سريع للشهر/السنة (يحافظ على الـquerystring) --}}
-            <form action="{{ route('investors.show', $investor) }}" method="GET" class="d-flex align-items-center gap-2">
-                @foreach(request()->except(['m','y','page']) as $k => $v)
+            {{-- اختيار سريع للفترة (يحافظ على الـquerystring) --}}
+            <form action="{{ route('investors.show', $investor) }}" method="GET" class="d-flex flex-wrap align-items-end justify-content-end gap-2">
+                @foreach(request()->except(['m','y','period_month','period_year','page']) as $k => $v)
                     @if(is_array($v))
                         @foreach($v as $vv)
                             <input type="hidden" name="{{ $k }}[]" value="{{ $vv }}">
@@ -489,9 +536,30 @@
                         <input type="hidden" name="{{ $k }}" value="{{ $v }}">
                     @endif
                 @endforeach
-                <input type="number" name="m" min="1" max="12" class="form-control form-control-sm" style="width:86px" value="{{ request('m', $mVal) }}" placeholder="شهر">
-                <input type="number" name="y" min="2000" max="2100" class="form-control form-control-sm" style="width:92px" value="{{ request('y', $yVal) }}" placeholder="سنة">
-                <x-button.action type="submit" variant="primary" :outline="true" size="sm">تحديث</x-button.action>
+                <div class="d-flex flex-column">
+                    <label class="form-label small mb-1" for="period_month">@lang('Month')</label>
+                    <select name="period_month" id="period_month" class="form-select form-select-sm">
+                        @foreach($periodMonthsOptions as $value => $label)
+                            <option value="{{ $value }}" @selected($selectedPeriodMonth === (int) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="d-flex flex-column">
+                    <label class="form-label small mb-1" for="period_year">@lang('Year')</label>
+                    <select name="period_year" id="period_year" class="form-select form-select-sm">
+                        @foreach($periodYearsOptions as $value => $label)
+                            <option value="{{ $value }}" @selected($selectedPeriodYear === (int) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="d-flex align-items-end gap-2">
+                    <x-button.action type="submit" variant="primary" :outline="true" size="sm">
+                        <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
+                    </x-button.action>
+                    <x-button.action href="{{ route('investors.show', $investor) }}" variant="secondary" :outline="true" size="sm">
+                        {{ __('Clear') }}
+                    </x-button.action>
+                </div>
             </form>
         </div>
         <div class="card-body">

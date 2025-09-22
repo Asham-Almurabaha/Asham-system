@@ -7,6 +7,8 @@ use App\Models\OfficeTransaction;
 use Modules\Lookups\Entities\Nationality;
 use Modules\Lookups\Entities\Title;
 use App\Services\InstallmentsMonthlyService;
+use App\Support\InstallmentPeriod;
+use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -298,27 +300,41 @@ class InvestorController extends Controller
         }
 
         // باراميترات شهر/سنة + حالات مستثناة
-        $m = $request->integer('m') ?: null;   // 1..12
-        $y = $request->integer('y') ?: null;   // YYYY
+        $periodContext = $this->resolveInstallmentPeriodContext($request);
+        $periodMonths  = $this->periodMonthOptions();
+        $periodYears   = $this->periodYearOptions();
+        $requestedMonth = $periodContext['requested_month'] ?? null;
+        $requestedYear  = $periodContext['requested_year'] ?? null;
+        $selectedPeriodMonth = $periodContext['month'] ?? null;
+        $selectedPeriodYear  = $periodContext['year'] ?? null;
+
+        $periodMonthForService = $requestedMonth ?? $selectedPeriodMonth;
+        $periodYearForService  = $requestedYear ?? $selectedPeriodYear;
         $excluded = ['مؤجل', 'معتذر'];
 
         // ملخص الأقساط — أولوية لاستخدام نسخة المستثمر فقط، مع fallback آمن
         try {
             if (method_exists($installmentsSvc, 'buildForInvestor')) {
                 // الإصدار الجديد من السيرفيس
-                $installmentsMonthly = $installmentsSvc->buildForInvestor($investor, $m, $y, $excluded);
+                $installmentsMonthly = $installmentsSvc->buildForInvestor($investor, $periodMonthForService, $periodYearForService, $excluded);
             } else {
                 // محاولة استخدام توقيع build الجديد (4 معاملات)
-                $installmentsMonthly = $installmentsSvc->build($m, $y, $excluded, $investor->id);
+                $installmentsMonthly = $installmentsSvc->build($periodMonthForService, $periodYearForService, $excluded, $investor->id);
             }
         } catch (\ArgumentCountError $e) {
             // fallback للإصدار القديم (3 معاملات) — إجمالي النظام
-            $installmentsMonthly = $installmentsSvc->build($m, $y, $excluded);
+            $installmentsMonthly = $installmentsSvc->build($periodMonthForService, $periodYearForService, $excluded);
         }
 
         return view('investors::show', [
             'investor'            => $investor,
             'installmentsMonthly' => $installmentsMonthly,
+            'periodLabel'         => $periodContext['label'] ?? null,
+            'periodMonths'        => $periodMonths,
+            'periodYears'         => $periodYears,
+            'selectedPeriodMonth' => $selectedPeriodMonth,
+            'selectedPeriodYear'  => $selectedPeriodYear,
+            'periodContext'       => $periodContext,
         ] + $data);
     }
 
@@ -826,5 +842,80 @@ class InvestorController extends Controller
             'Ended With Claim',
             'Claim closed',
         ];
+    }
+
+    protected function resolveInstallmentPeriodContext(Request $request): array
+    {
+        $month = $this->normalizeMonth($request->input('period_month'));
+        if ($month === null) {
+            $month = $this->normalizeMonth($request->input('m'));
+        }
+
+        $year = $this->normalizeYear($request->input('period_year'));
+        if ($year === null) {
+            $year = $this->normalizeYear($request->input('y'));
+        }
+
+        $resolved = InstallmentPeriod::resolve($month, $year, Carbon::now());
+
+        $start = $resolved['start']->copy();
+        $end   = $resolved['end']->copy();
+
+        return [
+            'start'           => $start,
+            'end'             => $end,
+            'month'           => (int) $start->month,
+            'year'            => (int) $start->year,
+            'label'           => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
+            'requested_month' => $month,
+            'requested_year'  => $year,
+        ];
+    }
+
+    protected function normalizeMonth($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1 && $value <= 12 ? $value : null;
+    }
+
+    protected function normalizeYear($value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (int) $value;
+
+        return $value >= 1900 && $value <= 2100 ? $value : null;
+    }
+
+    protected function periodMonthOptions(): array
+    {
+        $months = [];
+
+        for ($month = 1; $month <= 12; $month++) {
+            $months[$month] = Carbon::create(null, $month, 1)
+                ->locale(app()->getLocale())
+                ->translatedFormat('F');
+        }
+
+        return $months;
+    }
+
+    protected function periodYearOptions(): array
+    {
+        $currentYear = Carbon::now()->year;
+        $years = [];
+
+        for ($year = $currentYear - 5; $year <= $currentYear + 1; $year++) {
+            $years[$year] = (string) $year;
+        }
+
+        return $years;
     }
 }
