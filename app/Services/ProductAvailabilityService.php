@@ -5,6 +5,7 @@ namespace App\Services;
 use Modules\Lookups\Entities\ProductType;
 use App\Models\ProductTransaction;
 use App\Models\LedgerEntry;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class ProductAvailabilityService
@@ -79,6 +80,9 @@ class ProductAvailabilityService
         }
 
         // 2) Base لكميات ProductTransaction + join ledger_entries + فلاتر
+        $statusIdsType1 = $this->transactionStatusIdsForType(1);
+        $statusIdsType2 = $this->transactionStatusIdsForType(2);
+
         $txBase = ProductTransaction::query()
             ->from('product_transactions as pt')
             ->join('ledger_entries as le', 'le.id', '=', 'pt.ledger_entry_id')
@@ -91,25 +95,19 @@ class ProductAvailabilityService
             ->when(!empty($filters['product_type_ids'] ?? null), fn($q) => $q->whereIn('pt.product_type_id', array_filter($filters['product_type_ids'])));
 
         // ✅ نفس منطق Ajax: عكس الاتجاه للكميات
-        // الكميات "داخل" بعد العكس = قيود نوعها "خارج" (2) أو حالتها تابعة لنوع 2
+        // الكميات "داخل" بعد العكس = قيود اتجاهها "خارج" (أو fallback على النوع 2)
         $qtyInByType = (clone $txBase)
-            ->where(function ($q) {
-                $q->where('le.transaction_type_id', 2)
-                  ->orWhereIn('le.transaction_status_id', function ($sub) {
-                      $sub->select('id')->from('transaction_statuses')->where('transaction_type_id', 2);
-                  });
+            ->where(function ($q) use ($statusIdsType2) {
+                $this->applyLedgerDirectionFilter($q, ['out', 'OUT'], 2, $statusIdsType2);
             })
             ->selectRaw('pt.product_type_id as pt_id, SUM(pt.quantity) as s')
             ->groupBy('pt.product_type_id')
             ->pluck('s', 'pt_id');
 
-        // الكميات "خارج" بعد العكس = قيود نوعها "داخل" (1) أو حالتها تابعة لنوع 1
+        // الكميات "خارج" بعد العكس = قيود اتجاهها "داخل" (أو fallback على النوع 1)
         $qtyOutByType = (clone $txBase)
-            ->where(function ($q) {
-                $q->where('le.transaction_type_id', 1)
-                  ->orWhereIn('le.transaction_status_id', function ($sub) {
-                      $sub->select('id')->from('transaction_statuses')->where('transaction_type_id', 1);
-                  });
+            ->where(function ($q) use ($statusIdsType1) {
+                $this->applyLedgerDirectionFilter($q, ['in', 'IN'], 1, $statusIdsType1);
             })
             ->selectRaw('pt.product_type_id as pt_id, SUM(pt.quantity) as s')
             ->groupBy('pt.product_type_id')
@@ -139,6 +137,7 @@ class ProductAvailabilityService
             } else {
                 // نمط مفصل: يشمل مخزون وتفاصيل فلوس
                 $qLedgerBase = LedgerEntry::query()
+                    ->from('ledger_entries as le')
                     ->when(!empty($filters['from'] ?? null), fn($q) => $q->whereDate('entry_date', '>=', $filters['from']))
                     ->when(!empty($filters['to']   ?? null), fn($q) => $q->whereDate('entry_date', '<=', $filters['to']))
                     ->when(($filters['account_type'] ?? null) === 'bank', fn($q) => $q->whereNotNull('bank_account_id')->whereNull('safe_id'))
@@ -148,27 +147,21 @@ class ProductAvailabilityService
                     ->whereExists(function ($sub) use ($ptId) {
                         $sub->select(DB::raw(1))
                             ->from('product_transactions as pt2')
-                            ->whereColumn('pt2.ledger_entry_id', 'ledger_entries.id')
+                            ->whereColumn('pt2.ledger_entry_id', 'le.id')
                             ->where('pt2.product_type_id', $ptId);
                     });
 
                 $amountIn = (clone $qLedgerBase)
-                    ->where(function ($q) {
-                        $q->where('transaction_type_id', 1)
-                          ->orWhereIn('transaction_status_id', function ($sub) {
-                              $sub->select('id')->from('transaction_statuses')->where('transaction_type_id', 1);
-                          });
+                    ->where(function ($q) use ($statusIdsType1) {
+                        $this->applyLedgerDirectionFilter($q, ['in', 'IN'], 1, $statusIdsType1);
                     })
-                    ->sum('amount');
+                    ->sum('le.amount');
 
                 $amountOut = (clone $qLedgerBase)
-                    ->where(function ($q) {
-                        $q->where('transaction_type_id', 2)
-                          ->orWhereIn('transaction_status_id', function ($sub) {
-                              $sub->select('id')->from('transaction_statuses')->where('transaction_type_id', 2);
-                          });
+                    ->where(function ($q) use ($statusIdsType2) {
+                        $this->applyLedgerDirectionFilter($q, ['out', 'OUT'], 2, $statusIdsType2);
                     })
-                    ->sum('amount');
+                    ->sum('le.amount');
 
                 $amountIn  = round((float)$amountIn, 2);
                 $amountOut = round((float)$amountOut, 2);
@@ -259,5 +252,63 @@ class ProductAvailabilityService
             'out_formatted' => number_format($out, 2),
             'formatted'     => number_format($bal, 2),
         ];
+    }
+
+    /**
+     * @param  Builder  $query
+     * @param  array<int, string>  $directions
+     * @param  int  $transactionTypeId
+     * @param  array<int, int>  $statusIds
+     */
+    private function applyLedgerDirectionFilter(Builder $query, array $directions, int $transactionTypeId, array $statusIds = []): void
+    {
+        $normalizedDirections = [];
+
+        foreach ($directions as $dir) {
+            if (!is_string($dir)) {
+                continue;
+            }
+
+            $dir = trim($dir);
+
+            if ($dir === '') {
+                continue;
+            }
+
+            $lower = strtolower($dir);
+            $normalizedDirections[] = $lower;
+            $normalizedDirections[] = strtoupper($lower);
+            $normalizedDirections[] = ucfirst($lower);
+        }
+
+        $normalizedDirections = array_values(array_unique($normalizedDirections));
+
+        $query->where(function ($q) use ($normalizedDirections, $transactionTypeId, $statusIds) {
+            if (!empty($normalizedDirections)) {
+                $q->whereIn('le.direction', $normalizedDirections);
+            }
+
+            $q->orWhere(function ($q) use ($transactionTypeId, $statusIds) {
+                $q->whereNull('le.direction')
+                    ->where(function ($q) use ($transactionTypeId, $statusIds) {
+                        $q->where('le.transaction_type_id', $transactionTypeId);
+
+                        if (!empty($statusIds)) {
+                            $q->orWhereIn('le.transaction_status_id', $statusIds);
+                        }
+                    });
+            });
+        });
+    }
+    /**
+     * @return array<int, int>
+     */
+    private function transactionStatusIdsForType(int $transactionTypeId): array
+    {
+        return DB::table('transaction_statuses')
+            ->where('transaction_type_id', $transactionTypeId)
+            ->pluck('id')
+            ->map(static fn($id) => (int) $id)
+            ->all();
     }
 }

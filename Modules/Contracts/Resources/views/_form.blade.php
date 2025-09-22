@@ -403,14 +403,14 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ===== ويدجت السيولة (المستثمر) =====
-  const CASH_URL_TPL = "{{ url('/investors') }}/{id}/cash";
+  const CASH_URL_TPL = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
   const cashCache = Object.create(null);
 
   async function fetchInvestorCash(investorId){
     if (!investorId) return null;
     if (cashCache[investorId] !== undefined) return cashCache[investorId];
     try{
-      const url = CASH_URL_TPL.replace('{id}', investorId);
+      const url = CASH_URL_TPL.replace('__ID__', encodeURIComponent(investorId));
       const res = await fetch(url, { headers: { 'Accept': 'application/json' }, credentials:'same-origin' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();

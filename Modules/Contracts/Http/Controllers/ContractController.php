@@ -27,6 +27,7 @@ use Modules\Contracts\Support\InvestorShareValidator;
 use Modules\Contracts\Services\ContractStatusRefresher;
 use Modules\Contracts\Services\ContractStatusSummaryService;
 use Modules\Contracts\Services\InvestorTransactionLogger;
+use App\Services\ProductTypeAvailabilityService;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
 use App\Support\InstallmentPeriod;
@@ -48,7 +49,8 @@ class ContractController extends Controller
         private InvestorTransactionLogger $investorTransactionLogger,
         private InvestorShareValidator $investorShareValidator,
         private ContractStatusRefresher $contractStatusRefresher,
-        private ContractStatusSummaryService $contractStatusSummary
+        private ContractStatusSummaryService $contractStatusSummary,
+        private ProductTypeAvailabilityService $productTypeAvailability
     )
     {
     }
@@ -279,6 +281,28 @@ class ContractController extends Controller
     {
         $data = $this->validateContract($request, false);
         $this->backfillCalculatedFields($data, $request);
+
+        $productTypeId = (int) ($data['product_type_id'] ?? 0);
+        $requestedQty  = max(0, (int) ($data['products_count'] ?? 0));
+
+        if ($productTypeId > 0 && $requestedQty > 0) {
+            $productType = ProductType::find($productTypeId);
+
+            if ($productType) {
+                $availability = $this->productTypeAvailability->compute($productType);
+                $availableQty = (int) floor((float) ($availability['available'] ?? 0));
+
+                if ($requestedQty > $availableQty) {
+                    throw ValidationException::withMessages([
+                        'products_count' => [
+                            __('contracts::contracts.insufficient_stock_for_product_type', [
+                                'available' => number_format($availableQty),
+                            ]),
+                        ],
+                    ]);
+                }
+            }
+        }
 
         // ✅ نتاكد أن المفتاح المستخدم هو product_type_id فقط
         if (!empty($data['contract_type_id']) && empty($data['product_type_id'])) {

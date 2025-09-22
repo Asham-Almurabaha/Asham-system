@@ -125,4 +125,5 @@ return array (
   'No data for the chart.' => 'No data for the chart.',
   'No matching contracts for your search.' => 'No matching contracts for your search.',
   'View' => 'View',
+  'insufficient_stock_for_product_type' => 'Requested quantity exceeds the available stock for this product type. Currently available: :available.',
 );

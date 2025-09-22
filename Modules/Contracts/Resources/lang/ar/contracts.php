@@ -125,4 +125,5 @@ return array (
   'No data for the chart.' => 'لا توجد بيانات للمخطط.',
   'No matching contracts for your search.' => 'لا توجد عقود مطابقة لبحثك.',
   'View' => 'عرض',
+  'insufficient_stock_for_product_type' => 'العدد المطلوب يتجاوز الكمية المتاحة لهذا النوع. المتاح حالياً: :available.',
 );
