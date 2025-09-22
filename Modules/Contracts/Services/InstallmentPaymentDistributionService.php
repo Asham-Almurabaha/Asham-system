@@ -93,9 +93,7 @@ class InstallmentPaymentDistributionService
             }
 
             $investorTotalProfit   = max(0, (float) $contract->investor_profit * ($sharePercentage / 100));
-            $officeSharePercentage = (float) ($investor->pivot->office_share_percentage
-                ?? $investor->office_share_percentage
-                ?? 0);
+            $officeSharePercentage = (float) ($investor->pivot->office_share_percentage ?? 0);
 
             $officeProfit = $officeSharePercentage > 0
                 ? round($investorTotalProfit * ($officeSharePercentage / 100), 2)

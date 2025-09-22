@@ -368,7 +368,7 @@ class InvestorReportController extends Controller
         $capitalExpr = "ROUND($capitalExprRaw, 2)";
         $shareRatioExpr = "CASE WHEN COALESCE(ci.share_percentage, 0) > 0 THEN COALESCE(ci.share_percentage, 0) / 100 WHEN COALESCE(ci.share_value, 0) > 0 AND COALESCE(c.contract_value, 0) > 0 THEN COALESCE(ci.share_value, 0) / NULLIF(c.contract_value, 0) ELSE 0 END";
         $profitGrossExpr = "ROUND(COALESCE(c.investor_profit, 0) * ($shareRatioExpr), 2)";
-        $officePctExpr = "CASE WHEN COALESCE(ci.office_share_percentage, 0) > 0 THEN COALESCE(ci.office_share_percentage, 0) ELSE COALESCE(inv.office_share_percentage, 0) END";
+        $officePctExpr = 'COALESCE(ci.office_share_percentage, 0)';
         $officeCutExpr = "ROUND($profitGrossExpr * $officePctExpr / 100, 2)";
         $paidExpr = 'COALESCE(paid.paid_in, 0)';
         $profitNetExpr = "GREATEST(ROUND($profitGrossExpr - $officeCutExpr, 2), 0)";
@@ -388,7 +388,6 @@ class InvestorReportController extends Controller
 
         $totalsRow = DB::table('contract_investor as ci')
             ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
-            ->join('investors as inv', 'ci.investor_id', '=', 'inv.id')
             ->leftJoinSub($paidSub, 'paid', function ($join) {
                 $join->on('paid.contract_id', '=', 'ci.contract_id')
                     ->on('paid.investor_id', '=', 'ci.investor_id');
@@ -400,7 +399,7 @@ class InvestorReportController extends Controller
             ->when(!empty($endedIds), function ($q) use ($endedIds) {
                 $q->whereNotIn('c.contract_status_id', $endedIds);
             })
-            ->when($filters['investor_id'], fn ($q, $id) => $q->where('inv.id', $id))
+            ->when($filters['investor_id'], fn ($q, $id) => $q->where('ci.investor_id', $id))
             ->selectRaw(
                 "SUM(ROUND($remainingWithExpr, 2)) AS remaining_with_office, " .
                 "SUM(ROUND($remainingWithoutExpr, 2)) AS remaining_without_office, " .
@@ -428,6 +427,7 @@ class InvestorReportController extends Controller
                     'ci.contract_id',
                     'ci.share_percentage',
                     'ci.share_value',
+                    'ci.office_share_percentage',
                     'c.contract_value',
                     'c.investor_profit',
                     'c.contract_status_id',
@@ -464,7 +464,6 @@ class InvestorReportController extends Controller
                 $claimStatusIds
             ) {
                 $investorId = (int) ($investor->id ?? 0);
-                $pctOffice = (float) ($investor->office_share_percentage ?? 0);
                 $contracts = $contractsByInvestor->get($investorId, collect());
                 $contracts = $contracts instanceof \Illuminate\Support\Collection
                     ? $contracts
@@ -480,6 +479,7 @@ class InvestorReportController extends Controller
                     $contractValue = (float) ($contract->contract_value ?? 0);
                     $sharePct = (float) ($contract->share_percentage ?? 0);
                     $shareVal = (float) ($contract->share_value ?? 0);
+                    $officePct = (float) ($contract->office_share_percentage ?? 0);
 
                     $shareRatio = 0.0;
                     if ($sharePct > 0) {
@@ -498,7 +498,7 @@ class InvestorReportController extends Controller
                         $profitGross = round(((float) $contract->investor_profit) * $shareRatio, 2);
                     }
 
-                    $officeCut = round($profitGross * $pctOffice / 100, 2);
+                    $officeCut = round($profitGross * $officePct / 100, 2);
                     $expectedWith = round($shareVal + $profitGross, 2);
 
                     $paymentRow = [];

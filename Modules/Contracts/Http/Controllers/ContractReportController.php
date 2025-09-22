@@ -93,11 +93,7 @@ END
 SQL;
 
         $officePctExpr = <<<'SQL'
-CASE
-    WHEN COALESCE(ci.office_share_percentage, 0) > 0
-        THEN COALESCE(ci.office_share_percentage, 0)
-    ELSE COALESCE(inv.office_share_percentage, 0)
-END
+COALESCE(ci.office_share_percentage, 0)
 SQL;
 
         $officeDueSelect = <<<SQL
@@ -107,7 +103,6 @@ SQL;
 
         $officeDueSub = DB::table('contract_investor as ci')
             ->join('contracts as c', 'ci.contract_id', '=', 'c.id')
-            ->join('investors as inv', 'ci.investor_id', '=', 'inv.id')
             ->selectRaw($officeDueSelect)
             ->groupBy('ci.contract_id');
 

@@ -18,7 +18,7 @@
                 </td>
                 <td>{{ number_format($inv->pivot->share_percentage, 2) }}</td>
                 <td>{{ number_format($inv->pivot->share_value, 2) }}</td>
-                <td>{{ number_format($inv->pivot->office_share_percentage ?? $inv->office_share_percentage ?? 0, 2) }}</td>
+                <td>{{ number_format((float) ($inv->pivot->office_share_percentage ?? 0), 2) }}</td>
             </tr>
         @endforeach
     </x-table>

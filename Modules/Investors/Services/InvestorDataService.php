@@ -74,8 +74,6 @@ class InvestorDataService
             fn($c) => in_array((int)($c->contract_status_id ?? 0), $endedStatusIds, true)
         );
 
-        $defaultOfficePct = (float) ($investor->office_share_percentage ?? 0);
-
         /* =========================
          * إجماليات على "كل العقود" (نشِط + منتهي)
          * ========================= */
@@ -106,7 +104,7 @@ class InvestorDataService
                 $profitGrossAll = round(((float)$cAll->investor_profit) * $shareRatioAll, 2);
             }
 
-            $officePctAll = (float) ($cAll->pivot->office_share_percentage ?? $defaultOfficePct);
+            $officePctAll = (float) ($cAll->pivot->office_share_percentage ?? 0);
             $officeCutAll = round($profitGrossAll * $officePctAll / 100, 2);
             $profitNetAll = $profitGrossAll - $officeCutAll;
 
@@ -186,7 +184,7 @@ class InvestorDataService
                 $profitGross = round(((float)$c->investor_profit) * $shareRatio, 2);
             }
 
-            $officePct = (float) ($c->pivot->office_share_percentage ?? $defaultOfficePct);
+            $officePct = (float) ($c->pivot->office_share_percentage ?? 0);
             $officeCut = round($profitGross * $officePct / 100, 2);
             $profitNet = round($profitGross - $officeCut, 2);
 

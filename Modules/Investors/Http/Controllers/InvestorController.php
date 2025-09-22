@@ -69,12 +69,16 @@ class InvestorController extends Controller
                 ->when(!empty($endedStatusIds), function($q) use ($endedStatusIds) {
                     $q->whereNotIn('c.contract_status_id', $endedStatusIds);
                 })
-                ->select('ci.investor_id','ci.contract_id','ci.share_percentage','ci.share_value','c.contract_value','c.investor_profit')
+                ->select(
+                    'ci.investor_id',
+                    'ci.contract_id',
+                    'ci.share_percentage',
+                    'ci.share_value',
+                    'ci.office_share_percentage',
+                    'c.contract_value',
+                    'c.investor_profit'
+                )
                 ->get();
-
-            $officeSharePctByInvestor = $investors->getCollection()
-                ->mapWithKeys(fn (Investor $inv) => [$inv->id => (float) ($inv->office_share_percentage ?? 0.0)])
-                ->all();
 
             $contractIds = $rows->pluck('contract_id')->filter()->unique()->all();
             $paidByInvestor = collect();
@@ -89,18 +93,18 @@ class InvestorController extends Controller
             });
 
             // Remaining amount per investor
-            $remainingByInvestor = $rows->groupBy('investor_id')->map(function($g, $investorId) use ($officeSharePctByInvestor, $paidByInvestor) {
-                $officePct = (float) ($officeSharePctByInvestor[$investorId] ?? 0.0);
+            $remainingByInvestor = $rows->groupBy('investor_id')->map(function($g, $investorId) use ($paidByInvestor) {
                 $paymentsByContract = $paidByInvestor->get($investorId);
                 if (!$paymentsByContract instanceof Collection) {
                     $paymentsByContract = Collection::make();
                 }
 
-                $totalRemaining = $g->reduce(function($carry, $item) use ($officePct, $paymentsByContract) {
+                $totalRemaining = $g->reduce(function($carry, $item) use ($paymentsByContract) {
                     $contractId    = (int) ($item->contract_id ?? 0);
                     $contractValue = (float) ($item->contract_value ?? 0.0);
                     $sharePct      = (float) ($item->share_percentage ?? 0.0);
                     $shareVal      = (float) ($item->share_value ?? 0.0);
+                    $officePct     = (float) ($item->office_share_percentage ?? 0.0);
 
                     $shareRatio = 0.0;
                     if ($sharePct > 0) {
@@ -540,9 +544,9 @@ class InvestorController extends Controller
                 'ci.investor_id',
                 'ci.share_percentage',
                 'ci.share_value',
+                'ci.office_share_percentage',
                 'c.contract_value',
                 'c.investor_profit',
-                'i.office_share_percentage',
             ]);
 
         $endedStatusIds = $this->endedContractStatusIds();
