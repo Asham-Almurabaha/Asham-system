@@ -18,13 +18,13 @@
     $faviconUrl = $setting?->favicon_url ?? ($setting?->favicon ? asset('storage/'.$setting->favicon) : null);
   @endphp
 
-  <div class="d-flex align-items-center justify-content-between mb-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
     <div>
       <h4 class="mb-0">@lang('sidebar.General Settings')</h4>
       <small class="text-muted">@lang('sidebar.Control the name, owner name, logo, and site icon')</small>
     </div>
 
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
       @if($setting)
         <x-button.action href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true">
           <i class="bi bi-eye me-1"></i>@lang('sidebar.View')
@@ -62,7 +62,7 @@
       <div class="col-lg-8">
         <div class="card shadow-sm h-100">
           <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-3 mt-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 mt-2">
               <h5 class="mb-0 mt">@lang('sidebar.Basic Data')</h5>
               <span class="badge bg-success-subtle text-success border">@lang('sidebar.Active')</span>
             </div>
@@ -131,7 +131,7 @@
               </div>
             </div>
 
-            <div class="mt-3 d-flex gap-2">
+            <div class="mt-3 d-flex flex-wrap gap-2">
               <x-button.action href="{{ route('settings.show', $setting) }}" variant="secondary" :outline="true" size="sm">
                 <i class="bi bi-eye me-1"></i>@lang('sidebar.View Details')
               </x-button.action>
@@ -148,7 +148,7 @@
     <div class="card shadow-sm mt-3">
       <div class="card-body mt-2">
         <h6 class="mb-3">@lang('sidebar.Brand Preview')</h6>
-        <div class="border rounded p-3 d-flex align-items-center gap-3">
+        <div class="border rounded p-3 d-flex flex-wrap align-items-center gap-3">
           @if(!empty($logoUrl))
             <img src="{{ $logoUrl }}" alt="@lang('setting.Logo')" class="logo-img-40" class="rounded border bg-white p-1">
           @else

@@ -14,8 +14,8 @@
   </nav>
 
   {{-- Header / Toolbar --}}
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div class="d-flex align-items-center gap-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-3">
       @if(!empty($setting->logo_url))
         <img src="{{ $setting->logo_url }}" alt="@lang('setting.Logo')" class="rounded border bg-white p-1" style="height:48px">
       @else
@@ -29,7 +29,7 @@
       </div>
     </div>
 
-    <div class="d-flex gap-2">
+    <div class="d-flex flex-wrap gap-2">
       <x-button.edit href="{{ route('settings.edit', $setting) }}">
         @lang('sidebar.Edit')
       </x-button.edit>
@@ -101,14 +101,14 @@
 
           {{-- Logo Preview --}}
           <div class="mb-4">
-            <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
               <span class="text-muted">@lang('sidebar.Logo')</span>
               @if(!empty($setting->logo_url))
                 <a href="{{ $setting->logo_url }}" target="_blank" class="small">@lang('sidebar.Open Original')</a>
               @endif
             </div>
             @if(!empty($setting->logo_url))
-              <div class="border rounded p-3 bg-light d-flex align-items-center" style="min-height:90px;">
+              <div class="border rounded p-3 bg-light d-flex flex-wrap align-items-center" style="min-height:90px;">
                 <img src="{{ $setting->logo_url }}" alt="Logo" class="img-fluid" style="max-height:64px">
               </div>
             @else
@@ -120,14 +120,14 @@
 
           {{-- Favicon Preview --}}
           <div>
-            <div class="d-flex align-items-center justify-content-between mb-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
               <span class="text-muted">@lang('setting.Icon')</span>
               @if(!empty($setting->favicon_url))
                 <a href="{{ $setting->favicon_url }}" target="_blank" class="small">@lang('sidebar.Open Original')</a>
               @endif
             </div>
             @if(!empty($setting->favicon_url))
-              <div class="d-flex align-items-center gap-3">
+              <div class="d-flex flex-wrap align-items-center gap-3">
                 <div class="border rounded bg-light d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
                   <img src="{{ $setting->favicon_url }}" alt="@lang('setting.Icon')" class="img-fluid p-1" style="max-height:32px">
                 </div>
@@ -144,7 +144,7 @@
           <hr class="my-4">
           <div>
             <div class="text-muted small mb-2">@lang('sidebar.Inline Preview')</div>
-            <div class="border rounded p-3 d-flex align-items-center gap-3">
+            <div class="border rounded p-3 d-flex flex-wrap align-items-center gap-3">
               @if(!empty($setting->logo_url))
                 <img src="{{ $setting->logo_url }}" alt="@lang('setting.Logo')" style="height:32px" class="rounded border bg-white p-1">
               @else

@@ -109,6 +109,66 @@
       padding: 0.35rem 0.75rem;
       font-size: 0.75rem;
     }
+
+    @media (max-width: 991.98px) {
+      .user-roles-manager .hero-metric {
+        padding: 0.85rem 1rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .user-roles-manager .card .p-4 > .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        text-align: start;
+      }
+
+      .user-roles-manager .card .p-4 > .d-flex .text-end {
+        width: 100%;
+        text-align: inherit !important;
+      }
+
+      .user-roles-manager .card-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .user-roles-manager .card-header .text-end,
+      .user-roles-manager .card-header .badge,
+      .user-roles-manager .card-header .btn-group {
+        width: 100%;
+        text-align: inherit !important;
+      }
+
+      .user-roles-manager .summary-card .d-flex.align-items-center {
+        flex-wrap: wrap;
+      }
+
+      .user-roles-manager .search-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .user-roles-manager .search-input-group > .input-group-text,
+      .user-roles-manager .search-input-group > .form-control,
+      .user-roles-manager .search-input-group > .btn {
+        width: 100%;
+        border-radius: 0.75rem !important;
+      }
+
+      .user-roles-manager .search-input-group > .input-group-text {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .user-roles-manager .option-card {
+        padding: 0.85rem;
+      }
+    }
   </style>
 @endpush
 

@@ -6,7 +6,7 @@
   <div class="row">
     <div class="col-lg-8 mx-auto">
       <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
           <h5 class="mb-0">@lang('sidebar.Edit Settings')</h5>
           <x-button.action href="{{ route('settings.index') }}" variant="secondary" :outline="true" size="sm">
             <i class="bi bi-arrow-right-circle me-1"></i>@lang('sidebar.Back')
@@ -45,7 +45,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label d-flex justify-content-between">
+              <label class="form-label d-flex flex-wrap justify-content-between gap-2">
                 <span>@lang('sidebar.Logo (PNG/JPG/WEBP/SVG)')</span>
                 @if(!empty($setting->logo_url))
                   <a href="{{ $setting->logo_url }}" target="_blank" class="small">@lang('sidebar.View Current')</a>
@@ -68,7 +68,7 @@
             </div>
 
             <div class="col-md-6">
-              <label class="form-label d-flex justify-content-between">
+              <label class="form-label d-flex flex-wrap justify-content-between gap-2">
                 <span>@lang('sidebar.Favicon (ICO/PNG/JPG/WEBP/SVG)')</span>
                 @if(!empty($setting->favicon_url))
                   <a href="{{ $setting->favicon_url }}" target="_blank" class="small">@lang('sidebar.View Current')</a>
@@ -90,7 +90,7 @@
               @endif
             </div>
 
-            <div class="col-12 d-flex gap-2">
+            <div class="col-12 d-flex flex-wrap gap-2">
               <x-button.update>
                 @lang('sidebar.Update')
               </x-button.update>

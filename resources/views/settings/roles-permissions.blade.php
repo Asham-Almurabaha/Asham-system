@@ -125,6 +125,70 @@
     .settings-roles-permissions .search-input-group .btn {
       border-inline-start: 0;
     }
+
+    @media (max-width: 991.98px) {
+      .settings-roles-permissions .hero-metric {
+        padding: 0.85rem 1rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .settings-roles-permissions .card .p-4 > .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        text-align: start;
+      }
+
+      .settings-roles-permissions .card .p-4 > .d-flex .text-end {
+        width: 100%;
+        text-align: inherit !important;
+      }
+
+      .settings-roles-permissions .card-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .settings-roles-permissions .card-header .text-end,
+      .settings-roles-permissions .card-header .btn-group,
+      .settings-roles-permissions .card-header .badge {
+        width: 100%;
+        text-align: inherit !important;
+      }
+
+      .settings-roles-permissions .search-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .settings-roles-permissions .search-input-group > .input-group-text,
+      .settings-roles-permissions .search-input-group > .form-control,
+      .settings-roles-permissions .search-input-group > .btn {
+        width: 100%;
+        border-radius: 0.75rem !important;
+      }
+
+      .settings-roles-permissions .search-input-group > .input-group-text {
+        justify-content: flex-start;
+      }
+
+      .settings-roles-permissions .toolbar-divider {
+        display: none;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .settings-roles-permissions .permission-card {
+        padding: 0.85rem;
+      }
+
+      .settings-roles-permissions .role-summary {
+        padding: 1rem;
+      }
+    }
   </style>
 @endpush
 

@@ -84,6 +84,62 @@
     .settings-permissions .search-input-group .btn {
       border-inline-start: 0;
     }
+
+    @media (max-width: 991.98px) {
+      .settings-permissions .hero-metric {
+        padding: 0.85rem 1rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .settings-permissions .card .p-4 > .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        text-align: start;
+      }
+
+      .settings-permissions .card .p-4 > .d-flex .text-end {
+        width: 100%;
+        text-align: inherit !important;
+      }
+
+      .settings-permissions .card-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+
+      .settings-permissions .card-header .text-end,
+      .settings-permissions .card-header .badge,
+      .settings-permissions .card-header .btn-group {
+        width: 100%;
+        text-align: inherit !important;
+      }
+
+      .settings-permissions .search-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .settings-permissions .search-input-group > .input-group-text,
+      .settings-permissions .search-input-group > .form-control,
+      .settings-permissions .search-input-group > .btn {
+        width: 100%;
+        border-radius: 0.75rem !important;
+      }
+
+      .settings-permissions .search-input-group > .input-group-text {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .settings-permissions .permission-card {
+        padding: 0.85rem;
+      }
+    }
   </style>
 @endpush
 

@@ -46,7 +46,7 @@
         .table thead th { position: sticky; top: 0; background: #f8f9fb; z-index: 1; }
         .chart-card canvas { max-height: 280px; }
 
-        /* ===== ���� ������ ������ ��������� ===== */
+        /* ===== شريط النطاق الزمني ===== */
         .dr-toolbar{border:1px solid #eef2f7;border-radius:1.1rem;box-shadow:var(--soft-shadow);background:#fff}
         .dr-toolbar .btn-range{border-radius:999px}
         .dr-toolbar .btn-range.active{background:#0d6efd;color:#fff;border-color:#0d6efd}
@@ -54,5 +54,31 @@
         .dr-toolbar .chip{background:#f1f4f9;border-radius:999px;padding:.35rem .7rem;font-weight:600;color:#475569}
         .dr-toolbar .label{font-size:.9rem;color:#6b7280}
         .dr-toolbar .sep{width:1px;background:#eef2f7;height:32px}
-    
+
+        @media (max-width: 991.98px){
+            .dashboard-hero{padding:1rem 1.25rem}
+            .section-card .card-body{padding:1.25rem}
+        }
+
+        @media (max-width: 767.98px){
+            .dashboard-hero .d-flex{flex-direction:column;align-items:flex-start;gap:1rem}
+            .dashboard-hero .badge-chip{display:flex;justify-content:center;width:100%;text-align:center}
+            .dr-toolbar{padding:1rem}
+            .dr-toolbar>div{flex-direction:column;align-items:stretch;gap:1rem}
+            .dr-toolbar .btn-range{width:100%}
+            .dr-toolbar form{width:100%;flex-direction:column;align-items:stretch;gap:.75rem}
+            .dr-toolbar form .label{width:100%;margin-bottom:.25rem}
+            .dr-toolbar form>div{width:100%}
+            .dr-toolbar form .form-control{width:100%}
+            .dr-toolbar form .btn{width:100%}
+            .dr-toolbar .ms-auto{margin-inline-start:0!important;width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:.5rem}
+            .dr-toolbar .chip{display:flex;justify-content:center;width:100%;text-align:center}
+            .dr-toolbar .ms-auto .chip{justify-content:flex-start;text-align:start}
+            .dr-toolbar .ms-auto .text-muted{display:block;text-align:start}
+        }
+
+        @media (max-width: 575.98px){
+            .dashboard-hero{padding:1rem}
+            .chart-card canvas{max-height:220px}
+        }
 

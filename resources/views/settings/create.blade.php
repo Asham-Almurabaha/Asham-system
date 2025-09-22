@@ -71,7 +71,7 @@
               <div class="form-text">@lang('sidebar.Limit 2MB')</div>
             </div>
 
-            <div class="col-12 d-flex gap-2">
+            <div class="col-12 d-flex flex-wrap gap-2">
               <x-button.save>
                 @lang('app.Save')
               </x-button.save>

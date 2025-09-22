@@ -75,6 +75,67 @@
     .settings-user-roles .empty-state {
       padding: 3rem 1rem;
     }
+
+    @media (max-width: 991.98px) {
+      .settings-user-roles .hero-metric {
+        padding: 0.85rem 1rem;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .settings-user-roles .card .p-4 > .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        text-align: start;
+      }
+
+      .settings-user-roles .card .p-4 > .d-flex .text-end {
+        width: 100%;
+        text-align: inherit !important;
+      }
+
+      .settings-user-roles .card .d-flex.align-items-center.gap-3 {
+        flex-wrap: wrap;
+      }
+
+      .settings-user-roles .search-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .settings-user-roles .search-input-group > .input-group-text,
+      .settings-user-roles .search-input-group > .form-control,
+      .settings-user-roles .search-input-group > .btn {
+        width: 100%;
+        border-radius: 0.75rem !important;
+      }
+
+      .settings-user-roles .search-input-group > .input-group-text {
+        justify-content: flex-start;
+      }
+
+      .settings-user-roles .stat-item {
+        align-items: flex-start;
+      }
+
+      .settings-user-roles .results-alert {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .settings-user-roles .hero-metric {
+        text-align: start;
+      }
+
+      .settings-user-roles .search-input-group > .btn {
+        margin-top: 0.25rem;
+      }
+    }
   </style>
 @endpush
 
