@@ -8,6 +8,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('guarantors/dashboard', [GuarantorController::class, 'dashboard'])
         ->name('guarantors.dashboard');
 
+    Route::post('guarantors/refresh-statuses', [GuarantorController::class, 'refreshStatuses'])
+        ->name('guarantors.refresh-statuses');
+
     Route::prefix('guarantors/import')->name('guarantors.')->group(function () {
         Route::get('/', [GuarantorImportController::class, 'create'])->name('import.form');
         Route::post('/', [GuarantorImportController::class, 'store'])->name('import');

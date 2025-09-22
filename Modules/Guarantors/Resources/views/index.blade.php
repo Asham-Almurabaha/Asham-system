@@ -118,11 +118,18 @@
       <x-button.action href="{{ route('guarantors.dashboard') }}" variant="dark" :outline="true">
         <i class="bi bi-speedometer2"></i> {{ __('guarantors::messages.View Dashboard') }}
       </x-button.action>
+      <x-button.action type="submit" variant="primary" :outline="true" form="guarantors-refresh-statuses-form" onclick="return confirm('{{ __('guarantors::messages.Refresh Guarantor Statuses Confirmation') }}');">
+        <i class="bi bi-arrow-clockwise"></i> {{ __('guarantors::messages.Refresh Guarantor Statuses') }}
+      </x-button.action>
       @role('admin')
         <x-button.action href="{{ route('guarantors.import.form') }}" variant="primary" :outline="true">
             <i class="bi bi-upload"></i> {{ __('guarantors::messages.Import Excel') }}
         </x-button.action>
     @endrole
+
+    <form id="guarantors-refresh-statuses-form" method="POST" action="{{ route('guarantors.refresh-statuses') }}" class="d-none">
+      @csrf
+    </form>
 
       {{-- 🔥 شيلنا زر "تمبليت" زى العملاء --}}
     </div>

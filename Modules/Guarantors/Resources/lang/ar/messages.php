@@ -11,6 +11,8 @@ return [
     'Overdue Guarantors' => 'كفلاء لديهم تأخرات',
     'Due This Month Guarantors' => 'كفلاء مستحق لهم هذا الشهر',
     'Import Excel' => 'استيراد Excel',
+    'Refresh Guarantor Statuses' => 'تحديث حالات الكفلاء',
+    'Refresh Guarantor Statuses Confirmation' => 'هل أنت متأكد من رغبتك في تحديث حالات الكفلاء بناءً على العقود المرتبطة؟',
     'Results' => 'النتائج',
     'Filter' => 'تصفية',
     'Clear' => 'مسح',
@@ -77,6 +79,9 @@ return [
     // Messages
     'No matching results for your search.' => 'لا توجد نتائج مطابقة لبحثك.',
     'View full size image' => 'عرض الصورة بحجم كامل',
+    'Guarantor statuses refreshed (:count updated).' => 'تم تحديث حالات الكفلاء (:count حالة محدثة).',
+    'Guarantor statuses refreshed (no changes).' => 'تم تحديث حالات الكفلاء (لا توجد تغييرات).',
+    'Unable to refresh guarantor statuses because default statuses are missing.' => 'تعذّر تحديث حالات الكفلاء لعدم توفر الحالات الافتراضية.',
 
     // Placeholders
     'Type guarantor name...' => 'اكتب اسم الكفيل...',

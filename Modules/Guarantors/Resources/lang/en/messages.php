@@ -11,6 +11,8 @@ return [
     'Overdue Guarantors' => 'Overdue Guarantors',
     'Due This Month Guarantors' => 'Guarantors With Installments Due This Month',
     'Import Excel' => 'Import Excel',
+    'Refresh Guarantor Statuses' => 'Refresh Guarantor Statuses',
+    'Refresh Guarantor Statuses Confirmation' => 'Are you sure you want to refresh guarantor statuses based on their related contracts?',
     'Results' => 'Results',
     'Filter' => 'Filter',
     'Clear' => 'Clear',
@@ -77,6 +79,9 @@ return [
     // Messages
     'No matching results for your search.' => 'No matching results for your search.',
     'View full size image' => 'View full size image',
+    'Guarantor statuses refreshed (:count updated).' => 'Guarantor statuses refreshed (:count updated).',
+    'Guarantor statuses refreshed (no changes).' => 'Guarantor statuses refreshed (no changes).',
+    'Unable to refresh guarantor statuses because default statuses are missing.' => 'Unable to refresh guarantor statuses because default statuses are missing.',
 
     // Placeholders
     'Type guarantor name...' => 'Type guarantor name...',
