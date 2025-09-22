@@ -619,7 +619,7 @@
 
     {{-- ====== بطاقة زكاة المال ====== --}}
     <div class="row g-3 mb-4">
-        <div class="col-12 col-lg-6 col-xl-5">
+        <div class="col-12">
             <div class="kpi-card p-3 h-100">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <div class="kpi-icon"><i class="bi bi-moon-stars fs-5 text-info"></i></div>
