@@ -31,6 +31,26 @@
     thead { display: table-header-group; }
     tr { page-break-inside: avoid; }
     .badge-status { color:#fff; }
+    .statement-table {
+      width: 100%;
+      max-width: 100%;
+      table-layout: fixed;
+    }
+    .statement-table th,
+    .statement-table td {
+      vertical-align: middle;
+      word-break: break-word;
+    }
+    .statement-table .col-index { width: 6%; }
+    .statement-table .col-contract { width: 12%; }
+    .statement-table .col-status { width: 12%; }
+    .statement-table .col-customer { width: 20%; }
+    .statement-table .col-share { width: 8%; }
+    .statement-table .col-capital { width: 10%; }
+    .statement-table .col-net-profit { width: 10%; }
+    .statement-table .col-paid { width: 11%; }
+    .statement-table .col-remaining { width: 11%; }
+    .statement-table .amount { white-space: nowrap; }
   </style>
 @endpush
 
@@ -99,18 +119,18 @@
     </div>
   </div>
 
-  <x-table head-class="table-light" striped bordered class="text-center" :hover="false">
+  <x-table head-class="table-light" striped bordered class="text-center statement-table" :hover="false">
       <x-slot name="head">
           <tr>
-            <th style="width:56px">#</th>
-            <th class="text-start">@lang('app.Contract')</th>
-            <th>@lang('app.Status')</th>
-            <th class="text-start">{{ __('Customer') }}</th>
-            <th>@lang('reports.Share %')</th>
-            <th>@lang('reports.Capital')</th>
-            <th>@lang('reports.Net Profit')</th>
-            <th>{{ __('Paid to Investor from Customer') }}</th>
-            <th>{{ __('Remaining on Customers') }}</th>
+            <th class="col-index text-nowrap">#</th>
+            <th class="col-contract text-start text-nowrap">@lang('app.Contract')</th>
+            <th class="col-status text-nowrap">@lang('app.Status')</th>
+            <th class="col-customer text-start text-nowrap">{{ __('Customer') }}</th>
+            <th class="col-share text-end text-nowrap">@lang('reports.Share %')</th>
+            <th class="col-capital text-end text-nowrap">@lang('reports.Capital')</th>
+            <th class="col-net-profit text-end text-nowrap">@lang('reports.Net Profit')</th>
+            <th class="col-paid text-end text-nowrap">{{ __('Paid to Investor from Customer') }}</th>
+            <th class="col-remaining text-end text-nowrap">{{ __('Remaining on Customers') }}</th>
           </tr>
       </x-slot>
       @forelse($rows as $i => $row)
@@ -122,38 +142,41 @@
           if (str_contains($s,'منتهي') || str_contains(strtolower($s),'closed')) $badge = 'bg-danger';
         @endphp
         <tr>
-          <td>{{ $i+1 }}</td>
-          <td class="text-start">#{{ $row['contract_id'] }}</td>
-          <td><span class="badge {{ $badge }} badge-status">{{ $statusTxt }}</span></td>
-          <td class="text-start">{{ $row['customer'] }}</td>
-          <td>{{ number_format($row['share_pct'] ?? 0, 2) }}</td>
-          <td>{{ number_format($row['share_value'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
-          <td>{{ number_format($row['profit_net'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></td>
-          <td class="text-start">
+          <td class="col-index text-nowrap">{{ $i+1 }}</td>
+          <td class="col-contract text-start text-nowrap">#{{ $row['contract_id'] }}</td>
+          <td class="col-status"><span class="badge {{ $badge }} badge-status">{{ $statusTxt }}</span></td>
+          <td class="col-customer text-start">{{ $row['customer'] }}</td>
+          <td class="col-share text-end text-nowrap">{{ number_format($row['share_pct'] ?? 0, 2) }}</td>
+          <td class="col-capital text-end">
+            <div class="amount">{{ number_format($row['share_value'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></div>
+          </td>
+          <td class="col-net-profit text-end">
+            <div class="amount">{{ number_format($row['profit_net'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></div>
+          </td>
+          <td class="col-paid text-end">
             @php
               $normalizedStatus = mb_strtolower((string)($row['status_name'] ?? ''), 'UTF-8');
               $isRaisedStatus = $normalizedStatus === mb_strtolower('مرفوع فيه', 'UTF-8');
               $paidInstallments = (float)($row['paid_to_investor_from_installments'] ?? 0);
               $paidClaims = (float)($row['paid_to_investor_from_claims'] ?? 0);
             @endphp
-            <div>
-              {{ number_format($row['paid_to_investor_from_customer'] ?? 0, 2) }}
-              <span class="small-muted">{{ $cs }}</span>
-            </div>
+            <div class="amount">{{ number_format($row['paid_to_investor_from_customer'] ?? 0, 2) }} <span class="small-muted">{{ $cs }}</span></div>
             @if($isRaisedStatus)
-              <div class="small-muted">
+              <div class="small-muted text-start mt-1">
                 {{ __('reports.Paid via Installments') }}:
                 <span class="fw-semibold">{{ number_format($paidInstallments, 2) }}</span>
                 <span class="small-muted">{{ $cs }}</span>
               </div>
-              <div class="small-muted">
+              <div class="small-muted text-start">
                 {{ __('reports.Paid via Claims') }}:
                 <span class="fw-semibold">{{ number_format($paidClaims, 2) }}</span>
                 <span class="small-muted">{{ $cs }}</span>
               </div>
             @endif
           </td>
-          <td>{{ number_format(max(0, $row['remaining_on_customers'] ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span></td>
+          <td class="col-remaining text-end">
+            <div class="amount">{{ number_format(max(0, $row['remaining_on_customers'] ?? 0), 2) }} <span class="small-muted">{{ $cs }}</span></div>
+          </td>
         </tr>
       @empty
         <tr>
