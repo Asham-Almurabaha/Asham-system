@@ -10,6 +10,12 @@
     $rtlLocales = ['ar', 'he'];
     $isRtl = in_array($localeRoot, $rtlLocales, true);
 
+    $errorBag = $errors ?? session('errors');
+
+    if (! $errorBag instanceof \Illuminate\Support\ViewErrorBag) {
+        $errorBag = new \Illuminate\Support\ViewErrorBag();
+    }
+
     $flashKeys = [
         'success' => 'success',
         'status' => 'success',
@@ -36,10 +42,10 @@
         ]);
     }
 
-    if ($errors->any()) {
+    if ($errorBag->any()) {
         $sessionMessages->push([
             'type' => 'danger',
-            'content' => $errors->all(),
+            'content' => $errorBag->all(),
             'is_list' => true,
             'title' => __('Please review the highlighted errors below.'),
         ]);
