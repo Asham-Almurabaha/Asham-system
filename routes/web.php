@@ -30,6 +30,10 @@ Route::get('/', function () {
         : redirect()->route('login');
 });
 
+Route::view('/loading', 'loading', [
+    'setting' => Setting::first(),
+])->name('loading');
+
 Route::middleware('auth')->group(function () {
 
     Route::get('/global-search', GlobalSearchController::class)
