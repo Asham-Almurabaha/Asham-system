@@ -164,7 +164,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label for="investment_start_date" class="form-label">{{ __('investors::investors.Investment Start Date') }}</label>
+                        <label for="investment_start_date" class="form-label">{{ __('investors::investors.Investment Start Date') }} <span class="text-danger">*</span></label>
                         <input
                             type="date"
                             name="investment_start_date"
@@ -172,12 +172,13 @@
                             class="form-control js-date @error('investment_start_date') is-invalid @enderror"
                             placeholder="{{ __('YYYY-MM-DD') }}"
                             value="{{ old('investment_start_date') }}"
-                            dir="ltr">
+                            dir="ltr"
+                            required>
                         @error('investment_start_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-6">
-                        <label for="office_share_percentage" class="form-label">{{ __('investors::investors.Office Share %') }} (%)</label>
+                        <label for="office_share_percentage" class="form-label">{{ __('investors::investors.Office Share %') }} (%) <span class="text-danger">*</span></label>
                         <input
                             type="number"
                             name="office_share_percentage"
@@ -185,6 +186,7 @@
                             class="form-control @error('office_share_percentage') is-invalid @enderror"
                             value="{{ old('office_share_percentage', '0') }}"
                             min="0" max="100" step="0.01" inputmode="decimal" dir="ltr"
+                            required
                             placeholder="{{ __('investors::investors.Example: 12.50') }}">
                         <div class="form-text">{{ __('investors::investors.The value is between 0 and 100.') }}</div>
                         @error('office_share_percentage') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -228,12 +230,42 @@ document.addEventListener('DOMContentLoaded', function () {
     bindPreview('id_card_image','id-preview-wrap','id-preview');
     bindPreview('contract_image','contract-preview-wrap','contract-preview');
 
+    const form = document.querySelector('form[action="{{ route('investors.store') }}"]') ?? document.querySelector('form');
     const pct = document.getElementById('office_share_percentage');
+    const zeroShareMessage = @json(__('investors::investors.Zero Office Share Confirmation'));
     pct?.addEventListener('change', () => {
         let v = parseFloat(pct.value || '0');
         if (isNaN(v)) v = 0;
         v = Math.min(100, Math.max(0, v));
         pct.value = v.toFixed(2);
+    });
+
+    form?.addEventListener('submit', (event) => {
+        if (form && typeof form.checkValidity === 'function' && !form.checkValidity()) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (typeof form.reportValidity === 'function') {
+                form.reportValidity();
+            }
+            return;
+        }
+
+        if (!pct) {
+            return;
+        }
+
+        let value = parseFloat(pct.value || '0');
+        if (!isFinite(value)) {
+            value = 0;
+        }
+
+        if (Math.abs(value) < 0.000001) {
+            const confirmed = window.confirm(zeroShareMessage);
+            if (!confirmed) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        }
     });
 
     setTimeout(() => {

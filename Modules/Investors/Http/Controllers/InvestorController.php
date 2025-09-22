@@ -278,7 +278,7 @@ class InvestorController extends Controller
             'id_card_image' => ['nullable', 'image', 'max:2048'],
             'contract_image' => ['nullable', 'image', 'max:2048'],
             'office_share_percentage' => ['required', 'numeric', 'between:0,100'],
-            'investment_start_date' => ['nullable', 'date'],
+            'investment_start_date' => ['required', 'date'],
         ]);
 
         if ($request->hasFile('id_card_image')) {
@@ -291,7 +291,7 @@ class InvestorController extends Controller
 
         Investor::create($validated);
 
-        return redirect()->route('investors.index')->with('success', 'تم إضافة المستثمر بنجاح');
+        return redirect()->route('investors.index')->with('success', __('investors::investors.Investor created successfully'));
     }
 
     public function show(Request $request, Investor $investor, InvestorDataService $service, InstallmentsMonthlyService $installmentsSvc)
@@ -395,7 +395,7 @@ class InvestorController extends Controller
 
         $investor->update($validated);
 
-        return redirect()->route('investors.index')->with('success', 'تم تحديث بيانات المستثمر بنجاح');
+        return redirect()->route('investors.index')->with('success', __('investors::investors.Investor updated successfully'));
     }
 
     public function destroy(Investor $investor)
@@ -409,7 +409,7 @@ class InvestorController extends Controller
 
         $investor->delete();
 
-        return redirect()->route('investors.index')->with('success', 'تم حذف المستثمر بنجاح');
+        return redirect()->route('investors.index')->with('success', __('investors::investors.Investor deleted successfully'));
     }
 
     protected function countActiveInvestors(): int
