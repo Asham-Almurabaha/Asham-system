@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\LedgerEntry;
+use App\Models\OfficeTransaction;
 use Modules\Investors\Entities\Investor;
 // use App\Models\Product; // ❌ لم نعد نستخدمه
 use App\Models\ProductTransaction;
+use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Lookups\Entities\ProductType;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
@@ -332,6 +334,29 @@ class LedgerController extends Controller
                 }
             }
 
+            // ربط القيد بحركة في دفتر المستثمر أو المكتب
+            if ($data['party_category'] === 'investors') {
+                $transaction = InvestorTransaction::create([
+                    'investor_id'      => (int) $data['investor_id'],
+                    'status_id'        => (int) $data['status_id'],
+                    'amount'           => $amount,
+                    'transaction_date' => $data['transaction_date'],
+                    'notes'            => $data['notes'],
+                ]);
+
+                $entry->update(['ref' => 'IT-' . $transaction->id]);
+            } else {
+                $transaction = OfficeTransaction::create([
+                    'investor_id'      => !empty($data['investor_id']) ? (int) $data['investor_id'] : null,
+                    'status_id'        => (int) $data['status_id'],
+                    'amount'           => $amount,
+                    'transaction_date' => $data['transaction_date'],
+                    'notes'            => $data['notes'],
+                ]);
+
+                $entry->update(['ref' => 'OT-' . $transaction->id]);
+            }
+
             // TODO: تحديث أرصدة الخزن/البنوك لو عندك
         });
 
@@ -579,7 +604,7 @@ class LedgerController extends Controller
         $typeId    = (int) $status->transaction_type_id;
         $direction = $this->directionFromType($typeId);
 
-        DB::transaction(function () use ($data, $bank, $safe, $typeId, $direction, $isGoods, $productRows) {
+        DB::transaction(function () use ($data, $bank, $safe, $typeId, $direction, $isGoods, $productRows, $total) {
             $bankEntry = null;
             $safeEntry = null;
 
@@ -658,6 +683,39 @@ class LedgerController extends Controller
 
                         ProductTransaction::create($payload);
                     }
+                }
+            }
+
+            $createdEntries = collect([$bankEntry, $safeEntry])->filter();
+
+            if ($createdEntries->isNotEmpty()) {
+                $transactionDate = $data['transaction_date'];
+                $entryIds        = $createdEntries->pluck('id');
+
+                if ($data['party_category'] === 'investors') {
+                    $transaction = InvestorTransaction::create([
+                        'investor_id'      => (int) $data['investor_id'],
+                        'status_id'        => (int) $data['status_id'],
+                        'amount'           => $total,
+                        'transaction_date' => $transactionDate,
+                        'notes'            => $data['notes'],
+                    ]);
+
+                    LedgerEntry::whereIn('id', $entryIds)->update([
+                        'ref' => 'IT-' . $transaction->id,
+                    ]);
+                } else {
+                    $transaction = OfficeTransaction::create([
+                        'investor_id'      => !empty($data['investor_id']) ? (int) $data['investor_id'] : null,
+                        'status_id'        => (int) $data['status_id'],
+                        'amount'           => $total,
+                        'transaction_date' => $transactionDate,
+                        'notes'            => $data['notes'],
+                    ]);
+
+                    LedgerEntry::whereIn('id', $entryIds)->update([
+                        'ref' => 'OT-' . $transaction->id,
+                    ]);
                 }
             }
 
