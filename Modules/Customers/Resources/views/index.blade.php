@@ -138,21 +138,8 @@
       {{-- Template button removed as requested --}}
     </div>
 
-<<<<<<< ours
-    <form method="POST" action="{{ route('customers.refresh-statuses') }}" class="d-inline-block">
-      @csrf
-      <x-button.action
-        type="submit"
-        variant="warning"
-        :outline="true"
-        onclick="return confirm('{{ __('customers::messages.Refresh Customer Statuses Confirmation') }}');"
-      >
-        <i class="bi bi-arrow-repeat"></i> {{ __('customers::messages.Refresh Customer Statuses') }}
-      </x-button.action>
-=======
     <form id="customers-refresh-statuses-form" method="POST" action="{{ route('customers.refresh-statuses') }}" class="d-none">
       @csrf
->>>>>>> theirs
     </form>
 
     <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
