@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         let labels = @json($distribution['labels'] ?? []);
         if (!labels.length) {
-            labels = ['{{ __('dashboard.Banks') }}', '{{ __('dashboard.Safes') }}'];
+            labels = @json([__('dashboard.Banks'), __('dashboard.Safes')]);
         }
         const data = @json($distribution['data'] ?? []);
         if (!data.length) {
