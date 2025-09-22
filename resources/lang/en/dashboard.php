@@ -64,4 +64,12 @@ return [
     'Account' => 'Account',
     'Estimated Balance = Opening Balance + In - Out' => 'Estimated Balance = Opening Balance + In - Out',
     'Net = In - Out' => 'Net = In - Out',
+    'Refresh Statuses' => 'Refresh Statuses',
+    'Refresh statuses tooltip' => 'Refresh contract, customer, and guarantor statuses in sequence.',
+    'Refresh statuses start' => 'Preparing to refresh related statuses…',
+    'Refreshing contract statuses' => 'Refreshing contract statuses…',
+    'Refreshing customer statuses' => 'Refreshing customer statuses…',
+    'Refreshing guarantor statuses' => 'Refreshing guarantor statuses…',
+    'Refresh statuses success' => 'Statuses have been refreshed successfully.',
+    'Refresh statuses error' => 'Unable to refresh the statuses. Please try again.',
 ];

@@ -64,4 +64,12 @@ return [
     'Account' => 'الحساب',
     'Estimated Balance = Opening Balance + In - Out' => 'الرصيد التقديري = الرصيد الافتتاحي + داخل - خارج',
     'Net = In - Out' => 'الصافي = داخل - خارج',
+    'Refresh Statuses' => 'تحديث الحالات',
+    'Refresh statuses tooltip' => 'تحديث حالات العقود ثم العملاء ثم الكفلاء بالتتابع.',
+    'Refresh statuses start' => 'جارٍ التحضير لتحديث الحالات المرتبطة…',
+    'Refreshing contract statuses' => 'جارٍ تحديث حالات العقود…',
+    'Refreshing customer statuses' => 'جارٍ تحديث حالات العملاء…',
+    'Refreshing guarantor statuses' => 'جارٍ تحديث حالات الكفلاء…',
+    'Refresh statuses success' => 'تم تحديث الحالات بنجاح.',
+    'Refresh statuses error' => 'تعذّر تحديث الحالات. حاول مرة أخرى.',
 ];

@@ -138,6 +138,25 @@
                 <span class="badge-chip" data-bs-toggle="tooltip" title="{{ __('dashboard.Profit + Sales Difference + Mukataba') }}">
                     <i class="bi bi-building me-1"></i> {{ __('dashboard.Office Income Net') }}: {{ number_format($officeNet, 2) }}
                 </span>
+
+                <div class="d-flex flex-column align-items-end gap-1">
+                    <x-button.action
+                        type="button"
+                        variant="secondary"
+                        :outline="true"
+                        size="sm"
+                        id="dashboard-refresh-statuses"
+                        class="d-inline-flex align-items-center gap-2"
+                        data-bs-toggle="tooltip"
+                        title="{{ __('dashboard.Refresh statuses tooltip') }}"
+                        aria-label="{{ __('dashboard.Refresh Statuses') }}"
+                    >
+                        <span class="spinner-border spinner-border-sm d-none" data-role="spinner" role="status" aria-hidden="true"></span>
+                        <i class="bi bi-arrow-clockwise" data-role="icon" aria-hidden="true"></i>
+                        <span class="d-none d-md-inline" aria-hidden="true">{{ __('dashboard.Refresh Statuses') }}</span>
+                    </x-button.action>
+                    <span id="dashboard-refresh-statuses-message" class="small text-muted text-end" aria-live="polite"></span>
+                </div>
             </div>
         </div>
     </div>
@@ -467,95 +486,211 @@
     };
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function(){
-    // Tooltips
-    const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el, {container: 'body'}));
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle=\"tooltip\"]'));
+    tooltipTriggerList.forEach(function (el) {
+        new bootstrap.Tooltip(el, { container: 'body' });
+    });
 
-    // Line: Daily cashflow
-    (function(){
+    const statusRefreshBtn = document.getElementById('dashboard-refresh-statuses');
+    if (statusRefreshBtn) {
+        const spinnerEl = statusRefreshBtn.querySelector('[data-role=\"spinner\"]');
+        const iconEl = statusRefreshBtn.querySelector('[data-role=\"icon\"]');
+        const messageEl = document.getElementById('dashboard-refresh-statuses-message');
+        const refreshSteps = @json([
+            [
+                'url' => route('contracts.refresh-statuses'),
+                'progressMessage' => __('dashboard.Refreshing contract statuses'),
+            ],
+            [
+                'url' => route('customers.refresh-statuses'),
+                'progressMessage' => __('dashboard.Refreshing customer statuses'),
+            ],
+            [
+                'url' => route('guarantors.refresh-statuses'),
+                'progressMessage' => __('dashboard.Refreshing guarantor statuses'),
+            ],
+        ]);
+        const refreshMessages = {
+            start: '{{ __('dashboard.Refresh statuses start') }}',
+            success: '{{ __('dashboard.Refresh statuses success') }}',
+            error: '{{ __('dashboard.Refresh statuses error') }}',
+        };
+
+        statusRefreshBtn.addEventListener('click', async function () {
+            if (statusRefreshBtn.disabled) {
+                return;
+            }
+
+            if (messageEl) {
+                messageEl.textContent = refreshMessages.start;
+                messageEl.classList.remove('text-success', 'text-danger');
+                messageEl.classList.add('text-muted');
+            }
+
+            statusRefreshBtn.disabled = true;
+            statusRefreshBtn.setAttribute('aria-busy', 'true');
+
+            if (spinnerEl) {
+                spinnerEl.classList.remove('d-none');
+            }
+            if (iconEl) {
+                iconEl.classList.add('d-none');
+            }
+
+            const csrfToken = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content') ?? '';
+
+            try {
+                for (const step of refreshSteps) {
+                    if (messageEl && step.progressMessage) {
+                        messageEl.textContent = step.progressMessage;
+                        messageEl.classList.remove('text-success', 'text-danger');
+                        messageEl.classList.add('text-muted');
+                    }
+
+                    const response = await fetch(step.url, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Request failed with status ${response.status}`);
+                    }
+                }
+
+                if (messageEl) {
+                    messageEl.textContent = refreshMessages.success;
+                    messageEl.classList.remove('text-muted', 'text-danger');
+                    messageEl.classList.add('text-success');
+                }
+            } catch (error) {
+                if (messageEl) {
+                    messageEl.textContent = refreshMessages.error;
+                    messageEl.classList.remove('text-muted', 'text-success');
+                    messageEl.classList.add('text-danger');
+                }
+
+                console.error('Dashboard status refresh failed:', error);
+            } finally {
+                if (spinnerEl) {
+                    spinnerEl.classList.add('d-none');
+                }
+                if (iconEl) {
+                    iconEl.classList.remove('d-none');
+                }
+
+                statusRefreshBtn.disabled = false;
+                statusRefreshBtn.removeAttribute('aria-busy');
+            }
+        });
+    }
+
+    (function () {
         const el = document.getElementById('cashLineChart');
-        if (!el) return;
-        const labels = @json(($timeSeries['labels'] ?? ($timeSeries['labels'] ?? [])));
-        const inflow = @json(($timeSeries['in']     ?? ($timeSeries['in']     ?? [])));
-        const outflow= @json(($timeSeries['out']    ?? ($timeSeries['out']    ?? [])));
-        const net    = @json(($timeSeries['net']    ?? ($timeSeries['net']    ?? [])));
-        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">' + chartTranslations.noDailyData + '</div>'; return; }
+        if (!el) {
+            return;
+        }
+        const labels = @json($timeSeries['labels'] ?? []);
+        const inflow = @json($timeSeries['in'] ?? []);
+        const outflow = @json($timeSeries['out'] ?? []);
+        const net = @json($timeSeries['net'] ?? []);
+        if (!labels.length) {
+            el.parentElement.innerHTML = '<div class=\"text-muted\">' + chartTranslations.noDailyData + '</div>';
+            return;
+        }
         new Chart(el, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
-                    { label: chartTranslations.in, data: inflow, tension:.3, borderWidth:2, fill:false },
-                    { label: chartTranslations.out, data: outflow, tension:.3, borderWidth:2, fill:false },
-                    { label: chartTranslations.net, data: net, tension:.3, borderWidth:2, fill:false }
-                ]
+                    { label: chartTranslations.in, data: inflow, tension: 0.3, borderWidth: 2, fill: false },
+                    { label: chartTranslations.out, data: outflow, tension: 0.3, borderWidth: 2, fill: false },
+                    { label: chartTranslations.net, data: net, tension: 0.3, borderWidth: 2, fill: false },
+                ],
             },
             options: {
-                responsive:true,
-                interaction:{ mode:'index', intersect:false },
-                plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } },
-                scales:{ y:{ beginAtZero:true } }
-            }
+                responsive: true,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'bottom' }, tooltip: { rtl: true } },
+                scales: { y: { beginAtZero: true } },
+            },
         });
     })();
 
-    // Bar (stacked): Monthly in/out
-    (function(){
+    (function () {
         const el = document.getElementById('monthlyBarChart');
-        if (!el) return;
-        const labels = @json(($monthlySeries['labels'] ?? ($monthlySeries['labels'] ?? [])));
-        const inflow = @json(($monthlySeries['in']     ?? ($monthlySeries['in']     ?? [])));
-        const outflow= @json(($monthlySeries['out']    ?? ($monthlySeries['out']    ?? [])));
-        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">' + chartTranslations.noMonthlyData + '</div>'; return; }
+        if (!el) {
+            return;
+        }
+        const labels = @json($monthlySeries['labels'] ?? []);
+        const inflow = @json($monthlySeries['in'] ?? []);
+        const outflow = @json($monthlySeries['out'] ?? []);
+        if (!labels.length) {
+            el.parentElement.innerHTML = '<div class=\"text-muted\">' + chartTranslations.noMonthlyData + '</div>';
+            return;
+        }
         new Chart(el, {
             type: 'bar',
             data: {
                 labels,
                 datasets: [
-                    { label: chartTranslations.in, data: inflow, borderWidth:1, stack:'s' },
-                    { label: chartTranslations.out, data: outflow, borderWidth:1, stack:'s' }
-                ]
+                    { label: chartTranslations.in, data: inflow, borderWidth: 1, stack: 's' },
+                    { label: chartTranslations.out, data: outflow, borderWidth: 1, stack: 's' },
+                ],
             },
             options: {
-                responsive:true,
-                plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } },
-                scales:{ x:{ stacked:true }, y:{ stacked:true, beginAtZero:true } }
-            }
+                responsive: true,
+                plugins: { legend: { position: 'bottom' }, tooltip: { rtl: true } },
+                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+            },
         });
     })();
 
-    // Doughnut: Account distribution (banks vs safes)
-    (function(){
+    (function () {
         const el = document.getElementById('acctDistChart');
-        if (!el) return;
-        let labels = @json(($distribution['labels'] ?? []));
-        if (!labels.length) { labels = ['{{ __('dashboard.Banks') }}','{{ __('dashboard.Safes') }}']; }
-        const data   = @json(($distribution['data']   ?? ($distribution['data']   ?? [0,0])));
-        if (!data.length) { el.parentElement.innerHTML = '<div class="text-muted">{{ __('dashboard.No distribution data.') }}</div>'; return; }
+        if (!el) {
+            return;
+        }
+        let labels = @json($distribution['labels'] ?? []);
+        if (!labels.length) {
+            labels = ['{{ __('dashboard.Banks') }}', '{{ __('dashboard.Safes') }}'];
+        }
+        const data = @json($distribution['data'] ?? []);
+        if (!data.length) {
+            el.parentElement.innerHTML = '<div class=\"text-muted\">' + chartTranslations.noDistributionData + '</div>';
+            return;
+        }
         new Chart(el, {
             type: 'doughnut',
-            data: { labels, datasets:[{ data, borderWidth:1 }] },
-            options: { responsive:true, cutout:'58%', plugins:{ legend:{ position:'bottom' }, tooltip:{ rtl:true } } }
+            data: { labels, datasets: [{ data, borderWidth: 1 }] },
+            options: { responsive: true, cutout: '58%', plugins: { legend: { position: 'bottom' }, tooltip: { rtl: true } } },
         });
     })();
 
-    // Horizontal Bar: Top balances
-    (function(){
+    (function () {
         const el = document.getElementById('topBalancesChart');
-        if (!el) return;
+        if (!el) {
+            return;
+        }
         const labels = @json($topBalLabels ?? []);
-        const data   = @json($topBalData ?? []);
-        if (!labels.length) { el.parentElement.innerHTML = '<div class="text-muted">{{ __('dashboard.No sufficient balances to display.') }}</div>'; return; }
+        const data = @json($topBalData ?? []);
+        if (!labels.length) {
+            el.parentElement.innerHTML = '<div class=\"text-muted\">' + chartTranslations.noSufficientBalances + '</div>';
+            return;
+        }
         new Chart(el, {
             type: 'bar',
-            data: { labels, datasets: [{ label:'{{ __('dashboard.Estimated Balance') }}', data, borderWidth:1 }] },
+            data: { labels, datasets: [{ label: '{{ __('dashboard.Estimated Balance') }}', data, borderWidth: 1 }] },
             options: {
                 indexAxis: 'y',
-                responsive:true,
-                plugins:{ legend:{ display:false }, tooltip:{ rtl:true } },
-                scales:{ x:{ beginAtZero:true } }
-            }
+                responsive: true,
+                plugins: { legend: { display: false }, tooltip: { rtl: true } },
+                scales: { x: { beginAtZero: true } },
+            },
         });
     })();
 });
