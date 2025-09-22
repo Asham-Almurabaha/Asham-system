@@ -90,16 +90,35 @@ trait HandlesContractInvestors
         $sum = $validator->validate($investors);
 
         if ($sum > self::EPS && !empty($investors)) {
+            $timestamp = now();
             $pivot = [];
+
+            $investorIds = collect($investors)
+                ->map(fn ($row) => (int) ($row['id'] ?? 0))
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values()
+                ->all();
+
+            $officeShares = [];
+            if (!empty($investorIds)) {
+                $officeShares = Investor::query()
+                    ->whereIn('id', $investorIds)
+                    ->pluck('office_share_percentage', 'id')
+                    ->map(fn ($value) => (float) $value)
+                    ->all();
+            }
+
             foreach ($investors as $inv) {
                 $id = (int)$inv['id'];
                 $value = round(($contract->contract_value * (float)$inv['pct'])/100, 2);
                 if ($value <= 0) throw new \RuntimeException('قيمة مشاركة المستثمر يجب أن تكون > 0.');
                 $pivot[$id] = [
-                    'share_percentage' => (float)$inv['pct'],
-                    'share_value'      => (float)$value,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
+                    'share_percentage'        => (float)$inv['pct'],
+                    'share_value'             => (float)$value,
+                    'office_share_percentage' => (float) ($officeShares[$id] ?? 0.0),
+                    'created_at'              => $timestamp,
+                    'updated_at'              => $timestamp,
                 ];
             }
             $contract->investors()->sync($pivot);

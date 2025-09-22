@@ -15,6 +15,7 @@ class CreateContractInvestorTable extends Migration
 
             $table->decimal('share_percentage', 5, 2)->default(0); // نسبة مشاركة المستثمر في العقد
             $table->decimal('share_value', 15, 2)->default(0); // قيمة مشاركة المستثمر في العقد
+            $table->decimal('office_share_percentage', 5, 2)->default(0); // نسبة المكتب من ربح المستثمر
 
             $table->timestamps();
 

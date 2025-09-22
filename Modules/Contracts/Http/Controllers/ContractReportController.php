@@ -92,9 +92,17 @@ CASE
 END
 SQL;
 
+        $officePctExpr = <<<'SQL'
+CASE
+    WHEN COALESCE(ci.office_share_percentage, 0) > 0
+        THEN COALESCE(ci.office_share_percentage, 0)
+    ELSE COALESCE(inv.office_share_percentage, 0)
+END
+SQL;
+
         $officeDueSelect = <<<SQL
 ci.contract_id,
-ROUND(SUM(($profitShareExpr) * COALESCE(inv.office_share_percentage, 0) / 100), 2) AS office_due
+ROUND(SUM(($profitShareExpr) * ({$officePctExpr}) / 100), 2) AS office_due
 SQL;
 
         $officeDueSub = DB::table('contract_investor as ci')

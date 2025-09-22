@@ -51,7 +51,7 @@ class Investor extends Model
     public function contracts()
     {
         return $this->belongsToMany(Contract::class, 'contract_investor')
-                        ->withPivot(['share_percentage', 'share_value'])
+                        ->withPivot(['share_percentage', 'share_value', 'office_share_percentage'])
                         ->withTimestamps();
     }
 

@@ -522,7 +522,19 @@ class ContractController extends Controller
             ], 422);
         }
 
+        $incomingIds = array_values(array_unique($incomingIds));
+
+        $officeShares = [];
+        if (!empty($incomingIds)) {
+            $officeShares = Investor::query()
+                ->whereIn('id', $incomingIds)
+                ->pluck('office_share_percentage', 'id')
+                ->map(fn ($value) => (float) $value)
+                ->all();
+        }
+
         $pivotData = [];
+        $timestamp = now();
         foreach ($incoming as $s) {
             $value = round(($contractValue * $s->sharePercentage) / 100, 2);
             if ($value <= 0) {
@@ -535,8 +547,9 @@ class ContractController extends Controller
             $pivotData[$s->id] = [
                 'share_percentage' => (float) $s->sharePercentage,
                 'share_value'      => (float) $value,
-                'created_at'       => now(),
-                'updated_at'       => now(),
+                'office_share_percentage' => (float) ($officeShares[$s->id] ?? 0.0),
+                'created_at'       => $timestamp,
+                'updated_at'       => $timestamp,
             ];
         }
 
@@ -778,6 +791,25 @@ class ContractController extends Controller
         $now = now();
         $pivot = [];
 
+        $ids = [];
+        foreach ($investors as $inv) {
+            $id = isset($inv['id']) ? (int) $inv['id'] : 0;
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        $ids = array_values(array_unique($ids));
+
+        $officeShares = [];
+        if (!empty($ids)) {
+            $officeShares = Investor::query()
+                ->whereIn('id', $ids)
+                ->pluck('office_share_percentage', 'id')
+                ->map(fn ($value) => (float) $value)
+                ->all();
+        }
+
         foreach ($investors as $inv) {
             $id         = (int) ($inv['id'] ?? 0);
             $percentage = (float) ($inv['share_percentage'] ?? 0);
@@ -789,6 +821,7 @@ class ContractController extends Controller
             $pivot[$id] = [
                 'share_percentage' => $percentage,
                 'share_value'      => $value,
+                'office_share_percentage' => (float) ($officeShares[$id] ?? 0.0),
                 'created_at'       => $now,
                 'updated_at'       => $now,
             ];

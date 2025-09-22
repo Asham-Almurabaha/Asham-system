@@ -308,6 +308,7 @@ class ContractClaimControllerTest extends TestCase
         $contract->investors()->attach($investor->id, [
             'share_percentage' => 100,
             'share_value' => 1800,
+            'office_share_percentage' => $investor->office_share_percentage,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -427,6 +428,7 @@ class ContractClaimControllerTest extends TestCase
         $contract->investors()->attach($investor->id, [
             'share_percentage' => 100,
             'share_value' => $contract->total_value,
+            'office_share_percentage' => $investor->office_share_percentage,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -948,6 +950,7 @@ class ContractClaimControllerTest extends TestCase
         $contract->investors()->attach($investor->id, [
             'share_percentage' => 100,
             'share_value' => $contract->total_value,
+            'office_share_percentage' => $investor->office_share_percentage,
         ]);
 
         $paymentDate = now()->toDateString();
@@ -1304,6 +1307,7 @@ class ContractClaimControllerTest extends TestCase
         $contract->investors()->attach($investor->id, [
             'share_percentage' => 100,
             'share_value' => $contract->total_value,
+            'office_share_percentage' => $investor->office_share_percentage,
         ]);
 
         $claim = ContractClaim::create([
@@ -1535,6 +1539,7 @@ class ContractClaimControllerTest extends TestCase
         $contract->investors()->attach($investor->id, [
             'share_percentage' => 100,
             'share_value' => $contract->total_value,
+            'office_share_percentage' => $investor->office_share_percentage,
         ]);
 
         $response = $this->post(route('contract-claims.payments.store', $claim), [

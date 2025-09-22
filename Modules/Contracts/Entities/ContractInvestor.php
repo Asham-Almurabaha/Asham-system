@@ -19,6 +19,7 @@ class ContractInvestor extends Model
         'investor_id',
         'share_percentage',
         'share_value',
+        'office_share_percentage',
     ];
 
     // علاقة العقد

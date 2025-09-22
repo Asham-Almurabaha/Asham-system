@@ -6,6 +6,7 @@
                 <th>المستثمر</th>
                 <th>النسبة (%)</th>
                 <th>قيمة المشاركة</th>
+                <th>نسبة المكتب (%)</th>
             </tr>
         </x-slot>
         @foreach($contract->investors as $inv)
@@ -17,6 +18,7 @@
                 </td>
                 <td>{{ number_format($inv->pivot->share_percentage, 2) }}</td>
                 <td>{{ number_format($inv->pivot->share_value, 2) }}</td>
+                <td>{{ number_format($inv->pivot->office_share_percentage ?? $inv->office_share_percentage ?? 0, 2) }}</td>
             </tr>
         @endforeach
     </x-table>

@@ -368,7 +368,7 @@ class InvestorReportController extends Controller
         $capitalExpr = "ROUND($capitalExprRaw, 2)";
         $shareRatioExpr = "CASE WHEN COALESCE(ci.share_percentage, 0) > 0 THEN COALESCE(ci.share_percentage, 0) / 100 WHEN COALESCE(ci.share_value, 0) > 0 AND COALESCE(c.contract_value, 0) > 0 THEN COALESCE(ci.share_value, 0) / NULLIF(c.contract_value, 0) ELSE 0 END";
         $profitGrossExpr = "ROUND(COALESCE(c.investor_profit, 0) * ($shareRatioExpr), 2)";
-        $officePctExpr = 'COALESCE(inv.office_share_percentage, 0)';
+        $officePctExpr = "CASE WHEN COALESCE(ci.office_share_percentage, 0) > 0 THEN COALESCE(ci.office_share_percentage, 0) ELSE COALESCE(inv.office_share_percentage, 0) END";
         $officeCutExpr = "ROUND($profitGrossExpr * $officePctExpr / 100, 2)";
         $paidExpr = 'COALESCE(paid.paid_in, 0)';
         $profitNetExpr = "GREATEST(ROUND($profitGrossExpr - $officeCutExpr, 2), 0)";

@@ -96,7 +96,9 @@ class ClaimPaymentDistributionService
             }
 
             $investorTotalProfit = max(0, (float) $contract->investor_profit * ($sharePercentage / 100));
-            $officeSharePercent  = (float) ($investor->office_share_percentage ?? 0);
+            $officeSharePercent  = (float) ($investor->pivot->office_share_percentage
+                ?? $investor->office_share_percentage
+                ?? 0);
             $officeProfit        = $officeSharePercent > 0
                 ? round($investorTotalProfit * ($officeSharePercent / 100), 2)
                 : 0.0;
