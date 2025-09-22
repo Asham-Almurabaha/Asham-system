@@ -445,7 +445,15 @@ class CustomerController extends Controller
         $titles = Title::all();
         $nationalities = Nationality::all();
         $customerStatuses = CustomerStatus::select('id', 'name')->orderBy('name')->get();
-        return view('customers::create', compact('titles', 'nationalities', 'customerStatuses'));
+        $statusIds = $this->resolveCustomerStatusIds();
+        $defaultCustomerStatusId = $statusIds['new'] ?? null;
+
+        return view('customers::create', compact(
+            'titles',
+            'nationalities',
+            'customerStatuses',
+            'defaultCustomerStatusId'
+        ));
     }
 
     // حفظ عميل جديد
@@ -453,8 +461,8 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required','string','max:255', Rule::unique('customers','name')],
-            'national_id' => ['nullable','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')],
-            'phone' => ['nullable','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')],
+            'national_id' => ['required','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')],
+            'phone' => ['required','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')],
             'email' => 'nullable|email|max:255',
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
@@ -463,6 +471,13 @@ class CustomerController extends Controller
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);
+
+        if (blank($validated['customer_status_id'] ?? null)) {
+            $statusIds = $this->resolveCustomerStatusIds();
+            if (!blank($statusIds['new'] ?? null)) {
+                $validated['customer_status_id'] = $statusIds['new'];
+            }
+        }
 
         // رفع صورة الهوية
         if ($request->hasFile('id_card_image')) {
@@ -629,8 +644,8 @@ class CustomerController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required','string','max:255', Rule::unique('customers','name')->ignore($customer->id)],
-            'national_id' => ['nullable','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')->ignore($customer->id)],
-            'phone' => ['nullable','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')->ignore($customer->id)],
+            'national_id' => ['required','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')->ignore($customer->id)],
+            'phone' => ['required','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')->ignore($customer->id)],
             'email' => 'nullable|email|max:255',
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
@@ -639,6 +654,13 @@ class CustomerController extends Controller
             'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'notes' => 'nullable|string',
         ]);
+
+        if (blank($validated['customer_status_id'] ?? null)) {
+            $statusIds = $this->resolveCustomerStatusIds();
+            if (!blank($statusIds['new'] ?? null)) {
+                $validated['customer_status_id'] = $statusIds['new'];
+            }
+        }
 
         // رفع صورة الهوية الجديدة وحذف القديمة
         if ($request->hasFile('id_card_image')) {

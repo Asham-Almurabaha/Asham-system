@@ -24,7 +24,7 @@
 
     <div class="card shadow-sm kpi-card">
         <div class="card-body p-4">
-            <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data" novalidate>
+            <form action="{{ route('customers.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div class="row g-3">
@@ -47,7 +47,7 @@
 
                     {{-- رقم الهوية --}}
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">{{ __('National ID') }}</label>
+                        <label for="national_id" class="form-label">{{ __('National ID') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="national_id"
@@ -56,7 +56,11 @@
                             value="{{ old('national_id') }}"
                             inputmode="numeric"
                             dir="ltr"
+                            required
+                            pattern="^[12][0-9]{9}$"
+                            minlength="10"
                             maxlength="20"
+                            title="{{ __('Enter a 10-digit ID that starts with 1 or 2.') }}"
                             placeholder="{{ __('Example: 1234567890') }}">
                         <div class="form-text">{{ __('Numbers only.') }}</div>
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -64,7 +68,7 @@
 
                     {{-- الهاتف --}}
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">{{ __('Phone') }}</label>
+                        <label for="phone" class="form-label">{{ __('Phone') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="phone"
@@ -73,8 +77,11 @@
                             value="{{ old('phone') }}"
                             inputmode="tel"
                             dir="ltr"
+                            required
+                            pattern="^(?:[+]?9665[0-9]{8}|05[0-9]{8}|9665[0-9]{8})$"
                             maxlength="25"
                             autocomplete="tel"
+                            title="{{ __('Use a valid Saudi mobile number format.') }}"
                             placeholder="{{ __("+9665XXXXXXXX") }}">
                         <div class="form-text">{{ __('Prefer to enter the international code.') }}</div>
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -139,7 +146,7 @@
                             <option value="">{{ __('-- Choose --') }}</option>
                             @foreach (($customerStatuses ?? []) as $status)
                                 @if(is_object($status))
-                                    <option value="{{ $status->id }}" @selected(old('customer_status_id') == $status->id)>{{ $status->name }}</option>
+                                    <option value="{{ $status->id }}" @selected(old('customer_status_id', $defaultCustomerStatusId) == $status->id)>{{ $status->name }}</option>
                                 @endif
                             @endforeach
                         </select>
