@@ -85,6 +85,15 @@
         $timeSeries      = (array)  ($timeSeries     ?? ['labels'=>[], 'in'=>[], 'out'=>[], 'net'=>[]]);
         $monthlySeries   = (array)  ($monthlySeries  ?? ['labels'=>[], 'in'=>[], 'out'=>[]]);
         $distribution    = (array)  ($distribution   ?? ['labels'=>['بنوك','خزن'], 'data'=>[0,0]]);
+        $distributionLabels = isset($distribution['labels']) && is_array($distribution['labels'])
+            ? array_values($distribution['labels'])
+            : [];
+        if (!count($distributionLabels)) {
+            $distributionLabels = [__('dashboard.Banks'), __('dashboard.Safes')];
+        }
+        $distributionData = isset($distribution['data']) && is_array($distribution['data'])
+            ? array_values($distribution['data'])
+            : [];
 
         $banksWithOpen   = collect($banksWithOpen    ?? []);
         $safesWithOpen   = collect($safesWithOpen    ?? []);
@@ -108,6 +117,40 @@
                   )
                 : (float) ($officeTotals->net ?? 0)
               );
+
+        $chartTranslations = [
+            'in' => __('dashboard.In'),
+            'out' => __('dashboard.Out'),
+            'net' => __('dashboard.Net'),
+            'estimatedBalance' => __('dashboard.Estimated Balance'),
+            'banks' => __('dashboard.Banks'),
+            'safes' => __('dashboard.Safes'),
+            'noDailyData' => __('dashboard.No daily data.'),
+            'noMonthlyData' => __('dashboard.No monthly data.'),
+            'noDistributionData' => __('dashboard.No distribution data.'),
+            'noSufficientBalances' => __('dashboard.No sufficient balances to display.'),
+        ];
+
+        $refreshSteps = [
+            [
+                'url' => route('contracts.refresh-statuses'),
+                'progressMessage' => __('dashboard.Refreshing contract statuses'),
+            ],
+            [
+                'url' => route('customers.refresh-statuses'),
+                'progressMessage' => __('dashboard.Refreshing customer statuses'),
+            ],
+            [
+                'url' => route('guarantors.refresh-statuses'),
+                'progressMessage' => __('dashboard.Refreshing guarantor statuses'),
+            ],
+        ];
+
+        $refreshMessages = [
+            'start' => __('dashboard.Refresh statuses start'),
+            'success' => __('dashboard.Refresh statuses success'),
+            'error' => __('dashboard.Refresh statuses error'),
+        ];
     @endphp
 
     {{-- ====== HERO ====== --}}
@@ -471,19 +514,7 @@
 {{-- ====== Scripts ====== --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Translation variables for charts
-    const chartTranslations = {
-        in: '{{ __("dashboard.In") }}',
-        out: '{{ __("dashboard.Out") }}',
-        net: '{{ __("dashboard.Net") }}',
-        estimatedBalance: '{{ __("dashboard.Estimated Balance") }}',
-        banks: '{{ __("dashboard.Banks") }}',
-        safes: '{{ __("dashboard.Safes") }}',
-        noDailyData: '{{ __("dashboard.No daily data.") }}',
-        noMonthlyData: '{{ __("dashboard.No monthly data.") }}',
-        noDistributionData: '{{ __("dashboard.No distribution data.") }}',
-        noSufficientBalances: '{{ __("dashboard.No sufficient balances to display.") }}'
-    };
+    const chartTranslations = @json($chartTranslations);
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -497,25 +528,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const spinnerEl = statusRefreshBtn.querySelector('[data-role=\"spinner\"]');
         const iconEl = statusRefreshBtn.querySelector('[data-role=\"icon\"]');
         const messageEl = document.getElementById('dashboard-refresh-statuses-message');
-        const refreshSteps = @json([
-            [
-                'url' => route('contracts.refresh-statuses'),
-                'progressMessage' => __('dashboard.Refreshing contract statuses'),
-            ],
-            [
-                'url' => route('customers.refresh-statuses'),
-                'progressMessage' => __('dashboard.Refreshing customer statuses'),
-            ],
-            [
-                'url' => route('guarantors.refresh-statuses'),
-                'progressMessage' => __('dashboard.Refreshing guarantor statuses'),
-            ],
-        ]);
-        const refreshMessages = {
-            start: '{{ __('dashboard.Refresh statuses start') }}',
-            success: '{{ __('dashboard.Refresh statuses success') }}',
-            error: '{{ __('dashboard.Refresh statuses error') }}',
-        };
+        const refreshSteps = @json($refreshSteps);
+        const refreshMessages = @json($refreshMessages);
 
         statusRefreshBtn.addEventListener('click', async function () {
             if (statusRefreshBtn.disabled) {
@@ -655,11 +669,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!el) {
             return;
         }
-        let labels = @json($distribution['labels'] ?? []);
+        let labels = @json($distributionLabels);
         if (!labels.length) {
-            labels = @json([__('dashboard.Banks'), __('dashboard.Safes')]);
+            labels = [chartTranslations.banks, chartTranslations.safes];
         }
-        const data = @json($distribution['data'] ?? []);
+        const data = @json($distributionData);
         if (!data.length) {
             el.parentElement.innerHTML = '<div class=\"text-muted\">' + chartTranslations.noDistributionData + '</div>';
             return;
@@ -684,7 +698,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         new Chart(el, {
             type: 'bar',
-            data: { labels, datasets: [{ label: '{{ __('dashboard.Estimated Balance') }}', data, borderWidth: 1 }] },
+            data: { labels, datasets: [{ label: chartTranslations.estimatedBalance, data, borderWidth: 1 }] },
             options: {
                 indexAxis: 'y',
                 responsive: true,
