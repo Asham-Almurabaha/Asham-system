@@ -92,9 +92,14 @@
                   variant="secondary"
                   :outline="true"
                   id="togglePassword"
-                  tabindex="-1"
-                  aria-label="{{ __('Show/Hide password') }}">
-          <i class="bi bi-eye"></i>
+                  aria-controls="password"
+                  aria-pressed="false"
+                  aria-label="{{ __('Show password') }}"
+                  title="{{ __('Show password') }}"
+                  data-show-label="{{ __('Show password') }}"
+                  data-hide-label="{{ __('Hide password') }}"
+                  data-password-toggle-target="password">
+          <i class="bi bi-eye" aria-hidden="true"></i>
         </x-button.action>
         @error('password')
           <div class="invalid-feedback d-block" id="pwdHelp" aria-live="polite"><strong>{{ $message }}</strong></div>
@@ -119,9 +124,14 @@
                   variant="secondary"
                   :outline="true"
                   id="togglePasswordConfirm"
-                  tabindex="-1"
-                  aria-label="{{ __('Show/Hide password') }}">
-          <i class="bi bi-eye"></i>
+                  aria-controls="password-confirm"
+                  aria-pressed="false"
+                  aria-label="{{ __('Show password') }}"
+                  title="{{ __('Show password') }}"
+                  data-show-label="{{ __('Show password') }}"
+                  data-hide-label="{{ __('Hide password') }}"
+                  data-password-toggle-target="password-confirm">
+          <i class="bi bi-eye" aria-hidden="true"></i>
         </x-button.action>
         <div class="invalid-feedback" id="confirmFeedback">{{ __('Passwords do not match.') }}</div>
       </div>
@@ -139,54 +149,54 @@
 @endsection
 
 @push('scripts')
+  @once('password-toggle-script')
+    @include('components.password-toggle-script')
+  @endonce
+@endpush
+
+@push('scripts')
 <script>
 (function () {
   'use strict';
-  document.addEventListener('DOMContentLoaded', function () {
-    // فحص Bootstrap عند الإرسال فقط
-    var forms = document.querySelectorAll('.needs-validation');
-    Array.prototype.slice.call(forms).forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        validateConfirm();
-        if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-      }, false);
-    });
 
-    // إظهار/إخفاء كلمات المرور
-    bindToggle('togglePassword', 'password');
-    bindToggle('togglePasswordConfirm', 'password-confirm');
-
-    // فحص تأكيد كلمة المرور بشكل حيّ
-    ['input','change','keyup'].forEach(function (evt) {
-      document.getElementById('password')?.addEventListener(evt, validateConfirm);
-      document.getElementById('password-confirm')?.addEventListener(evt, validateConfirm);
-    });
-
-    function bindToggle(btnId, inputId) {
-      const btn = document.getElementById(btnId);
-      const inp = document.getElementById(inputId);
-      if (!btn || !inp) return;
-      btn.addEventListener('click', function () {
-        const isText = inp.type === 'text';
-        inp.type = isText ? 'password' : 'text';
-        this.innerHTML = isText ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+  function ready(callback) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function handler() {
+        document.removeEventListener('DOMContentLoaded', handler);
+        callback();
       });
+    } else {
+      callback();
+    }
+  }
+
+  ready(function () {
+    var passwordInput = document.getElementById('password');
+    var confirmInput = document.getElementById('password-confirm');
+
+    if (!passwordInput || !confirmInput) {
+      return;
     }
 
-    function validateConfirm() {
-      const pwd  = document.getElementById('password');
-      const conf = document.getElementById('password-confirm');
-      if (!pwd || !conf) return;
-      if (conf.value && pwd.value !== conf.value) {
-        conf.setCustomValidity('Mismatch');
+    var validateConfirm = function () {
+      if (confirmInput.value && passwordInput.value !== confirmInput.value) {
+        confirmInput.setCustomValidity('Mismatch');
       } else {
-        conf.setCustomValidity('');
+        confirmInput.setCustomValidity('');
       }
+    };
+
+    ['input', 'change', 'blur'].forEach(function (eventName) {
+      passwordInput.addEventListener(eventName, validateConfirm);
+      confirmInput.addEventListener(eventName, validateConfirm);
+    });
+
+    var form = confirmInput.form;
+    if (form) {
+      form.addEventListener('submit', validateConfirm);
     }
+
+    validateConfirm();
   });
 })();
 </script>

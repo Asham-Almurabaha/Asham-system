@@ -53,9 +53,14 @@
                   variant="secondary"
                   :outline="true"
                   id="togglePassword"
-                  tabindex="-1"
-                  aria-label="{{ __('Show/Hide password') }}">
-          <i class="bi bi-eye"></i>
+                  aria-controls="password"
+                  aria-pressed="false"
+                  aria-label="{{ __('Show password') }}"
+                  title="{{ __('Show password') }}"
+                  data-show-label="{{ __('Show password') }}"
+                  data-hide-label="{{ __('Hide password') }}"
+                  data-password-toggle-target="password">
+          <i class="bi bi-eye" aria-hidden="true"></i>
         </x-button.action>
         @error('password')
           <div class="invalid-feedback d-block" id="pwdHelp" aria-live="polite">
@@ -100,33 +105,7 @@
 @endsection
 
 @push('scripts')
-<script>
-(function () {
-  'use strict';
-  document.addEventListener('DOMContentLoaded', function () {
-    // Bootstrap validation on submit only
-    var forms = document.querySelectorAll('.needs-validation');
-    Array.prototype.slice.call(forms).forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-      }, false);
-    });
-
-    // Toggle password visibility
-    const toggleBtn = document.getElementById('togglePassword');
-    const pwdInput  = document.getElementById('password');
-    if (toggleBtn && pwdInput) {
-      toggleBtn.addEventListener('click', function () {
-        const isText = pwdInput.type === 'text';
-        pwdInput.type = isText ? 'password' : 'text';
-        this.innerHTML = isText ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
-      });
-    }
-  });
-})();
-</script>
+  @once('password-toggle-script')
+    @include('components.password-toggle-script')
+  @endonce
 @endpush
