@@ -4,6 +4,11 @@ namespace App\Imports;
 
 use App\Imports\Concerns\DetectsEmptyRows;
 use App\Models\LedgerEntry;
+use App\Models\OfficeTransaction;
+use App\Models\ProductTransaction;
+use Illuminate\Support\Facades\DB;
+use Modules\Investors\Entities\InvestorTransaction;
+use Modules\Lookups\Entities\ProductType;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 use Carbon\Carbon;
@@ -35,6 +40,12 @@ class LedgerEntriesImport implements
     protected int $rowCount      = 0;
     protected int $insertedCount = 0;
     protected int $skippedCount  = 0;
+
+    /** @var int[]|null */
+    private ?array $goodsStatusIds = null;
+
+    /** @var int[]|null */
+    private ?array $cachedProductTypeIds = null;
 
     public function model(array $row)
     {
@@ -91,23 +102,94 @@ class LedgerEntriesImport implements
                 throw new \RuntimeException('تعذّر استنتاج الاتجاه (direction) من نوع الحركة.');
             }
 
-            $entry = new LedgerEntry([
-                'entry_date'            => $date,
-                'investor_id'           => $cat === 'investors' ? $invId : null,
-                'is_office'             => $cat === 'office',
-                'transaction_status_id' => $stId,
-                'transaction_type_id'   => $typeId,
-                'bank_account_id'       => $bank ?: null,
-                'safe_id'               => $safe ?: null,
-                'contract_id'           => $contractId ?: null,
-                'installment_id'        => $installmentId ?: null,
-                'amount'                => $amt,
-                'direction'             => $direction,
-                'ref'                   => $ref,
-                'notes'                 => $notes,
-            ]);
+            $goodsRows = $this->extractGoodsRows($row);
+            $isGoods   = in_array($stId, $this->goodsStatusIds(), true);
 
-            $entry->save();
+            if ($isGoods && empty($goodsRows)) {
+                throw new \RuntimeException('يجب تحديد product_type_id و quantity لحالات البضائع.');
+            }
+
+            if (!empty($goodsRows)) {
+                $this->ensureProductTypesExist($goodsRows);
+            }
+
+            $entry = null;
+
+            DB::transaction(function () use (
+                &$entry,
+                $cat,
+                $invId,
+                $stId,
+                $typeId,
+                $bank,
+                $safe,
+                $contractId,
+                $installmentId,
+                $amt,
+                $direction,
+                $ref,
+                $notes,
+                $date,
+                $goodsRows,
+                $isGoods
+            ) {
+                $entry = new LedgerEntry([
+                    'entry_date'            => $date,
+                    'investor_id'           => $cat === 'investors' ? $invId : null,
+                    'is_office'             => $cat === 'office',
+                    'transaction_status_id' => $stId,
+                    'transaction_type_id'   => $typeId,
+                    'bank_account_id'       => $bank ?: null,
+                    'safe_id'               => $safe ?: null,
+                    'contract_id'           => $contractId ?: null,
+                    'installment_id'        => $installmentId ?: null,
+                    'amount'                => $amt,
+                    'direction'             => $direction,
+                    'ref'                   => $ref,
+                    'notes'                 => $notes,
+                ]);
+
+                $entry->save();
+
+                if ($isGoods && !empty($goodsRows)) {
+                    foreach ($goodsRows as $goods) {
+                        ProductTransaction::create([
+                            'ledger_entry_id' => $entry->id,
+                            'product_type_id' => $goods['product_type_id'],
+                            'quantity'        => $goods['quantity'],
+                        ]);
+                    }
+                }
+
+                if ($cat === 'investors') {
+                    $transaction = InvestorTransaction::create([
+                        'investor_id'      => (int) $invId,
+                        'status_id'        => (int) $stId,
+                        'amount'           => $amt,
+                        'transaction_date' => $date,
+                        'notes'            => $notes,
+                    ]);
+
+                    if (empty($ref)) {
+                        $entry->ref = 'IT-' . $transaction->id;
+                        $entry->save();
+                    }
+                } else {
+                    $transaction = OfficeTransaction::create([
+                        'investor_id'      => !empty($invId) ? (int) $invId : null,
+                        'status_id'        => (int) $stId,
+                        'amount'           => $amt,
+                        'transaction_date' => $date,
+                        'notes'            => $notes,
+                    ]);
+
+                    if (empty($ref)) {
+                        $entry->ref = 'OT-' . $transaction->id;
+                        $entry->save();
+                    }
+                }
+            });
+
             $this->insertedCount++;
 
             return $entry;
@@ -197,6 +279,121 @@ class LedgerEntriesImport implements
 
         try { return Carbon::parse($value)->format('Y-m-d'); }
         catch (\Throwable $e) { return null; }
+    }
+
+    /**
+     * @return int[]
+     */
+    private function goodsStatusIds(): array
+    {
+        if ($this->goodsStatusIds !== null) {
+            return $this->goodsStatusIds;
+        }
+
+        return $this->goodsStatusIds = TransactionStatus::whereIn('name', ['شراء بضائع', 'بيع بضائع'])
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @return array<int,array{product_type_id:int,quantity:int}>
+     */
+    private function extractGoodsRows(array $row): array
+    {
+        $typeValues = $this->normalizeGoodsColumn(Arr::get($row, 'product_type_id'));
+        $qtyValues  = $this->normalizeGoodsColumn(Arr::get($row, 'quantity'));
+
+        $count = max(count($typeValues), count($qtyValues));
+        if ($count === 0) {
+            return [];
+        }
+
+        $rows = [];
+        for ($i = 0; $i < $count; $i++) {
+            $typeId = $typeValues[$i] ?? null;
+            $qty    = $qtyValues[$i]  ?? null;
+
+            if ($typeId === null || $qty === null) {
+                continue;
+            }
+
+            $typeId = (int) $typeId;
+            $qty    = (int) $qty;
+
+            if ($typeId <= 0 || $qty <= 0) {
+                continue;
+            }
+
+            $rows[] = [
+                'product_type_id' => $typeId,
+                'quantity'        => $qty,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param mixed $value
+     * @return array<int,string>
+     */
+    private function normalizeGoodsColumn($value): array
+    {
+        if ($value === null) {
+            return [];
+        }
+
+        if (is_array($value)) {
+            $items = $value;
+        } else {
+            $stringValue = trim((string) $value);
+            if ($stringValue === '') {
+                return [];
+            }
+
+            $stringValue = str_replace(["\r", "\n", "\t"], ' ', $stringValue);
+            $items = preg_split('/[|;,]+/', $stringValue) ?: [];
+        }
+
+        $out = [];
+        foreach ($items as $item) {
+            if ($item === null || $item === '') {
+                continue;
+            }
+
+            $trimmed = trim((string) $item);
+            if ($trimmed === '') {
+                continue;
+            }
+
+            $out[] = $trimmed;
+        }
+
+        return array_values($out);
+    }
+
+    /**
+     * @param array<int,array{product_type_id:int,quantity:int}> $goodsRows
+     */
+    private function ensureProductTypesExist(array $goodsRows): void
+    {
+        $ids = array_unique(array_map(fn($row) => (int) $row['product_type_id'], $goodsRows));
+        if ($ids === []) {
+            return;
+        }
+
+        if ($this->cachedProductTypeIds === null) {
+            $this->cachedProductTypeIds = ProductType::pluck('id')
+                ->map(fn($id) => (int) $id)
+                ->all();
+        }
+
+        $missing = array_diff($ids, $this->cachedProductTypeIds);
+        if (!empty($missing)) {
+            throw new \RuntimeException('product_type_id غير موجود: ' . implode(',', $missing));
+        }
     }
 
     protected function arNormalize(?string $text): string
