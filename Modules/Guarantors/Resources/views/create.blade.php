@@ -24,7 +24,7 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            <form action="{{ route('guarantors.store') }}" method="POST" enctype="multipart/form-data" novalidate>
+            <form id="create-guarantor-form" action="{{ route('guarantors.store') }}" method="POST" enctype="multipart/form-data" novalidate>
                 @csrf
 
                 <div class="row g-3">
@@ -47,7 +47,7 @@
 
                     {{-- رقم الهوية --}}
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">{{ __('guarantors::messages.National ID Number') }}</label>
+                        <label for="national_id" class="form-label">{{ __('guarantors::messages.National ID Number') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="national_id"
@@ -56,15 +56,19 @@
                             value="{{ old('national_id') }}"
                             inputmode="numeric"
                             dir="ltr"
-                            maxlength="20"
+                            maxlength="10"
+                            pattern="^[12]\d{9}$"
+                            required
+                            aria-required="true"
                             placeholder="{{ __('guarantors::messages.Example: 1234567890') }}">
                         <div class="form-text">{{ __('guarantors::messages.Only numbers can be entered.') }}</div>
-                        @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @php $nationalIdError = $errors->first('national_id'); @endphp
+                        <div class="invalid-feedback" data-feedback-for="national_id" @if($nationalIdError) data-server-error="true" @endif>{{ $nationalIdError }}</div>
                     </div>
 
                     {{-- الهاتف --}}
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">{{ __('guarantors::messages.Phone') }}</label>
+                        <label for="phone" class="form-label">{{ __('guarantors::messages.Phone') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="phone"
@@ -75,9 +79,13 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
+                            pattern="^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$"
+                            required
+                            aria-required="true"
                             placeholder="{{ __('guarantors::messages.+9665XXXXXXXX') }}">
                         <div class="form-text">{{ __('guarantors::messages.It is preferable to enter the international code.') }}</div>
-                        @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @php $phoneError = $errors->first('phone'); @endphp
+                        <div class="invalid-feedback" data-feedback-for="phone" @if($phoneError) data-server-error="true" @endif>{{ $phoneError }}</div>
                     </div>
 
                     {{-- البريد --}}
@@ -230,6 +238,103 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         reader.readAsDataURL(file);
     });
+
+    const form = document.getElementById('create-guarantor-form');
+    if (form) {
+        const nationalInput = form.querySelector('#national_id');
+        const phoneInput    = form.querySelector('#phone');
+        const nationalPattern = /^[12]\d{9}$/;
+        const phonePattern    = /^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/;
+        const messages = {
+            nationalRequired: @json(__('guarantors::messages.validation.national_id_required')),
+            nationalFormat: @json(__('guarantors::messages.validation.national_id_format')),
+            phoneRequired: @json(__('guarantors::messages.validation.phone_required')),
+            phoneFormat: @json(__('guarantors::messages.validation.phone_format')),
+        };
+
+        const getFeedback = (inputEl) => (inputEl ? form.querySelector(`[data-feedback-for="${inputEl.id}"]`) : null);
+
+        const clearError = (inputEl) => {
+            if (!inputEl) { return true; }
+            const feedback = getFeedback(inputEl);
+            if (feedback) {
+                feedback.textContent = '';
+                feedback.removeAttribute('data-server-error');
+            }
+            inputEl.classList.remove('is-invalid');
+            inputEl.setCustomValidity('');
+            return true;
+        };
+
+        const applyError = (inputEl, message) => {
+            if (!inputEl) { return false; }
+            const feedback = getFeedback(inputEl);
+            if (feedback) {
+                feedback.textContent = message;
+                feedback.removeAttribute('data-server-error');
+            }
+            inputEl.classList.add('is-invalid');
+            inputEl.setCustomValidity(message);
+            return false;
+        };
+
+        const checkField = (inputEl, pattern, requiredMsg, formatMsg) => {
+            if (!inputEl) { return true; }
+            const value = inputEl.value.trim();
+            if (!value) {
+                return applyError(inputEl, requiredMsg);
+            }
+            if (!pattern.test(value)) {
+                return applyError(inputEl, formatMsg);
+            }
+            return clearError(inputEl);
+        };
+
+        const handleInput = (inputEl, pattern, formatMsg) => {
+            if (!inputEl) { return; }
+            inputEl.addEventListener('input', () => {
+                const feedback = getFeedback(inputEl);
+                if (feedback) {
+                    feedback.removeAttribute('data-server-error');
+                }
+                inputEl.setCustomValidity('');
+
+                if (!inputEl.value.trim()) {
+                    inputEl.classList.remove('is-invalid');
+                    if (feedback) {
+                        feedback.textContent = '';
+                    }
+                    return;
+                }
+
+                if (pattern.test(inputEl.value.trim())) {
+                    clearError(inputEl);
+                } else if (inputEl.classList.contains('is-invalid') && feedback) {
+                    feedback.textContent = formatMsg;
+                }
+            });
+        };
+
+        handleInput(nationalInput, nationalPattern, messages.nationalFormat);
+        handleInput(phoneInput, phonePattern, messages.phoneFormat);
+
+        form.addEventListener('submit', (event) => {
+            const nationalOk = checkField(nationalInput, nationalPattern, messages.nationalRequired, messages.nationalFormat);
+            const phoneOk    = checkField(phoneInput, phonePattern, messages.phoneRequired, messages.phoneFormat);
+
+            if (!nationalOk || !phoneOk) {
+                event.preventDefault();
+                event.stopPropagation();
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    if (typeof firstInvalid.reportValidity === 'function') {
+                        firstInvalid.reportValidity();
+                    }
+                }
+            }
+        });
+    }
 
     // إخفاء أي تنبيه بعد 5 ثوانٍ
     setTimeout(() => {

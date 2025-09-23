@@ -46,7 +46,7 @@
 
                     {{-- رقم الهوية --}}
                     <div class="col-md-6">
-                        <label for="national_id" class="form-label">{{ __('investors::investors.National ID') }}</label>
+                        <label for="national_id" class="form-label">{{ __('investors::investors.National ID') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="national_id"
@@ -55,7 +55,11 @@
                             value="{{ old('national_id', $investor->national_id) }}"
                             inputmode="numeric"
                             dir="ltr"
-                            maxlength="20"
+                            minlength="10"
+                            maxlength="10"
+                            pattern="^(?:1|2)\d{9}$"
+                            title="{{ __('investors::investors.National ID must be 10 digits and start with 1 or 2.') }}"
+                            required
                             placeholder="{{ __('investors::investors.Example: 1234567890') }}">
                         <div class="form-text">{{ __('investors::investors.Only numbers can be entered.') }}</div>
                         @error('national_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -63,7 +67,7 @@
 
                     {{-- الهاتف --}}
                     <div class="col-md-6">
-                        <label for="phone" class="form-label">{{ __('investors::investors.Phone') }}</label>
+                        <label for="phone" class="form-label">{{ __('investors::investors.Phone') }} <span class="text-danger">*</span></label>
                         <input
                             type="text"
                             name="phone"
@@ -74,6 +78,9 @@
                             dir="ltr"
                             maxlength="25"
                             autocomplete="tel"
+                            pattern="^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$"
+                            title="{{ __('investors::investors.Please enter a valid Saudi mobile number.') }}"
+                            required
                             placeholder="{{ __('investors::investors.+9665XXXXXXXX') }}">
                         @error('phone') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

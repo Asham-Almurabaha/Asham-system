@@ -172,6 +172,12 @@ return [
     'Skipped Rows' => 'Skipped Rows',
     'File format not supported. Allowed formats: xlsx, xls, csv' => 'File format not supported. Allowed formats: xlsx, xls, csv',
     'File size exceeds 10MB.' => 'File size exceeds 10MB.',
+    'validation' => [
+        'national_id_required' => 'National ID number is required.',
+        'national_id_format' => 'National ID must be 10 digits and start with 1 or 2.',
+        'phone_required' => 'Mobile number is required.',
+        'phone_format' => 'Please enter a valid mobile number starting with 05 or the international code 966.',
+    ],
     'fields' => [
         'name' => 'Name',
         'national_id' => 'National ID',

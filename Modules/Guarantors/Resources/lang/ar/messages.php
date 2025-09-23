@@ -172,6 +172,12 @@ return [
     'Skipped Rows' => 'الصفوف المتخطّاة',
     'File format not supported. Allowed formats: xlsx, xls, csv' => 'صيغة الملف غير مدعومة. الصيغ المسموحة: xlsx, xls, csv',
     'File size exceeds 10MB.' => 'حجم الملف يتجاوز 10MB.',
+    'validation' => [
+        'national_id_required' => 'رقم الهوية مطلوب.',
+        'national_id_format' => 'رقم الهوية يجب أن يتكون من 10 أرقام ويبدأ بالرقم 1 أو 2.',
+        'phone_required' => 'رقم الجوال مطلوب.',
+        'phone_format' => 'الرجاء إدخال رقم جوال صحيح يبدأ بـ 05 أو بالمفتاح الدولي 966.',
+    ],
     'fields' => [
         'name' => 'الاسم',
         'national_id' => 'رقم الهوية',

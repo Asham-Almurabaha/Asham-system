@@ -439,8 +439,8 @@ class GuarantorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:guarantors,name,',
-            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,',
-            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,',
+            'national_id' => 'required|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,',
+            'phone' => 'required|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,',
             'email' => 'nullable|email|max:255',
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',
@@ -478,8 +478,8 @@ class GuarantorController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:guarantors,name,' . $guarantor->id,
-            'national_id' => 'nullable|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,' . $guarantor->id,
-            'phone' => 'nullable|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,' . $guarantor->id,
+            'national_id' => 'required|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,' . $guarantor->id,
+            'phone' => 'required|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,' . $guarantor->id,
             'email' => 'nullable|email|max:255',
             'title_id' => 'nullable|exists:titles,id',
             'address' => 'nullable|string',

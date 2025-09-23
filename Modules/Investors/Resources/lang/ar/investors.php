@@ -52,6 +52,8 @@ return array (
   '+9665XXXXXXXX' => '+9665XXXXXXXX',
   'Only numbers can be entered.' => 'يمكن إدخال أرقام فقط.',
   'It is preferable to enter the international code.' => 'يُفضّل إدخال المفتاح الدولي.',
+  'National ID must be 10 digits and start with 1 or 2.' => 'يجب أن يكون رقم الهوية 10 أرقام ويبدأ بـ 1 أو 2.',
+  'Please enter a valid Saudi mobile number.' => 'يرجى إدخال رقم جوال سعودي صحيح.',
   'Write the address in detail' => 'اكتب العنوان بالتفصيل',
   'Allowed extensions: jpg/png/webp — suitable size less than 2MB.' => 'الامتدادات المسموحة: jpg/png/webp — حجم مناسب أقل من 2MB.',
   'Example: 12.50' => 'مثال: 12.50',

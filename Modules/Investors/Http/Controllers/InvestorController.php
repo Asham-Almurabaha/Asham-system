@@ -269,8 +269,8 @@ class InvestorController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('investors', 'name')],
-            'national_id' => ['nullable', 'digits:10', 'regex:/^[12]\d{9}$/', Rule::unique('investors', 'national_id')],
-            'phone' => ['nullable', 'regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/', Rule::unique('investors', 'phone')],
+            'national_id' => ['required', 'digits:10', 'regex:/^[12]\d{9}$/', Rule::unique('investors', 'national_id')],
+            'phone' => ['required', 'regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/', Rule::unique('investors', 'phone')],
             'email' => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
             'nationality_id' => ['nullable', 'exists:nationalities,id'],
@@ -359,13 +359,13 @@ class InvestorController extends Controller
                 Rule::unique('investors', 'name')->ignore($investor->id),
             ],
             'national_id' => [
-                'nullable',
+                'required',
                 'digits:10',
                 'regex:/^[12]\d{9}$/',
                 Rule::unique('investors', 'national_id')->ignore($investor->id),
             ],
             'phone' => [
-                'nullable',
+                'required',
                 'regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/',
                 Rule::unique('investors', 'phone')->ignore($investor->id),
             ],
