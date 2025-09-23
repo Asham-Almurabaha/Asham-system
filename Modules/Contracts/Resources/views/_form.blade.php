@@ -299,8 +299,9 @@
           </tr>
         @endforeach
     </x-table>
-
-    <x-button.action type="button" variant="primary" :outline="true" size="sm" id="add-investor">+ إضافة مستثمر</x-button.action>
+    <div class="mt-3">
+      <x-button.action type="button" variant="primary" :outline="true" :block="true" id="add-investor">+ إضافة مستثمر</x-button.action>
+    </div>
   </div>
 </div>
 
