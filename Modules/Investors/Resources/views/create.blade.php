@@ -192,7 +192,7 @@
                             id="office_share_percentage"
                             class="form-control @error('office_share_percentage') is-invalid @enderror"
                             value="{{ old('office_share_percentage', '0') }}"
-                            min="0" max="100" step="0.01" inputmode="decimal" dir="ltr"
+                            min="0" max="100" step="0.1" inputmode="decimal" dir="ltr"
                             required
                             placeholder="{{ __('investors::investors.Example: 12.50') }}">
                         <div class="form-text">{{ __('investors::investors.The value is between 0 and 100.') }}</div>
