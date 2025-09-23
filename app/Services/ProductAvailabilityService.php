@@ -6,6 +6,7 @@ use Modules\Lookups\Entities\ProductType;
 use App\Models\ProductTransaction;
 use App\Models\LedgerEntry;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
 
 class ProductAvailabilityService
@@ -138,6 +139,8 @@ class ProductAvailabilityService
                 // نمط مفصل: يشمل مخزون وتفاصيل فلوس
                 $qLedgerBase = LedgerEntry::query()
                     ->from('ledger_entries as le')
+                    ->withoutGlobalScope(SoftDeletingScope::class)
+                    ->whereNull('le.deleted_at')
                     ->when(!empty($filters['from'] ?? null), fn($q) => $q->whereDate('entry_date', '>=', $filters['from']))
                     ->when(!empty($filters['to']   ?? null), fn($q) => $q->whereDate('entry_date', '<=', $filters['to']))
                     ->when(($filters['account_type'] ?? null) === 'bank', fn($q) => $q->whereNotNull('bank_account_id')->whereNull('safe_id'))

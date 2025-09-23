@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\LedgerEntry;
 use App\Models\ProductTransaction;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
 use Modules\Lookups\Entities\ProductType;
 
@@ -64,6 +65,8 @@ class ProductTypeAvailabilityService
 
         $ledgerBase = LedgerEntry::query()
             ->from('ledger_entries as le')
+            ->withoutGlobalScope(SoftDeletingScope::class)
+            ->whereNull('le.deleted_at')
             ->whereExists(function ($sub) use ($productType) {
                 $sub->select(DB::raw(1))
                     ->from('product_transactions as pt')
