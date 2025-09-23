@@ -137,31 +137,14 @@
                         @error('title_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    {{-- حالة الكفيل --}}
-                    <div class="col-md-6">
-                        <label for="guarantor_status_id" class="form-label">{{ __('guarantors::messages.Guarantor Status') }}</label>
-                        <select
-                            name="guarantor_status_id"
-                            id="guarantor_status_id"
-                            class="form-select @error('guarantor_status_id') is-invalid @enderror">
-                            <option value="">-- {{ __('guarantors::messages.Choose') }} --</option>
-                            @foreach (($guarantorStatuses ?? []) as $status)
-                                @if(is_object($status))
-                                    <option value="{{ $status->id }}" @selected(old('guarantor_status_id') == $status->id)>{{ $status->name }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                        @error('guarantor_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                    </div>
-
                     {{-- العنوان --}}
                     <div class="col-12">
                         <label for="address" class="form-label">{{ __('guarantors::messages.Address') }}</label>
                         <textarea
                             name="address"
                             id="address"
-                            rows="3"
-                            class="form-control @error('address') is-invalid @enderror"
+                            rows="1"
+                            class="form-control single-line-textarea @error('address') is-invalid @enderror"
                             placeholder="{{ __('guarantors::messages.Write the address in detail') }}">{{ old('address') }}</textarea>
                         @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -191,8 +174,8 @@
                         <textarea
                             name="notes"
                             id="notes"
-                            rows="3"
-                            class="form-control @error('notes') is-invalid @enderror"
+                            rows="1"
+                            class="form-control single-line-textarea @error('notes') is-invalid @enderror"
                             placeholder="{{ __('guarantors::messages.Any additional information about the guarantor') }}">{{ old('notes') }}</textarea>
                         @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
@@ -214,7 +197,13 @@
 @endsection
 
 @push('styles')
-
+<style>
+    .single-line-textarea {
+        height: calc(1.5em + .75rem + 2px);
+        min-height: calc(1.5em + .75rem + 2px);
+        resize: vertical;
+    }
+</style>
 @endpush
 
 @push('scripts')

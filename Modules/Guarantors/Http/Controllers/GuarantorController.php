@@ -433,8 +433,7 @@ class GuarantorController extends Controller
     {
         $nationalities = Nationality::all();
         $titles = Title::all();
-        $guarantorStatuses = GuarantorStatus::select('id', 'name')->orderBy('name')->get();
-        return view('guarantors::create', compact('nationalities', 'titles', 'guarantorStatuses'));
+        return view('guarantors::create', compact('nationalities', 'titles'));
     }
 
     public function store(StoreGuarantorRequest $request)
