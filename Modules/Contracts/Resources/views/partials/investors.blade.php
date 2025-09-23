@@ -112,16 +112,25 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const tableBody   = document.getElementById("investors-table-body");
-    const addBtn      = document.getElementById("add-investor-row");
-    const saveBtn     = document.querySelector("#investors-form button[type='submit']");
-    const saveTxt     = saveBtn?.querySelector(".save-text");
-    const saveSpin    = saveBtn?.querySelector(".spinner-border");
-    const helperRem   = document.getElementById("helper-remaining");
-    const outsideRem  = document.getElementById("outside-remaining");
-    const contractVal = parseInt(document.getElementById("contract_value").value || "0", 10) || 0;
+    const helperRem  = document.getElementById("helper-remaining");
+    const outsideRem = document.getElementById("outside-remaining");
+    const contractInput = document.getElementById("contract_value");
+    const contractVal = parseInt(contractInput?.value || "0", 10) || 0;
 
     const modalEl = document.getElementById("addInvestorModal");
+    if (!modalEl) {
+      return;
+    }
+
+    const tableBody = document.getElementById("investors-table-body") || modalEl.querySelector("tbody");
+    if (!tableBody) {
+      return;
+    }
+
+    const addBtn   = document.getElementById("add-investor-row");
+    const saveBtn  = document.querySelector("#investors-form button[type='submit']");
+    const saveTxt  = saveBtn?.querySelector(".save-text");
+    const saveSpin = saveBtn?.querySelector(".spinner-border");
     function qsa(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
 
     /* ===== سيولة المستثمر (Ajax اختياري) ===== */
