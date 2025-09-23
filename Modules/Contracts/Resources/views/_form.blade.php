@@ -210,7 +210,7 @@
   {{-- المستثمرون --}}
   <div class="col-md-12">
     <h6 class="form-label">المستثمرون</h6>
-    <x-table bordered class="text-center" :hover="false">
+    <x-table bordered class="text-center" :hover="false" id="investors-table">
         <x-slot name="head">
             <tr>
               <th style="width:40%">المستثمر / السيولة</th>
@@ -324,10 +324,14 @@ document.addEventListener('DOMContentLoaded', function () {
   const productsCountInput = document.getElementById('products_count');
   const availableBadge     = document.getElementById('available_count_badge');
 
-  const tbody            = document.getElementById('investors-table-body');
+  const investorsTable   = document.getElementById('investors-table');
+  const tbody            = investorsTable
+                              ? (investorsTable.tBodies && investorsTable.tBodies[0])
+                                  || investorsTable.querySelector('tbody')
+                              : null;
   const addBtn           = document.getElementById('add-investor');
 
-  if (!saleInput || !contractInput || !profitInput || !totalInput || !instValueInput || !instCountInput || !tbody) return;
+  if (!saleInput || !contractInput || !profitInput || !totalInput || !instValueInput || !instCountInput || !investorsTable || !tbody) return;
 
   // 🔒 منع تعديل يدوي لقيمة العقد/الإجمالي
   makeReadOnly(contractInput); makeReadOnly(totalInput);
@@ -477,6 +481,51 @@ document.addEventListener('DOMContentLoaded', function () {
     return Math.max(0, remVal);
   }
 
+  function autoFillRow(tr, cashOverride){
+    const io = getRowIO(tr);
+    const { select, pct, value } = io;
+    if (!pct || !value) return false;
+    if (select && !select.value) return false;
+
+    const hasPct   = String(pct.value || '').trim() !== '';
+    const hasValue = String(value.value || '').trim() !== '';
+    if (hasPct || hasValue) return false;
+
+    const base = toNumber(contractInput.value);
+    if (base <= 0) return false;
+
+    const remaining = remainingPercent(tr);
+    if (remaining <= 0) return false;
+
+    let cash = cashOverride;
+    if (cash === undefined){
+      const cached = investorCashForRow(tr);
+      if (isFinite(cached)) cash = cached;
+    }
+
+    if (!isFinite(cash)) return false;
+    cash = Math.max(0, cash);
+
+    const pctByCash = base > 0 ? (cash / base) * 100 : 0;
+    let targetPct = clamp(Math.min(remaining, pctByCash), 0, 100);
+    let targetValue = (base * targetPct) / 100;
+    if (!Number.isFinite(targetValue)) targetValue = 0;
+    targetValue = Math.min(targetValue, cash, base);
+
+    if (targetValue <= 0){
+      if (cash > 0){
+        value.value = String(Math.min(cash, base));
+        recalcInvestorRow(tr, 'val', { formatActive: true });
+        return true;
+      }
+      return false;
+    }
+
+    value.value = String(targetValue);
+    recalcInvestorRow(tr, 'val', { formatActive: true });
+    return true;
+  }
+
   // المطلوب للمستثمر
   function neededForRow(tr){
     const { pct, value } = getRowIO(tr);
@@ -537,8 +586,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const { pct, value } = io;
-    if (pct && String(pct.value).trim() !== '')      recalcInvestorRow(tr, 'pct', {formatActive:false});
-    else if (value && String(value.value).trim() !== '') recalcInvestorRow(tr, 'val', {formatActive:false});
+    const hasPct   = pct && String(pct.value).trim() !== '';
+    const hasValue = value && String(value.value).trim() !== '';
+
+    if (hasPct) {
+      recalcInvestorRow(tr, 'pct', {formatActive:false});
+    } else if (hasValue) {
+      recalcInvestorRow(tr, 'val', {formatActive:false});
+    } else if (Number.isFinite(cash)) {
+      if (autoFillRow(tr, cash)) updateNeededForAll();
+    }
   }
 
   function setCashLoading(tr, isLoading=true){
@@ -629,8 +686,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (value) value.value = '';
         return;
       }
-      if (pct && String(pct.value).trim() !== '')        recalcInvestorRow(tr, 'pct');
-      else if (value && String(value.value).trim() !== '') recalcInvestorRow(tr, 'val');
+      let hasPct   = pct && String(pct.value).trim() !== '';
+      let hasValue = value && String(value.value).trim() !== '';
+
+      if (!hasPct && !hasValue){
+        if (autoFillRow(tr)){
+          hasPct   = pct && String(pct.value).trim() !== '';
+          hasValue = value && String(value.value).trim() !== '';
+        }
+      }
+
+      if (hasPct)        recalcInvestorRow(tr, 'pct');
+      else if (hasValue) recalcInvestorRow(tr, 'val');
     });
     updateNeededForAll();
   }
