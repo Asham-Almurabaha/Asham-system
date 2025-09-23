@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Modules\Guarantors\Http\Requests\StoreGuarantorRequest;
+use Modules\Guarantors\Http\Requests\UpdateGuarantorRequest;
 
 class GuarantorController extends Controller
 {
@@ -435,20 +437,9 @@ class GuarantorController extends Controller
         return view('guarantors::create', compact('nationalities', 'titles', 'guarantorStatuses'));
     }
 
-    public function store(Request $request)
+    public function store(StoreGuarantorRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:guarantors,name,',
-            'national_id' => 'required|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,',
-            'phone' => 'required|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,',
-            'email' => 'nullable|email|max:255',
-            'title_id' => 'nullable|exists:titles,id',
-            'address' => 'nullable|string',
-            'nationality_id' => 'nullable|exists:nationalities,id',
-            'guarantor_status_id' => 'nullable|exists:guarantor_statuses,id',
-            'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('id_card_image')) {
             $validated['id_card_image'] = $request->file('id_card_image')->store('guarantor_id_cards', 'public');
@@ -474,20 +465,9 @@ class GuarantorController extends Controller
         return view('guarantors::edit', compact('guarantor', 'nationalities', 'titles', 'guarantorStatuses'));
     }
 
-    public function update(Request $request, Guarantor $guarantor)
+    public function update(UpdateGuarantorRequest $request, Guarantor $guarantor)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:guarantors,name,' . $guarantor->id,
-            'national_id' => 'required|digits:10|regex:/^[12]\d{9}$/|unique:guarantors,national_id,' . $guarantor->id,
-            'phone' => 'required|regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/|unique:guarantors,phone,' . $guarantor->id,
-            'email' => 'nullable|email|max:255',
-            'title_id' => 'nullable|exists:titles,id',
-            'address' => 'nullable|string',
-            'nationality_id' => 'nullable|exists:nationalities,id',
-            'guarantor_status_id' => 'nullable|exists:guarantor_statuses,id',
-            'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('id_card_image')) {
             // حذف الصورة القديمة إذا موجودة

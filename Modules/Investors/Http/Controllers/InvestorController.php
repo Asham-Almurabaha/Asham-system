@@ -9,7 +9,6 @@ use Modules\Lookups\Entities\Title;
 use App\Services\InstallmentsMonthlyService;
 use App\Support\InstallmentPeriod;
 use Carbon\Carbon;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -21,6 +20,8 @@ use Modules\Lookups\Entities\ContractStatus;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Http\Controllers\Concerns\InvestorLiquiditySummaries;
+use Modules\Investors\Http\Requests\StoreInvestorRequest;
+use Modules\Investors\Http\Requests\UpdateInvestorRequest;
 use Modules\Investors\Services\InvestorDataService;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
 use Modules\Investors\Support\InvestorContractPaymentAggregator;
@@ -265,21 +266,9 @@ class InvestorController extends Controller
         return view('investors::create', compact('nationalities', 'titles'));
     }
 
-    public function store(Request $request)
+    public function store(StoreInvestorRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('investors', 'name')],
-            'national_id' => ['required', 'digits:10', 'regex:/^[12]\d{9}$/', Rule::unique('investors', 'national_id')],
-            'phone' => ['required', 'regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/', Rule::unique('investors', 'phone')],
-            'email' => ['nullable', 'email', 'max:255'],
-            'address' => ['nullable', 'string'],
-            'nationality_id' => ['nullable', 'exists:nationalities,id'],
-            'title_id' => ['nullable', 'exists:titles,id'],
-            'id_card_image' => ['nullable', 'image', 'max:2048'],
-            'contract_image' => ['nullable', 'image', 'max:2048'],
-            'office_share_percentage' => ['required', 'numeric', 'between:0,100'],
-            'investment_start_date' => ['required', 'date'],
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('id_card_image')) {
             $validated['id_card_image'] = $request->file('id_card_image')->store('investor/investor_id_cards', 'public');
@@ -349,35 +338,9 @@ class InvestorController extends Controller
         return view('investors::edit', compact('investor', 'nationalities', 'titles'));
     }
 
-    public function update(Request $request, Investor $investor)
+    public function update(UpdateInvestorRequest $request, Investor $investor)
     {
-        $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('investors', 'name')->ignore($investor->id),
-            ],
-            'national_id' => [
-                'required',
-                'digits:10',
-                'regex:/^[12]\d{9}$/',
-                Rule::unique('investors', 'national_id')->ignore($investor->id),
-            ],
-            'phone' => [
-                'required',
-                'regex:/^(?:05\d{8}|\+?9665\d{8}|009665\d{8})$/',
-                Rule::unique('investors', 'phone')->ignore($investor->id),
-            ],
-            'email' => ['nullable', 'email', 'max:255'],
-            'address' => ['nullable', 'string'],
-            'nationality_id' => ['nullable', 'exists:nationalities,id'],
-            'title_id' => ['nullable', 'exists:titles,id'],
-            'id_card_image' => ['nullable', 'image', 'max:2048'],
-            'contract_image' => ['nullable', 'image', 'max:2048'],
-            'office_share_percentage' => ['required', 'numeric', 'between:0,100'],
-            'investment_start_date' => ['nullable', 'date'],
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('id_card_image')) {
             if ($investor->id_card_image) {

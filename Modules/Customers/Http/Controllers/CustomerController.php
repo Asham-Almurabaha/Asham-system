@@ -18,7 +18,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use Modules\Customers\Http\Requests\StoreCustomerRequest;
+use Modules\Customers\Http\Requests\UpdateCustomerRequest;
 use App\Models\OfficeTransaction;
 use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Investors\Support\InvestorContractPaymentAggregator;
@@ -457,20 +458,9 @@ class CustomerController extends Controller
     }
 
     // حفظ عميل جديد
-    public function store(Request $request)
+    public function store(StoreCustomerRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required','string','max:255', Rule::unique('customers','name')],
-            'national_id' => ['required','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')],
-            'phone' => ['required','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')],
-            'email' => 'nullable|email|max:255',
-            'title_id' => 'nullable|exists:titles,id',
-            'address' => 'nullable|string',
-            'nationality_id' => 'nullable|exists:nationalities,id',
-            'customer_status_id' => 'nullable|exists:customer_statuses,id',
-            'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if (blank($validated['customer_status_id'] ?? null)) {
             $statusIds = $this->resolveCustomerStatusIds();
@@ -640,20 +630,9 @@ class CustomerController extends Controller
     }
 
     // تحديث بيانات عميل
-    public function update(Request $request, Customer $customer)
+    public function update(UpdateCustomerRequest $request, Customer $customer)
     {
-        $validated = $request->validate([
-            'name' => ['required','string','max:255', Rule::unique('customers','name')->ignore($customer->id)],
-            'national_id' => ['required','digits:10','regex:/^[12]\d{9}$/', Rule::unique('customers','national_id')->ignore($customer->id)],
-            'phone' => ['required','regex:/^(?:\+?9665\d{8}|05\d{8}|9665\d{8})$/', Rule::unique('customers','phone')->ignore($customer->id)],
-            'email' => 'nullable|email|max:255',
-            'title_id' => 'nullable|exists:titles,id',
-            'address' => 'nullable|string',
-            'nationality_id' => 'nullable|exists:nationalities,id',
-            'customer_status_id' => 'nullable|exists:customer_statuses,id',
-            'id_card_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         if (blank($validated['customer_status_id'] ?? null)) {
             $statusIds = $this->resolveCustomerStatusIds();
