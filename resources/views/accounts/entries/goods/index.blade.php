@@ -481,6 +481,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     })();
 
+    const isSaleGoods = () => STATUS_TYPE === 1;
+
     function goodsManagerFactory(sectionId, wrapperId, templateId, addButtonId) {
         const section = document.getElementById(sectionId);
         const wrapper = document.getElementById(wrapperId);
@@ -497,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
             template,
             addButton,
             isSectionActive: () => true,
-            isSaleMode: () => false,
+            isSaleMode: isSaleGoods,
             fetchAvailability: fetchProductAvailability,
             prepareNewRow: (row) => {
                 if (!wrapper) {
