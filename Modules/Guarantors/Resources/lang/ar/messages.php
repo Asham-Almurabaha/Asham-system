@@ -11,6 +11,7 @@ return [
     'Overdue Guarantors' => 'كفلاء لديهم تأخرات',
     'Due This Month Guarantors' => 'كفلاء مستحق لهم هذا الشهر',
     'Import Excel' => 'استيراد Excel',
+    'Export Excel' => 'تصدير Excel',
     'Refresh Guarantor Statuses' => 'تحديث حالات الكفلاء',
     'Refresh Guarantor Statuses Confirmation' => 'هل أنت متأكد من رغبتك في تحديث حالات الكفلاء بناءً على العقود المرتبطة؟',
     'Results' => 'النتائج',
@@ -131,6 +132,22 @@ return [
     'No ID card image uploaded.' => 'لا توجد صورة هوية مرفوعة.',
     'Copy' => 'نسخ',
     'Copied' => 'تم النسخ',
+
+    'export_headings' => [
+        'id' => 'المعرف',
+        'name' => 'الاسم',
+        'national_id' => 'رقم الهوية',
+        'phone' => 'الهاتف',
+        'email' => 'البريد الإلكتروني',
+        'address' => 'العنوان',
+        'nationality' => 'الجنسية',
+        'title' => 'الوظيفة',
+        'guarantor_status' => 'حالة الكفيل',
+        'id_card_image' => 'صورة الهوية',
+        'notes' => 'ملاحظات',
+        'created_at' => 'تاريخ الإنشاء',
+        'updated_at' => 'تاريخ التحديث',
+    ],
 
     // Import Page
     'Import Guarantors from Excel' => 'استيراد الكُفلاء من Excel',

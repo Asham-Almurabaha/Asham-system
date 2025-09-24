@@ -27,6 +27,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('investors/dashboard', [InvestorController::class, 'dashboard'])
         ->name('investors.dashboard');
 
+    Route::get('investors/export', [InvestorController::class, 'export'])
+        ->name('investors.export');
+
     Route::resource('investors', InvestorController::class);
     Route::resource('investor-transactions', InvestorTransactionController::class);
 

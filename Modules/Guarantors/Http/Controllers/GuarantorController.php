@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Guarantors\Exports\GuarantorsExport;
 use Modules\Guarantors\Http\Requests\StoreGuarantorRequest;
 use Modules\Guarantors\Http\Requests\UpdateGuarantorRequest;
 
@@ -138,6 +140,13 @@ class GuarantorController extends Controller
             'periodMonths',
             'periodYears'
         ));
+    }
+
+    public function export()
+    {
+        $timestamp = now()->format('Y_m_d_H_i_s');
+
+        return Excel::download(new GuarantorsExport(), "guarantors_export_{$timestamp}.xlsx");
     }
 
     public function refreshStatuses(Request $request)

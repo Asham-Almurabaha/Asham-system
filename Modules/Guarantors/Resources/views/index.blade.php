@@ -125,7 +125,10 @@
         <x-button.action href="{{ route('guarantors.import.form') }}" variant="primary" :outline="true">
             <i class="bi bi-upload"></i> {{ __('guarantors::messages.Import Excel') }}
         </x-button.action>
-    @endrole
+        <x-button.action href="{{ route('guarantors.export') }}" variant="primary" :outline="true">
+            <i class="bi bi-download"></i> {{ __('guarantors::messages.Export Excel') }}
+        </x-button.action>
+      @endrole
 
     <form id="guarantors-refresh-statuses-form" method="POST" action="{{ route('guarantors.refresh-statuses') }}" class="d-none">
       @csrf

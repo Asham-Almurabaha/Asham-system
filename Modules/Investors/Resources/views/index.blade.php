@@ -53,9 +53,12 @@
         <x-button.action href="{{ route('investors.import.form') }}" variant="primary" :outline="true">
             <i class="bi bi-upload"></i> {{ __('investors::investors.Import Excel') }}
         </x-button.action>
+        <x-button.action href="{{ route('investors.export') }}" variant="primary" :outline="true">
+            <i class="bi bi-download"></i> {{ __('investors::investors.Export Excel') }}
+        </x-button.action>
       @endrole
 
-      
+
       @if (session('failures') && count(session('failures')))
         <x-button.action href="{{ route('investors.import.export_failures') }}" variant="warning">
           <i class="bi bi-exclamation-triangle"></i> {{ __('investors::investors.Export Failures') }}

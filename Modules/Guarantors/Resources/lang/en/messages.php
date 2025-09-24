@@ -11,6 +11,7 @@ return [
     'Overdue Guarantors' => 'Overdue Guarantors',
     'Due This Month Guarantors' => 'Guarantors With Installments Due This Month',
     'Import Excel' => 'Import Excel',
+    'Export Excel' => 'Export Excel',
     'Refresh Guarantor Statuses' => 'Refresh Guarantor Statuses',
     'Refresh Guarantor Statuses Confirmation' => 'Are you sure you want to refresh guarantor statuses based on their related contracts?',
     'Results' => 'Results',
@@ -131,6 +132,22 @@ return [
     'No ID card image uploaded.' => 'No ID card image uploaded.',
     'Copy' => 'Copy',
     'Copied' => 'Copied',
+
+    'export_headings' => [
+        'id' => 'ID',
+        'name' => 'Name',
+        'national_id' => 'National ID',
+        'phone' => 'Phone',
+        'email' => 'Email',
+        'address' => 'Address',
+        'nationality' => 'Nationality',
+        'title' => 'Title',
+        'guarantor_status' => 'Guarantor Status',
+        'id_card_image' => 'ID Card Image',
+        'notes' => 'Notes',
+        'created_at' => 'Created At',
+        'updated_at' => 'Updated At',
+    ],
 
     // Import Page
     'Import Guarantors from Excel' => 'Import Guarantors from Excel',

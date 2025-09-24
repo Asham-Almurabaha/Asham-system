@@ -25,6 +25,8 @@ use Modules\Investors\Http\Requests\UpdateInvestorRequest;
 use Modules\Investors\Services\InvestorDataService;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
 use Modules\Investors\Support\InvestorContractPaymentAggregator;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Investors\Exports\InvestorsExport;
 
 class InvestorController extends Controller
 {
@@ -150,6 +152,13 @@ class InvestorController extends Controller
         $nationalities = Nationality::all();
         $titles = Title::all();
         return view('investors::index', compact('investors', 'nationalities', 'titles', 'investorsTotalAll', 'activeInvestorsTotalAll', 'newInvestorsThisMonthAll', 'newInvestorsThisWeekAll', 'liquidityByInvestor', 'activeCountByInvestor', 'remainingByInvestor'));
+    }
+
+    public function export()
+    {
+        $timestamp = now()->format('Y_m_d_H_i_s');
+
+        return Excel::download(new InvestorsExport(), "investors_export_{$timestamp}.xlsx");
     }
 
     public function dashboard(Request $request)
