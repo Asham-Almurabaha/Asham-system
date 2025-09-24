@@ -66,7 +66,24 @@
 </div>
 
 <div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card-body p-20">
+        <div id="goodsOperationsAlerts" class="mb-3">
+            @foreach ($operations as $key => $operation)
+                <div
+                    class="alert alert-info d-flex justify-content-between align-items-center {{ $activeTab === $key ? '' : 'd-none' }}"
+                    data-operation="{{ $key }}">
+                    <div>
+                        يتم إنشاء القيود للفئة <strong>المكتب</strong>
+                        وبحالة <strong>{{ $statusName }}</strong>.
+                        @if (!empty($operation['description']))
+                            <div class="small text-muted mt-1">{{ $operation['description'] }}</div>
+                        @endif
+                    </div>
+                    <span class="badge rounded-pill {{ $operation['badge_class'] ?? 'bg-secondary' }}">{{ $directionLabel }}</span>
+                </div>
+            @endforeach
+        </div>
+
         <ul class="nav nav-tabs" id="goodsOperationsTabs" role="tablist">
             @foreach ($operations as $key => $operation)
                 <li class="nav-item" role="presentation">
@@ -91,16 +108,6 @@
                     id="goods-operation-{{ $key }}"
                     role="tabpanel"
                     aria-labelledby="goods-operation-tab-{{ $key }}">
-                    <div class="alert alert-info d-flex justify-content-between align-items-center">
-                        <div>
-                            يتم إنشاء القيود للفئة <strong>المكتب</strong>
-                            وبحالة <strong>{{ $statusName }}</strong>.
-                            @if (!empty($operation['description']))
-                                <div class="small text-muted mt-1">{{ $operation['description'] }}</div>
-                            @endif
-                        </div>
-                        <span class="badge rounded-pill {{ $operation['badge_class'] ?? 'bg-secondary' }}">{{ $directionLabel }}</span>
-                    </div>
 
                     @if ($key === 'purchase')
                         <form action="{{ $primaryFormAction }}" method="POST" class="row g-3 mt-1" id="goodsPurchaseForm">
@@ -465,6 +472,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const ACCOUNT_AVAIL_URL = @json(route('ajax.accounts.availability'));
     const PRODUCT_AVAIL_URL = @json(route('product-types.available', ['productType' => '__ID__']));
     const STATUS_TYPE = Number({{ $statusType ?? 2 }});
+
+    const tabAlertContainer = document.getElementById('goodsOperationsAlerts');
+    if (tabAlertContainer) {
+        const tabAlerts = tabAlertContainer.querySelectorAll('[data-operation]');
+        const toggleTabAlert = (operation) => {
+            tabAlerts.forEach((alert) => {
+                alert.classList.toggle('d-none', alert.dataset.operation !== operation);
+            });
+        };
+
+        document.querySelectorAll('#goodsOperationsTabs button[data-operation]').forEach((button) => {
+            button.addEventListener('shown.bs.tab', (event) => {
+                const targetButton = event?.target ?? button;
+                const operation = targetButton?.getAttribute('data-operation');
+                if (operation) {
+                    toggleTabAlert(operation);
+                }
+            });
+        });
+    }
 
     const fetchAccountAvailability = async (type, id) => {
         if (!type || !id) {
