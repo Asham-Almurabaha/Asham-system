@@ -86,6 +86,8 @@ return array (
   'Add Ledger Entry' => 'إضافة قيد',
   'Internal Transfer' => 'تحويل داخلي',
   'Split Ledger Entry' => 'قيد مجزأ',
+  'Goods Entries' => 'قيود البضائع',
+  'Goods Purchase' => 'شراء بضائع',
   'Import Ledger Entries' => 'استيراد قيود الدفتر',
   'View' => 'عرض',
   'Edit' => 'تعديل',

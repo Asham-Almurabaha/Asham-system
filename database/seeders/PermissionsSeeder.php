@@ -16,6 +16,7 @@ class PermissionsSeeder extends Seeder
         // 1) أنشئ الصلاحيات (مثال – عدل القائمة حسب مشروعك)
         $permissions = [
             'users.view', 'users.create', 'users.update', 'users.delete',
+            'accounts.entries.view', 'accounts.entries.create',
         ];
 
         foreach ($permissions as $p) {

@@ -8,6 +8,7 @@ use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\Accounts\GoodsEntriesController;
 use App\Http\Controllers\LedgerEntriesImportController;
 use App\Http\Controllers\Setting\PermissionManagementController;
 use App\Http\Controllers\Setting\RoleManagementController;
@@ -78,6 +79,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/transfer',        [LedgerController::class, 'transferStore'])->name('transfer.store');
         Route::get('/split/create',     [LedgerController::class, 'splitCreate'])->name('split.create');
         Route::post('/split',           [LedgerController::class, 'splitStore'])->name('split.store');
+    });
+
+    Route::prefix('accounts/entries/goods')->name('accounts.entries.goods.')->group(function () {
+        Route::get('/', [GoodsEntriesController::class, 'index'])
+            ->name('index')
+            ->middleware('permission:accounts.entries.view');
+
+        Route::post('/', [GoodsEntriesController::class, 'store'])
+            ->name('store')
+            ->middleware('permission:accounts.entries.create');
+
+        Route::post('/partial', [GoodsEntriesController::class, 'storePartial'])
+            ->name('store-partial')
+            ->middleware('permission:accounts.entries.create');
     });
     // AJAX مساعدة
     Route::get('/product-types/{productType}/available', [AjaxProductTypeController::class, 'available'])

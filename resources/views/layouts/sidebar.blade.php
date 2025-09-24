@@ -38,7 +38,8 @@
   $contractsOpen = $isRoute('contracts.*');
 
   // فتح مجموعة الحسابات؟
-  $accountsOpen = $isRoute('ledger.*');
+  $accountsOpen = $isRoute('ledger.*')
+      || $isRoute('accounts.entries.goods.*');
 
   $customerManagePatterns = [
       'customers.index',
@@ -234,6 +235,11 @@
       <li>
         <a class="{{ $active($isRoute(['ledger.split.create', 'ledger.split.store'])) }}" href="{{ route('ledger.split.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('accounts.entries.goods.*')) }}" href="{{ route('accounts.entries.goods.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Goods Purchase')</span>
         </a>
       </li>
     </ul>
