@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Ledger\Http\Controllers\LedgerController;
 use Modules\Ledger\Http\Controllers\LedgerEntriesImportController;
+use Modules\Ledger\Http\Controllers\OfficeLedgerController;
 
 Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('ledger/import')->name('ledger.')->group(function () {
@@ -21,5 +22,15 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/split/create',     [LedgerController::class, 'splitCreate'])->name('split.create');
         Route::post('/split',           [LedgerController::class, 'splitStore'])->name('split.store');
         Route::get('/export',           [LedgerController::class, 'export'])->name('export');
+    });
+
+    Route::prefix('ledger/office')->name('ledger.office.')->group(function () {
+        Route::get('/',                      [OfficeLedgerController::class, 'shortcuts'])->name('shortcuts');
+        Route::get('/mukataba',              [OfficeLedgerController::class, 'mukataba'])->name('shortcuts.mukataba');
+        Route::get('/sales-diff',            [OfficeLedgerController::class, 'salesDiff'])->name('shortcuts.sales_diff');
+        Route::get('/profit',                [OfficeLedgerController::class, 'profit'])->name('shortcuts.profit');
+        Route::get('/account-deposit',       [OfficeLedgerController::class, 'accountDeposit'])->name('shortcuts.account_deposit');
+        Route::get('/account-withdrawal',    [OfficeLedgerController::class, 'accountWithdrawal'])->name('shortcuts.account_withdrawal');
+        Route::get('/opening-balance',       [OfficeLedgerController::class, 'openingBalance'])->name('shortcuts.opening_balance');
     });
 });

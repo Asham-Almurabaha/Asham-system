@@ -259,6 +259,37 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
         </a>
       </li>
+      <li class="nav-heading">@lang('sidebar.Office Ledger Entries')</li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.office.shortcuts.mukataba')) }}" href="{{ route('ledger.office.shortcuts.mukataba') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Office Mukataba Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.office.shortcuts.sales_diff')) }}" href="{{ route('ledger.office.shortcuts.sales_diff') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Office Sales Difference Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.office.shortcuts.profit')) }}" href="{{ route('ledger.office.shortcuts.profit') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Office Profit Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.office.shortcuts.account_deposit')) }}" href="{{ route('ledger.office.shortcuts.account_deposit') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Office Accounts Deposit')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.office.shortcuts.account_withdrawal')) }}" href="{{ route('ledger.office.shortcuts.account_withdrawal') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Office Accounts Withdrawal')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.office.shortcuts.opening_balance')) }}" href="{{ route('ledger.office.shortcuts.opening_balance') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Office Opening Balance')</span>
+        </a>
+      </li>
       <li class="nav-heading">@lang('sidebar.Investor Ledger Entries')</li>
       <li>
         <a class="{{ $active($isRoute(['investors.ledger.shortcuts', 'investors.ledger.shortcuts.capital'])) }}" href="{{ route('investors.ledger.shortcuts.capital') }}">
