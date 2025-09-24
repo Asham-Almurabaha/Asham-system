@@ -50,8 +50,23 @@ class LedgerController extends Controller
         'محاماه مطالبه',
     ];
 
+    private const REQUIRED_TABLES = [
+        'ledger_entries',
+        'transaction_statuses',
+        'transaction_types',
+        'investors',
+        'bank_accounts',
+        'safes',
+    ];
+
     public function index(Request $request, CashAccountsDataService $cashSvc, OfficeIncomeMetricsService $officeSvc, ProductAvailabilityService $goodsSvc)
-{
+    {
+        if ($missingTables = $this->missingRequiredTables()) {
+            return view('ledger::ledger.missing-tables', [
+                'missingTables' => $missingTables,
+            ]);
+        }
+
     /* ========================
      * كويري الأساس لجدول العرض
      * ======================== */
@@ -761,6 +776,16 @@ class LedgerController extends Controller
             ->where('category_id', $categoryId)
             ->where('transaction_status_id', $statusId)
             ->exists();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function missingRequiredTables(): array
+    {
+        return array_values(array_filter(self::REQUIRED_TABLES, static function (string $table): bool {
+            return !Schema::hasTable($table);
+        }));
     }
 
     /** اتجاه الحركة من نوعها */
