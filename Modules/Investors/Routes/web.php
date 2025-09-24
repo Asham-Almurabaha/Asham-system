@@ -34,6 +34,11 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::resource('investor-transactions', InvestorTransactionController::class);
 
     Route::prefix('investors/ledger')->name('investors.ledger.')->group(function () {
+        Route::get('/shortcuts', [InvestorLedgerController::class, 'shortcuts'])->name('shortcuts');
+        Route::get('/shortcuts/capital', [InvestorLedgerController::class, 'capitalShortcut'])->name('shortcuts.capital');
+        Route::get('/shortcuts/liquidity-in', [InvestorLedgerController::class, 'liquidityInShortcut'])->name('shortcuts.liquidity_in');
+        Route::get('/shortcuts/liquidity-out', [InvestorLedgerController::class, 'liquidityOutShortcut'])->name('shortcuts.liquidity_out');
+        Route::get('/shortcuts/zakat', [InvestorLedgerController::class, 'zakatShortcut'])->name('shortcuts.zakat');
         Route::get('/create', [InvestorLedgerController::class, 'create'])->name('create');
         Route::get('/split/create', [InvestorLedgerController::class, 'split'])->name('split.create');
         Route::get('/import', [InvestorLedgerImportController::class, 'create'])->name('import.form');

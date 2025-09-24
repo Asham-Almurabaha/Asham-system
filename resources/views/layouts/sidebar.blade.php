@@ -39,6 +39,7 @@
 
   // فتح مجموعة الحسابات؟
   $accountsOpen = $isRoute('ledger.*')
+      || $isRoute('investors.ledger.*')
       || $isRoute('accounts.entries.goods.*')
       || $isRoute('accounts.entries.goods.sales.*');
 
@@ -246,6 +247,43 @@
       <li>
         <a class="{{ $active($isRoute(['ledger.split.create', 'ledger.split.store'])) }}" href="{{ route('ledger.split.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
+        </a>
+      </li>
+      <li class="nav-heading">@lang('sidebar.Investor Ledger Entries')</li>
+      <li>
+        <a class="{{ $active($isRoute(['investors.ledger.create', 'investors.ledger.store'])) }}" href="{{ route('investors.ledger.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Ledger Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute(['investors.ledger.split.create', 'investors.ledger.split.store'])) }}" href="{{ route('investors.ledger.split.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Split Ledger Entry')</span>
+        </a>
+      </li>
+      <li class="nav-heading">@lang('sidebar.Investor Quick Entries')</li>
+      <li>
+        <a class="{{ $active($isRoute(['investors.ledger.shortcuts', 'investors.ledger.shortcuts.capital'])) }}" href="{{ route('investors.ledger.shortcuts.capital') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Capital Entry')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.ledger.shortcuts.liquidity_in')) }}" href="{{ route('investors.ledger.shortcuts.liquidity_in') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Liquidity Deposit')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.ledger.shortcuts.liquidity_out')) }}" href="{{ route('investors.ledger.shortcuts.liquidity_out') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Liquidity Withdrawal')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.ledger.shortcuts.zakat')) }}" href="{{ route('investors.ledger.shortcuts.zakat') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Zakat Withdrawal')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.ledger.import.*')) }}" href="{{ route('investors.ledger.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Ledger Entries')</span>
         </a>
       </li>
       <li class="nav-heading">@lang('sidebar.Goods Entries')</li>
