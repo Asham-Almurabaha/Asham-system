@@ -53,6 +53,16 @@
       'ledger.import.*',
   ]);
 
+  // فتح مجموعة تصدير البيانات؟
+  $dataExportsOpen = $isRoute([
+      'customers.export',
+      'guarantors.export',
+      'investors.export',
+      'investors.ledger.export',
+      'ledger.export',
+      'contracts.export.*',
+  ]);
+
   $customerManagePatterns = [
       'customers.index',
       'customers.create',
@@ -347,6 +357,49 @@
     </ul>
   </li>
 
+
+
+  {{-- تصدير البيانات --}}
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($dataExportsOpen) }}"
+       data-bs-target="#data-exports-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $dataExportsOpen ? 'true' : 'false' }}">
+      <i class="bi bi-cloud-arrow-up"></i><span>@lang('sidebar.Data Exports')</span><i class="bi bi-chevron-down ms-auto"></i>
+    </a>
+
+    <ul id="data-exports-nav" class="nav-content collapse {{ $open($dataExportsOpen) }}" data-bs-parent="#sidebar-nav">
+      <li>
+        <a class="{{ $active($isRoute('customers.export')) }}" href="{{ route('customers.export') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Export Customers')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('guarantors.export')) }}" href="{{ route('guarantors.export') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Export Guarantors')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.export')) }}" href="{{ route('investors.export') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Export Investors')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.ledger.export')) }}" href="{{ route('investors.ledger.export') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Export Investor Ledger')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.export')) }}" href="{{ route('ledger.export') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Export Ledger Entries')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('contracts.export.*')) }}" href="{{ route('contracts.export.data') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Export Contracts')</span>
+        </a>
+      </li>
+    </ul>
+  </li>
 
 
   {{-- الإعدادات (قابلة للطي) --}}
