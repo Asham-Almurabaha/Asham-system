@@ -2,8 +2,8 @@
 
 namespace Modules\Contracts\Http\Controllers;
 
-use Modules\Investors\DTOs\InvestorShare;
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Customers\Entities\Customer;
 use Modules\Guarantors\Entities\Guarantor;
@@ -19,6 +19,7 @@ use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 use App\Services\InstallmentsMonthlyService;
 use Modules\Contracts\Entities\Contract;
+use Modules\Contracts\Exports\ContractsDataExport;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Contracts\Support\ContractStatusNames;
@@ -30,12 +31,14 @@ use Modules\Contracts\Services\InvestorTransactionLogger;
 use App\Services\ProductTypeAvailabilityService;
 use Modules\Contracts\Http\Requests\StoreContractInvestorsRequest;
 use Modules\Investors\Entities\Investor;
+use Modules\Investors\DTOs\InvestorShare;
 use App\Support\InstallmentPeriod;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -64,50 +67,7 @@ class ContractController extends Controller
         $perPage     = 20;
         $currentPage = max((int) $request->get('page', 1), 1);
 
-        $pivotTable = (new Contract)->investors()->getTable();
-
-        // الاستعلام الأساسي للعقود
-        $contractsBaseQuery = Contract::query();
-
-        // فلترة حسب العميل
-        if ($request->filled('customer')) {
-            $name = trim($request->customer);
-            $contractsBaseQuery->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$name}%"));
-        }
-
-        // فلترة حسب المستثمر
-        if ($request->filled('investor_id')) {
-            $investorId = $request->investor_id;
-            if ($investorId === '_none') {
-                $contractsBaseQuery->doesntHave('investors');
-            } else {
-                $contractsBaseQuery->whereHas('investors', fn($q) => $q->where('investors.id', $investorId)
-                    ->where($pivotTable . '.share_percentage', '<=', 100));
-            }
-        } elseif ($request->filled('investor')) {
-            $name = trim($request->investor);
-            $contractsBaseQuery->whereHas('investors', fn($q) => $q->where('investors.name', 'like', "%{$name}%")
-                ->where($pivotTable . '.share_percentage', '<=', 100));
-        }
-
-        // فلترة حسب رقم العقد
-        if ($request->filled('contract_number')) {
-            $number = trim($request->contract_number);
-            $contractsBaseQuery->where('contract_number', 'like', "%{$number}%");
-        }
-
-        // فلترة حسب حالة العقد
-        if ($request->filled('status')) {
-            $contractsBaseQuery->where('contract_status_id', $request->status);
-        }
-
-        // فلترة حسب التواريخ
-        if ($request->filled('from')) {
-            $contractsBaseQuery->whereDate('start_date', '>=', $request->from);
-        }
-        if ($request->filled('to')) {
-            $contractsBaseQuery->whereDate('start_date', '<=', $request->to);
-        }
+        $contractsBaseQuery = $this->buildContractsBaseQuery($request);
 
         $contractsOrderedQuery = (clone $contractsBaseQuery)->latest();
 
@@ -192,6 +152,63 @@ class ContractController extends Controller
             'contractStatuses',
             'investors'
         ));
+    }
+
+    public function export(Request $request)
+    {
+        $contractsBaseQuery = $this->buildContractsBaseQuery($request);
+
+        $timestamp = now()->format('Y_m_d_His');
+
+        return Excel::download(
+            new ContractsDataExport($contractsBaseQuery),
+            "contracts_export_{$timestamp}.xlsx"
+        );
+    }
+
+    private function buildContractsBaseQuery(Request $request): Builder
+    {
+        $pivotTable = (new Contract)->investors()->getTable();
+
+        $contractsBaseQuery = Contract::query();
+
+        if ($request->filled('customer')) {
+            $name = trim($request->customer);
+            $contractsBaseQuery->whereHas('customer', fn($q) => $q->where('name', 'like', "%{$name}%"));
+        }
+
+        if ($request->filled('investor_id')) {
+            $investorId = $request->investor_id;
+            if ($investorId === '_none') {
+                $contractsBaseQuery->doesntHave('investors');
+            } else {
+                $contractsBaseQuery->whereHas('investors', fn($q) => $q->where('investors.id', $investorId)
+                    ->where($pivotTable . '.share_percentage', '<=', 100));
+            }
+        } elseif ($request->filled('investor')) {
+            $name = trim($request->investor);
+            $contractsBaseQuery->whereHas('investors', fn($q) => $q->where('investors.name', 'like', "%{$name}%")
+                ->where($pivotTable . '.share_percentage', '<=', 100));
+        }
+
+        if ($request->filled('contract_number')) {
+            $number = trim($request->contract_number);
+            $contractsBaseQuery->where('contract_number', 'like', "%{$number}%");
+        }
+
+        if ($request->filled('status')) {
+            $contractsBaseQuery->where('contract_status_id', $request->status);
+        }
+
+        if ($request->filled('from')) {
+            $contractsBaseQuery->whereDate('start_date', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $contractsBaseQuery->whereDate('start_date', '<=', $request->to);
+        }
+
+        return $contractsBaseQuery;
     }
 
 

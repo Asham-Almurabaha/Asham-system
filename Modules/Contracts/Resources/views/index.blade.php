@@ -58,6 +58,9 @@
                     </li>
                 </ul>
             </div>
+            <x-button.action href="{{ route('contracts.export.data', request()->query()) }}" variant="primary" :outline="true">
+                <i class="bi bi-download"></i> {{ __('contracts::contracts.Export Excel') }}
+            </x-button.action>
             @endrole
         </div>
 

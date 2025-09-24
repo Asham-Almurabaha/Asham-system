@@ -48,6 +48,14 @@ Route::post('contracts/refresh-statuses', [ContractController::class, 'refreshSt
     ->name('contracts.refresh-statuses');
 Route::put('contracts/{contract}/images', [ContractController::class, 'updateImages'])
     ->name('contracts.images.update');
+Route::prefix('contracts/export')->name('contracts.export.')->group(function () {
+    Route::get('/data', [ContractController::class, 'export'])->name('data');
+    Route::get('/', [ContractsExportController::class, 'create'])->name('form');
+    Route::get('/basic', [ContractsExportController::class, 'basic'])->name('basic');
+    Route::get('/investors', [ContractsExportController::class, 'investors'])->name('investors');
+    Route::get('/payments', [ContractsExportController::class, 'payments'])->name('payments');
+});
+
 Route::resource('contracts', ContractController::class);
 Route::post('/contracts/investors/store', [ContractController::class, 'storeInvestors'])->name('contracts.investors.store');
 
@@ -72,10 +80,4 @@ Route::get('reports/contracts/without-investor', [ContractReportController::clas
 Route::get('/contracts/{contract}/print', [ContractReportController::class, 'show'])->name('contracts.print');
 Route::get('/contracts/{contract}/closure', [ContractReportController::class, 'closure'])->name('contracts.closure');
 Route::get('/contracts/{contract}/paid', [ContractReportController::class, 'paidInstallments'])->name('contracts.paid');
-
-// تصدير أمثلة العقود
-Route::get('contracts/export', [ContractsExportController::class, 'create'])->name('contracts.export.form');
-Route::get('contracts/export/basic', [ContractsExportController::class, 'basic'])->name('contracts.export.basic');
-Route::get('contracts/export/investors', [ContractsExportController::class, 'investors'])->name('contracts.export.investors');
-Route::get('contracts/export/payments', [ContractsExportController::class, 'payments'])->name('contracts.export.payments');
 
