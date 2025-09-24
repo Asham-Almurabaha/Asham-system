@@ -39,7 +39,15 @@ class LedgerController extends Controller
     private const DIR_OUT = 'out';
 
     /** أسماء الحالات التي تُخفى من القوائم المنسدلة */
-    private const STATUS_EXCLUSIONS = ['فرق البيع','إضافة عقد','سداد قسط','سداد مطالبة','سداد مطالبه'];
+    private const STATUS_EXCLUSIONS = [
+        'فرق البيع',
+        'إضافة عقد',
+        'سداد قسط',
+        'سداد مطالبة',
+        'سداد مطالبه',
+        'محاماة مطالبة',
+        'محاماه مطالبه',
+    ];
 
     public function index(Request $request, CashAccountsDataService $cashSvc, OfficeIncomeMetricsService $officeSvc, ProductAvailabilityService $goodsSvc)
 {
