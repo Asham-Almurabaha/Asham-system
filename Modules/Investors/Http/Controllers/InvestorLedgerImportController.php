@@ -2,7 +2,7 @@
 
 namespace Modules\Investors\Http\Controllers;
 
-use App\Exports\LedgerEntriesFailuresFixExport;
+use Modules\Ledger\Exports\LedgerEntriesFailuresFixExport;
 use App\Http\Controllers\Controller;
 use App\Support\ResetsImportSessions;
 use Illuminate\Http\Request;

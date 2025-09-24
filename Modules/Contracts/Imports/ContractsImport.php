@@ -10,7 +10,7 @@ use Modules\Customers\Entities\Customer;
 use Modules\Guarantors\Entities\Guarantor;
 use Modules\Lookups\Entities\InstallmentStatus;
 use Modules\Lookups\Entities\InstallmentType;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Lookups\Entities\ProductType;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;

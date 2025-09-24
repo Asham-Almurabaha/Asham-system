@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Modules\Ledger\Entities;
 
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

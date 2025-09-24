@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exports;
+namespace Modules\Ledger\Exports;
 
 use App\Support\ExcelHeadingLocalizer;
 use Maatwebsite\Excel\Concerns\FromArray;

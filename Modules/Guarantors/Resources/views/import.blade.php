@@ -18,7 +18,7 @@
         <p class="text-muted mb-0">
           {{ __('guarantors::messages.Upload an Excel/CSV file with specifications:') }}
           <code>name, national_id, phone, email, address, nationality, title, notes, id_card_image, contract_image</code>
-          — @lang('accounts::ledger_import.First row is headers.')
+          — @lang('ledger::ledger_import.First row is headers.')
         </p>
       </div>
       <div class="ms-auto d-none d-md-block">

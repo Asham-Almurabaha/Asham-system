@@ -2,7 +2,7 @@
 
 namespace Modules\Accounts\Entities;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Illuminate\Database\Eloquent\Model;
 
 class BankAccount extends Model

@@ -1,0 +1,11 @@
+{
+    "name": "Ledger",
+    "alias": "ledger",
+    "description": "",
+    "keywords": [],
+    "version": "1.0.0",
+    "priority": 0,
+    "providers": [
+        "Modules\\Ledger\\Providers\\LedgerServiceProvider"
+    ]
+}

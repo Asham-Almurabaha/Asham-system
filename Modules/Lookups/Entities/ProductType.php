@@ -2,7 +2,7 @@
 
 namespace Modules\Lookups\Entities;
 
-use App\Models\ProductTransaction;
+use Modules\Ledger\Entities\ProductTransaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Modules\Contracts\Entities\Contract;

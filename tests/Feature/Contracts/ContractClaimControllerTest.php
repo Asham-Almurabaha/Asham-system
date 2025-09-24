@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Contracts;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use App\Models\OfficeTransaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

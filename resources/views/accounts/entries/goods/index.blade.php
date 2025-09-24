@@ -84,7 +84,7 @@
                     <input type="hidden" name="safe_id" id="purchase_safe_id" value="{{ $purchaseSafeId }}">
 
                     <div class="col-md-4 mt-0">
-                        <label class="form-label" for="purchase_account_picker">@lang('accounts::ledger.Account')</label>
+                        <label class="form-label" for="purchase_account_picker">@lang('ledger::ledger.Account')</label>
                         <select id="purchase_account_picker" class="form-select" required>
                             <option value="" disabled {{ $purchaseBankId || $purchaseSafeId ? '' : 'selected' }}>اختر حسابًا</option>
                             <optgroup label="الحسابات البنكية">
@@ -108,14 +108,14 @@
                     </div>
 
                     <div class="col-md-4 mt-0">
-                        <label class="form-label" for="purchase_amount">@lang('accounts::ledger.Amount')</label>
+                        <label class="form-label" for="purchase_amount">@lang('ledger::ledger.Amount')</label>
                         <input type="number" step="0.01" min="0" name="amount" id="purchase_amount" class="form-control" value="{{ $purchaseAmount }}" required>
                         <div class="invalid-feedback">المبلغ يتجاوز المتاح في الحساب.</div>
                         @error('amount', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-4 mt-0">
-                        <label class="form-label" for="purchase_transaction_date">@lang('accounts::ledger.Transaction Date')</label>
+                        <label class="form-label" for="purchase_transaction_date">@lang('ledger::ledger.Transaction Date')</label>
                         <input type="date" name="transaction_date" id="purchase_transaction_date" class="form-control js-date" value="{{ $purchaseDate }}" required>
                         @error('transaction_date', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
@@ -131,7 +131,7 @@
                                     @foreach ($purchaseProducts as $i => $row)
                                         <div class="row g-2 product-row align-items-end {{ $i > 0 ? 'mt-2' : '' }}">
                                             <div class="col-md-8">
-                                                <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+                                                <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
                                                 <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
                                                     <option value="">— اختر —</option>
                                                     @foreach ($products as $product)
@@ -156,7 +156,7 @@
                                 @else
                                     <div class="row g-2 product-row align-items-end">
                                         <div class="col-md-8">
-                                            <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+                                            <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
                                             <select name="products[0][product_type_id]" class="form-select js-product-select">
                                                 <option value="">— اختر —</option>
                                                 @foreach ($products as $product)
@@ -183,7 +183,7 @@
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="purchase_notes">@lang('accounts::ledger.Notes')</label>
+                        <label class="form-label" for="purchase_notes">@lang('ledger::ledger.Notes')</label>
                         <textarea name="notes" id="purchase_notes" rows="3" class="form-control" maxlength="1000">{{ $purchaseNotes }}</textarea>
                         @error('notes', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
@@ -212,28 +212,28 @@
                     @endif
 
                     <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_amount">@lang('accounts::ledger.Total Amount')</label>
+                        <label class="form-label" for="partial_amount">@lang('ledger::ledger.Total Amount')</label>
                         <input type="number" step="0.01" min="0" name="amount" id="partial_amount" class="form-control" value="{{ $partialAmount }}" required>
                         <div class="invalid-feedback">المبلغ يتجاوز المتاح.</div>
                         @error('amount', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_bank_share">@lang('accounts::ledger.Amount (Bank)')</label>
+                        <label class="form-label" for="partial_bank_share">@lang('ledger::ledger.Amount (Bank)')</label>
                         <input type="number" step="0.01" min="0" name="bank_share" id="partial_bank_share" class="form-control" value="{{ $partialBankShare }}">
                         <div class="invalid-feedback">المبلغ أكبر من المتاح في الحساب البنكي.</div>
                         @error('bank_share', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_safe_share">@lang('accounts::ledger.Amount (Safe)')</label>
+                        <label class="form-label" for="partial_safe_share">@lang('ledger::ledger.Amount (Safe)')</label>
                         <input type="number" step="0.01" min="0" name="safe_share" id="partial_safe_share" class="form-control" value="{{ $partialSafeShare }}">
                         <div class="invalid-feedback">المبلغ أكبر من المتاح في الخزنة.</div>
                         @error('safe_share', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_transaction_date">@lang('accounts::ledger.Transaction Date')</label>
+                        <label class="form-label" for="partial_transaction_date">@lang('ledger::ledger.Transaction Date')</label>
                         <input type="date" name="transaction_date" id="partial_transaction_date" class="form-control js-date" value="{{ $partialDate }}" required>
                         @error('transaction_date', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
@@ -244,7 +244,7 @@
                                 <div class="border rounded p-3 h-100">
                                     <h6 class="mb-3">جزء البنك</h6>
                                     <div>
-                                        <label class="form-label" for="partial_bank_account_id">@lang('accounts::ledger.Bank Account')</label>
+                                        <label class="form-label" for="partial_bank_account_id">@lang('ledger::ledger.Bank Account')</label>
                                         <select name="bank_account_id" id="partial_bank_account_id" class="form-select">
                                             <option value="" disabled {{ $partialBankId ? '' : 'selected' }}>اختر الحساب البنكي</option>
                                             @foreach ($banks as $bank)
@@ -265,7 +265,7 @@
                                 <div class="border rounded p-3 h-100">
                                     <h6 class="mb-3">جزء الخزنة</h6>
                                     <div>
-                                        <label class="form-label" for="partial_safe_id">@lang('accounts::ledger.Safe')</label>
+                                        <label class="form-label" for="partial_safe_id">@lang('ledger::ledger.Safe')</label>
                                         <select name="safe_id" id="partial_safe_id" class="form-select">
                                             <option value="" disabled {{ $partialSafeId ? '' : 'selected' }}>اختر الخزنة</option>
                                             @foreach ($safes as $safe)
@@ -302,7 +302,7 @@
                                     @foreach ($partialProducts as $i => $row)
                                         <div class="row g-2 product-row align-items-end {{ $i > 0 ? 'mt-2' : '' }}">
                                             <div class="col-md-8">
-                                                <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+                                                <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
                                                 <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
                                                     <option value="">— اختر —</option>
                                                     @foreach ($products as $product)
@@ -327,7 +327,7 @@
                                 @else
                                     <div class="row g-2 product-row align-items-end">
                                         <div class="col-md-8">
-                                            <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+                                            <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
                                             <select name="products[0][product_type_id]" class="form-select js-product-select">
                                                 <option value="">— اختر —</option>
                                                 @foreach ($products as $product)
@@ -354,7 +354,7 @@
                     </div>
 
                     <div class="col-12">
-                        <label class="form-label" for="partial_notes">@lang('accounts::ledger.Notes')</label>
+                        <label class="form-label" for="partial_notes">@lang('ledger::ledger.Notes')</label>
                         <textarea name="notes" id="partial_notes" rows="3" class="form-control" maxlength="1000">{{ $partialNotes }}</textarea>
                         @error('notes', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                     </div>
@@ -379,7 +379,7 @@
 <template id="purchase_product_template">
     <div class="row g-2 product-row align-items-end mt-2">
         <div class="col-md-8">
-            <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+            <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
             <select class="form-select js-product-select">
                 <option value="">— اختر —</option>
                 @foreach ($products as $product)
@@ -403,7 +403,7 @@
 <template id="partial_product_template">
     <div class="row g-2 product-row align-items-end mt-2">
         <div class="col-md-8">
-            <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+            <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
             <select class="form-select js-product-select">
                 <option value="">— اختر —</option>
                 @foreach ($products as $product)

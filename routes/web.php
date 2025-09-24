@@ -7,10 +7,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\Accounts\GoodsEntriesController;
 use App\Http\Controllers\Accounts\GoodsSalesEntriesController;
-use App\Http\Controllers\LedgerEntriesImportController;
 use App\Http\Controllers\Setting\PermissionManagementController;
 use App\Http\Controllers\Setting\RoleManagementController;
 use App\Http\Controllers\Setting\RolePermissionController;
@@ -57,30 +55,11 @@ Route::middleware('auth')->group(function () {
         Route::resource('settings', SettingController::class);
     });
 
-    // استيراد القيود
-    Route::prefix('ledger/import')->name('ledger.')->group(function () {
-        Route::get('/',               [LedgerEntriesImportController::class, 'create'])->name('import.form');
-        Route::post('/',              [LedgerEntriesImportController::class, 'store'])->name('import');
-        Route::get('/template',       [LedgerEntriesImportController::class, 'template'])->name('import.template');
-        Route::get('/failures/fix',   [LedgerEntriesImportController::class, 'exportFailuresFix'])->name('import.failures.fix');
-    });
-
     // CRUDات رئيسية
     require base_path('Modules/Customers/Routes/web.php');
     require base_path('Modules/Guarantors/Routes/web.php');
     require base_path('Modules/Investors/Routes/web.php');
     require base_path('Modules/Contracts/Routes/web.php');
-
-    // القيود
-    Route::prefix('ledger')->name('ledger.')->group(function () {
-        Route::get('/',                 [LedgerController::class, 'index'])->name('index');
-        Route::get('/create',           [LedgerController::class, 'create'])->name('create');
-        Route::post('/',                [LedgerController::class, 'store'])->name('store');
-        Route::get('/transfer/create',  [LedgerController::class, 'transferCreate'])->name('transfer.create');
-        Route::post('/transfer',        [LedgerController::class, 'transferStore'])->name('transfer.store');
-        Route::get('/split/create',     [LedgerController::class, 'splitCreate'])->name('split.create');
-        Route::post('/split',           [LedgerController::class, 'splitStore'])->name('split.store');
-    });
 
     Route::prefix('accounts/entries/goods')->name('accounts.entries.goods.')->group(function () {
         Route::get('/', [GoodsEntriesController::class, 'index'])

@@ -4,7 +4,7 @@ namespace Modules\Contracts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Modules\Lookups\Entities\InstallmentStatus;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use App\Models\OfficeTransaction;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;

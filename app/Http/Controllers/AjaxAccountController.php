@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Illuminate\Http\Request;

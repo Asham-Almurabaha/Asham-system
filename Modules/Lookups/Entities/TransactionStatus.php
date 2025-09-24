@@ -2,7 +2,7 @@
 
 namespace Modules\Lookups\Entities;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use App\Models\OfficeTransaction;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

@@ -1,24 +1,25 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Ledger\Http\Controllers;
 
-use App\Models\LedgerEntry;
+use App\Http\Controllers\Controller;
 use App\Models\OfficeTransaction;
-use Modules\Investors\Entities\Investor;
-// use App\Models\Product; // ❌ لم نعد نستخدمه
-use App\Models\ProductTransaction;
-use Modules\Investors\Entities\InvestorTransaction;
-use Modules\Lookups\Entities\ProductType;
-use Modules\Accounts\Entities\BankAccount;
-use Modules\Accounts\Entities\Safe;
-use Modules\Lookups\Entities\TransactionStatus;
 use App\Services\CashAccountsDataService;
 use App\Services\OfficeIncomeMetricsService;
 use App\Services\ProductAvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
+use Modules\Investors\Entities\Investor;
+use Modules\Investors\Entities\InvestorTransaction;
+use Modules\Ledger\Entities\LedgerEntry;
+use Modules\Ledger\Entities\ProductTransaction;
+use Modules\Lookups\Entities\ProductType;
+use Modules\Lookups\Entities\TransactionStatus;
+use function view;
 
 class LedgerController extends Controller
 {
@@ -161,7 +162,7 @@ class LedgerController extends Controller
     /* ========================
      * تمرير القيم للواجهة
      * ======================== */
-    return view('accounts::ledger.index', array_merge([
+    return view('ledger::ledger.index', array_merge([
         'entries'           => $entries,
         'totIn'             => $totIn,
         'totOut'            => $totOut,
@@ -210,7 +211,7 @@ class LedgerController extends Controller
         $goodsStatusIds  = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])
                             ->pluck('id')->values()->all();
 
-        return view('accounts::ledger.create', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
+        return view('ledger::ledger.create', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
     }
 
     public function store(Request $request)
@@ -381,7 +382,7 @@ class LedgerController extends Controller
         $banks = BankAccount::orderBy('name')->get();
         $safes = Safe::orderBy('name')->get();
 
-        return view('accounts::ledger.transfer', compact('banks', 'safes'));
+        return view('ledger::ledger.transfer', compact('banks', 'safes'));
     }
 
     public function transferStore(Request $request)
@@ -517,7 +518,7 @@ class LedgerController extends Controller
         $goodsStatusIds  = TransactionStatus::whereIn('name', ['شراء بضائع','بيع بضائع'])
                             ->pluck('id')->values()->all();
 
-        return view('accounts::ledger.split', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
+        return view('ledger::ledger.split', compact('investors', 'banks', 'safes', 'statusesByCategory', 'products', 'goodsStatusIds'));
     }
 
     public function splitStore(Request $request)

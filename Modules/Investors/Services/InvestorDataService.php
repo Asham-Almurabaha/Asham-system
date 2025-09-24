@@ -4,7 +4,7 @@ namespace Modules\Investors\Services;
 
 use Modules\Lookups\Entities\ContractStatus;
 use Modules\Investors\Entities\Investor;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use App\Models\OfficeTransaction;
 use Modules\Investors\Support\InvestorLiquidityCalculator;
 use Modules\Lookups\Entities\TransactionStatus;

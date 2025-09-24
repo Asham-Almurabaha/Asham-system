@@ -3,7 +3,7 @@
 namespace Modules\Investors\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

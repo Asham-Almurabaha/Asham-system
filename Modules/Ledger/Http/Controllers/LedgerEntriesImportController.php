@@ -1,14 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace Modules\Ledger\Http\Controllers;
 
-use App\Exports\LedgerEntriesFailuresFixExport;
-use App\Exports\LedgerEntriesTemplateExport;
-use App\Imports\LedgerEntriesImport;
+use App\Http\Controllers\Controller;
 use App\Support\ResetsImportSessions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
+use Modules\Ledger\Exports\LedgerEntriesFailuresFixExport;
+use Modules\Ledger\Exports\LedgerEntriesTemplateExport;
+use Modules\Ledger\Imports\LedgerEntriesImport;
+use function view;
 
 class LedgerEntriesImportController extends Controller
 {
@@ -21,7 +23,7 @@ class LedgerEntriesImportController extends Controller
             'failures_simple',
         ], $request, ['ledger_import_just_done', 'ledger_import_action']);
 
-        return view('accounts::ledger.import');
+        return view('ledger::ledger.import');
     }
 
     public function store(Request $request)
@@ -120,20 +122,20 @@ class LedgerEntriesImportController extends Controller
 
     // تنزيل ملف لتصحيح الصفوف الفاشلة (CSV سريع)
     public function exportFailuresFix()
-{
-    $failures = session('ledger_import.failures_simple', []);
+    {
+        $failures = session('ledger_import.failures_simple', []);
 
-    if (empty($failures) || (is_countable($failures) && count($failures) === 0)) {
-        return redirect()->route('ledger.import.form')
-            ->with('info', 'لا توجد أخطاء لتوليد ملف التصحيح.')
-            ->with('ledger_import_action', true);
+        if (empty($failures) || (is_countable($failures) && count($failures) === 0)) {
+            return redirect()->route('ledger.import.form')
+                ->with('info', 'لا توجد أخطاء لتوليد ملف التصحيح.')
+                ->with('ledger_import_action', true);
+        }
+
+        if ($failures instanceof Collection) {
+            $failures = $failures->all();
+        }
+
+        return Excel::download(new LedgerEntriesFailuresFixExport($failures), 'ledger_entries_to_fix.xlsx');
     }
-
-    if ($failures instanceof Collection) {
-        $failures = $failures->all();
-    }
-
-    return Excel::download(new LedgerEntriesFailuresFixExport($failures), 'ledger_entries_to_fix.xlsx');
-}
 
 }

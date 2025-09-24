@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Imports;
+namespace Modules\Ledger\Imports;
 
 use App\Imports\Concerns\DetectsEmptyRows;
-use App\Models\LedgerEntry;
 use App\Models\OfficeTransaction;
-use App\Models\ProductTransaction;
 use Illuminate\Support\Facades\DB;
+use Modules\Ledger\Entities\LedgerEntry;
+use Modules\Ledger\Entities\ProductTransaction;
 use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Lookups\Entities\ProductType;
 use Modules\Lookups\Entities\TransactionStatus;

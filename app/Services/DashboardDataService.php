@@ -4,13 +4,16 @@ namespace App\Services;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Models\LedgerEntry;
+use Illuminate\Support\Facades\Schema;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Investors\Entities\Investor;
 
 class DashboardDataService
 {
+    private ?bool $ledgerTableExists = null;
+
     public function __construct(
         private CashAccountsDataService     $cashSvc,
         private OfficeIncomeMetricsService  $officeSvc,
@@ -19,6 +22,10 @@ class DashboardDataService
 
     public function build(array $filters = []): array
     {
+        if (!$this->ledgerExists()) {
+            return $this->emptyState();
+        }
+
         // 1) سيولة المستثمرين (غير متأثرة بالتاريخ)
         [$invTotals, $invByInvestor] = $this->investorsLiquidityFromLedger();
 
@@ -70,6 +77,51 @@ class DashboardDataService
             'activeInvestors'=> $activeInvestors,
 
             'cardsAvailable' => $cardsAvailable,
+        ];
+    }
+
+    private function ledgerExists(): bool
+    {
+        return $this->ledgerTableExists ??= Schema::hasTable('ledger_entries');
+    }
+
+    private function emptyState(): array
+    {
+        return [
+            'invTotals'      => (object) [
+                'inflow'  => 0.0,
+                'outflow' => 0.0,
+                'net'     => 0.0,
+            ],
+            'invByInvestor'  => collect(),
+
+            'officeTotals'   => (object) ['net' => 0.0],
+            'officeMetrics'  => [],
+
+            'banksWithOpen'  => collect(),
+            'safesWithOpen'  => collect(),
+            'distribution'   => [
+                'labels' => ['بنوك', 'خزن'],
+                'data'   => [0.0, 0.0],
+            ],
+
+            'timeSeries'     => [
+                'labels' => [],
+                'in'     => [],
+                'out'    => [],
+                'net'    => [],
+            ],
+            'monthlySeries'  => [
+                'labels' => [],
+                'in'     => [],
+                'out'    => [],
+            ],
+
+            'entriesCount'   => 0,
+            'avgAmount'      => 0.0,
+            'activeInvestors'=> 0,
+
+            'cardsAvailable' => 0,
         ];
     }
 

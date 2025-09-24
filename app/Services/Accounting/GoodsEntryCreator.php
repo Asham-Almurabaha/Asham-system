@@ -2,9 +2,9 @@
 
 namespace App\Services\Accounting;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use App\Models\OfficeTransaction;
-use App\Models\ProductTransaction;
+use Modules\Ledger\Entities\ProductTransaction;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;

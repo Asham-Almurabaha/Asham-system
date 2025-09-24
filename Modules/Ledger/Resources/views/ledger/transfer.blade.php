@@ -25,7 +25,7 @@
 
             {{-- من (مصدر) --}}
             <div class="col-md-5">
-                <label class="form-label" for="from_picker">@lang('accounts::ledger.From Account')</label>
+                <label class="form-label" for="from_picker">@lang('ledger::ledger.From Account')</label>
                 <select id="from_picker" class="form-select" required>
                     <option value="" disabled {{ $oldFrom ? '' : 'selected' }}>اختر الحساب المصدر</option>
                     <optgroup label="الحسابات البنكية">
@@ -59,7 +59,7 @@
 
             {{-- إلى (وجهة) --}}
             <div class="col-md-5">
-                <label class="form-label" for="to_picker">@lang('accounts::ledger.To Account')</label>
+                <label class="form-label" for="to_picker">@lang('ledger::ledger.To Account')</label>
                 <select id="to_picker" class="form-select" required>
                     <option value="" disabled {{ $oldTo ? '' : 'selected' }}>اختر الحساب الوجهة</option>
                     <optgroup label="الحسابات البنكية">
@@ -82,7 +82,7 @@
 
             {{-- المبلغ + التاريخ --}}
             <div class="col-md-6">
-                <label class="form-label" for="amount">@lang('accounts::ledger.Amount')</label>
+                <label class="form-label" for="amount">@lang('ledger::ledger.Amount')</label>
                 <input
                     type="number" step="0.01" min="0"
                     name="amount" id="amount"
@@ -93,14 +93,14 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label" for="transaction_date">@lang('accounts::ledger.Transaction Date')</label>
+                <label class="form-label" for="transaction_date">@lang('ledger::ledger.Transaction Date')</label>
                 <input type="date" name="transaction_date" id="transaction_date" class="form-control js-date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
                 @error('transaction_date') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
             {{-- ملاحظات --}}
             <div class="col-12">
-                <label class="form-label" for="notes">@lang('accounts::ledger.Notes')</label>
+                <label class="form-label" for="notes">@lang('ledger::ledger.Notes')</label>
                 <textarea name="notes" id="notes" rows="3" class="form-control" maxlength="1000">{{ old('notes') }}</textarea>
             </div>
 

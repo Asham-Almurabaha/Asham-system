@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Investors;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Imports\InvestorLedgerEntriesImport;

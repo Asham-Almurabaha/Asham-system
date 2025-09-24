@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Contracts;
 
-use App\Models\LedgerEntry;
-use App\Models\ProductTransaction;
+use Modules\Ledger\Entities\LedgerEntry;
+use Modules\Ledger\Entities\ProductTransaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;

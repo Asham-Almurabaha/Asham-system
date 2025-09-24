@@ -2,7 +2,7 @@
 
 namespace Modules\Contracts\Services;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Lookups\Entities\TransactionStatus;
 use Modules\Lookups\Entities\TransactionType;
 use Carbon\Carbon;

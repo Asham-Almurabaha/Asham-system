@@ -3,7 +3,7 @@
 namespace Modules\Investors\Imports;
 
 use App\Imports\Concerns\DetectsEmptyRows;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;

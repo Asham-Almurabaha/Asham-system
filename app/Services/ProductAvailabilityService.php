@@ -3,14 +3,17 @@
 namespace App\Services;
 
 use Modules\Lookups\Entities\ProductType;
-use App\Models\ProductTransaction;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\ProductTransaction;
+use Modules\Ledger\Entities\LedgerEntry;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProductAvailabilityService
 {
+    private ?bool $hasRequiredTablesCache = null;
+
     /**
      * احسب المتاح من البضائع لكل نوع
      *
@@ -62,6 +65,10 @@ class ProductAvailabilityService
     {
         $compact = (bool)($filters['compact'] ?? $filters['only_available'] ?? false);
         $lowThreshold = (int)($filters['low_threshold'] ?? config('inventory.low_threshold', 5));
+
+        if (!$this->hasRequiredTables()) {
+            return $this->emptyResult($compact, $lowThreshold);
+        }
 
         // 1) قائمة الأنواع المطلوبة
         $typeQuery = ProductType::query()
@@ -226,6 +233,43 @@ class ProductAvailabilityService
             'totals' => [
                 'stock'  => $this->fmtStockTotals($totQtyIn, $totQtyOut, $totAvail),
                 'ledger' => $this->fmtMoneyTotals($totAmtIn, $totAmtOut, $totBal),
+            ],
+        ];
+    }
+
+    private function hasRequiredTables(): bool
+    {
+        if ($this->hasRequiredTablesCache !== null) {
+            return $this->hasRequiredTablesCache;
+        }
+
+        foreach (['product_types', 'product_transactions', 'ledger_entries', 'transaction_statuses'] as $table) {
+            if (!Schema::hasTable($table)) {
+                return $this->hasRequiredTablesCache = false;
+            }
+        }
+
+        return $this->hasRequiredTablesCache = true;
+    }
+
+    private function emptyResult(bool $compact, int $lowThreshold): array
+    {
+        if ($compact) {
+            return [
+                'items'  => [],
+                'totals' => [
+                    'available'     => 0,
+                    'formatted'     => '0',
+                    'low_threshold' => $lowThreshold,
+                ],
+            ];
+        }
+
+        return [
+            'items'  => [],
+            'totals' => [
+                'stock'  => $this->fmtStockTotals(0, 0, 0),
+                'ledger' => $this->fmtMoneyTotals(0.0, 0.0, 0.0),
             ],
         ];
     }

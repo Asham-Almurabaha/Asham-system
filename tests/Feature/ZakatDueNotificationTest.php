@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use App\Models\User;
 use App\Notifications\ZakatDueNotification;
 use Carbon\Carbon;

@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Accounts;
 
-use App\Imports\LedgerEntriesImport;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Imports\LedgerEntriesImport;
+use Modules\Ledger\Entities\LedgerEntry;
 use App\Models\OfficeTransaction;
-use App\Models\ProductTransaction;
+use Modules\Ledger\Entities\ProductTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Accounts\Entities\Safe;
 use Modules\Lookups\Entities\ProductType;

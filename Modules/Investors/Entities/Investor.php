@@ -2,7 +2,7 @@
 
 namespace Modules\Investors\Entities;
 
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Lookups\Entities\Nationality;
 use App\Models\OfficeTransaction;
 use Modules\Lookups\Entities\Title;

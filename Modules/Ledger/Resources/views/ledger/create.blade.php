@@ -51,7 +51,7 @@
             <div class="row">
                 {{-- الفئة --}}
                 <div class="col-md-4">
-                    <label class="form-label" for="party_category">@lang('accounts::ledger.Category')</label>
+                    <label class="form-label" for="party_category">@lang('ledger::ledger.Category')</label>
                     @if($restrictPartyToInvestors)
                         <select id="party_category" class="form-select" disabled>
                             <option value="investors" selected>المستثمرون</option>
@@ -67,7 +67,7 @@
 
                 {{-- المستثمر (شرطي عند investors) --}}
                 <div class="col-md-4" id="investorWrap">
-                    <label class="form-label" for="investor_id">@lang('accounts::ledger.Investor')</label>
+                    <label class="form-label" for="investor_id">@lang('ledger::ledger.Investor')</label>
                     <select name="investor_id" id="investor_id" class="form-select" aria-describedby="investorHelp">
                         <option value="" disabled {{ old('investor_id') ? '' : 'selected' }}>اختر المستثمر</option>
                         @foreach ($investors as $investor)
@@ -88,7 +88,7 @@
 
                 {{-- الحالة: قائمتان منفصلتان + حقل مخفي يوحّد الإرسال --}}
                 <div class="col-md-4">
-                    <label class="form-label">@lang('accounts::ledger.Status')</label>
+                    <label class="form-label">@lang('ledger::ledger.Status')</label>
 
                     <select id="status_investors" class="form-select mb-2" {{ $oldCat==='investors' ? '' : 'hidden' }}
                             data-goods-ids='@json($goodsStatusIds)'>
@@ -126,7 +126,7 @@
 
             {{-- مُلتقط الحساب + عرض المتاح --}}
             <div class="col-md-4 mt-0">
-                <label class="form-label" for="account_picker">@lang('accounts::ledger.Account')</label>
+                <label class="form-label" for="account_picker">@lang('ledger::ledger.Account')</label>
                 <select id="account_picker" class="form-select" required disabled>
                     <option value="" disabled {{ $oldAccountPicker ? '' : 'selected' }}>اختر حسابًا</option>
                     <optgroup label="الحسابات البنكية">
@@ -156,14 +156,14 @@
 
             {{-- المبلغ + التاريخ --}}
             <div class="col-md-4 mt-0">
-                <label class="form-label" for="amount">@lang('accounts::ledger.Amount')</label>
+                <label class="form-label" for="amount">@lang('ledger::ledger.Amount')</label>
                 <input type="number" step="0.01" min="0" name="amount" id="amount" class="form-control" value="{{ old('amount', '0') }}" required>
                 <div class="invalid-feedback">المبلغ يتجاوز الحد المسموح.</div>
                 @error('amount') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
 
             <div class="col-md-4 mt-0">
-                <label class="form-label" for="transaction_date">@lang('accounts::ledger.Transaction Date')</label>
+                <label class="form-label" for="transaction_date">@lang('ledger::ledger.Transaction Date')</label>
                 <input type="date" name="transaction_date" id="transaction_date" class="form-control js-date" value="{{ old('transaction_date', now()->toDateString()) }}" required>
                 @error('transaction_date') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
             </div>
@@ -181,7 +181,7 @@
                                 @php $oldTypeId = $row['product_type_id'] ?? $row['product_id'] ?? null; @endphp
                                 <div class="row g-2 product-row align-items-end {{ $i>0 ? 'mt-2' : '' }}">
                                     <div class="col-md-8">
-                                        <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+                                        <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
                                         <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
                                             <option value="">— اختر —</option>
                                             @foreach($products as $p)
@@ -206,7 +206,7 @@
                         @else
                             <div class="row g-2 product-row align-items-end">
                                 <div class="col-md-8">
-                                    <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+                                    <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
                                     <select name="products[0][product_type_id]" class="form-select js-product-select">
                                         <option value="">— اختر —</option>
                                         @foreach($products as $p)
@@ -238,7 +238,7 @@
 
             {{-- ملاحظات --}}
             <div class="col-12">
-                <label class="form-label" for="notes">@lang('accounts::ledger.Notes')</label>
+                <label class="form-label" for="notes">@lang('ledger::ledger.Notes')</label>
                 <textarea name="notes" id="notes" rows="3" class="form-control" maxlength="1000">{{ old('notes') }}</textarea>
             </div>
 
@@ -267,7 +267,7 @@
 <template id="product_row_tpl">
     <div class="row g-2 product-row align-items-end mt-2">
         <div class="col-md-8">
-            <label class="form-label small mb-1">@lang('accounts::ledger.Product Type')</label>
+            <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
             <select class="form-select js-product-select">
                 <option value="">— اختر —</option>
                 @foreach($products as $p)

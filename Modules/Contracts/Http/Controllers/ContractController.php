@@ -12,7 +12,7 @@ use Modules\Lookups\Entities\InstallmentType;
 use Modules\Lookups\Entities\Claimant;
 use Modules\Lookups\Entities\ClaimPayer;
 use Modules\Lookups\Entities\ClaimStatus;
-use App\Models\LedgerEntry;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Lookups\Entities\ProductType;
 use Modules\Accounts\Entities\Safe;
 use Modules\Lookups\Entities\TransactionStatus;

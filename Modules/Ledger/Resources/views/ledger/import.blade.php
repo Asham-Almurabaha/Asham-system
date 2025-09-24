@@ -1,7 +1,7 @@
 ﻿{{-- resources/views/ledger/import.blade.php --}}
 @extends('layouts.master')
 
-@section('title', __('accounts::ledger_import.Import Ledger Entries from Excel'))
+@section('title', __('ledger::ledger_import.Import Ledger Entries from Excel'))
 
 @section('content')
 <div class="container-xxl py-4" dir="rtl">
@@ -22,7 +22,7 @@
       </div>
       <div class="ms-auto d-none d-md-block">
         <x-button.action href="{{ route('ledger.import.template') }}" variant="secondary" :outline="true" size="sm">
-          <i class="bi bi-filetype-xlsx me-1"></i> @lang('accounts::ledger_import.Download template')
+          <i class="bi bi-filetype-xlsx me-1"></i> @lang('ledger::ledger_import.Download template')
         </x-button.action>
       </div>
     </div>
@@ -111,7 +111,7 @@
       <div class="d-flex align-items-start">
         <i class="bi bi-exclamation-circle me-2 fs-5"></i>
         <div>
-          <div class="fw-semibold mb-1">@lang('accounts::ledger_import.Errors during read/save:')</div>
+          <div class="fw-semibold mb-1">@lang('ledger::ledger_import.Errors during read/save:')</div>
           <ul class="mb-0">
             @foreach ($errorsSimple as $msg) <li>{{ $msg }}</li> @endforeach
           </ul>
@@ -124,17 +124,17 @@
     <div class="card-body">
       <x-import.form
           :action="route('ledger.import')"
-          :drag-text="__('accounts::ledger_import.Drag file here or click to choose')"
-          :help-text="__('accounts::ledger_import.Excel/CSV only — validation before save')"
-          :submit-text="__('accounts::ledger_import.Import Now')"
-          :selected-label="__('accounts::ledger_import.Selected file:')"
+          :drag-text="__('ledger::ledger_import.Drag file here or click to choose')"
+          :help-text="__('ledger::ledger_import.Excel/CSV only — validation before save')"
+          :submit-text="__('ledger::ledger_import.Import Now')"
+          :selected-label="__('ledger::ledger_import.Selected file:')"
           id-prefix="accounts-ledger-import"
-          :invalid-format-message="__('accounts::ledger_import.Unsupported file format. Allowed: xlsx, xls, csv')"
-          :too-large-message="__('accounts::ledger_import.File size exceeds 10MB.')"
+          :invalid-format-message="__('ledger::ledger_import.Unsupported file format. Allowed: xlsx, xls, csv')"
+          :too-large-message="__('ledger::ledger_import.File size exceeds 10MB.')"
       >
         @if ($hasFailures && Route::has('ledger.import.failures.fix'))
           <x-button.action href="{{ route('ledger.import.failures.fix') }}" variant="warning">
-            <i class="bi bi-wrench-adjustable me-1"></i> @lang('accounts::ledger_import.Download file to fix rows')
+            <i class="bi bi-wrench-adjustable me-1"></i> @lang('ledger::ledger_import.Download file to fix rows')
           </x-button.action>
         @endif
       </x-import.form>
@@ -145,10 +145,10 @@
     <div class="card border-0 shadow-sm">
       <div class="card-header d-flex align-items-center bg-white">
         <i class="bi bi-list-check me-2"></i>
-        <span>@lang('accounts::ledger_import.Validation Errors')</span>
+        <span>@lang('ledger::ledger_import.Validation Errors')</span>
         <span class="badge rounded-pill text-bg-danger ms-2">{{ $failuresCount }}</span>
         <x-button.action type="submit" variant="secondary" :outline="true" size="sm" class="ms-auto" data-bs-toggle="collapse" data-bs-target="#failuresTable" aria-expanded="true">
-          @lang('accounts::ledger_import.Show/Hide')
+          @lang('ledger::ledger_import.Show/Hide')
         </x-button.action>
       </div>
 
@@ -157,10 +157,10 @@
           <x-table head-class="table-light sticky-top" striped small>
               <x-slot name="head">
                   <tr>
-                    <th style="width:110px">@lang('accounts::ledger_import.Row Number')</th>
-                    <th style="width:220px">@lang('accounts::ledger_import.Field')</th>
-                    <th>@lang('accounts::ledger_import.Messages')</th>
-                    <th style="min-width:260px">@lang('accounts::ledger_import.Values')</th>
+                    <th style="width:110px">@lang('ledger::ledger_import.Row Number')</th>
+                    <th style="width:220px">@lang('ledger::ledger_import.Field')</th>
+                    <th>@lang('ledger::ledger_import.Messages')</th>
+                    <th style="min-width:260px">@lang('ledger::ledger_import.Values')</th>
                   </tr>
               </x-slot>
               @foreach ($failuresBag as $failure)
@@ -189,7 +189,7 @@
               @endforeach
           </x-table>
           <div class="p-3 text-muted small">
-            @lang('accounts::ledger_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')
+            @lang('ledger::ledger_import.Correct rows above then re-upload. Prefer using the “Download file to fix rows” button.')
           </div>
         </div>
       </div>

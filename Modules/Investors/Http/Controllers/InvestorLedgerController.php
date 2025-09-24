@@ -16,7 +16,7 @@ class InvestorLedgerController extends Controller
 
     public function create()
     {
-        return view('accounts::ledger.create', $this->buildFormPayload([
+        return view('ledger::ledger.create', $this->buildFormPayload([
             'pageTitleText' => 'قيد مستثمر',
             'pageHeading'   => 'إضافة قيد للمستثمرين',
             'breadcrumbParentUrl'   => route('investors.index'),
@@ -30,7 +30,7 @@ class InvestorLedgerController extends Controller
 
     public function split()
     {
-        return view('accounts::ledger.split', $this->buildFormPayload([
+        return view('ledger::ledger.split', $this->buildFormPayload([
             'pageTitleText' => 'قيد مستثمر مُجزّأ',
             'pageHeading'   => 'قيد مستثمر مُجزّأ',
             'breadcrumbParentUrl'   => route('investors.index'),

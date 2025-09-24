@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\LedgerEntry;
-use App\Models\ProductTransaction;
+use Modules\Ledger\Entities\LedgerEntry;
+use Modules\Ledger\Entities\ProductTransaction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\DB;
