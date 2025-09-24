@@ -42,6 +42,16 @@
       || $isRoute('accounts.entries.goods.*')
       || $isRoute('accounts.entries.goods.sales.*');
 
+  // فتح مجموعة استيرادات البيانات؟
+  $dataImportsOpen = $isRoute([
+      'customers.import.*',
+      'guarantors.import.*',
+      'investors.import.*',
+      'investors.ledger.import.*',
+      'contracts.import.*',
+      'ledger.import.*',
+  ]);
+
   $customerManagePatterns = [
       'customers.index',
       'customers.create',
@@ -252,7 +262,65 @@
     </ul>
   </li>
 
-  
+
+  {{-- استيرادات البيانات --}}
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($dataImportsOpen) }}"
+       data-bs-target="#data-imports-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $dataImportsOpen ? 'true' : 'false' }}">
+      <i class="bi bi-cloud-arrow-down"></i><span>@lang('sidebar.Data Imports')</span><i class="bi bi-chevron-down ms-auto"></i>
+    </a>
+
+    <ul id="data-imports-nav" class="nav-content collapse {{ $open($dataImportsOpen) }}" data-bs-parent="#sidebar-nav">
+      <li>
+        <a class="{{ $active($isRoute('customers.import.*')) }}" href="{{ route('customers.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Customers')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('guarantors.import.*')) }}" href="{{ route('guarantors.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Guarantors')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.import.*')) }}" href="{{ route('investors.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Investors')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('investors.ledger.import.*')) }}" href="{{ route('investors.ledger.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Investor Ledger')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('contracts.import.form')) }}" href="{{ route('contracts.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Contracts')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('contracts.import.basic.*')) }}" href="{{ route('contracts.import.basic.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Basic Contracts')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('contracts.import.investors.*')) }}" href="{{ route('contracts.import.investors.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Contract Investors')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('contracts.import.payments.*')) }}" href="{{ route('contracts.import.payments.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Contract Payments')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('ledger.import.*')) }}" href="{{ route('ledger.import.form') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Ledger Entries')</span>
+        </a>
+      </li>
+    </ul>
+  </li>
+
+
 
   {{-- الإعدادات (قابلة للطي) --}}
   @role('admin')
