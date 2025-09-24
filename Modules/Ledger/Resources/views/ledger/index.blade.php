@@ -19,14 +19,6 @@
         <x-button.action href="{{ route('ledger.create') }}" variant="success" :outline="true">+ إضافة قيد</x-button.action>
         <x-button.action href="{{ route('ledger.transfer.create') }}" variant="primary" :outline="true">تحويل داخلي (مكتب)</x-button.action>
         <x-button.action href="{{ route('ledger.split.create') }}" variant="secondary" :outline="true">قيد مُجزّأ (بنك + خزنة)</x-button.action>
-        @role('admin')
-            <x-button.action href="{{ route('ledger.import.form') }}" variant="primary" :outline="true">
-                <i class="bi bi-upload"></i> استيراد Excel
-            </x-button.action>
-            <x-button.action href="{{ route('ledger.export', request()->query()) }}" variant="primary" :outline="true">
-                <i class="bi bi-download"></i> @lang('ledger::ledger.Export Ledger Entries')
-            </x-button.action>
-        @endrole
 
         <span class="ms-auto small text-muted">
             النتائج: <strong>{{ $entries->total() }}</strong>

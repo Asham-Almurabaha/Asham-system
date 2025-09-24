@@ -122,14 +122,6 @@
       <x-button.action type="submit" variant="primary" :outline="true" form="customers-refresh-statuses-form" onclick="return confirm('{{ __('customers::messages.Refresh Customer Statuses Confirmation') }}');">
         <i class="bi bi-arrow-clockwise"></i> {{ __('customers::messages.Refresh Customer Statuses') }}
       </x-button.action>
-      @role('admin')
-        <x-button.action href="{{ route('customers.import.form') }}" variant="primary" :outline="true">
-            <i class="bi bi-upload"></i> {{ __('Import Excel') }}
-        </x-button.action>
-        <x-button.action href="{{ route('customers.export') }}" variant="primary" :outline="true">
-            <i class="bi bi-download"></i> {{ __('Export Excel') }}
-        </x-button.action>
-      @endrole
 
 
 

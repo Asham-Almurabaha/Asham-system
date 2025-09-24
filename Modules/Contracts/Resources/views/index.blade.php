@@ -26,42 +26,6 @@
             <x-button.action type="submit" variant="primary" :outline="true" form="contracts-refresh-statuses-form" onclick="return confirm('{{ __('contracts::contracts.Confirm Refresh All Statuses') }}');">
                 <i class="bi bi-arrow-clockwise"></i> {{ __('contracts::contracts.Refresh All Statuses') }}
             </x-button.action>
-            @role('admin')
-            <div class="btn-group">
-                <x-button.action type="button" variant="primary" :outline="true" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-upload"></i> {{ __('Import Excel') }}
-                </x-button.action>
-                <ul class="dropdown-menu dropdown-menu-end text-end shadow mt-2">
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.form') }}">
-                            <i class="bi bi-upload"></i>
-                            <span>{{ __('Import Excel') }}</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.basic.form') }}">
-                            <i class="bi bi-upload"></i>
-                            <span>{{ __('Import Basic Excel') }}</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.investors.form') }}">
-                            <i class="bi bi-upload"></i>
-                            <span>{{ __('Import Investors Excel') }}</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2" href="{{ route('contracts.import.payments.form') }}">
-                            <i class="bi bi-upload"></i>
-                            <span>{{ __('Import Payments Excel') }}</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <x-button.action href="{{ route('contracts.export.data', request()->query()) }}" variant="primary" :outline="true">
-                <i class="bi bi-download"></i> {{ __('contracts::contracts.Export Excel') }}
-            </x-button.action>
-            @endrole
         </div>
 
         <span class="ms-auto small text-muted">
