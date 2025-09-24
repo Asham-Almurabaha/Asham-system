@@ -34,6 +34,22 @@
     $statusId = $statusId ?? null;
     $statusType = $statusType ?? 2;
     $directionClass = $statusType === 1 ? 'bg-success' : 'bg-danger';
+
+    $primaryTabDescription = $primaryTabDescription ?? 'يُستخدم لإدخال قيد كامل للبضائع دفعة واحدة.';
+    $partialTabDescription = $partialTabDescription ?? 'يتيح توزيع القيد بين البنك والخزنة مع تحديد كميات البضائع.';
+
+    $operations = [
+        'purchase' => [
+            'title' => $primaryTabLabel,
+            'description' => $primaryTabDescription,
+            'badge_class' => $directionClass,
+        ],
+        'partial' => [
+            'title' => 'قيد مُجزّأ',
+            'description' => $partialTabDescription,
+            'badge_class' => $directionClass,
+        ],
+    ];
 @endphp
 
 @section('title', $pageTitle)
@@ -49,329 +65,346 @@
     </nav>
 </div>
 
-<div class="alert alert-info d-flex justify-content-between align-items-center">
-    <div>
-        يتم إنشاء القيود للفئة <strong>المكتب</strong> وبحالة <strong>{{ $statusName }}</strong>.
-    </div>
-    <span class="badge rounded-pill {{ $directionClass }}">{{ $directionLabel }}</span>
-</div>
-
 <div class="card shadow-sm">
     <div class="card-body">
-        <ul class="nav nav-tabs" id="goodsTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {{ $activeTab === 'purchase' ? 'active' : '' }}" id="purchase-tab" data-bs-toggle="tab" data-bs-target="#tab-purchase" type="button" role="tab">
-                    {{ $primaryTabLabel }}
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {{ $activeTab === 'partial' ? 'active' : '' }}" id="partial-tab" data-bs-toggle="tab" data-bs-target="#tab-partial" type="button" role="tab">
-                    قيد مُجزّأ
-                </button>
-            </li>
+        <ul class="nav nav-tabs" id="goodsOperationsTabs" role="tablist">
+            @foreach ($operations as $key => $operation)
+                <li class="nav-item" role="presentation">
+                    <button
+                        class="nav-link {{ $activeTab === $key ? 'active' : '' }}"
+                        id="goods-operation-tab-{{ $key }}"
+                        data-bs-toggle="tab"
+                        data-bs-target="#goods-operation-{{ $key }}"
+                        type="button"
+                        role="tab"
+                        data-operation="{{ $key }}">
+                        {{ $operation['title'] }}
+                    </button>
+                </li>
+            @endforeach
         </ul>
 
-        <div class="tab-content pt-3">
-            <div class="tab-pane fade {{ $activeTab === 'purchase' ? 'show active' : '' }}" id="tab-purchase" role="tabpanel" aria-labelledby="purchase-tab">
-                <form action="{{ $primaryFormAction }}" method="POST" class="row g-3 mt-1" id="goodsPurchaseForm">
-                    @csrf
-                    <input type="hidden" name="active_tab" value="purchase">
-                    <input type="hidden" name="party_category" value="office">
-                    @if($statusId)
-                        <input type="hidden" name="status_id" value="{{ $statusId }}">
-                    @endif
-                    <input type="hidden" name="bank_account_id" id="purchase_bank_account_id" value="{{ $purchaseBankId }}">
-                    <input type="hidden" name="safe_id" id="purchase_safe_id" value="{{ $purchaseSafeId }}">
-
-                    <div class="col-md-4 mt-0">
-                        <label class="form-label" for="purchase_account_picker">@lang('ledger::ledger.Account')</label>
-                        <select id="purchase_account_picker" class="form-select" required>
-                            <option value="" disabled {{ $purchaseBankId || $purchaseSafeId ? '' : 'selected' }}>اختر حسابًا</option>
-                            <optgroup label="الحسابات البنكية">
-                                @foreach ($banks as $bank)
-                                    <option value="bank:{{ $bank->id }}" @selected($purchaseBankId == $bank->id)> {{ $bank->name }} </option>
-                                @endforeach
-                            </optgroup>
-                            <optgroup label="الخزن">
-                                @foreach ($safes as $safe)
-                                    <option value="safe:{{ $safe->id }}" @selected($purchaseSafeId == $safe->id)> {{ $safe->name }} </option>
-                                @endforeach
-                            </optgroup>
-                        </select>
-                        <div class="form-text mt-1">
-                            <span class="text-muted">المتاح في الحساب: </span>
-                            <strong id="purchase_available_value">—</strong>
-                            <span id="purchase_available_loading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+        <div class="tab-content pt-3" id="goodsOperationsContent">
+            @foreach ($operations as $key => $operation)
+                <div
+                    class="tab-pane fade {{ $activeTab === $key ? 'show active' : '' }}"
+                    id="goods-operation-{{ $key }}"
+                    role="tabpanel"
+                    aria-labelledby="goods-operation-tab-{{ $key }}">
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>
+                            يتم إنشاء القيود للفئة <strong>المكتب</strong>
+                            وبحالة <strong>{{ $statusName }}</strong>.
+                            @if (!empty($operation['description']))
+                                <div class="small text-muted mt-1">{{ $operation['description'] }}</div>
+                            @endif
                         </div>
-                        @error('bank_account_id', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                        @error('safe_id', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        <span class="badge rounded-pill {{ $operation['badge_class'] ?? 'bg-secondary' }}">{{ $directionLabel }}</span>
                     </div>
 
-                    <div class="col-md-4 mt-0">
-                        <label class="form-label" for="purchase_amount">@lang('ledger::ledger.Amount')</label>
-                        <input type="number" step="0.01" min="0" name="amount" id="purchase_amount" class="form-control" value="{{ $purchaseAmount }}" required>
-                        <div class="invalid-feedback">المبلغ يتجاوز المتاح في الحساب.</div>
-                        @error('amount', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
+                    @if ($key === 'purchase')
+                        <form action="{{ $primaryFormAction }}" method="POST" class="row g-3 mt-1" id="goodsPurchaseForm">
+                                            @csrf
+                                            <input type="hidden" name="active_tab" value="purchase">
+                                            <input type="hidden" name="party_category" value="office">
+                                            @if($statusId)
+                                                <input type="hidden" name="status_id" value="{{ $statusId }}">
+                                            @endif
+                                            <input type="hidden" name="bank_account_id" id="purchase_bank_account_id" value="{{ $purchaseBankId }}">
+                                            <input type="hidden" name="safe_id" id="purchase_safe_id" value="{{ $purchaseSafeId }}">
 
-                    <div class="col-md-4 mt-0">
-                        <label class="form-label" for="purchase_transaction_date">@lang('ledger::ledger.Transaction Date')</label>
-                        <input type="date" name="transaction_date" id="purchase_transaction_date" class="form-control js-date" value="{{ $purchaseDate }}" required>
-                        @error('transaction_date', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-12" id="purchase_goods_section">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
-                                <x-button.action type="button" variant="primary" :outline="true" size="sm" id="purchase_add_product">إضافة نوع</x-button.action>
-                            </div>
-                            <div class="card-body" id="purchase_products_wrapper">
-                                @if (!empty($purchaseProducts))
-                                    @foreach ($purchaseProducts as $i => $row)
-                                        <div class="row g-2 product-row align-items-end {{ $i > 0 ? 'mt-2' : '' }}">
-                                            <div class="col-md-8">
-                                                <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
-                                                <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
-                                                    <option value="">— اختر —</option>
-                                                    @foreach ($products as $product)
-                                                        <option value="{{ $product->id }}" @selected(($row['product_type_id'] ?? null) == $product->id)>{{ $product->name }}</option>
-                                                    @endforeach
+                                            <div class="col-md-4 mt-0">
+                                                <label class="form-label" for="purchase_account_picker">@lang('ledger::ledger.Account')</label>
+                                                <select id="purchase_account_picker" class="form-select" required>
+                                                    <option value="" disabled {{ $purchaseBankId || $purchaseSafeId ? '' : 'selected' }}>اختر حسابًا</option>
+                                                    <optgroup label="الحسابات البنكية">
+                                                        @foreach ($banks as $bank)
+                                                            <option value="bank:{{ $bank->id }}" @selected($purchaseBankId == $bank->id)> {{ $bank->name }} </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                    <optgroup label="الخزن">
+                                                        @foreach ($safes as $safe)
+                                                            <option value="safe:{{ $safe->id }}" @selected($purchaseSafeId == $safe->id)> {{ $safe->name }} </option>
+                                                        @endforeach
+                                                    </optgroup>
                                                 </select>
-                                                @error("products.$i.product_type_id", 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
-                                                    <span>الكمية</span>
-                                                    <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
-                                                </label>
-                                                <div class="input-group">
-                                                    <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
-                                                    <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
+                                                <div class="form-text mt-1">
+                                                    <span class="text-muted">المتاح في الحساب: </span>
+                                                    <strong id="purchase_available_value">—</strong>
+                                                    <span id="purchase_available_loading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
                                                 </div>
-                                                @error("products.$i.quantity", 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                @error('bank_account_id', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                @error('safe_id', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                             </div>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <div class="row g-2 product-row align-items-end">
-                                        <div class="col-md-8">
-                                            <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
-                                            <select name="products[0][product_type_id]" class="form-select js-product-select">
-                                                <option value="">— اختر —</option>
-                                                @foreach ($products as $product)
-                                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
-                                                <span>الكمية</span>
-                                                <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
-                                            </label>
-                                            <div class="input-group">
-                                                <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
-                                                <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
+
+                                            <div class="col-md-4 mt-0">
+                                                <label class="form-label" for="purchase_amount">@lang('ledger::ledger.Amount')</label>
+                                                <input type="number" step="0.01" min="0" name="amount" id="purchase_amount" class="form-control" value="{{ $purchaseAmount }}" required>
+                                                <div class="invalid-feedback">المبلغ يتجاوز المتاح في الحساب.</div>
+                                                @error('amount', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                                             </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="card-footer small text-muted">* إدخال تفاصيل البضائع إلزامي في هذه الشاشة.</div>
-                        </div>
-                        @error('products', 'goodsPurchase')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
-                    </div>
 
-                    <div class="col-12">
-                        <label class="form-label" for="purchase_notes">@lang('ledger::ledger.Notes')</label>
-                        <textarea name="notes" id="purchase_notes" rows="3" class="form-control" maxlength="1000">{{ $purchaseNotes }}</textarea>
-                        @error('notes', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
+                                            <div class="col-md-4 mt-0">
+                                                <label class="form-label" for="purchase_transaction_date">@lang('ledger::ledger.Transaction Date')</label>
+                                                <input type="date" name="transaction_date" id="purchase_transaction_date" class="form-control js-date" value="{{ $purchaseDate }}" required>
+                                                @error('transaction_date', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                            </div>
 
-                    <div class="col-12 d-flex gap-2 mt-2">
-                        <x-button.action type="submit" variant="success" :outline="true" id="purchase_save_btn">
-                            <span class="spinner-border spinner-border-sm me-1 d-none" id="purchase_spinner" role="status" aria-hidden="true"></span>
-                            <span class="d-inline-flex align-items-center gap-1">
-                                <i class="bi bi-check2-circle"></i>
-                                <span>حفظ</span>
-                            </span>
-                        </x-button.action>
-                        <button type="reset" class="btn btn-outline-secondary">إعادة تعيين</button>
-                        <x-button.action href="{{ route('ledger.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button.action>
-                    </div>
-                </form>
-            </div>
+                                            <div class="col-12" id="purchase_goods_section">
+                                                <div class="card border-0 shadow-sm">
+                                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                                        <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
+                                                        <x-button.action type="button" variant="primary" :outline="true" size="sm" id="purchase_add_product">إضافة نوع</x-button.action>
+                                                    </div>
+                                                    <div class="card-body" id="purchase_products_wrapper">
+                                                        @if (!empty($purchaseProducts))
+                                                            @foreach ($purchaseProducts as $i => $row)
+                                                                <div class="row g-2 product-row align-items-end {{ $i > 0 ? 'mt-2' : '' }}">
+                                                                    <div class="col-md-8">
+                                                                        <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
+                                                                        <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
+                                                                            <option value="">— اختر —</option>
+                                                                            @foreach ($products as $product)
+                                                                                <option value="{{ $product->id }}" @selected(($row['product_type_id'] ?? null) == $product->id)>{{ $product->name }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                        @error("products.$i.product_type_id", 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                                                            <span>الكمية</span>
+                                                                            <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                                                        </label>
+                                                                        <div class="input-group">
+                                                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
+                                                                            <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
+                                                                        </div>
+                                                                        @error("products.$i.quantity", 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        @else
+                                                            <div class="row g-2 product-row align-items-end">
+                                                                <div class="col-md-8">
+                                                                    <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
+                                                                    <select name="products[0][product_type_id]" class="form-select js-product-select">
+                                                                        <option value="">— اختر —</option>
+                                                                        @foreach ($products as $product)
+                                                                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                                                        <span>الكمية</span>
+                                                                        <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                                                    </label>
+                                                                    <div class="input-group">
+                                                                        <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
+                                                                        <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="card-footer small text-muted">* إدخال تفاصيل البضائع إلزامي في هذه الشاشة.</div>
+                                                </div>
+                                                @error('products', 'goodsPurchase')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+                                            </div>
 
-            <div class="tab-pane fade {{ $activeTab === 'partial' ? 'show active' : '' }}" id="tab-partial" role="tabpanel" aria-labelledby="partial-tab">
-                <form action="{{ $partialFormAction }}" method="POST" class="row g-3 mt-1" id="goodsPartialForm">
-                    @csrf
-                    <input type="hidden" name="active_tab" value="partial">
-                    <input type="hidden" name="party_category" value="office">
-                    @if($statusId)
-                        <input type="hidden" name="status_id" value="{{ $statusId }}">
+                                            <div class="col-12">
+                                                <label class="form-label" for="purchase_notes">@lang('ledger::ledger.Notes')</label>
+                                                <textarea name="notes" id="purchase_notes" rows="3" class="form-control" maxlength="1000">{{ $purchaseNotes }}</textarea>
+                                                @error('notes', 'goodsPurchase')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-12 d-flex gap-2 mt-2">
+                                                <x-button.action type="submit" variant="success" :outline="true" id="purchase_save_btn">
+                                                    <span class="spinner-border spinner-border-sm me-1 d-none" id="purchase_spinner" role="status" aria-hidden="true"></span>
+                                                    <span class="d-inline-flex align-items-center gap-1">
+                                                        <i class="bi bi-check2-circle"></i>
+                                                        <span>حفظ</span>
+                                                    </span>
+                                                </x-button.action>
+                                                <button type="reset" class="btn btn-outline-secondary">إعادة تعيين</button>
+                                                <x-button.action href="{{ route('ledger.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button.action>
+                                            </div>
+                                        </form>
+                    @else
+                        <form action="{{ $partialFormAction }}" method="POST" class="row g-3 mt-1" id="goodsPartialForm">
+                                            @csrf
+                                            <input type="hidden" name="active_tab" value="partial">
+                                            <input type="hidden" name="party_category" value="office">
+                                            @if($statusId)
+                                                <input type="hidden" name="status_id" value="{{ $statusId }}">
+                                            @endif
+
+                                            <div class="col-md-3 mt-0">
+                                                <label class="form-label" for="partial_amount">@lang('ledger::ledger.Total Amount')</label>
+                                                <input type="number" step="0.01" min="0" name="amount" id="partial_amount" class="form-control" value="{{ $partialAmount }}" required>
+                                                <div class="invalid-feedback">المبلغ يتجاوز المتاح.</div>
+                                                @error('amount', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-md-3 mt-0">
+                                                <label class="form-label" for="partial_bank_share">@lang('ledger::ledger.Amount (Bank)')</label>
+                                                <input type="number" step="0.01" min="0" name="bank_share" id="partial_bank_share" class="form-control" value="{{ $partialBankShare }}">
+                                                <div class="invalid-feedback">المبلغ أكبر من المتاح في الحساب البنكي.</div>
+                                                @error('bank_share', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-md-3 mt-0">
+                                                <label class="form-label" for="partial_safe_share">@lang('ledger::ledger.Amount (Safe)')</label>
+                                                <input type="number" step="0.01" min="0" name="safe_share" id="partial_safe_share" class="form-control" value="{{ $partialSafeShare }}">
+                                                <div class="invalid-feedback">المبلغ أكبر من المتاح في الخزنة.</div>
+                                                @error('safe_share', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-md-3 mt-0">
+                                                <label class="form-label" for="partial_transaction_date">@lang('ledger::ledger.Transaction Date')</label>
+                                                <input type="date" name="transaction_date" id="partial_transaction_date" class="form-control js-date" value="{{ $partialDate }}" required>
+                                                @error('transaction_date', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <h6 class="mb-3">جزء البنك</h6>
+                                                            <div>
+                                                                <label class="form-label" for="partial_bank_account_id">@lang('ledger::ledger.Bank Account')</label>
+                                                                <select name="bank_account_id" id="partial_bank_account_id" class="form-select">
+                                                                    <option value="" disabled {{ $partialBankId ? '' : 'selected' }}>اختر الحساب البنكي</option>
+                                                                    @foreach ($banks as $bank)
+                                                                        <option value="{{ $bank->id }}" @selected($partialBankId == $bank->id)> {{ $bank->name }} </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <div class="form-text mt-1">
+                                                                    <span class="text-muted">المتاح: </span>
+                                                                    <strong id="partial_bank_available">—</strong>
+                                                                    <span id="partial_bank_loading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                                                                </div>
+                                                                @error('bank_account_id', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="border rounded p-3 h-100">
+                                                            <h6 class="mb-3">جزء الخزنة</h6>
+                                                            <div>
+                                                                <label class="form-label" for="partial_safe_id">@lang('ledger::ledger.Safe')</label>
+                                                                <select name="safe_id" id="partial_safe_id" class="form-select">
+                                                                    <option value="" disabled {{ $partialSafeId ? '' : 'selected' }}>اختر الخزنة</option>
+                                                                    @foreach ($safes as $safe)
+                                                                        <option value="{{ $safe->id }}" @selected($partialSafeId == $safe->id)> {{ $safe->name }} </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                <div class="form-text mt-1">
+                                                                    <span class="text-muted">المتاح: </span>
+                                                                    <strong id="partial_safe_available">—</strong>
+                                                                    <span id="partial_safe_loading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                                                                </div>
+                                                                @error('safe_id', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12">
+                                                <div class="alert alert-secondary mt-3" id="partial_sum_hint">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    مجموع الجزء البنكي والجزء الخاص بالخزنة يجب أن يساوي إجمالي مبلغ القيد.
+                                                </div>
+                                                <div class="alert alert-light border mt-2 mb-0" id="partial_ratio_hint">
+                                                    <div class="small text-muted">سيتم حساب نسب البنك والخزنة تلقائيًا بعد حفظ القيد.</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12" id="partial_goods_section">
+                                                <div class="card border-0 shadow-sm">
+                                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                                        <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
+                                                        <x-button.action type="button" variant="primary" :outline="true" size="sm" id="partial_add_product">إضافة نوع</x-button.action>
+                                                    </div>
+                                                    <div class="card-body" id="partial_products_wrapper">
+                                                        @if (!empty($partialProducts))
+                                                            @foreach ($partialProducts as $i => $row)
+                                                                <div class="row g-2 product-row align-items-end {{ $i > 0 ? 'mt-2' : '' }}">
+                                                                    <div class="col-md-8">
+                                                                        <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
+                                                                        <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
+                                                                            <option value="">— اختر —</option>
+                                                                            @foreach ($products as $product)
+                                                                                <option value="{{ $product->id }}" @selected(($row['product_type_id'] ?? null) == $product->id)>{{ $product->name }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                        @error("products.$i.product_type_id", 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                                                            <span>الكمية</span>
+                                                                            <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                                                        </label>
+                                                                        <div class="input-group">
+                                                                            <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
+                                                                            <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
+                                                                        </div>
+                                                                        @error("products.$i.quantity", 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                                                    </div>
+                                                                </div>
+                                                            @endforeach
+                                                        @else
+                                                            <div class="row g-2 product-row align-items-end">
+                                                                <div class="col-md-8">
+                                                                    <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
+                                                                    <select name="products[0][product_type_id]" class="form-select js-product-select">
+                                                                        <option value="">— اختر —</option>
+                                                                        @foreach ($products as $product)
+                                                                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                                                        @endforeach
+                                                                    </select>
+                                                                </div>
+                                                                <div class="col-md-4">
+                                                                    <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
+                                                                        <span>الكمية</span>
+                                                                        <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
+                                                                    </label>
+                                                                    <div class="input-group">
+                                                                        <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
+                                                                        <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="card-footer small text-muted">* إدخال تفاصيل البضائع إلزامي في هذه الشاشة.</div>
+                                                </div>
+                                                @error('products', 'goodsPartial')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-12">
+                                                <label class="form-label" for="partial_notes">@lang('ledger::ledger.Notes')</label>
+                                                <textarea name="notes" id="partial_notes" rows="3" class="form-control" maxlength="1000">{{ $partialNotes }}</textarea>
+                                                @error('notes', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                                            </div>
+
+                                            <div class="col-12 d-flex gap-2 mt-2">
+                                                <x-button.action type="submit" variant="success" :outline="true" id="partial_save_btn">
+                                                    <span class="spinner-border spinner-border-sm me-1 d-none" id="partial_spinner" role="status" aria-hidden="true"></span>
+                                                    <span class="d-inline-flex align-items-center gap-1">
+                                                        <i class="bi bi-check2-circle"></i>
+                                                        <span>حفظ</span>
+                                                    </span>
+                                                </x-button.action>
+                                                <button type="reset" class="btn btn-outline-secondary">إعادة تعيين</button>
+                                                <x-button.action href="{{ route('ledger.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button.action>
+                                            </div>
+                                        </form>
                     @endif
-
-                    <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_amount">@lang('ledger::ledger.Total Amount')</label>
-                        <input type="number" step="0.01" min="0" name="amount" id="partial_amount" class="form-control" value="{{ $partialAmount }}" required>
-                        <div class="invalid-feedback">المبلغ يتجاوز المتاح.</div>
-                        @error('amount', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_bank_share">@lang('ledger::ledger.Amount (Bank)')</label>
-                        <input type="number" step="0.01" min="0" name="bank_share" id="partial_bank_share" class="form-control" value="{{ $partialBankShare }}">
-                        <div class="invalid-feedback">المبلغ أكبر من المتاح في الحساب البنكي.</div>
-                        @error('bank_share', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_safe_share">@lang('ledger::ledger.Amount (Safe)')</label>
-                        <input type="number" step="0.01" min="0" name="safe_share" id="partial_safe_share" class="form-control" value="{{ $partialSafeShare }}">
-                        <div class="invalid-feedback">المبلغ أكبر من المتاح في الخزنة.</div>
-                        @error('safe_share', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-3 mt-0">
-                        <label class="form-label" for="partial_transaction_date">@lang('ledger::ledger.Transaction Date')</label>
-                        <input type="date" name="transaction_date" id="partial_transaction_date" class="form-control js-date" value="{{ $partialDate }}" required>
-                        @error('transaction_date', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-12">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="border rounded p-3 h-100">
-                                    <h6 class="mb-3">جزء البنك</h6>
-                                    <div>
-                                        <label class="form-label" for="partial_bank_account_id">@lang('ledger::ledger.Bank Account')</label>
-                                        <select name="bank_account_id" id="partial_bank_account_id" class="form-select">
-                                            <option value="" disabled {{ $partialBankId ? '' : 'selected' }}>اختر الحساب البنكي</option>
-                                            @foreach ($banks as $bank)
-                                                <option value="{{ $bank->id }}" @selected($partialBankId == $bank->id)> {{ $bank->name }} </option>
-                                            @endforeach
-                                        </select>
-                                        <div class="form-text mt-1">
-                                            <span class="text-muted">المتاح: </span>
-                                            <strong id="partial_bank_available">—</strong>
-                                            <span id="partial_bank_loading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
-                                        </div>
-                                        @error('bank_account_id', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="border rounded p-3 h-100">
-                                    <h6 class="mb-3">جزء الخزنة</h6>
-                                    <div>
-                                        <label class="form-label" for="partial_safe_id">@lang('ledger::ledger.Safe')</label>
-                                        <select name="safe_id" id="partial_safe_id" class="form-select">
-                                            <option value="" disabled {{ $partialSafeId ? '' : 'selected' }}>اختر الخزنة</option>
-                                            @foreach ($safes as $safe)
-                                                <option value="{{ $safe->id }}" @selected($partialSafeId == $safe->id)> {{ $safe->name }} </option>
-                                            @endforeach
-                                        </select>
-                                        <div class="form-text mt-1">
-                                            <span class="text-muted">المتاح: </span>
-                                            <strong id="partial_safe_available">—</strong>
-                                            <span id="partial_safe_loading" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
-                                        </div>
-                                        @error('safe_id', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="small">
-                            <span id="partial_sum_hint" class="text-muted">مجموع البنك + الخزنة يجب أن يساوي الإجمالي.</span>
-                            <span id="partial_ratio_hint" class="ms-2 text-muted"></span>
-                        </div>
-                    </div>
-
-                    <div class="col-12" id="partial_goods_section">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <span><i class="bi bi-box-seam me-1"></i> تفاصيل البضائع</span>
-                                <x-button.action type="button" variant="primary" :outline="true" size="sm" id="partial_add_product">إضافة نوع</x-button.action>
-                            </div>
-                            <div class="card-body" id="partial_products_wrapper">
-                                @if (!empty($partialProducts))
-                                    @foreach ($partialProducts as $i => $row)
-                                        <div class="row g-2 product-row align-items-end {{ $i > 0 ? 'mt-2' : '' }}">
-                                            <div class="col-md-8">
-                                                <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
-                                                <select name="products[{{ $i }}][product_type_id]" class="form-select js-product-select">
-                                                    <option value="">— اختر —</option>
-                                                    @foreach ($products as $product)
-                                                        <option value="{{ $product->id }}" @selected(($row['product_type_id'] ?? null) == $product->id)>{{ $product->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error("products.$i.product_type_id", 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
-                                                    <span>الكمية</span>
-                                                    <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
-                                                </label>
-                                                <div class="input-group">
-                                                    <input type="number" min="1" name="products[{{ $i }}][quantity]" class="form-control js-qty-input" value="{{ $row['quantity'] ?? '' }}" placeholder="0">
-                                                    <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
-                                                </div>
-                                                @error("products.$i.quantity", 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <div class="row g-2 product-row align-items-end">
-                                        <div class="col-md-8">
-                                            <label class="form-label small mb-1">@lang('ledger::ledger.Product Type')</label>
-                                            <select name="products[0][product_type_id]" class="form-select js-product-select">
-                                                <option value="">— اختر —</option>
-                                                @foreach ($products as $product)
-                                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small mb-1 d-flex align-items-center justify-content-between">
-                                                <span>الكمية</span>
-                                                <span class="badge bg-light text-dark js-available-badge">المتاح: —</span>
-                                            </label>
-                                            <div class="input-group">
-                                                <input type="number" min="1" name="products[0][quantity]" class="form-control js-qty-input" placeholder="0">
-                                                <x-button.action type="button" variant="danger" :outline="true" class="js-remove-product" title="حذف">حذف</x-button.action>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class="card-footer small text-muted">* إدخال تفاصيل البضائع إلزامي في هذه الشاشة.</div>
-                        </div>
-                        @error('products', 'goodsPartial')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label" for="partial_notes">@lang('ledger::ledger.Notes')</label>
-                        <textarea name="notes" id="partial_notes" rows="3" class="form-control" maxlength="1000">{{ $partialNotes }}</textarea>
-                        @error('notes', 'goodsPartial')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-12 d-flex gap-2 mt-2">
-                        <x-button.action type="submit" variant="success" :outline="true" id="partial_save_btn">
-                            <span class="spinner-border spinner-border-sm me-1 d-none" id="partial_spinner" role="status" aria-hidden="true"></span>
-                            <span class="d-inline-flex align-items-center gap-1">
-                                <i class="bi bi-check2-circle"></i>
-                                <span>حفظ</span>
-                            </span>
-                        </x-button.action>
-                        <button type="reset" class="btn btn-outline-secondary">إعادة تعيين</button>
-                        <x-button.action href="{{ route('ledger.index') }}" variant="secondary" :outline="true">@lang('app.Cancel')</x-button.action>
-                    </div>
-                </form>
-            </div>
+                </div>
+            @endforeach
         </div>
     </div>
 </div>

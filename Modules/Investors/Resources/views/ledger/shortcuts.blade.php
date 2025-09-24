@@ -37,12 +37,12 @@
     </nav>
 </div>
 
-@if (!empty($missingStatuses))
+{{-- @if (!empty($missingStatuses))
     <div class="alert alert-warning">
         الحالات التالية غير متاحة ضمن فئة المستثمرين: <strong>{{ implode('، ', $missingStatuses) }}</strong>.
         يرجى إضافتها من إعدادات الحالات لضمان عمل النماذج بشكل صحيح.
     </div>
-@endif
+@endif --}}
 
 <div class="card shadow-sm">
     <div class="card-body">
@@ -500,571 +500,571 @@
 @endsection
 
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const ACCOUNT_AVAIL_URL = @json(route('ajax.accounts.availability'));
-    const INVESTOR_LIQ_TEMPLATE = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
-    const USE_OLD = {{ $hasOldInput ? 'true' : 'false' }};
-    const OPERATION_STORAGE_KEY = 'investorLedgerShortcuts.activeOperation';
-    const MODE_STORAGE_PREFIX = 'investorLedgerShortcuts.activeMode.';
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ACCOUNT_AVAIL_URL = @json(route('ajax.accounts.availability'));
+            const INVESTOR_LIQ_TEMPLATE = @json(route('ajax.investors.liquidity', ['investor' => '__ID__']));
+            const USE_OLD = {{ $hasOldInput ? 'true' : 'false' }};
+            const OPERATION_STORAGE_KEY = 'investorLedgerShortcuts.activeOperation';
+            const MODE_STORAGE_PREFIX = 'investorLedgerShortcuts.activeMode.';
 
-    const formatCurrency = (value) => {
-        const num = Number(value);
-        if (!Number.isFinite(num)) {
-            return '0.00';
-        }
-        return num.toLocaleString('ar-EG', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        });
-    };
-
-    const parseDecimal = (value) => {
-        if (value == null) {
-            return null;
-        }
-        const str = String(value).trim().replace(',', '.');
-        if (!str) {
-            return null;
-        }
-        const num = Number(str);
-        return Number.isFinite(num) ? num : null;
-    };
-
-    const parseAccountValue = (value) => {
-        if (!value) {
-            return null;
-        }
-        const [type, id] = String(value).split(':');
-        if (!type || !id) {
-            return null;
-        }
-        const idNum = Number(id);
-        if (!Number.isFinite(idNum)) {
-            return null;
-        }
-        if (type !== 'bank' && type !== 'safe') {
-            return null;
-        }
-        return { type, id: idNum };
-    };
-
-    const fetchAccountAvailability = async (type, id) => {
-        if (!type || !id) {
-            return null;
-        }
-        const params = new URLSearchParams({
-            account_type: type,
-            account_id: String(id),
-        });
-        try {
-            const response = await fetch(`${ACCOUNT_AVAIL_URL}?${params.toString()}`, {
-                headers: { 'Accept': 'application/json' },
-                credentials: 'same-origin',
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    };
-
-    const fetchInvestorLiquidity = async (url) => {
-        if (!url) {
-            return { success: false, message: 'missing-url' };
-        }
-        try {
-            const response = await fetch(url, {
-                headers: { 'Accept': 'application/json' },
-                credentials: 'same-origin',
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            return { success: false, message: error.message };
-        }
-    };
-
-    const attachSubmitHandler = (form) => {
-        if (!form) {
-            return;
-        }
-        const submitBtn = form.querySelector('.js-submit-btn');
-        const spinner = form.querySelector('.js-submit-spinner');
-        form.addEventListener('submit', () => {
-            if (submitBtn) {
-                submitBtn.setAttribute('disabled', 'disabled');
-            }
-            if (spinner) {
-                spinner.classList.remove('d-none');
-            }
-        });
-        form.addEventListener('reset', () => {
-            if (submitBtn) {
-                submitBtn.removeAttribute('disabled');
-            }
-            if (spinner) {
-                spinner.classList.add('d-none');
-            }
-        });
-    };
-
-    const initInvestorFields = () => {
-        document.querySelectorAll('.js-investor-field').forEach((wrapper) => {
-            const select = wrapper.querySelector('.js-investor-select');
-            const valueSpan = wrapper.querySelector('.js-investor-liquidity');
-            const loading = wrapper.querySelector('.js-investor-loading');
-            const urlTemplate = wrapper.dataset.liquidityUrl || INVESTOR_LIQ_TEMPLATE;
-            if (!select || !valueSpan) {
-                return;
-            }
-
-            const refresh = async () => {
-                valueSpan.classList.remove('text-danger');
-                const investorId = select.value;
-                if (!investorId) {
-                    valueSpan.textContent = '—';
-                    return;
+            const formatCurrency = (value) => {
+                const num = Number(value);
+                if (!Number.isFinite(num)) {
+                    return '0.00';
                 }
-                if (loading) {
-                    loading.classList.remove('d-none');
-                }
-                const url = urlTemplate.replace('__ID__', encodeURIComponent(investorId));
-                const payload = await fetchInvestorLiquidity(url);
-                if (loading) {
-                    loading.classList.add('d-none');
-                }
-                if (!payload || payload.success !== true) {
-                    valueSpan.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
-                    valueSpan.classList.add('text-danger');
-                    return;
-                }
-                const numeric = Number(payload.cash ?? payload.liquidity ?? payload.balance ?? 0);
-                const formatted = payload.formatted
-                    ?? payload.cash_formatted
-                    ?? payload.liquidity_formatted
-                    ?? formatCurrency(numeric);
-                valueSpan.textContent = formatted;
+                return num.toLocaleString('ar-EG', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                });
             };
 
-            select.addEventListener('change', refresh);
-            if (select.value) {
-                refresh();
-            }
-        });
-    };
-
-    const initSingleForms = () => {
-        document.querySelectorAll('.js-single-form').forEach((form) => {
-            const statusType = Number(form.dataset.statusType || 2);
-            const accountPicker = form.querySelector('.js-account-picker');
-            const bankHidden = form.querySelector('.js-bank-hidden');
-            const safeHidden = form.querySelector('.js-safe-hidden');
-            const availabilityValue = form.querySelector('.js-account-availability');
-            const availabilityLoading = form.querySelector('.js-account-loading');
-            const amountInput = form.querySelector('.js-amount-input');
-            let accountAvail = null;
-
-            const applyHidden = (account) => {
-                if (bankHidden) {
-                    bankHidden.value = account && account.type === 'bank' ? account.id : '';
+            const parseDecimal = (value) => {
+                if (value == null) {
+                    return null;
                 }
-                if (safeHidden) {
-                    safeHidden.value = account && account.type === 'safe' ? account.id : '';
+                const str = String(value).trim().replace(',', '.');
+                if (!str) {
+                    return null;
+                }
+                const num = Number(str);
+                return Number.isFinite(num) ? num : null;
+            };
+
+            const parseAccountValue = (value) => {
+                if (!value) {
+                    return null;
+                }
+                const [type, id] = String(value).split(':');
+                if (!type || !id) {
+                    return null;
+                }
+                const idNum = Number(id);
+                if (!Number.isFinite(idNum)) {
+                    return null;
+                }
+                if (type !== 'bank' && type !== 'safe') {
+                    return null;
+                }
+                return { type, id: idNum };
+            };
+
+            const fetchAccountAvailability = async (type, id) => {
+                if (!type || !id) {
+                    return null;
+                }
+                const params = new URLSearchParams({
+                    account_type: type,
+                    account_id: String(id),
+                });
+                try {
+                    const response = await fetch(`${ACCOUNT_AVAIL_URL}?${params.toString()}`, {
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'same-origin',
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    return { success: false, message: error.message };
                 }
             };
 
-            const applyAmountConstraints = () => {
-                if (!amountInput) {
-                    return;
+            const fetchInvestorLiquidity = async (url) => {
+                if (!url) {
+                    return { success: false, message: 'missing-url' };
                 }
-                if (statusType === 2 && accountAvail !== null) {
-                    amountInput.setAttribute('max', String(accountAvail));
-                } else {
-                    amountInput.removeAttribute('max');
+                try {
+                    const response = await fetch(url, {
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'same-origin',
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    return { success: false, message: error.message };
                 }
             };
 
-            const validateAmount = () => {
-                if (!amountInput) {
+            const attachSubmitHandler = (form) => {
+                if (!form) {
                     return;
                 }
-                const value = parseDecimal(amountInput.value);
-                if (statusType === 2 && accountAvail !== null && value !== null && value > accountAvail + 1e-9) {
-                    amountInput.setCustomValidity('المبلغ يتجاوز المتاح في الحساب.');
-                } else {
-                    amountInput.setCustomValidity('');
-                }
-                amountInput.classList.toggle('is-invalid', amountInput.validationMessage !== '');
+                const submitBtn = form.querySelector('.js-submit-btn');
+                const spinner = form.querySelector('.js-submit-spinner');
+                form.addEventListener('submit', () => {
+                    if (submitBtn) {
+                        submitBtn.setAttribute('disabled', 'disabled');
+                    }
+                    if (spinner) {
+                        spinner.classList.remove('d-none');
+                    }
+                });
+                form.addEventListener('reset', () => {
+                    if (submitBtn) {
+                        submitBtn.removeAttribute('disabled');
+                    }
+                    if (spinner) {
+                        spinner.classList.add('d-none');
+                    }
+                });
             };
 
-            const refreshAvailability = async () => {
-                if (!availabilityValue) {
-                    return;
-                }
-                availabilityValue.classList.remove('text-danger');
-                const account = parseAccountValue(accountPicker ? accountPicker.value : '');
-                applyHidden(account);
-                if (!account) {
-                    availabilityValue.textContent = '—';
-                    accountAvail = null;
-                    applyAmountConstraints();
-                    validateAmount();
-                    return;
-                }
-                if (availabilityLoading) {
-                    availabilityLoading.classList.remove('d-none');
-                }
-                const payload = await fetchAccountAvailability(account.type, account.id);
-                if (availabilityLoading) {
-                    availabilityLoading.classList.add('d-none');
-                }
-                if (!payload || payload.success !== true) {
-                    availabilityValue.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
-                    availabilityValue.classList.add('text-danger');
-                    accountAvail = null;
-                } else {
-                    const numeric = Number(payload.balance ?? payload.available ?? payload.cash ?? 0);
-                    const formatted = payload.formatted
-                        ?? payload.balance_formatted
-                        ?? payload.available_formatted
-                        ?? formatCurrency(numeric);
-                    availabilityValue.textContent = formatted;
-                    accountAvail = Number.isFinite(numeric) ? numeric : null;
-                }
-                applyAmountConstraints();
-                validateAmount();
-            };
+            const initInvestorFields = () => {
+                document.querySelectorAll('.js-investor-field').forEach((wrapper) => {
+                    const select = wrapper.querySelector('.js-investor-select');
+                    const valueSpan = wrapper.querySelector('.js-investor-liquidity');
+                    const loading = wrapper.querySelector('.js-investor-loading');
+                    const urlTemplate = wrapper.dataset.liquidityUrl || INVESTOR_LIQ_TEMPLATE;
+                    if (!select || !valueSpan) {
+                        return;
+                    }
 
-            if (accountPicker) {
-                accountPicker.addEventListener('change', refreshAvailability);
-                refreshAvailability();
-            }
-
-            if (amountInput) {
-                amountInput.addEventListener('input', validateAmount);
-                validateAmount();
-            }
-
-            attachSubmitHandler(form);
-        });
-    };
-
-    const initSplitForms = () => {
-        const round2 = (value) => Math.round((value ?? 0) * 100) / 100;
-
-        document.querySelectorAll('.js-split-form').forEach((form) => {
-            const statusType = Number(form.dataset.statusType || 2);
-            const totalInput = form.querySelector('.js-total-input');
-            const bankShareInput = form.querySelector('.js-bank-share');
-            const safeShareInput = form.querySelector('.js-safe-share');
-            const bankSelect = form.querySelector('.js-bank-select');
-            const safeSelect = form.querySelector('.js-safe-select');
-            const bankAvailability = form.querySelector('.js-bank-availability');
-            const bankLoading = form.querySelector('.js-bank-loading');
-            const safeAvailability = form.querySelector('.js-safe-availability');
-            const safeLoading = form.querySelector('.js-safe-loading');
-            const sumHint = form.querySelector('.js-sum-hint');
-            const ratioHint = form.querySelector('.js-ratio-hint');
-            let bankAvail = null;
-            let safeAvail = null;
-
-            const validateShare = (input, avail) => {
-                if (!input) {
-                    return;
-                }
-                const value = parseDecimal(input.value);
-                if (statusType === 2 && avail !== null && value !== null && value > avail + 1e-9) {
-                    input.setCustomValidity('المبلغ يتجاوز المتاح في الحساب.');
-                } else {
-                    input.setCustomValidity('');
-                }
-                input.classList.toggle('is-invalid', input.validationMessage !== '');
-            };
-
-            const updateShareConstraints = () => {
-                if (statusType === 2) {
-                    if (bankShareInput) {
-                        if (bankAvail !== null) {
-                            bankShareInput.setAttribute('max', String(bankAvail));
-                        } else {
-                            bankShareInput.removeAttribute('max');
+                    const refresh = async () => {
+                        valueSpan.classList.remove('text-danger');
+                        const investorId = select.value;
+                        if (!investorId) {
+                            valueSpan.textContent = '—';
+                            return;
                         }
-                    }
-                    if (safeShareInput) {
-                        if (safeAvail !== null) {
-                            safeShareInput.setAttribute('max', String(safeAvail));
-                        } else {
-                            safeShareInput.removeAttribute('max');
+                        if (loading) {
+                            loading.classList.remove('d-none');
                         }
+                        const url = urlTemplate.replace('__ID__', encodeURIComponent(investorId));
+                        const payload = await fetchInvestorLiquidity(url);
+                        if (loading) {
+                            loading.classList.add('d-none');
+                        }
+                        if (!payload || payload.success !== true) {
+                            valueSpan.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
+                            valueSpan.classList.add('text-danger');
+                            return;
+                        }
+                        const numeric = Number(payload.cash ?? payload.liquidity ?? payload.balance ?? 0);
+                        const formatted = payload.formatted
+                            ?? payload.cash_formatted
+                            ?? payload.liquidity_formatted
+                            ?? formatCurrency(numeric);
+                        valueSpan.textContent = formatted;
+                    };
+
+                    select.addEventListener('change', refresh);
+                    if (select.value) {
+                        refresh();
                     }
-                } else {
-                    if (bankShareInput) {
-                        bankShareInput.removeAttribute('max');
-                    }
-                    if (safeShareInput) {
-                        safeShareInput.removeAttribute('max');
-                    }
-                }
-                validateShare(bankShareInput, bankAvail);
-                validateShare(safeShareInput, safeAvail);
-            };
-
-            const updateSumHint = () => {
-                if (!sumHint) {
-                    return;
-                }
-                sumHint.classList.remove('text-danger');
-                const total = parseDecimal(totalInput ? totalInput.value : null);
-                const bankVal = parseDecimal(bankShareInput ? bankShareInput.value : null) || 0;
-                const safeVal = parseDecimal(safeShareInput ? safeShareInput.value : null) || 0;
-                const sum = round2(bankVal + safeVal);
-
-                if (total == null) {
-                    sumHint.textContent = 'أدخل إجمالي المبلغ لتوزيعه على البنك والخزنة.';
-                    if (ratioHint) {
-                        ratioHint.textContent = '';
-                    }
-                    return;
-                }
-
-                if (Math.abs(sum - round2(total)) > 0.01) {
-                    sumHint.textContent = 'يجب أن يساوي مجموع البنك + الخزنة إجمالي المبلغ.';
-                    sumHint.classList.add('text-danger');
-                } else {
-                    sumHint.textContent = 'مجموع البنك + الخزنة يساوي إجمالي المبلغ.';
-                }
-
-                if (ratioHint) {
-                    if (total > 0 && Math.abs(sum - round2(total)) <= 0.01) {
-                        const bankPct = (bankVal / total) * 100;
-                        const safePct = (safeVal / total) * 100;
-                        ratioHint.textContent = `البنك ${bankPct.toFixed(2)}% — الخزنة ${safePct.toFixed(2)}%`;
-                    } else {
-                        ratioHint.textContent = '';
-                    }
-                }
-            };
-
-            const enforceShareState = () => {
-                const bankChosen = !!(bankSelect && bankSelect.value);
-                if (bankShareInput) {
-                    bankShareInput.readOnly = !bankChosen;
-                    bankShareInput.classList.toggle('bg-light', !bankChosen);
-                    if (!bankChosen) {
-                        bankShareInput.value = '0.00';
-                        bankAvail = null;
-                    }
-                }
-
-                const safeChosen = !!(safeSelect && safeSelect.value);
-                if (safeShareInput) {
-                    safeShareInput.readOnly = !safeChosen;
-                    safeShareInput.classList.toggle('bg-light', !safeChosen);
-                    if (!safeChosen) {
-                        safeShareInput.value = '0.00';
-                        safeAvail = null;
-                    }
-                }
-
-                updateShareConstraints();
-                updateSumHint();
-            };
-
-            const refreshBankAvailability = async () => {
-                if (!bankAvailability) {
-                    return;
-                }
-                bankAvailability.classList.remove('text-danger');
-                const bankId = bankSelect ? bankSelect.value : '';
-                if (!bankId) {
-                    bankAvailability.textContent = '—';
-                    bankAvail = null;
-                    updateShareConstraints();
-                    return;
-                }
-                if (bankLoading) {
-                    bankLoading.classList.remove('d-none');
-                }
-                const payload = await fetchAccountAvailability('bank', bankId);
-                if (bankLoading) {
-                    bankLoading.classList.add('d-none');
-                }
-                if (!payload || payload.success !== true) {
-                    bankAvailability.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
-                    bankAvailability.classList.add('text-danger');
-                    bankAvail = null;
-                } else {
-                    const numeric = Number(payload.balance ?? payload.available ?? payload.cash ?? 0);
-                    const formatted = payload.formatted
-                        ?? payload.balance_formatted
-                        ?? payload.available_formatted
-                        ?? formatCurrency(numeric);
-                    bankAvailability.textContent = formatted;
-                    bankAvail = Number.isFinite(numeric) ? numeric : null;
-                }
-                updateShareConstraints();
-            };
-
-            const refreshSafeAvailability = async () => {
-                if (!safeAvailability) {
-                    return;
-                }
-                safeAvailability.classList.remove('text-danger');
-                const safeId = safeSelect ? safeSelect.value : '';
-                if (!safeId) {
-                    safeAvailability.textContent = '—';
-                    safeAvail = null;
-                    updateShareConstraints();
-                    return;
-                }
-                if (safeLoading) {
-                    safeLoading.classList.remove('d-none');
-                }
-                const payload = await fetchAccountAvailability('safe', safeId);
-                if (safeLoading) {
-                    safeLoading.classList.add('d-none');
-                }
-                if (!payload || payload.success !== true) {
-                    safeAvailability.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
-                    safeAvailability.classList.add('text-danger');
-                    safeAvail = null;
-                } else {
-                    const numeric = Number(payload.balance ?? payload.available ?? payload.cash ?? 0);
-                    const formatted = payload.formatted
-                        ?? payload.balance_formatted
-                        ?? payload.available_formatted
-                        ?? formatCurrency(numeric);
-                    safeAvailability.textContent = formatted;
-                    safeAvail = Number.isFinite(numeric) ? numeric : null;
-                }
-                updateShareConstraints();
-            };
-
-            if (bankSelect) {
-                bankSelect.addEventListener('change', () => {
-                    enforceShareState();
-                    refreshBankAvailability();
                 });
-            }
+            };
 
-            if (safeSelect) {
-                safeSelect.addEventListener('change', () => {
-                    enforceShareState();
-                    refreshSafeAvailability();
-                });
-            }
+            const initSingleForms = () => {
+                document.querySelectorAll('.js-single-form').forEach((form) => {
+                    const statusType = Number(form.dataset.statusType || 2);
+                    const accountPicker = form.querySelector('.js-account-picker');
+                    const bankHidden = form.querySelector('.js-bank-hidden');
+                    const safeHidden = form.querySelector('.js-safe-hidden');
+                    const availabilityValue = form.querySelector('.js-account-availability');
+                    const availabilityLoading = form.querySelector('.js-account-loading');
+                    const amountInput = form.querySelector('.js-amount-input');
+                    let accountAvail = null;
 
-            if (totalInput) {
-                totalInput.addEventListener('input', updateSumHint);
-            }
-            if (bankShareInput) {
-                bankShareInput.addEventListener('input', () => {
-                    validateShare(bankShareInput, bankAvail);
-                    updateSumHint();
-                });
-            }
-            if (safeShareInput) {
-                safeShareInput.addEventListener('input', () => {
-                    validateShare(safeShareInput, safeAvail);
-                    updateSumHint();
-                });
-            }
+                    const applyHidden = (account) => {
+                        if (bankHidden) {
+                            bankHidden.value = account && account.type === 'bank' ? account.id : '';
+                        }
+                        if (safeHidden) {
+                            safeHidden.value = account && account.type === 'safe' ? account.id : '';
+                        }
+                    };
 
-            enforceShareState();
-            if (bankSelect && bankSelect.value) {
-                refreshBankAvailability();
-            }
-            if (safeSelect && safeSelect.value) {
-                refreshSafeAvailability();
-            }
-            updateSumHint();
+                    const applyAmountConstraints = () => {
+                        if (!amountInput) {
+                            return;
+                        }
+                        if (statusType === 2 && accountAvail !== null) {
+                            amountInput.setAttribute('max', String(accountAvail));
+                        } else {
+                            amountInput.removeAttribute('max');
+                        }
+                    };
 
-            attachSubmitHandler(form);
-        });
-    };
+                    const validateAmount = () => {
+                        if (!amountInput) {
+                            return;
+                        }
+                        const value = parseDecimal(amountInput.value);
+                        if (statusType === 2 && accountAvail !== null && value !== null && value > accountAvail + 1e-9) {
+                            amountInput.setCustomValidity('المبلغ يتجاوز المتاح في الحساب.');
+                        } else {
+                            amountInput.setCustomValidity('');
+                        }
+                        amountInput.classList.toggle('is-invalid', amountInput.validationMessage !== '');
+                    };
 
-    const initTabPersistence = () => {
-        const { Tab } = window.bootstrap || {};
-        document.querySelectorAll('#investorOperationsTabs button[data-operation]').forEach((button) => {
-            button.addEventListener('shown.bs.tab', (event) => {
-                const op = event.target?.dataset?.operation;
-                if (op) {
-                    try {
-                        localStorage.setItem(OPERATION_STORAGE_KEY, op);
-                    } catch (error) {
-                        // ignore storage errors
+                    const refreshAvailability = async () => {
+                        if (!availabilityValue) {
+                            return;
+                        }
+                        availabilityValue.classList.remove('text-danger');
+                        const account = parseAccountValue(accountPicker ? accountPicker.value : '');
+                        applyHidden(account);
+                        if (!account) {
+                            availabilityValue.textContent = '—';
+                            accountAvail = null;
+                            applyAmountConstraints();
+                            validateAmount();
+                            return;
+                        }
+                        if (availabilityLoading) {
+                            availabilityLoading.classList.remove('d-none');
+                        }
+                        const payload = await fetchAccountAvailability(account.type, account.id);
+                        if (availabilityLoading) {
+                            availabilityLoading.classList.add('d-none');
+                        }
+                        if (!payload || payload.success !== true) {
+                            availabilityValue.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
+                            availabilityValue.classList.add('text-danger');
+                            accountAvail = null;
+                        } else {
+                            const numeric = Number(payload.balance ?? payload.available ?? payload.cash ?? 0);
+                            const formatted = payload.formatted
+                                ?? payload.balance_formatted
+                                ?? payload.available_formatted
+                                ?? formatCurrency(numeric);
+                            availabilityValue.textContent = formatted;
+                            accountAvail = Number.isFinite(numeric) ? numeric : null;
+                        }
+                        applyAmountConstraints();
+                        validateAmount();
+                    };
+
+                    if (accountPicker) {
+                        accountPicker.addEventListener('change', refreshAvailability);
+                        refreshAvailability();
                     }
-                    if (!USE_OLD && Tab) {
-                        const storedMode = (() => {
-                            try {
-                                return localStorage.getItem(`${MODE_STORAGE_PREFIX}${op}`);
-                            } catch (error) {
-                                return null;
+
+                    if (amountInput) {
+                        amountInput.addEventListener('input', validateAmount);
+                        validateAmount();
+                    }
+
+                    attachSubmitHandler(form);
+                });
+            };
+
+            const initSplitForms = () => {
+                const round2 = (value) => Math.round((value ?? 0) * 100) / 100;
+
+                document.querySelectorAll('.js-split-form').forEach((form) => {
+                    const statusType = Number(form.dataset.statusType || 2);
+                    const totalInput = form.querySelector('.js-total-input');
+                    const bankShareInput = form.querySelector('.js-bank-share');
+                    const safeShareInput = form.querySelector('.js-safe-share');
+                    const bankSelect = form.querySelector('.js-bank-select');
+                    const safeSelect = form.querySelector('.js-safe-select');
+                    const bankAvailability = form.querySelector('.js-bank-availability');
+                    const bankLoading = form.querySelector('.js-bank-loading');
+                    const safeAvailability = form.querySelector('.js-safe-availability');
+                    const safeLoading = form.querySelector('.js-safe-loading');
+                    const sumHint = form.querySelector('.js-sum-hint');
+                    const ratioHint = form.querySelector('.js-ratio-hint');
+                    let bankAvail = null;
+                    let safeAvail = null;
+
+                    const validateShare = (input, avail) => {
+                        if (!input) {
+                            return;
+                        }
+                        const value = parseDecimal(input.value);
+                        if (statusType === 2 && avail !== null && value !== null && value > avail + 1e-9) {
+                            input.setCustomValidity('المبلغ يتجاوز المتاح في الحساب.');
+                        } else {
+                            input.setCustomValidity('');
+                        }
+                        input.classList.toggle('is-invalid', input.validationMessage !== '');
+                    };
+
+                    const updateShareConstraints = () => {
+                        if (statusType === 2) {
+                            if (bankShareInput) {
+                                if (bankAvail !== null) {
+                                    bankShareInput.setAttribute('max', String(bankAvail));
+                                } else {
+                                    bankShareInput.removeAttribute('max');
+                                }
                             }
-                        })();
+                            if (safeShareInput) {
+                                if (safeAvail !== null) {
+                                    safeShareInput.setAttribute('max', String(safeAvail));
+                                } else {
+                                    safeShareInput.removeAttribute('max');
+                                }
+                            }
+                        } else {
+                            if (bankShareInput) {
+                                bankShareInput.removeAttribute('max');
+                            }
+                            if (safeShareInput) {
+                                safeShareInput.removeAttribute('max');
+                            }
+                        }
+                        validateShare(bankShareInput, bankAvail);
+                        validateShare(safeShareInput, safeAvail);
+                    };
+
+                    const updateSumHint = () => {
+                        if (!sumHint) {
+                            return;
+                        }
+                        sumHint.classList.remove('text-danger');
+                        const total = parseDecimal(totalInput ? totalInput.value : null);
+                        const bankVal = parseDecimal(bankShareInput ? bankShareInput.value : null) || 0;
+                        const safeVal = parseDecimal(safeShareInput ? safeShareInput.value : null) || 0;
+                        const sum = round2(bankVal + safeVal);
+
+                        if (total == null) {
+                            sumHint.textContent = 'أدخل إجمالي المبلغ لتوزيعه على البنك والخزنة.';
+                            if (ratioHint) {
+                                ratioHint.textContent = '';
+                            }
+                            return;
+                        }
+
+                        if (Math.abs(sum - round2(total)) > 0.01) {
+                            sumHint.textContent = 'يجب أن يساوي مجموع البنك + الخزنة إجمالي المبلغ.';
+                            sumHint.classList.add('text-danger');
+                        } else {
+                            sumHint.textContent = 'مجموع البنك + الخزنة يساوي إجمالي المبلغ.';
+                        }
+
+                        if (ratioHint) {
+                            if (total > 0 && Math.abs(sum - round2(total)) <= 0.01) {
+                                const bankPct = (bankVal / total) * 100;
+                                const safePct = (safeVal / total) * 100;
+                                ratioHint.textContent = `البنك ${bankPct.toFixed(2)}% — الخزنة ${safePct.toFixed(2)}%`;
+                            } else {
+                                ratioHint.textContent = '';
+                            }
+                        }
+                    };
+
+                    const enforceShareState = () => {
+                        const bankChosen = !!(bankSelect && bankSelect.value);
+                        if (bankShareInput) {
+                            bankShareInput.readOnly = !bankChosen;
+                            bankShareInput.classList.toggle('bg-light', !bankChosen);
+                            if (!bankChosen) {
+                                bankShareInput.value = '0.00';
+                                bankAvail = null;
+                            }
+                        }
+
+                        const safeChosen = !!(safeSelect && safeSelect.value);
+                        if (safeShareInput) {
+                            safeShareInput.readOnly = !safeChosen;
+                            safeShareInput.classList.toggle('bg-light', !safeChosen);
+                            if (!safeChosen) {
+                                safeShareInput.value = '0.00';
+                                safeAvail = null;
+                            }
+                        }
+
+                        updateShareConstraints();
+                        updateSumHint();
+                    };
+
+                    const refreshBankAvailability = async () => {
+                        if (!bankAvailability) {
+                            return;
+                        }
+                        bankAvailability.classList.remove('text-danger');
+                        const bankId = bankSelect ? bankSelect.value : '';
+                        if (!bankId) {
+                            bankAvailability.textContent = '—';
+                            bankAvail = null;
+                            updateShareConstraints();
+                            return;
+                        }
+                        if (bankLoading) {
+                            bankLoading.classList.remove('d-none');
+                        }
+                        const payload = await fetchAccountAvailability('bank', bankId);
+                        if (bankLoading) {
+                            bankLoading.classList.add('d-none');
+                        }
+                        if (!payload || payload.success !== true) {
+                            bankAvailability.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
+                            bankAvailability.classList.add('text-danger');
+                            bankAvail = null;
+                        } else {
+                            const numeric = Number(payload.balance ?? payload.available ?? payload.cash ?? 0);
+                            const formatted = payload.formatted
+                                ?? payload.balance_formatted
+                                ?? payload.available_formatted
+                                ?? formatCurrency(numeric);
+                            bankAvailability.textContent = formatted;
+                            bankAvail = Number.isFinite(numeric) ? numeric : null;
+                        }
+                        updateShareConstraints();
+                    };
+
+                    const refreshSafeAvailability = async () => {
+                        if (!safeAvailability) {
+                            return;
+                        }
+                        safeAvailability.classList.remove('text-danger');
+                        const safeId = safeSelect ? safeSelect.value : '';
+                        if (!safeId) {
+                            safeAvailability.textContent = '—';
+                            safeAvail = null;
+                            updateShareConstraints();
+                            return;
+                        }
+                        if (safeLoading) {
+                            safeLoading.classList.remove('d-none');
+                        }
+                        const payload = await fetchAccountAvailability('safe', safeId);
+                        if (safeLoading) {
+                            safeLoading.classList.add('d-none');
+                        }
+                        if (!payload || payload.success !== true) {
+                            safeAvailability.textContent = payload && payload.message ? `خطأ: ${payload.message}` : 'تعذّر الجلب';
+                            safeAvailability.classList.add('text-danger');
+                            safeAvail = null;
+                        } else {
+                            const numeric = Number(payload.balance ?? payload.available ?? payload.cash ?? 0);
+                            const formatted = payload.formatted
+                                ?? payload.balance_formatted
+                                ?? payload.available_formatted
+                                ?? formatCurrency(numeric);
+                            safeAvailability.textContent = formatted;
+                            safeAvail = Number.isFinite(numeric) ? numeric : null;
+                        }
+                        updateShareConstraints();
+                    };
+
+                    if (bankSelect) {
+                        bankSelect.addEventListener('change', () => {
+                            enforceShareState();
+                            refreshBankAvailability();
+                        });
+                    }
+
+                    if (safeSelect) {
+                        safeSelect.addEventListener('change', () => {
+                            enforceShareState();
+                            refreshSafeAvailability();
+                        });
+                    }
+
+                    if (totalInput) {
+                        totalInput.addEventListener('input', updateSumHint);
+                    }
+                    if (bankShareInput) {
+                        bankShareInput.addEventListener('input', () => {
+                            validateShare(bankShareInput, bankAvail);
+                            updateSumHint();
+                        });
+                    }
+                    if (safeShareInput) {
+                        safeShareInput.addEventListener('input', () => {
+                            validateShare(safeShareInput, safeAvail);
+                            updateSumHint();
+                        });
+                    }
+
+                    enforceShareState();
+                    if (bankSelect && bankSelect.value) {
+                        refreshBankAvailability();
+                    }
+                    if (safeSelect && safeSelect.value) {
+                        refreshSafeAvailability();
+                    }
+                    updateSumHint();
+
+                    attachSubmitHandler(form);
+                });
+            };
+
+            const initTabPersistence = () => {
+                const { Tab } = window.bootstrap || {};
+                document.querySelectorAll('#investorOperationsTabs button[data-operation]').forEach((button) => {
+                    button.addEventListener('shown.bs.tab', (event) => {
+                        const op = event.target?.dataset?.operation;
+                        if (op) {
+                            try {
+                                localStorage.setItem(OPERATION_STORAGE_KEY, op);
+                            } catch (error) {
+                                // ignore storage errors
+                            }
+                            if (!USE_OLD && Tab) {
+                                const storedMode = (() => {
+                                    try {
+                                        return localStorage.getItem(`${MODE_STORAGE_PREFIX}${op}`);
+                                    } catch (error) {
+                                        return null;
+                                    }
+                                })();
+                                if (storedMode) {
+                                    const modeButton = document.querySelector(`#investor-operation-${op}-${storedMode}-tab`);
+                                    if (modeButton) {
+                                        new Tab(modeButton).show();
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.js-mode-tab').forEach((button) => {
+                    button.addEventListener('shown.bs.tab', (event) => {
+                        const op = event.target?.dataset?.operation;
+                        const mode = event.target?.dataset?.mode;
+                        if (op && mode) {
+                            try {
+                                localStorage.setItem(`${MODE_STORAGE_PREFIX}${op}`, mode);
+                            } catch (error) {
+                                // ignore
+                            }
+                        }
+                    });
+                });
+
+                if (USE_OLD || !Tab) {
+                    return;
+                }
+
+                try {
+                    const storedOperation = localStorage.getItem(OPERATION_STORAGE_KEY);
+                    if (storedOperation) {
+                        const opButton = document.querySelector(`#investorOperationsTabs button[data-operation="${storedOperation}"]`);
+                        if (opButton) {
+                            new Tab(opButton).show();
+                        }
+                    }
+                    const activeOpButton = document.querySelector('#investorOperationsTabs .nav-link.active');
+                    const currentOperation = activeOpButton?.dataset?.operation
+                        ?? localStorage.getItem(OPERATION_STORAGE_KEY);
+                    if (currentOperation) {
+                        const storedMode = localStorage.getItem(`${MODE_STORAGE_PREFIX}${currentOperation}`);
                         if (storedMode) {
-                            const modeButton = document.querySelector(`#investor-operation-${op}-${storedMode}-tab`);
+                            const modeButton = document.querySelector(`#investor-operation-${currentOperation}-${storedMode}-tab`);
                             if (modeButton) {
                                 new Tab(modeButton).show();
                             }
                         }
                     }
+                } catch (error) {
+                    // ignore storage errors
                 }
-            });
+            };
+
+            initTabPersistence();
+            initInvestorFields();
+            initSingleForms();
+            initSplitForms();
         });
-
-        document.querySelectorAll('.js-mode-tab').forEach((button) => {
-            button.addEventListener('shown.bs.tab', (event) => {
-                const op = event.target?.dataset?.operation;
-                const mode = event.target?.dataset?.mode;
-                if (op && mode) {
-                    try {
-                        localStorage.setItem(`${MODE_STORAGE_PREFIX}${op}`, mode);
-                    } catch (error) {
-                        // ignore
-                    }
-                }
-            });
-        });
-
-        if (USE_OLD || !Tab) {
-            return;
-        }
-
-        try {
-            const storedOperation = localStorage.getItem(OPERATION_STORAGE_KEY);
-            if (storedOperation) {
-                const opButton = document.querySelector(`#investorOperationsTabs button[data-operation="${storedOperation}"]`);
-                if (opButton) {
-                    new Tab(opButton).show();
-                }
-            }
-            const activeOpButton = document.querySelector('#investorOperationsTabs .nav-link.active');
-            const currentOperation = activeOpButton?.dataset?.operation
-                ?? localStorage.getItem(OPERATION_STORAGE_KEY);
-            if (currentOperation) {
-                const storedMode = localStorage.getItem(`${MODE_STORAGE_PREFIX}${currentOperation}`);
-                if (storedMode) {
-                    const modeButton = document.querySelector(`#investor-operation-${currentOperation}-${storedMode}-tab`);
-                    if (modeButton) {
-                        new Tab(modeButton).show();
-                    }
-                }
-            }
-        } catch (error) {
-            // ignore storage errors
-        }
-    };
-
-    initTabPersistence();
-    initInvestorFields();
-    initSingleForms();
-    initSplitForms();
-});
-</script>
+    </script>
 @endpush
