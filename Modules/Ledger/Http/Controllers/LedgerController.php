@@ -12,10 +12,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Investors\Entities\Investor;
 use Modules\Investors\Entities\InvestorTransaction;
+use Modules\Ledger\Exports\LedgerEntriesExport;
 use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Ledger\Entities\ProductTransaction;
 use Modules\Lookups\Entities\ProductType;
@@ -206,6 +208,28 @@ class LedgerController extends Controller
         'goodsAvailability' => $goodsAvailability,
     ], $accountsData));
 }
+
+    public function export(Request $request)
+    {
+        $filters = collect($request->only([
+            'party_category',
+            'investor_id',
+            'status_id',
+            'account_type',
+            'from',
+            'to',
+        ]))->reject(fn($value) => $value === null || $value === '')->all();
+
+        $filters['bank_ids'] = (array) $request->input('bank_ids', []);
+        $filters['safe_ids'] = (array) $request->input('safe_ids', []);
+
+        $timestamp = now()->format('Y_m_d_His');
+
+        return Excel::download(
+            new LedgerEntriesExport($filters),
+            "ledger_entries_{$timestamp}.xlsx"
+        );
+    }
 
     public function create()
     {

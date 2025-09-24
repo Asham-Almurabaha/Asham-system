@@ -19,4 +19,5 @@ return array (
   'Account Type' => 'Account Type',
   'From' => 'From',
   'To' => 'To',
+  'Export Ledger Entries' => 'Export Ledger Entries (Excel)',
 );

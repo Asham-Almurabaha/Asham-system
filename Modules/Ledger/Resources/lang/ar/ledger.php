@@ -19,4 +19,5 @@ return array (
   'Account Type' => 'نوع الحساب',
   'From' => 'من',
   'To' => 'إلى',
+  'Export Ledger Entries' => 'تصدير القيود (Excel)',
 );

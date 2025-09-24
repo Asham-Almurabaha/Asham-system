@@ -20,5 +20,6 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::post('/transfer',        [LedgerController::class, 'transferStore'])->name('transfer.store');
         Route::get('/split/create',     [LedgerController::class, 'splitCreate'])->name('split.create');
         Route::post('/split',           [LedgerController::class, 'splitStore'])->name('split.store');
+        Route::get('/export',           [LedgerController::class, 'export'])->name('export');
     });
 });

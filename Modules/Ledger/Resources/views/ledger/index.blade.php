@@ -23,6 +23,9 @@
             <x-button.action href="{{ route('ledger.import.form') }}" variant="primary" :outline="true">
                 <i class="bi bi-upload"></i> استيراد Excel
             </x-button.action>
+            <x-button.action href="{{ route('ledger.export', request()->query()) }}" variant="primary" :outline="true">
+                <i class="bi bi-download"></i> @lang('ledger::ledger.Export Ledger Entries')
+            </x-button.action>
         @endrole
 
         <span class="ms-auto small text-muted">
