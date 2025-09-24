@@ -1,14 +1,18 @@
 @extends('layouts.master')
 
 @php
-    $pageTitle = 'القيود — البضائع';
-    $pageHeading = 'قيود البضائع';
+    $pageTitle = $pageTitle ?? 'القيود — البضائع';
+    $pageHeading = $pageHeading ?? 'قيود البضائع';
     $activeTab = old('active_tab', $defaultTab ?? 'purchase');
     if (!in_array($activeTab, ['purchase', 'partial'], true)) {
         $activeTab = 'purchase';
     }
 
     $today = now()->toDateString();
+
+    $primaryTabLabel = $primaryTabLabel ?? 'قيد شراء بضائع';
+    $primaryFormAction = $primaryFormAction ?? route('accounts.entries.goods.store');
+    $partialFormAction = $partialFormAction ?? route('accounts.entries.goods.store-partial');
 
     $purchaseProducts = $activeTab === 'partial' ? [] : old('products', []);
     $partialProducts = $activeTab === 'partial' ? old('products', []) : [];
@@ -57,7 +61,7 @@
         <ul class="nav nav-tabs" id="goodsTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link {{ $activeTab === 'purchase' ? 'active' : '' }}" id="purchase-tab" data-bs-toggle="tab" data-bs-target="#tab-purchase" type="button" role="tab">
-                    قيد شراء بضائع
+                    {{ $primaryTabLabel }}
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -69,7 +73,7 @@
 
         <div class="tab-content pt-3">
             <div class="tab-pane fade {{ $activeTab === 'purchase' ? 'show active' : '' }}" id="tab-purchase" role="tabpanel" aria-labelledby="purchase-tab">
-                <form action="{{ route('accounts.entries.goods.store') }}" method="POST" class="row g-3 mt-1" id="goodsPurchaseForm">
+                <form action="{{ $primaryFormAction }}" method="POST" class="row g-3 mt-1" id="goodsPurchaseForm">
                     @csrf
                     <input type="hidden" name="active_tab" value="purchase">
                     <input type="hidden" name="party_category" value="office">
@@ -199,7 +203,7 @@
             </div>
 
             <div class="tab-pane fade {{ $activeTab === 'partial' ? 'show active' : '' }}" id="tab-partial" role="tabpanel" aria-labelledby="partial-tab">
-                <form action="{{ route('accounts.entries.goods.store-partial') }}" method="POST" class="row g-3 mt-1" id="goodsPartialForm">
+                <form action="{{ $partialFormAction }}" method="POST" class="row g-3 mt-1" id="goodsPartialForm">
                     @csrf
                     <input type="hidden" name="active_tab" value="partial">
                     <input type="hidden" name="party_category" value="office">

@@ -9,6 +9,7 @@ use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\Accounts\GoodsEntriesController;
+use App\Http\Controllers\Accounts\GoodsSalesEntriesController;
 use App\Http\Controllers\LedgerEntriesImportController;
 use App\Http\Controllers\Setting\PermissionManagementController;
 use App\Http\Controllers\Setting\RoleManagementController;
@@ -91,6 +92,20 @@ Route::middleware('auth')->group(function () {
             ->middleware('permission:accounts.entries.create');
 
         Route::post('/partial', [GoodsEntriesController::class, 'storePartial'])
+            ->name('store-partial')
+            ->middleware('permission:accounts.entries.create');
+    });
+
+    Route::prefix('accounts/entries/goods/sales')->name('accounts.entries.goods.sales.')->group(function () {
+        Route::get('/', [GoodsSalesEntriesController::class, 'index'])
+            ->name('index')
+            ->middleware('permission:accounts.entries.view');
+
+        Route::post('/', [GoodsSalesEntriesController::class, 'store'])
+            ->name('store')
+            ->middleware('permission:accounts.entries.create');
+
+        Route::post('/partial', [GoodsSalesEntriesController::class, 'storePartial'])
             ->name('store-partial')
             ->middleware('permission:accounts.entries.create');
     });

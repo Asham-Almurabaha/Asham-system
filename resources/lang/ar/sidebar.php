@@ -88,6 +88,7 @@ return array (
   'Split Ledger Entry' => 'قيد مجزأ',
   'Goods Entries' => 'قيود البضائع',
   'Goods Purchase' => 'شراء بضائع',
+  'Goods Sale' => 'بيع بضائع',
   'Import Ledger Entries' => 'استيراد قيود الدفتر',
   'View' => 'عرض',
   'Edit' => 'تعديل',

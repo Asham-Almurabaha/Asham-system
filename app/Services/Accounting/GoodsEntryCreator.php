@@ -24,7 +24,7 @@ class GoodsEntryCreator
      */
     public function createEntry(array $payload): LedgerEntry
     {
-        $status = $this->resolveStatus();
+        $status = $this->resolveStatus($payload['status_id'] ?? null);
         $typeId = (int) $status->transaction_type_id;
         $direction = $this->directionFromType($typeId);
 
@@ -93,7 +93,7 @@ class GoodsEntryCreator
      */
     public function createPartial(array $payload): Collection
     {
-        $status = $this->resolveStatus();
+        $status = $this->resolveStatus($payload['status_id'] ?? null);
         $typeId = (int) $status->transaction_type_id;
         $direction = $this->directionFromType($typeId);
 
@@ -200,16 +200,25 @@ class GoodsEntryCreator
         });
     }
 
-    private function resolveStatus(): TransactionStatus
+    private function resolveStatus(?int $statusId = null): TransactionStatus
     {
-        $status = TransactionStatus::where('name', self::STATUS_NAME_PRIMARY)->first();
+        $status = null;
+
+        if ($statusId) {
+            $status = TransactionStatus::find($statusId);
+        }
+
+        if (!$status) {
+            $status = TransactionStatus::where('name', self::STATUS_NAME_PRIMARY)->first();
+        }
+
         if (!$status) {
             $status = TransactionStatus::where('name', self::STATUS_NAME_FALLBACK)->first();
         }
 
         if (!$status) {
             throw ValidationException::withMessages([
-                'status_id' => 'تعذر تحديد حالة "شراء البضائع" المطلوبة.',
+                'status_id' => 'تعذر تحديد حالة البضائع المطلوبة.',
             ]);
         }
 

@@ -88,6 +88,7 @@ return [
     'Split Ledger Entry' => 'Split Ledger Entry',
     'Goods Entries' => 'Goods Entries',
     'Goods Purchase' => 'Goods Purchase',
+    'Goods Sale' => 'Goods Sale',
     'Import Ledger Entries' => 'Import Ledger Entries',
     'View' => 'View',
     'Edit' => 'Edit',

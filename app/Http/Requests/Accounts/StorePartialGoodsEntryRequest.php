@@ -31,6 +31,7 @@ class StorePartialGoodsEntryRequest extends FormRequest
             'amount'            => ['required', 'numeric', 'min:0.01'],
             'bank_share'        => ['nullable', 'numeric', 'min:0'],
             'safe_share'        => ['nullable', 'numeric', 'min:0'],
+            'status_id'         => ['nullable', 'integer', 'exists:transaction_statuses,id'],
             'bank_account_id'   => ['nullable', 'integer', 'exists:bank_accounts,id'],
             'safe_id'           => ['nullable', 'integer', 'exists:safes,id'],
             'transaction_date'  => ['required', 'date_format:Y-m-d'],
@@ -49,6 +50,7 @@ class StorePartialGoodsEntryRequest extends FormRequest
             'safe_share'               => 'مبلغ الخزنة',
             'bank_account_id'          => 'الحساب البنكي',
             'safe_id'                  => 'الخزنة',
+            'status_id'                => 'حالة العملية',
             'transaction_date'         => 'تاريخ العملية',
             'notes'                    => 'ملاحظات',
             'products'                 => 'المنتجات',
@@ -64,6 +66,7 @@ class StorePartialGoodsEntryRequest extends FormRequest
             'safe_share'      => $this->input('safe_share', 0),
             'bank_account_id' => $this->filled('bank_account_id') ? $this->input('bank_account_id') : null,
             'safe_id'         => $this->filled('safe_id') ? $this->input('safe_id') : null,
+            'status_id'       => $this->filled('status_id') ? (int) $this->input('status_id') : null,
         ]);
     }
 

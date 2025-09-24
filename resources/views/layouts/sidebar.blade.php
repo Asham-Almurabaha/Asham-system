@@ -39,7 +39,8 @@
 
   // فتح مجموعة الحسابات؟
   $accountsOpen = $isRoute('ledger.*')
-      || $isRoute('accounts.entries.goods.*');
+      || $isRoute('accounts.entries.goods.*')
+      || $isRoute('accounts.entries.goods.sales.*');
 
   $customerManagePatterns = [
       'customers.index',
@@ -240,6 +241,11 @@
       <li>
         <a class="{{ $active($isRoute('accounts.entries.goods.*')) }}" href="{{ route('accounts.entries.goods.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Goods Purchase')</span>
+        </a>
+      </li>
+      <li>
+        <a class="{{ $active($isRoute('accounts.entries.goods.sales.*')) }}" href="{{ route('accounts.entries.goods.sales.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Goods Sale')</span>
         </a>
       </li>
     </ul>

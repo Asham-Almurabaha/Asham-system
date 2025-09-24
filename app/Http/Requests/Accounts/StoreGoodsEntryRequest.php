@@ -28,6 +28,7 @@ class StoreGoodsEntryRequest extends FormRequest
     {
         return [
             'active_tab'        => ['nullable', Rule::in(['purchase'])],
+            'status_id'         => ['nullable', 'integer', 'exists:transaction_statuses,id'],
             'bank_account_id'   => ['nullable', 'integer', 'exists:bank_accounts,id'],
             'safe_id'           => ['nullable', 'integer', 'exists:safes,id'],
             'amount'            => ['required', 'numeric', 'min:0.01'],
@@ -44,6 +45,7 @@ class StoreGoodsEntryRequest extends FormRequest
         return [
             'bank_account_id' => 'الحساب البنكي',
             'safe_id'         => 'الخزنة',
+            'status_id'       => 'حالة العملية',
             'amount'          => 'المبلغ',
             'transaction_date'=> 'تاريخ العملية',
             'notes'           => 'ملاحظات',
@@ -58,6 +60,7 @@ class StoreGoodsEntryRequest extends FormRequest
         $this->merge([
             'bank_account_id' => $this->filled('bank_account_id') ? $this->input('bank_account_id') : null,
             'safe_id'         => $this->filled('safe_id') ? $this->input('safe_id') : null,
+            'status_id'       => $this->filled('status_id') ? (int) $this->input('status_id') : null,
         ]);
     }
 
