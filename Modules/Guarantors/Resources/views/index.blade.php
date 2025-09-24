@@ -122,12 +122,12 @@
         <i class="bi bi-arrow-clockwise"></i> {{ __('guarantors::messages.Refresh Guarantor Statuses') }}
       </x-button.action>
 
+      {{-- 🔥 شيلنا زر "تمبليت" زى العملاء --}}
+    </div>
+
     <form id="guarantors-refresh-statuses-form" method="POST" action="{{ route('guarantors.refresh-statuses') }}" class="d-none">
       @csrf
     </form>
-
-      {{-- 🔥 شيلنا زر "تمبليت" زى العملاء --}}
-    </div>
 
     @if($activeReportLabel)
         <span class="badge bg-info text-dark d-inline-flex align-items-center gap-2 px-3 py-2">
