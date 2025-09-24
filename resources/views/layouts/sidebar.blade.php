@@ -238,6 +238,7 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
         </a>
       </li>
+      <li class="nav-heading">@lang('sidebar.Goods Entries')</li>
       <li>
         <a class="{{ $active($isRoute('accounts.entries.goods.*')) }}" href="{{ route('accounts.entries.goods.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Goods Purchase')</span>
