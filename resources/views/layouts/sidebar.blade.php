@@ -251,17 +251,6 @@
       </li>
       <li class="nav-heading">@lang('sidebar.Investor Ledger Entries')</li>
       <li>
-        <a class="{{ $active($isRoute(['investors.ledger.create', 'investors.ledger.store'])) }}" href="{{ route('investors.ledger.create') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Ledger Entry')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute(['investors.ledger.split.create', 'investors.ledger.split.store'])) }}" href="{{ route('investors.ledger.split.create') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Split Ledger Entry')</span>
-        </a>
-      </li>
-      <li class="nav-heading">@lang('sidebar.Investor Quick Entries')</li>
-      <li>
         <a class="{{ $active($isRoute(['investors.ledger.shortcuts', 'investors.ledger.shortcuts.capital'])) }}" href="{{ route('investors.ledger.shortcuts.capital') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Capital Entry')</span>
         </a>
