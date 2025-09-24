@@ -38,6 +38,9 @@ class LedgerController extends Controller
     private const DIR_IN  = 'in';
     private const DIR_OUT = 'out';
 
+    /** أسماء الحالات التي تُخفى من القوائم المنسدلة */
+    private const STATUS_EXCLUSIONS = ['فرق البيع','إضافة عقد','سداد قسط','سداد مطالبة','سداد مطالبه'];
+
     public function index(Request $request, CashAccountsDataService $cashSvc, OfficeIncomeMetricsService $officeSvc, ProductAvailabilityService $goodsSvc)
 {
     /* ========================
@@ -187,10 +190,10 @@ class LedgerController extends Controller
 
         $statusesByCategory = [
             'investors' => $this->statusesForCategory($this->CAT_INVESTORS)
-                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->reject(fn($s) => in_array($s->name, self::STATUS_EXCLUSIONS, true))
                                 ->values(),
             'office'    => $this->statusesForCategory($this->CAT_OFFICE)
-                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->reject(fn($s) => in_array($s->name, self::STATUS_EXCLUSIONS, true))
                                 ->values(),
         ];
 
@@ -494,10 +497,10 @@ class LedgerController extends Controller
 
         $statusesByCategory = [
             'investors' => $this->statusesForCategory($this->CAT_INVESTORS)
-                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->reject(fn($s) => in_array($s->name, self::STATUS_EXCLUSIONS, true))
                                 ->values(),
             'office'    => $this->statusesForCategory($this->CAT_OFFICE)
-                                ->reject(fn($s) => in_array($s->name, ['فرق البيع','إضافة عقد','سداد قسط']))
+                                ->reject(fn($s) => in_array($s->name, self::STATUS_EXCLUSIONS, true))
                                 ->values(),
         ];
 
