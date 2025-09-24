@@ -280,11 +280,6 @@
           <i class="bi bi-circle"></i><span>@lang('sidebar.Investor Zakat Withdrawal')</span>
         </a>
       </li>
-      <li>
-        <a class="{{ $active($isRoute('investors.ledger.import.*')) }}" href="{{ route('investors.ledger.import.form') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Import Ledger Entries')</span>
-        </a>
-      </li>
       <li class="nav-heading">@lang('sidebar.Goods Entries')</li>
       <li>
         <a class="{{ $active($isRoute('accounts.entries.goods.*')) }}" href="{{ route('accounts.entries.goods.index') }}">
