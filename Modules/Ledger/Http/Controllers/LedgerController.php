@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Investors\Entities\Investor;
@@ -389,7 +390,11 @@ class LedgerController extends Controller
 
         $redirectRoute = $this->resolveRedirectRoute($request, 'ledger.index');
 
-        return redirect()->route($redirectRoute)->with('success', 'تم إضافة القيد بنجاح');
+        $successMessage = Str::startsWith($redirectRoute, 'investors.ledger.')
+            ? 'تم حفظ قيد المستثمرين بنجاح.'
+            : 'تم إضافة القيد بنجاح.';
+
+        return redirect()->route($redirectRoute)->with('success', $successMessage);
     }
 
     public function transferCreate()
@@ -751,7 +756,11 @@ class LedgerController extends Controller
 
         $redirectRoute = $this->resolveRedirectRoute($request, 'ledger.index');
 
-        return redirect()->route($redirectRoute)->with('success', 'تم حفظ القيد المُجزّأ بنجاح');
+        $successMessage = Str::startsWith($redirectRoute, 'investors.ledger.')
+            ? 'تم حفظ القيد المُجزّأ للمستثمرين بنجاح.'
+            : 'تم حفظ القيد المُجزّأ بنجاح.';
+
+        return redirect()->route($redirectRoute)->with('success', $successMessage);
     }
 
     // =======================
