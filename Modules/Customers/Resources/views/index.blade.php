@@ -126,9 +126,12 @@
         <x-button.action href="{{ route('customers.import.form') }}" variant="primary" :outline="true">
             <i class="bi bi-upload"></i> {{ __('Import Excel') }}
         </x-button.action>
+        <x-button.action href="{{ route('customers.export') }}" variant="primary" :outline="true">
+            <i class="bi bi-download"></i> {{ __('Export Excel') }}
+        </x-button.action>
       @endrole
 
-      
+
 
       {{-- Template button removed as requested --}}
     </div>

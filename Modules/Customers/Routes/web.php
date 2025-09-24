@@ -25,6 +25,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('customers/refresh-statuses', [CustomerController::class, 'refreshStatuses'])
         ->name('customers.refresh-statuses');
 
+    Route::get('customers/export', [CustomerController::class, 'export'])
+        ->name('customers.export');
+
     Route::resource('customers', CustomerController::class);
 
     Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])

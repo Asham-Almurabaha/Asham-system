@@ -24,6 +24,8 @@ use App\Models\OfficeTransaction;
 use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Investors\Support\InvestorContractPaymentAggregator;
 use Modules\Lookups\Entities\TransactionStatus;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Customers\Exports\CustomersExport;
 
 
 class CustomerController extends Controller
@@ -140,6 +142,13 @@ class CustomerController extends Controller
             'periodMonths',
             'periodYears'
         ));
+    }
+
+    public function export()
+    {
+        $timestamp = now()->format('Y_m_d_His');
+
+        return Excel::download(new CustomersExport(), "customers_export_{$timestamp}.xlsx");
     }
 
     public function refreshStatuses(Request $request)

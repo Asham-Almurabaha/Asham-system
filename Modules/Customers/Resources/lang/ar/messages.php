@@ -4,6 +4,7 @@ return array (
   'Customers List' => 'قائمة العملاء',
   'Add New Customer' => 'إضافة عميل جديد',
   'Import Excel' => 'استيراد Excel',
+  'Export Excel' => 'تصدير Excel',
   'Results' => 'النتائج',
   'Filter' => 'تصفية',
   'Refresh Customer Statuses' => 'تحديث حالات العملاء',
@@ -129,4 +130,20 @@ return array (
   'View in full size' => 'عرض بالحجم الكامل',
   1234567890 => '1234567890',
   '+9665XXXXXXXX' => '+9665XXXXXXXX',
+  'export_headings' => 
+  array (
+    'id' => 'المعرف',
+    'name' => 'الاسم',
+    'national_id' => 'رقم الهوية',
+    'phone' => 'الهاتف',
+    'email' => 'البريد الإلكتروني',
+    'address' => 'العنوان',
+    'nationality' => 'الجنسية',
+    'title' => 'الوظيفة',
+    'customer_status' => 'حالة العميل',
+    'id_card_image' => 'صورة الهوية',
+    'notes' => 'ملاحظات',
+    'created_at' => 'تاريخ الإنشاء',
+    'updated_at' => 'تاريخ التحديث',
+  ),
 );

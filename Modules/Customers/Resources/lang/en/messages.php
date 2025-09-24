@@ -4,6 +4,7 @@ return array (
   'Customers List' => 'Customers List',
   'Add New Customer' => 'Add New Customer',
   'Import Excel' => 'Import Excel',
+  'Export Excel' => 'Export Excel',
   'Results' => 'Results',
   'Filter' => 'Filter',
   'Refresh Customer Statuses' => 'Refresh Customer Statuses',
@@ -123,4 +124,20 @@ return array (
   'View in full size' => 'View in full size',
   1234567890 => '1234567890',
   '+9665XXXXXXXX' => '+9665XXXXXXXX',
+  'export_headings' => 
+  array (
+    'id' => 'ID',
+    'name' => 'Name',
+    'national_id' => 'National ID',
+    'phone' => 'Phone',
+    'email' => 'Email',
+    'address' => 'Address',
+    'nationality' => 'Nationality',
+    'title' => 'Title',
+    'customer_status' => 'Customer Status',
+    'id_card_image' => 'ID Card Image',
+    'notes' => 'Notes',
+    'created_at' => 'Created At',
+    'updated_at' => 'Updated At',
+  ),
 );
