@@ -10,8 +10,21 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
+$modulesPath = realpath(__DIR__.'/../Modules');
 
+$moduleProviders = [];
 
+if ($modulesPath !== false && is_dir($modulesPath)) {
+    foreach (glob($modulesPath.'/*/Providers/*ServiceProvider.php') ?: [] as $providerFile) {
+        $relative = substr($providerFile, strlen($modulesPath) + 1);
+        $relative = str_replace('\\', '/', $relative);
+        $relative = str_replace('.php', '', $relative);
+
+        $moduleProviders[] = 'Modules\\'.str_replace('/', '\\', $relative);
+    }
+
+    $moduleProviders = array_values(array_unique($moduleProviders));
+}
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         AppServiceProvider::class,
         AuthServiceProvider::class,
+        ...$moduleProviders,
     ])
     ->withMiddleware(function ($middleware) {
         $middleware->alias([
