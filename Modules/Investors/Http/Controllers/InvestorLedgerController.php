@@ -7,8 +7,10 @@ use Illuminate\Support\Collection;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Investors\Entities\Investor;
+use Modules\Investors\Exports\InvestorLedgerEntriesExport;
 use Modules\Lookups\Entities\ProductType;
 use Modules\Lookups\Entities\TransactionStatus;
+use Maatwebsite\Excel\Facades\Excel;
 
 class InvestorLedgerController extends Controller
 {
@@ -68,6 +70,13 @@ class InvestorLedgerController extends Controller
             'restrictPartyToInvestors' => true,
             'redirectRouteName'     => 'investors.index',
         ]));
+    }
+
+    public function export()
+    {
+        $timestamp = now()->format('Y_m_d_His');
+
+        return Excel::download(new InvestorLedgerEntriesExport(), "investor_ledger_entries_{$timestamp}.xlsx");
     }
 
     private function buildFormPayload(array $overrides = []): array

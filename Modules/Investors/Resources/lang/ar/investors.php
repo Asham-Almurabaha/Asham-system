@@ -13,6 +13,7 @@ return array (
   'Import Excel' => 'استيراد Excel',
   'Export Excel' => 'تصدير Excel',
   'Import Investor Ledger' => 'استيراد قيود المستثمرين (Excel)',
+  'Export Investor Ledger' => 'تصدير قيود المستثمرين (Excel)',
   'Export Failures' => 'تصدير الإخفاقات',
   'Reports' => 'التقارير',
   'Investors Liquidity Report' => 'تقرير سيولة المستثمرين',

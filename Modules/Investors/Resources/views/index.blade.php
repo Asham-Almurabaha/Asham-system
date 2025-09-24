@@ -46,6 +46,11 @@
                 <i class="bi bi-cloud-arrow-up"></i> {{ __('investors::investors.Import Investor Ledger') }}
               </a>
             </li>
+            <li>
+              <a class="dropdown-item" href="{{ route('investors.ledger.export') }}">
+                <i class="bi bi-download"></i> {{ __('investors::investors.Export Investor Ledger') }}
+              </a>
+            </li>
           @endrole
         </ul>
       </div>

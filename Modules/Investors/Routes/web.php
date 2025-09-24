@@ -41,6 +41,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/shortcuts/zakat', [InvestorLedgerController::class, 'zakatShortcut'])->name('shortcuts.zakat');
         Route::get('/create', [InvestorLedgerController::class, 'create'])->name('create');
         Route::get('/split/create', [InvestorLedgerController::class, 'split'])->name('split.create');
+        Route::get('/export', [InvestorLedgerController::class, 'export'])->name('export');
         Route::get('/import', [InvestorLedgerImportController::class, 'create'])->name('import.form');
         Route::post('/import', [InvestorLedgerImportController::class, 'store'])->name('import');
         Route::get('/import/template', [InvestorLedgerImportController::class, 'template'])->name('import.template');

@@ -9,6 +9,7 @@ return array (
   'Import Excel' => 'Import Excel',
   'Export Excel' => 'Export Excel',
   'Import Investor Ledger' => 'Import investor ledger (Excel)',
+  'Export Investor Ledger' => 'Export investor ledger (Excel)',
   'Add Investor' => 'Add Investor',
   'Export Failures' => 'Export Failures',
   'Reports' => 'Reports',
