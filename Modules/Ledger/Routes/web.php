@@ -28,7 +28,6 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/',                      [OfficeLedgerController::class, 'shortcuts'])->name('shortcuts');
         Route::get('/mukataba',              [OfficeLedgerController::class, 'mukataba'])->name('shortcuts.mukataba');
         Route::get('/sales-diff',            [OfficeLedgerController::class, 'salesDiff'])->name('shortcuts.sales_diff');
-        Route::get('/profit',                [OfficeLedgerController::class, 'profit'])->name('shortcuts.profit');
         Route::get('/account-deposit',       [OfficeLedgerController::class, 'accountDeposit'])->name('shortcuts.account_deposit');
         Route::get('/account-withdrawal',    [OfficeLedgerController::class, 'accountWithdrawal'])->name('shortcuts.account_withdrawal');
         Route::get('/opening-balance',       [OfficeLedgerController::class, 'openingBalance'])->name('shortcuts.opening_balance');

@@ -271,11 +271,6 @@
         </a>
       </li>
       <li>
-        <a class="{{ $active($isRoute('ledger.office.shortcuts.profit')) }}" href="{{ route('ledger.office.shortcuts.profit') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Office Profit Entry')</span>
-        </a>
-      </li>
-      <li>
         <a class="{{ $active($isRoute('ledger.office.shortcuts.account_deposit')) }}" href="{{ route('ledger.office.shortcuts.account_deposit') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Office Accounts Deposit')</span>
         </a>

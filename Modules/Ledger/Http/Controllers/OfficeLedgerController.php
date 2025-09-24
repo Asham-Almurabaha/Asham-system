@@ -22,7 +22,7 @@ class OfficeLedgerController extends Controller
     {
         [$operations] = $this->buildOperations();
 
-        $preferredOrder = ['mukataba', 'sales_diff', 'profit', 'account_deposit', 'account_withdrawal', 'opening_balance'];
+        $preferredOrder = ['mukataba', 'sales_diff', 'account_deposit', 'account_withdrawal', 'opening_balance'];
         foreach ($preferredOrder as $key) {
             if (isset($operations[$key])) {
                 return redirect()->route($this->routeForOperation($key));
@@ -45,11 +45,6 @@ class OfficeLedgerController extends Controller
     public function salesDiff()
     {
         return $this->renderShortcut('sales_diff', $this->routeForOperation('sales_diff'));
-    }
-
-    public function profit()
-    {
-        return $this->renderShortcut('profit', $this->routeForOperation('profit'));
     }
 
     public function accountDeposit()
@@ -94,12 +89,6 @@ class OfficeLedgerController extends Controller
                 'active'  => $operationKey === 'sales_diff',
                 'enabled' => isset($operations['sales_diff']) ? ($operations['sales_diff']['enabled'] ?? false) : false,
             ],
-            'profit' => [
-                'label'   => 'قيد ربح المكتب',
-                'route'   => route($this->routeForOperation('profit')),
-                'active'  => $operationKey === 'profit',
-                'enabled' => isset($operations['profit']) ? ($operations['profit']['enabled'] ?? false) : false,
-            ],
             'account_deposit' => [
                 'label'   => 'إيداع حسابات المكتب',
                 'route'   => route($this->routeForOperation('account_deposit')),
@@ -141,19 +130,13 @@ class OfficeLedgerController extends Controller
                 'status_name'   => 'المكاتبة',
                 'title'         => 'تحصيل المكاتبة للمكتب',
                 'description'   => 'سجّل المبالغ المحصلة من المكاتبات لصالح المكتب.',
-                'allow_investor'=> true,
+                'allow_investor'=> false,
             ],
             'sales_diff' => [
                 'status_name'   => 'فرق البيع',
                 'title'         => 'قيد فرق البيع للمكتب',
                 'description'   => 'سجّل فروقات البيع التي تخص المكتب.',
-                'allow_investor'=> true,
-            ],
-            'profit' => [
-                'status_name'   => 'ربح المكتب',
-                'title'         => 'تحصيل ربح المكتب',
-                'description'   => 'استخدمه لتحصيل أرباح المكتب من العقود أو المطالبات.',
-                'allow_investor'=> true,
+                'allow_investor'=> false,
             ],
             'account_deposit' => [
                 'status_name'   => 'إيداع حسابات',
@@ -239,7 +222,6 @@ class OfficeLedgerController extends Controller
         return match ($operationKey) {
             'mukataba'         => 'ledger.office.shortcuts.mukataba',
             'sales_diff'       => 'ledger.office.shortcuts.sales_diff',
-            'profit'           => 'ledger.office.shortcuts.profit',
             'account_deposit'  => 'ledger.office.shortcuts.account_deposit',
             'account_withdrawal'=> 'ledger.office.shortcuts.account_withdrawal',
             'opening_balance'  => 'ledger.office.shortcuts.opening_balance',
