@@ -24,25 +24,6 @@
       <x-button.action href="{{ route('investors.dashboard') }}" variant="dark" :outline="true">
         <i class="bi bi-speedometer2"></i> {{ __('investors::investors.View Dashboard') }}
       </x-button.action>
-      <div class="btn-group" role="group">
-        <x-button.action type="button" variant="primary" :outline="true" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-          <i class="bi bi-journal-text"></i> إدارة العمليات المحاسبية
-        </x-button.action>
-        <ul class="dropdown-menu dropdown-menu-end text-end">
-          <li>
-            <a class="dropdown-item" href="{{ route('investors.ledger.create') }}">
-              <i class="bi bi-journal-plus"></i> قيد عادي
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="{{ route('investors.ledger.split.create') }}">
-              <i class="bi bi-columns-gap"></i> قيد مُجزّأ
-            </a>
-          </li>
-        </ul>
-      </div>
-
-
       @if (session('failures') && count(session('failures')))
         <x-button.action href="{{ route('investors.import.export_failures') }}" variant="warning">
           <i class="bi bi-exclamation-triangle"></i> {{ __('investors::investors.Export Failures') }}
