@@ -240,13 +240,13 @@
 
     <ul id="accounts-nav" class="nav-content collapse {{ $open($accountsOpen) }}" data-bs-parent="#sidebar-nav">
       <li>
-        <a class="{{ $active($isRoute(['ledger.index'])) }}" href="{{ route('ledger.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Ledger')</span>
-        </a>
-      </li>
-      <li>
         <a class="{{ $active($isRoute(['ledger.dashboard'])) }}" href="{{ route('ledger.dashboard') }}">
           <i class="bi bi-circle"></i><span>داش بورد الحسابات</span>
+        </a>
+      </li>
+       <li>
+        <a class="{{ $active($isRoute(['ledger.index'])) }}" href="{{ route('ledger.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Ledger')</span>
         </a>
       </li>
       <li class="nav-heading">@lang('sidebar.Office Ledger Entries')</li>

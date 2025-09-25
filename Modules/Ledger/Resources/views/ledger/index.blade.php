@@ -18,7 +18,7 @@
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
         <div class="btn-group" role="group" aria-label="Ledger actions">
             <x-button.action href="{{ route('ledger.dashboard') }}" variant="dark" :outline="true">
-                <i class="bi bi-speedometer2"></i> داش بورد الحسابات
+                <i class="bi bi-speedometer2"></i> {{ __('ledger::ledger.View Dashboard') }}
             </x-button.action>
         </div>
 

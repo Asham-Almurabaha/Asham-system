@@ -20,4 +20,5 @@ return array (
   'From' => 'من',
   'To' => 'إلى',
   'Export Ledger Entries' => 'تصدير القيود (Excel)',
+  'View Dashboard' => 'عرض لوحة التحكم',
 );
