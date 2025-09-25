@@ -245,6 +245,11 @@
         </a>
       </li>
       <li>
+        <a class="{{ $active($isRoute(['ledger.dashboard'])) }}" href="{{ route('ledger.dashboard') }}">
+          <i class="bi bi-circle"></i><span>داش بورد الحسابات</span>
+        </a>
+      </li>
+      <li>
         <a class="{{ $active($isRoute(['ledger.create', 'ledger.store'])) }}" href="{{ route('ledger.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Add Ledger Entry')</span>
         </a>

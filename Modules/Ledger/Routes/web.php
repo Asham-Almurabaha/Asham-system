@@ -15,6 +15,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
     Route::prefix('ledger')->name('ledger.')->group(function () {
         Route::get('/',                 [LedgerController::class, 'index'])->name('index');
+        Route::get('/dashboard',        [LedgerController::class, 'dashboard'])->name('dashboard');
         Route::get('/create',           [LedgerController::class, 'create'])->name('create');
         Route::post('/',                [LedgerController::class, 'store'])->name('store');
         Route::get('/transfer/create',  [LedgerController::class, 'transferCreate'])->name('transfer.create');
