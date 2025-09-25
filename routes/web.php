@@ -18,7 +18,8 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-
+if (!App::runningInConsole() && Schema::hasTable('settings')) {
+    $settings = Setting::first();
 // لغة الواجهة
 Route::post('/lang/toggle', [LanguageController::class, 'toggle'])->name('lang.toggle');
 Route::get('/lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
@@ -135,3 +136,4 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+}
