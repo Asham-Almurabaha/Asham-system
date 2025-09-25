@@ -16,7 +16,10 @@
 
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <x-button.action href="{{ route('ledger.index') }}" variant="secondary" :outline="true">العودة لدفتر القيود</x-button.action>
+        <x-button.action href="{{ route('ledger.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
+            <i class="bi bi-journal-text"></i>
+            <span>تفاصيل القيود</span>
+        </x-button.action>
     </div>
 
     
