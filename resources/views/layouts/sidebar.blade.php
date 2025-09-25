@@ -249,21 +249,6 @@
           <i class="bi bi-circle"></i><span>داش بورد الحسابات</span>
         </a>
       </li>
-      <li>
-        <a class="{{ $active($isRoute(['ledger.create', 'ledger.store'])) }}" href="{{ route('ledger.create') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Add Ledger Entry')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute(['ledger.transfer.create', 'ledger.transfer.store'])) }}" href="{{ route('ledger.transfer.create') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Internal Transfer')</span>
-        </a>
-      </li>
-      <li>
-        <a class="{{ $active($isRoute(['ledger.split.create', 'ledger.split.store'])) }}" href="{{ route('ledger.split.create') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Split Ledger Entry')</span>
-        </a>
-      </li>
       <li class="nav-heading">@lang('sidebar.Office Ledger Entries')</li>
       <li>
         <a class="{{ $active($isRoute('ledger.office.shortcuts.mukataba')) }}" href="{{ route('ledger.office.shortcuts.mukataba') }}">

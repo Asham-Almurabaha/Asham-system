@@ -16,10 +16,11 @@
 {{-- شريط أدوات سريع --}}
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        <x-button.action href="{{ route('ledger.create') }}" variant="success" :outline="true">+ إضافة قيد</x-button.action>
-        <x-button.action href="{{ route('ledger.transfer.create') }}" variant="primary" :outline="true">تحويل داخلي (مكتب)</x-button.action>
-        <x-button.action href="{{ route('ledger.split.create') }}" variant="secondary" :outline="true">قيد مُجزّأ (بنك + خزنة)</x-button.action>
-        <x-button.action href="{{ route('ledger.dashboard') }}" variant="info" :outline="true">داش بورد الحسابات</x-button.action>
+        <div class="btn-group" role="group" aria-label="Ledger actions">
+            <x-button.action href="{{ route('ledger.dashboard') }}" variant="dark" :outline="true">
+                <i class="bi bi-speedometer2"></i> داش بورد الحسابات
+            </x-button.action>
+        </div>
 
         <span class="ms-auto small text-muted">
             النتائج: <strong>{{ $entries->total() }}</strong>
