@@ -2,11 +2,14 @@
 
 namespace Modules\Accounts\Entities;
 
+use App\Traits\Auditable;
 use Modules\Ledger\Entities\LedgerEntry;
 use Illuminate\Database\Eloquent\Model;
 
 class BankAccount extends Model
 {
+    use Auditable;
+
     protected $fillable = [
         'name',
         'bank_name',
