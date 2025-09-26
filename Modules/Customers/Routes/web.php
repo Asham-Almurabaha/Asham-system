@@ -28,6 +28,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::get('customers/export', [CustomerController::class, 'export'])
         ->name('customers.export');
 
+    Route::get('customers/{customer}/reports/monthly/print', [CustomerController::class, 'printMonthlyPayments'])
+        ->name('customers.reports.monthly.print');
+
     Route::resource('customers', CustomerController::class);
 
     Route::get('reports/customers/delinquent', [CustomerReportController::class, 'delinquent'])
