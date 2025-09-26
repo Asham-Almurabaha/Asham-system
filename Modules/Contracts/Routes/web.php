@@ -67,6 +67,8 @@ Route::prefix('contracts/{contract}/notes')->name('contracts.notes.')->group(fun
 // الأقساط
 Route::prefix('installments')->name('installments.')->group(function () {
     Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
+    Route::post('/{installment}/cancel-payment', [ContractInstallmentController::class, 'cancelInstallmentPayment'])
+        ->name('cancel_payment');
     Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
 });
 Route::post('/installments/defer/{id}', [ContractInstallmentController::class, 'deferAjax']);

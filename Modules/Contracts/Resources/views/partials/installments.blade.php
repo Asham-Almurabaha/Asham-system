@@ -143,7 +143,7 @@
                                     ⏳ تأجيل
                                 </x-button.action>
                             @endif
-            
+
                             {{-- زر المعتذر --}}
                             @php
                                 $daysDiff = now()->diffInDays($dueDate, false);
@@ -155,6 +155,14 @@
                             )
                                 <x-button.action type="button" variant="secondary" :outline="true" size="sm" class="excuse-btn" data-id="{{ $inst->id }}">
                                     🙏 معتذر
+                                </x-button.action>
+                            @endif
+
+                            @if($inst->payment_amount > 0)
+                                <x-button.action type="button" variant="danger" :outline="true" size="sm"
+                                                 class="cancel-payment-btn"
+                                                 data-cancel-url="{{ route('installments.cancel_payment', $inst) }}">
+                                    ❌ إلغاء سداد القسط
                                 </x-button.action>
                             @endif
                         @endunless
@@ -328,6 +336,87 @@
         const accEarly = document.getElementById('account_picker_early');
         if (accPay)   accPay.addEventListener('change',  () => syncAccountHiddenGeneric('account_picker_pay','bank_account_id_pay','safe_id_pay'));
         if (accEarly) accEarly.addEventListener('change',() => syncAccountHiddenGeneric('account_picker_early','bank_account_id_early','safe_id_early'));
+
+        document.querySelectorAll('.cancel-payment-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                if (!confirm('هل تريد إلغاء السداد المسجل لهذا القسط فقط؟')) {
+                    return;
+                }
+
+                const url = this.dataset.cancelUrl;
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(res => res.json().then(data => ({ ok: res.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok && data.success) {
+                        if (data.installment) {
+                            const row = this.closest('tr');
+                            if (row) {
+                                const cells = Array.from(row.querySelectorAll('td'));
+                                const paymentDateCell = cells[3];
+                                const paymentAmountCell = cells[4];
+                                const statusCell = cells[5];
+
+                                if (paymentDateCell) {
+                                    paymentDateCell.textContent = '—';
+                                }
+
+                                if (paymentAmountCell) {
+                                    const tooltipTarget = paymentAmountCell.querySelector('[data-bs-toggle="tooltip"]');
+                                    if (tooltipTarget) {
+                                        const tooltipInstance = (window.bootstrap && window.bootstrap.Tooltip)
+                                            ? window.bootstrap.Tooltip.getInstance(tooltipTarget)
+                                            : null;
+                                        if (tooltipInstance) {
+                                            tooltipInstance.dispose();
+                                        }
+
+                                        tooltipTarget.removeAttribute('data-bs-toggle');
+                                        tooltipTarget.removeAttribute('data-bs-placement');
+                                        tooltipTarget.removeAttribute('data-bs-custom-class');
+                                        tooltipTarget.removeAttribute('title');
+                                    }
+
+                                    const formattedAmount = Number(data.installment.payment_amount || 0).toLocaleString('en-US', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    });
+
+                                    if (tooltipTarget) {
+                                        tooltipTarget.textContent = formattedAmount;
+                                    } else {
+                                        paymentAmountCell.textContent = formattedAmount;
+                                    }
+                                }
+
+                                if (statusCell) {
+                                    const badge = statusCell.querySelector('.badge');
+                                    if (badge) {
+                                        badge.className = 'badge bg-' + (data.installment.badge_class || 'secondary');
+                                        badge.textContent = data.installment.status_name || '—';
+                                    }
+                                }
+
+                                this.remove();
+                            }
+                        }
+                    } else {
+                        alert((data && data.message) || 'تعذّر إلغاء سداد القسط');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('تعذر الاتصال بالخادم');
+                });
+            });
+        });
 
         // سداد عادي
         const payForm = document.getElementById("payContractForm");
