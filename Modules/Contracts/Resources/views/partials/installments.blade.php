@@ -158,13 +158,15 @@
                                 </x-button.action>
                             @endif
 
-                            @if($inst->payment_amount > 0)
-                                <x-button.action type="button" variant="danger" :outline="true" size="sm"
-                                                 class="cancel-payment-btn"
-                                                 data-cancel-url="{{ route('installments.cancel_payment', $inst) }}">
-                                    ❌ إلغاء سداد القسط
-                                </x-button.action>
-                            @endif
+                            @routecan('installments.cancel_payment')
+                                @if($inst->payment_amount > 0)
+                                    <x-button.action type="button" variant="danger" :outline="true" size="sm"
+                                                     class="cancel-payment-btn"
+                                                     data-cancel-url="{{ route('installments.cancel_payment', $inst) }}">
+                                        ❌ إلغاء سداد القسط
+                                    </x-button.action>
+                                @endif
+                            @endroutecan
                         @endunless
                     </td>
                 </tr>

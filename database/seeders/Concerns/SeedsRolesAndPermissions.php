@@ -82,9 +82,15 @@ trait SeedsRolesAndPermissions
      */
     protected function rolePermissionMap(array $permissions): array
     {
+        $isAdminOnly = fn(string $permission): bool => $this->isAdminOnlyPermission($permission);
+
         return [
             'admin' => $permissions,
-            'manager' => array_values(array_filter($permissions, function (string $permission): bool {
+            'manager' => array_values(array_filter($permissions, function (string $permission) use ($isAdminOnly): bool {
+                if ($isAdminOnly($permission)) {
+                    return false;
+                }
+
                 if (str_ends_with($permission, '.destroy') && (
                     str_starts_with($permission, 'settings.') ||
                     str_starts_with($permission, 'transaction_types.') ||
@@ -100,7 +106,11 @@ trait SeedsRolesAndPermissions
 
                 return true;
             })),
-            'accountant' => array_values(array_filter($permissions, function (string $permission): bool {
+            'accountant' => array_values(array_filter($permissions, function (string $permission) use ($isAdminOnly): bool {
+                if ($isAdminOnly($permission)) {
+                    return false;
+                }
+
                 return (
                     str_starts_with($permission, 'ledger.') ||
                     str_starts_with($permission, 'installments.') ||
@@ -134,18 +144,20 @@ trait SeedsRolesAndPermissions
                         'contracts.export.payments',
                         'contracts.refresh-statuses',
                         'view-dashboard',
-                        'view-audit-logs',
                         'accounts.entries.view',
                         'accounts.entries.create',
                     ], true)
                 );
             })),
-            'viewer' => array_values(array_filter($permissions, function (string $permission): bool {
+            'viewer' => array_values(array_filter($permissions, function (string $permission) use ($isAdminOnly): bool {
+                if ($isAdminOnly($permission)) {
+                    return false;
+                }
+
                 return (
                     (bool) preg_match('/\.(index|show|template|form|print|closure)$/', $permission) ||
                     in_array($permission, [
                         'view-dashboard',
-                        'view-audit-logs',
                         'product-types.available',
                         'ajax.investors.liquidity',
                         'investors.cash',
@@ -153,6 +165,82 @@ trait SeedsRolesAndPermissions
                     ], true)
                 );
             })),
+        ];
+    }
+
+    /**
+     * Determine if the permission should be limited to admin users.
+     */
+    protected function isAdminOnlyPermission(string $permission): bool
+    {
+        if (in_array($permission, $this->adminOnlyPermissionNames(), true)) {
+            return true;
+        }
+
+        foreach ($this->adminOnlyPermissionPrefixes() as $prefix) {
+            if (str_starts_with($permission, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Permissions that should be exclusive to admin users.
+     *
+     * @return array<int, string>
+     */
+    protected function adminOnlyPermissionNames(): array
+    {
+        return [
+            'view-audit-logs',
+            'installments.cancel_payment',
+        ];
+    }
+
+    /**
+     * Permission prefixes that should be exclusive to admin users.
+     *
+     * @return array<int, string>
+     */
+    protected function adminOnlyPermissionPrefixes(): array
+    {
+        return [
+            'audit.logs',
+            'settings.',
+            'nationalities.',
+            'titles.',
+            'customer_statuses.',
+            'guarantor_statuses.',
+            'contract_statuses.',
+            'claim_statuses.',
+            'claimants.',
+            'claim_payers.',
+            'installment_statuses.',
+            'installment_types.',
+            'transaction_statuses.',
+            'transaction_types.',
+            'categories.',
+            'accounts.bank-accounts.',
+            'accounts.safes.',
+            'product_types.',
+            'products.',
+            'settings.roles.',
+            'settings.permissions.',
+            'users.',
+            'customers.import',
+            'customers.export',
+            'guarantors.import',
+            'guarantors.export',
+            'investors.import',
+            'investors.export',
+            'investors.ledger.import',
+            'investors.ledger.export',
+            'contracts.import',
+            'contracts.export',
+            'ledger.import',
+            'ledger.export',
         ];
     }
 
