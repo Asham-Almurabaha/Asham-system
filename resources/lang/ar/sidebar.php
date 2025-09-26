@@ -2,6 +2,7 @@
 
 return array (
   'Dashboard' => 'لوحة التحكم',
+  'Audit Logs' => 'سجل النشاط',
   'Customers' => 'العملاء',
   'Customers Dashboard' => 'لوحة تحكم العملاء',
   'Manage Customers' => 'إدارة العملاء',
