@@ -3,6 +3,7 @@
 namespace Database\Seeders\Concerns;
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -174,8 +175,10 @@ trait SeedsRolesAndPermissions
             'sanctum.',
         ];
 
+        $ignoredPatterns = $this->normalizedIgnoredPermissionPatterns();
+
         return collect(Route::getRoutes())
-            ->filter(function ($route) use ($ignoredPrefixes) {
+            ->filter(function ($route) use ($ignoredPrefixes, $ignoredPatterns) {
                 $name = $route->getName();
                 if (!$name) {
                     return false;
@@ -187,6 +190,10 @@ trait SeedsRolesAndPermissions
                     }
                 }
 
+                if ($this->shouldIgnorePermissionName($name, $ignoredPatterns)) {
+                    return false;
+                }
+
                 $middleware = $route->gatherMiddleware();
 
                 return in_array('auth', $middleware, true);
@@ -196,5 +203,47 @@ trait SeedsRolesAndPermissions
             ->sort()
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected function normalizedIgnoredPermissionPatterns(): array
+    {
+        $patterns = config('permission.auto.ignore', []);
+
+        if (is_string($patterns)) {
+            $patterns = [$patterns];
+        }
+
+        if (!is_array($patterns)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            array_map(
+                fn($pattern) => is_string($pattern) ? trim($pattern) : null,
+                $patterns
+            ),
+            fn($pattern) => $pattern !== null && $pattern !== ''
+        ));
+    }
+
+    /**
+     * @param  array<int, string>  $patterns
+     */
+    protected function shouldIgnorePermissionName(string $name, array $patterns): bool
+    {
+        foreach ($patterns as $pattern) {
+            if ($pattern === $name) {
+                return true;
+            }
+
+            if (Str::contains($pattern, '*') && fnmatch($pattern, $name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
