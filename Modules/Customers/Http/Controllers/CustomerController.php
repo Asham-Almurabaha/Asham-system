@@ -1192,6 +1192,7 @@ class CustomerController extends Controller
             $contractPaid = 0.0;
             $contractRemaining = 0.0;
             $lastPayment = null;
+            $lastPaymentAmount = null;
 
             foreach ($items as $installment) {
                 $dueAmount = (float) ($installment->due_amount ?? 0.0);
@@ -1200,8 +1201,9 @@ class CustomerController extends Controller
                 $remaining = max($dueAmount - $paidEffective, 0.0);
                 $paymentDate = $installment->payment_date ? Carbon::parse($installment->payment_date) : null;
 
-                if ($paymentDate && (!$lastPayment || $paymentDate->gt($lastPayment))) {
+                if ($paymentDate && (!$lastPayment || $paymentDate->gt($lastPayment) || ($paymentDate->eq($lastPayment) && ($paidEffective >= ($lastPaymentAmount ?? PHP_FLOAT_MIN))))) {
                     $lastPayment = $paymentDate;
+                    $lastPaymentAmount = $paidEffective;
                 }
 
                 $contractDue += $dueAmount;
@@ -1224,6 +1226,7 @@ class CustomerController extends Controller
                 'paid_sum'           => round($contractPaid, 2),
                 'remaining_sum'      => round($contractRemaining, 2),
                 'last_payment_date'  => $lastPayment?->format('Y-m-d'),
+                'last_payment_amount' => $lastPaymentAmount !== null ? round($lastPaymentAmount, 2) : null,
             ];
         }
 

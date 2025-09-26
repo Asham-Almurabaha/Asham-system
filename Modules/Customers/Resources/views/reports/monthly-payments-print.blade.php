@@ -103,52 +103,10 @@
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">{{ __('customers::messages.Customer Information') }}</h6>
-                    <div class="row g-2 small">
-                        <div class="col-6">
-                            <div class="text-muted">{{ __('customers::messages.Name') }}</div>
-                            <div class="fw-semibold">{{ $customer->name }}</div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-muted">{{ __('customers::messages.ID') }}</div>
-                            <div class="fw-semibold">{{ $customer->id }}</div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-muted">{{ __('customers::messages.Customer Status') }}</div>
-                            <div class="fw-semibold">{{ optional($customer->customerStatus)->name ?? __('customers::messages.Undefined') }}</div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-muted">{{ __('customers::messages.Nationality') }}</div>
-                            <div class="fw-semibold">{{ optional($customer->nationality)->name ?? '—' }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">{{ __('customers::messages.Period') }}</h6>
-                    <div class="row g-2 small">
-                        <div class="col-6">
-                            <div class="text-muted">{{ __('customers::messages.From') }}</div>
-                            <div class="fw-semibold">{{ $periodStartLabel }}</div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-muted">{{ __('customers::messages.To') }}</div>
-                            <div class="fw-semibold">{{ $periodEndLabel }}</div>
-                        </div>
-                        <div class="col-12">
-                            <div class="text-muted">{{ __('customers::messages.Period') }}</div>
-                            <div class="fw-semibold">{{ $periodLabel ?: '—' }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="card border-0 bg-light-subtle mb-4">
+        <div class="card-body">
+            <div class="small-muted mb-1">{{ __('customers::messages.Customer Name') }}</div>
+            <div class="fw-bold fs-5 mb-0">{{ $customer->name ?? '—' }}</div>
         </div>
     </div>
 
@@ -202,12 +160,10 @@
         <x-slot name="head">
             <tr>
                 <th style="width: 160px;">{{ __('customers::messages.Contract Number') }}</th>
-                <th style="width: 140px;">{{ __('customers::messages.Start Date') }}</th>
-                <th>{{ __('customers::messages.Status') }}</th>
-                <th class="text-end" style="width: 140px;">{{ __('customers::messages.Installments Count') }}</th>
                 <th class="text-end" style="width: 140px;">{{ __('customers::messages.Due Amount') }}</th>
                 <th class="text-end" style="width: 140px;">{{ __('customers::messages.Paid Amount') }}</th>
                 <th class="text-end" style="width: 140px;">{{ __('customers::messages.Remaining Amount') }}</th>
+                <th class="text-end" style="width: 140px;">{{ __('customers::messages.Last Payment Amount') }}</th>
                 <th style="width: 160px;">{{ __('customers::messages.Last Payment Date') }}</th>
             </tr>
         </x-slot>
@@ -215,27 +171,23 @@
         @forelse($contracts as $row)
             @php
                 $contractNumber  = (string) ($row['contract_number'] ?? ($row['contract_id'] ?? '—'));
-                $contractStatus  = $row['status_name'] ?? '—';
-                $contractStart   = $row['start_date'] ?? null;
-                $installmentsCnt = (int) ($row['installment_count'] ?? 0);
                 $dueSum          = (float) ($row['due_sum'] ?? 0.0);
                 $paidSum         = (float) ($row['paid_sum'] ?? 0.0);
                 $remainingSum    = (float) ($row['remaining_sum'] ?? max($dueSum - $paidSum, 0));
                 $lastPaymentDate = $row['last_payment_date'] ?? null;
+                $lastPaymentAmount = $row['last_payment_amount'] ?? null;
             @endphp
             <tr>
                 <td>{{ $contractNumber }}</td>
-                <td>{{ $contractStart ?: '—' }}</td>
-                <td>{{ $contractStatus ?: '—' }}</td>
-                <td class="text-end">{{ number_format($installmentsCnt) }}</td>
                 <td class="text-end">{{ $formatNumber($dueSum) }}</td>
                 <td class="text-end text-success">{{ $formatNumber($paidSum) }}</td>
                 <td class="text-end">{{ $formatNumber($remainingSum) }}</td>
+                <td class="text-end">{{ $lastPaymentAmount !== null ? $formatNumber($lastPaymentAmount) : '—' }}</td>
                 <td>{{ $lastPaymentDate ?: '—' }}</td>
             </tr>
         @empty
             <tr>
-                <td colspan="8" class="py-5 text-center text-muted">{{ __('customers::messages.No payments recorded in period') }}</td>
+                <td colspan="6" class="py-5 text-center text-muted">{{ __('customers::messages.No payments recorded in period') }}</td>
             </tr>
         @endforelse
     </x-table>
