@@ -44,6 +44,42 @@
       flex-direction: column;
     }
 
+    .settings-permissions .permission-toolbar {
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--bs-body-secondary-bg, rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.08));
+    }
+
+    .settings-permissions .permission-toolbar .btn {
+      border-radius: 999px;
+    }
+
+    .settings-permissions .permission-toolbar .btn.active {
+      background-color: rgba(var(--bs-primary-rgb), 0.12);
+      border-color: rgba(var(--bs-primary-rgb), 0.32);
+      color: var(--bs-primary);
+    }
+
+    .settings-permissions .permission-toolbar .summary-pill {
+      border-radius: 999px;
+      background-color: rgba(var(--bs-primary-rgb), 0.08);
+      color: var(--bs-primary);
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .settings-permissions .permission-toolbar .result-counter {
+      font-size: 0.75rem;
+      color: var(--bs-secondary-color, var(--bs-gray-600));
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
     .settings-permissions .permission-card:hover,
     .settings-permissions .permission-card:focus-within {
       border-color: rgba(var(--bs-primary-rgb), 0.55);
@@ -121,6 +157,21 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0.75rem;
+      }
+
+      .settings-permissions .permission-toolbar {
+        padding: 1rem;
+      }
+
+      .settings-permissions .permission-toolbar .d-flex {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .settings-permissions .permission-toolbar .btn-group,
+      .settings-permissions .permission-toolbar .btn {
+        width: 100%;
       }
 
       .settings-permissions .search-input-group > .input-group-text,
@@ -331,7 +382,7 @@
               <div class="alert alert-info mb-0">@lang('permissions.No permissions defined.')</div>
             @else
               <div class="row g-3 align-items-end mb-4">
-                <div class="col-lg-7">
+                <div class="col-12 col-lg-7">
                   <label for="permission-search" class="form-label small fw-semibold text-muted text-uppercase">@lang('permissions.Filter Permissions')</label>
                   <div class="input-group search-input-group">
                     <span class="input-group-text bg-body"><i class="bi bi-search"></i></span>
@@ -341,6 +392,31 @@
                     </x-button.action>
                   </div>
                   <div class="form-text">@lang('permissions.Permission Search Help')</div>
+                </div>
+                <div class="col-12 col-lg-5">
+                  <div class="permission-toolbar h-100 d-flex flex-column justify-content-center gap-2">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                      <span class="summary-pill">
+                        <i class="bi bi-diagram-3"></i>
+                        <span data-permission-library-summary data-template="@lang('permissions.Permission Library Summary Template')"></span>
+                      </span>
+                      <span class="result-counter" data-permission-result-count data-template="@lang('permissions.Permission Result Count')">
+                        <i class="bi bi-list-check"></i>
+                        <span></span>
+                      </span>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                      <div class="btn-group btn-group-sm" role="group" aria-label="@lang('permissions.Permission Assignment Filter Label')">
+                        <button type="button" class="btn btn-outline-primary active" data-permission-filter="all">@lang('permissions.Permission Assignment Filter All')</button>
+                        <button type="button" class="btn btn-outline-primary" data-permission-filter="assigned">@lang('permissions.Permission Assignment Filter Assigned')</button>
+                        <button type="button" class="btn btn-outline-primary" data-permission-filter="unassigned">@lang('permissions.Permission Assignment Filter Unassigned')</button>
+                      </div>
+                      <div class="btn-group btn-group-sm" role="group" aria-label="@lang('permissions.Permission Bulk Actions Label')">
+                        <button type="button" class="btn btn-outline-secondary" data-permission-bulk="expand">@lang('permissions.Expand All')</button>
+                        <button type="button" class="btn btn-outline-secondary" data-permission-bulk="collapse">@lang('permissions.Collapse All')</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -367,7 +443,7 @@
                             @php
                               $rolesForPermission = $permission->roles->sortBy('name')->values();
                             @endphp
-                            <div class="col-12 col-md-6" data-permission-card data-permission="{{ Str::lower($permission->name) }}" data-permission-label="{{ Str::lower($permissionLabels[$permission->name] ?? $permission->name) }}" data-permission-roles="{{ Str::lower($rolesForPermission->pluck('name')->implode(' ')) }}" data-permission-guard="{{ Str::lower($permission->guard_name ?? '') }}">
+                            <div class="col-12 col-md-6" data-permission-card data-permission="{{ Str::lower($permission->name) }}" data-permission-label="{{ Str::lower($permissionLabels[$permission->name] ?? $permission->name) }}" data-permission-roles="{{ Str::lower($rolesForPermission->pluck('name')->implode(' ')) }}" data-permission-guard="{{ Str::lower($permission->guard_name ?? '') }}" data-permission-assigned="{{ $rolesForPermission->isNotEmpty() ? '1' : '0' }}">
                               <div class="permission-card">
                                 <div class="d-flex align-items-start justify-content-between gap-2">
                                   <div>
@@ -435,18 +511,39 @@
       const permissionClear = root.querySelector('#permission-search-clear');
       const permissionCards = root.querySelectorAll('[data-permission-card]');
       const groupContainers = root.querySelectorAll('[data-permission-group-container]');
+      const resultCounter = root.querySelector('[data-permission-result-count] span');
+      const summaryBadge = root.querySelector('[data-permission-library-summary]');
+      const filterButtons = root.querySelectorAll('[data-permission-filter]');
+      const toolbarBulkButtons = root.querySelectorAll('[data-permission-bulk]');
       const emptyResults = root.querySelector('#permissions-empty-results');
       const emptyText = emptyResults ? emptyResults.querySelector('[data-permission-empty-text]') : null;
       const emptyTemplate = emptyResults ? emptyResults.getAttribute('data-empty-template') : null;
+      let currentFilter = 'all';
 
       if (emptyResults && emptyText) {
         emptyResults.setAttribute('data-default-text', emptyText.textContent);
       }
 
+      const updateSummary = () => {
+        if (!summaryBadge) {
+          return;
+        }
+
+        const template = summaryBadge.getAttribute('data-template') || '';
+        const assignedCount = root.querySelectorAll('[data-permission-card][data-permission-assigned="1"]').length;
+        const total = permissionCards.length;
+        summaryBadge.textContent = template
+          .replace(':assigned', new Intl.NumberFormat().format(assignedCount))
+          .replace(':total', new Intl.NumberFormat().format(total));
+      };
+
       const updatePermissionVisibility = () => {
         if (!permissionCards.length) {
           if (emptyResults) {
             emptyResults.classList.add('d-none');
+          }
+          if (resultCounter) {
+            resultCounter.textContent = '';
           }
           return;
         }
@@ -461,8 +558,12 @@
             card.dataset.permissionRoles,
             card.dataset.permissionGuard,
           ].filter(Boolean).join(' ').toLowerCase();
-
-          const matches = query === '' || datasetValue.includes(query);
+          const assigned = card.getAttribute('data-permission-assigned') === '1';
+          const matchesFilter = currentFilter === 'all'
+            || (currentFilter === 'assigned' && assigned)
+            || (currentFilter === 'unassigned' && !assigned);
+          const matchesQuery = query === '' || datasetValue.includes(query);
+          const matches = matchesFilter && matchesQuery;
           card.classList.toggle('d-none', !matches);
           if (matches) {
             visibleCount += 1;
@@ -485,6 +586,13 @@
           } else if (emptyText) {
             emptyText.textContent = emptyResults.getAttribute('data-default-text') || '';
           }
+        }
+
+        if (resultCounter) {
+          const template = resultCounter.parentElement?.getAttribute('data-template') || '';
+          resultCounter.textContent = template
+            .replace(':count', new Intl.NumberFormat().format(visibleCount))
+            .replace(':total', new Intl.NumberFormat().format(permissionCards.length));
         }
       };
 
@@ -521,6 +629,27 @@
       expandAllBtn?.addEventListener('click', () => setAccordionState(true));
       collapseAllBtn?.addEventListener('click', () => setAccordionState(false));
 
+      filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          currentFilter = button.getAttribute('data-permission-filter') || 'all';
+          filterButtons.forEach(btn => btn.classList.toggle('active', btn === button));
+          updatePermissionVisibility();
+        });
+      });
+
+      toolbarBulkButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const action = button.getAttribute('data-permission-bulk');
+          if (action === 'expand') {
+            setAccordionState(true);
+          }
+          if (action === 'collapse') {
+            setAccordionState(false);
+          }
+        });
+      });
+
+      updateSummary();
       updatePermissionVisibility();
     });
   </script>
