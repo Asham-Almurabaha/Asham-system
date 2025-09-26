@@ -87,6 +87,7 @@
                         <th>{{ __('User') }}</th>
                         <th>{{ __('Old Values') }}</th>
                         <th>{{ __('New Values') }}</th>
+                        <th style="width:110px">{{ __('Actions') }}</th>
                         <th>{{ __('IP Address') }}</th>
                         <th>{{ __('Performed At') }}</th>
                     </tr>
@@ -114,6 +115,11 @@
                         </td>
                         <td>
                             <pre class="text-success small text-start mb-0">{{ json_encode($log->new_values, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) }}</pre>
+                        </td>
+                        <td>
+                            <x-button.secondary href="{{ route('audit.logs.show', $log) }}" size="sm">
+                                {{ __('Show') }}
+                            </x-button.secondary>
                         </td>
                         <td dir="ltr">{{ $log->ip_address }}</td>
                         <td>{{ optional($log->performed_at)->format('Y-m-d H:i') }}</td>

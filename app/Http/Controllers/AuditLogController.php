@@ -62,4 +62,20 @@ class AuditLogController extends Controller
 
         return view('audit_logs.index', compact('logs','users','events','models'));
     }
+
+    public function show(AuditLog $auditLog)
+    {
+        $auditLog->loadMissing('user');
+
+        return view('audit_logs.show', [
+            'log' => $auditLog,
+            'eventColor' => match($auditLog->event) {
+                'created' => 'success',
+                'updated' => 'warning',
+                'deleted' => 'danger',
+                'restored' => 'info',
+                default => 'secondary',
+            },
+        ]);
+    }
 }
