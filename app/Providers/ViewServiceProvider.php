@@ -32,7 +32,16 @@ class ViewServiceProvider extends ServiceProvider
                 return $cached = [];
             }
 
-            return $cached = $user->getAllPermissions()->pluck('name')->all();
+            $permissions = $user->getAllPermissions()->pluck('name')->all();
+
+            $personalAccess = [
+                'settings.account.*',
+                'settings.account.edit',
+                'settings.account.profile.update',
+                'settings.account.password.update',
+            ];
+
+            return $cached = array_values(array_unique(array_merge($permissions, $personalAccess)));
         };
 
         $normalizePatterns = fn(array $patterns): array => array_values(array_filter(array_map(

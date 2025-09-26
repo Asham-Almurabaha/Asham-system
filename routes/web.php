@@ -13,6 +13,7 @@ use App\Http\Controllers\Setting\PermissionManagementController;
 use App\Http\Controllers\Setting\RoleManagementController;
 use App\Http\Controllers\Setting\RolePermissionController;
 use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\Setting\AccountSettingsController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
 use App\Models\Setting;
 use App\Models\User;
@@ -54,6 +55,18 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
     // الإعدادات
     Route::prefix('settings')->group(function () {
         Route::resource('settings', SettingController::class);
+
+        Route::get('account', [AccountSettingsController::class, 'edit'])
+            ->name('settings.account.edit')
+            ->withoutMiddleware('permission.route');
+
+        Route::put('account/profile', [AccountSettingsController::class, 'updateProfile'])
+            ->name('settings.account.profile.update')
+            ->withoutMiddleware('permission.route');
+
+        Route::put('account/password', [AccountSettingsController::class, 'updatePassword'])
+            ->name('settings.account.password.update')
+            ->withoutMiddleware('permission.route');
     });
 
     // CRUDات رئيسية

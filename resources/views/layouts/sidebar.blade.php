@@ -199,6 +199,7 @@
 
   $settingsPermissionPatterns = [
       'settings.*',
+      'settings.account.*',
       'nationalities.*',
       'titles.*',
       'customer_statuses.*',
@@ -222,7 +223,7 @@
       'users.*',
   ];
 
-  $settingsGeneralPatterns = ['settings.index'];
+  $settingsGeneralPatterns = ['settings.index', 'settings.account.*'];
   $settingsPeoplePatterns = [
       'nationalities.*',
       'titles.*',
@@ -692,6 +693,14 @@
         </a>
       </li>
       @endroutecanany
+
+      @auth
+      <li>
+        <a class="{{ $active($isRoute('settings.account.edit')) }}" href="{{ route('settings.account.edit') }}">
+          <i class="bi bi-circle"></i><span>@lang('setting.Account Settings')</span>
+        </a>
+      </li>
+      @endauth
 
       @routecanany($settingsPeoplePatterns)
       <li class="nav-heading">@lang('sidebar.People & Customers')</li>
