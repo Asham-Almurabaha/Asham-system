@@ -96,6 +96,7 @@ Route::middleware('auth')->group(function () {
     // سجلات التدقيق
     Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
     Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])->name('audit.logs.show');
+    Route::post('/audit-logs/{auditLog}/revert', [AuditLogController::class, 'revert'])->name('audit.logs.revert');
 
     // المتاح في الحسابات (بنكي/خزنة)
     Route::get('/ajax/accounts/availability',      [AjaxAccountController::class, 'availability'])->name('ajax.accounts.availability');

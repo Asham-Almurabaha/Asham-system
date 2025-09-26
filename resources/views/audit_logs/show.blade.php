@@ -10,6 +10,22 @@
             <div class="text-muted small">{{ __('ID') }}: {{ $log->id }}</div>
         </div>
         <div class="d-flex gap-2">
+            @php
+                $revertConfirmations = [
+                    'updated' => __('Audit log revert confirm updated'),
+                    'created' => __('Audit log revert confirm created'),
+                    'deleted' => __('Audit log revert confirm deleted'),
+                ];
+            @endphp
+
+            @if(isset($revertConfirmations[$log->event]))
+                <form method="POST" action="{{ route('audit.logs.revert', $log) }}" onsubmit='return confirm({{ json_encode($revertConfirmations[$log->event]) }});'>
+                    @csrf
+                    <x-button.action type="submit" variant="warning" size="sm">
+                        {{ __('Revert Change') }}
+                    </x-button.action>
+                </form>
+            @endif
             <x-button.secondary href="{{ route('audit.logs') }}" class="btn-sm">
                 {{ __('Back') }}
             </x-button.secondary>
