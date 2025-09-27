@@ -24,6 +24,7 @@ return [
             'recurrence_interval' => 'Recurrence Interval',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
+            'not_available' => 'Not available',
         ],
         'status' => [
             'recurring' => 'Recurring',
@@ -61,6 +62,7 @@ return [
             'notes' => 'Notes',
             'reference' => 'Reference',
             'status' => 'Status',
+            'not_available' => 'Not available',
         ],
         'status_labels' => [
             'upcoming' => 'Upcoming',

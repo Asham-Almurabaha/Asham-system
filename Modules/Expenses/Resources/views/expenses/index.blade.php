@@ -90,11 +90,11 @@
                     <tr>
                         <td class="text-center">{{ $expenses->firstItem() + $loop->index }}</td>
                         <td class="fw-semibold">{{ $expense->title }}</td>
-                        <td>{{ $expense->type?->name ?? '—' }}</td>
+                        <td>{{ $expense->type?->name ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td class="text-end">{{ number_format($expense->amount, 2) }}</td>
                         <td>{{ $expense->currency_code }}</td>
                         <td>{{ optional($expense->due_date)->toDateString() }}</td>
-                        <td>{{ optional($expense->paid_at)->toDateString() ?? '—' }}</td>
+                        <td>{{ optional($expense->paid_at)->toDateString() ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td>
                             @if($expense->paid_at)
                                 <span class="badge bg-success-subtle text-success">@lang('expenses::expenses.status_labels.paid')</span>

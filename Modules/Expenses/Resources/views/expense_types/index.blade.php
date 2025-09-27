@@ -41,7 +41,7 @@
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
                         <td class="fw-semibold">{{ $type->name }}</td>
-                        <td>{{ $type->description ?? '—' }}</td>
+                        <td>{{ $type->description ?? __('expenses::types.fields.not_available') }}</td>
                         <td class="text-end">{{ number_format($type->default_amount, 2) }}</td>
                         <td>{{ $type->currency_code }}</td>
                         <td>
@@ -51,7 +51,7 @@
                                 <span class="badge bg-secondary-subtle text-muted">@lang('expenses::types.status.one_time')</span>
                             @endif
                         </td>
-                        <td>{{ $type->recurrence_interval ?? '—' }}</td>
+                        <td>{{ $type->recurrence_interval ?? __('expenses::types.fields.not_available') }}</td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
                                 <x-button.action href="{{ route('expenses.expense-types.edit', $type) }}" variant="primary" :outline="true" size="sm">

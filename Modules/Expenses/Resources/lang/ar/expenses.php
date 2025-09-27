@@ -24,6 +24,7 @@ return [
             'recurrence_interval' => 'فترة التكرار',
             'created_at' => 'تاريخ الإنشاء',
             'updated_at' => 'آخر تحديث',
+            'not_available' => 'غير متوفر',
         ],
         'status' => [
             'recurring' => 'متكرر',
@@ -61,6 +62,7 @@ return [
             'notes' => 'ملاحظات إضافية',
             'reference' => 'المرجع',
             'status' => 'الحالة',
+            'not_available' => 'غير متوفر',
         ],
         'status_labels' => [
             'upcoming' => 'مستحقة قريباً',
