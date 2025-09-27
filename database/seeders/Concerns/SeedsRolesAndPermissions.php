@@ -90,6 +90,7 @@ trait SeedsRolesAndPermissions
             'operating.motocycles.index',
             'operating.motorcycles.index',
             'expenses.expense-types.index',
+            'expenses.recurrence-periods.index',
             'expenses.expenses.index',
             'expenses.cars.index',
             'expenses.motocycles.index',

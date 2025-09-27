@@ -23,6 +23,7 @@
       || $isRoute('transaction_statuses.*')
       || $isRoute('transaction_types.*')
       || $isRoute('expenses.expense-types.*')
+      || $isRoute('expenses.recurrence-periods.*')
       || $isRoute('accounts.bank-accounts.*')
       || $isRoute('accounts.safes.*')
       || $isRoute('product_types.*')
@@ -284,6 +285,7 @@
       'settings.permissions.*',
       'users.*',
       'expenses.expense-types.*',
+      'expenses.recurrence-periods.*',
   ];
 
   $settingsGeneralPatterns = [
@@ -302,7 +304,7 @@
   $settingsClaimsPatterns = ['claim_statuses.*', 'claimants.*', 'claim_payers.*'];
   $settingsInstallmentPatterns = ['installment_types.*', 'installment_statuses.*'];
   $settingsTransactionPatterns = ['transaction_types.*', 'transaction_statuses.*', 'categories.*'];
-  $settingsExpensesPatterns = ['expenses.expense-types.*'];
+  $settingsExpensesPatterns = ['expenses.expense-types.*', 'expenses.recurrence-periods.*'];
   $settingsAccountsPatterns = ['accounts.bank-accounts.*', 'accounts.safes.*'];
   $settingsProductsPatterns = ['product_types.*', 'products.*'];
   $settingsUsersPatterns = [
@@ -961,6 +963,14 @@
       <li>
         <a class="{{ $active($isRoute('expenses.expense-types.*')) }}" href="{{ route('expenses.expense-types.index') }}">
           <i class="bi bi-circle"></i><span>{{ __('expenses::types.index_title') }}</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('expenses.recurrence-periods.*')
+      <li>
+        <a class="{{ $active($isRoute('expenses.recurrence-periods.*')) }}" href="{{ route('expenses.recurrence-periods.index') }}">
+          <i class="bi bi-circle"></i><span>{{ __('expenses::recurrence_periods.index_title') }}</span>
         </a>
       </li>
       @endroutecanany
