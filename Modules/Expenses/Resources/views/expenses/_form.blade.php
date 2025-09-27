@@ -125,7 +125,7 @@
             type="date"
             name="due_date"
             id="due_date"
-            class="form-control @error('due_date') is-invalid @enderror"
+            class="form-control js-date @error('due_date') is-invalid @enderror"
             value="{{ $oldDueDate }}"
             required
         >
@@ -140,7 +140,7 @@
             type="date"
             name="paid_at"
             id="paid_at"
-            class="form-control @error('paid_at') is-invalid @enderror"
+            class="form-control js-date @error('paid_at') is-invalid @enderror"
             value="{{ $oldPaidAt }}"
         >
         @error('paid_at') <div class="invalid-feedback">{{ $message }}</div> @enderror
