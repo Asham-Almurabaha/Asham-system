@@ -92,7 +92,6 @@
                         <span>{{ __('Search') }}</span>
                     </x-button.action>
                     <x-button.secondary href="{{ route('audit.logs') }}" size="sm" :block="true" class="d-flex align-items-center justify-content-center gap-2">
-                        <i class="bi bi-arrow-counterclockwise"></i>
                         <span>{{ __('Clear') }}</span>
                     </x-button.secondary>
                 </div>
@@ -123,13 +122,10 @@
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="d-flex align-items-center gap-2">
-                            <label for="audit-log-delete-range" class="form-label mb-0 text-danger">{{ __('Delete Range') }}</label>
                             <x-button.delete id="audit-log-delete-range" type="submit" size="sm" class="d-inline-flex align-items-center gap-2">
-                                <i class="bi bi-trash"></i>
                                 <span>{{ __('Delete Range') }}</span>
                             </x-button.delete>
                         </div>
-                        <div class="small text-muted mt-2">{{ __('Audit log range delete help') }}</div>
                     </div>
                 </form>
             </div>
@@ -144,7 +140,7 @@
             </div>
             <span class="badge rounded-pill bg-info-subtle text-info-emphasis align-self-start px-3 py-2">{{ __('Total') }}: {{ $logs->total() }}</span>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body mt-1">
             <div class="table-responsive">
                 <x-table head-class="table-light" striped bordered class="text-center align-middle audit-log-table" :hover="false">
                     <x-slot name="head">
