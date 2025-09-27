@@ -54,6 +54,10 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
         ->middleware('can:view-dashboard')
         ->name('dashboard');
 
+    Route::get('/dashboard/daily-ledger/print', [DashboardController::class, 'printDailyLedger'])
+        ->middleware('can:view-dashboard')
+        ->name('dashboard.daily-ledger.print');
+
     // الإعدادات
     Route::prefix('settings')->group(function () {
         Route::resource('settings', SettingController::class);

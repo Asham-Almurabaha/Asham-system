@@ -72,4 +72,5 @@ return [
     'Refreshing guarantor statuses' => 'Refreshing guarantor statuses…',
     'Refresh statuses success' => 'Statuses have been refreshed successfully.',
     'Refresh statuses error' => 'Unable to refresh the statuses. Please try again.',
+    'Print Daily Ledger' => "Print Today's Ledger",
 ];

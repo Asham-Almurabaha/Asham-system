@@ -72,4 +72,5 @@ return [
     'Refreshing guarantor statuses' => 'جارٍ تحديث حالات الكفلاء…',
     'Refresh statuses success' => 'تم تحديث الحالات بنجاح.',
     'Refresh statuses error' => 'تعذّر تحديث الحالات. حاول مرة أخرى.',
+    'Print Daily Ledger' => 'تقرير قيود اليوم (طباعة)',
 ];
