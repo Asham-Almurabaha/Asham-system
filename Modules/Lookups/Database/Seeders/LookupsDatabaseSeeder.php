@@ -149,6 +149,8 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'رصيد افتتاحي', 'type' => 'إيداع'],
             ['name' => 'رأس المال', 'type' => 'إيداع'],
             ['name' => 'زكاة المال', 'type' => 'سحب'],
+            ['name' => 'مديونية', 'type' => 'سحب'],
+            ['name' => 'سداد مديونية', 'type' => 'إيداع'],
             
         ];
 
@@ -195,6 +197,9 @@ class LookupsDatabaseSeeder extends Seeder
             ['status' => 'محاماة مطالبة', 'category' => 'المكتب'],
             ['status' => 'رأس المال', 'category' => 'المستثمرين'],
             ['status' => 'زكاة المال', 'category' => 'المستثمرين'],
+            ['status' => 'مديونية', 'category' => 'المكتب'],
+            ['status' => 'سداد مديونية', 'category' => 'المكتب'],
+
             
         ];
 
