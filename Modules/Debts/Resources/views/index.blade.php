@@ -17,34 +17,47 @@
     </nav>
 </div>
 
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-body py-3 px-4">
-        <div class="d-flex flex-wrap align-items-center gap-2">
-            @can('debts.create')
-                <x-button.action href="{{ route('debts.create') }}" variant="success">
-                    <i class="bi bi-plus-circle"></i>
-                    <span class="ms-1">{{ __('debts::messages.buttons.create') }}</span>
-                </x-button.action>
-            @endcan
+<div class="card shadow-sm mb-3">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
+        @can('debts.create')
+            <x-button.action href="{{ route('debts.create') }}" variant="success">
+                <i class="bi bi-plus-circle"></i>
+                <span class="ms-1">{{ __('debts::messages.buttons.create') }}</span>
+            </x-button.action>
+        @endcan
+    </div>
+</div>
 
-            <div class="ms-auto row g-2 w-100 w-md-auto">
-                <div class="col-12 col-md-auto">
-                    <div class="px-3 py-2 bg-success-subtle border border-success-subtle rounded-3 text-success-emphasis small text-nowrap">
-                        <span class="fw-semibold">{{ __('debts::messages.totals.principal') }}:</span>
-                        <span class="ms-1">{{ number_format($totals['principal'], 2) }}</span>
-                    </div>
+<div class="row g-3 mb-3" dir="rtl">
+    <div class="col-12 col-md-4">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-pie-chart fs-4 text-primary"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">{{ __('debts::messages.totals.principal') }}</div>
+                    <div class="kpi-value fw-bold">{{ number_format($totals['principal'], 2) }}</div>
                 </div>
-                <div class="col-12 col-md-auto">
-                    <div class="px-3 py-2 bg-primary-subtle border border-primary-subtle rounded-3 text-primary-emphasis small text-nowrap">
-                        <span class="fw-semibold">{{ __('debts::messages.totals.paid') }}:</span>
-                        <span class="ms-1">{{ number_format($totals['paid'], 2) }}</span>
-                    </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">{{ __('debts::messages.totals.paid') }}</div>
+                    <div class="kpi-value fw-bold">{{ number_format($totals['paid'], 2) }}</div>
                 </div>
-                <div class="col-12 col-md-auto">
-                    <div class="px-3 py-2 bg-warning-subtle border border-warning-subtle rounded-3 text-warning-emphasis small text-nowrap">
-                        <span class="fw-semibold">{{ __('debts::messages.totals.outstanding') }}:</span>
-                        <span class="ms-1">{{ number_format($totals['outstanding'], 2) }}</span>
-                    </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4">
+        <div class="kpi-card p-3 h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
+                <div class="flex-grow-1">
+                    <div class="subnote">{{ __('debts::messages.totals.outstanding') }}</div>
+                    <div class="kpi-value fw-bold">{{ number_format($totals['outstanding'], 2) }}</div>
                 </div>
             </div>
         </div>
