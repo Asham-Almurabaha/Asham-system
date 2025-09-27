@@ -79,12 +79,12 @@
 
     <div class="col-md-4">
         <label class="form-label">{{ __('debts::messages.fields.issued_at') }}</label>
-        <input type="date" name="issued_at" class="form-control" value="{{ old('issued_at', optional($debt->issued_at)->format('Y-m-d') ?? now()->format('Y-m-d')) }}" required>
+        <input type="date" name="issued_at" class="form-control js-date" value="{{ old('issued_at', optional($debt->issued_at)->format('Y-m-d') ?? now()->format('Y-m-d')) }}" required>
     </div>
 
     <div class="col-md-4">
         <label class="form-label">{{ __('debts::messages.fields.due_at') }}</label>
-        <input type="date" name="due_at" class="form-control" value="{{ old('due_at', optional($debt->due_at)->format('Y-m-d')) }}">
+        <input type="date" name="due_at" class="form-control js-date" value="{{ old('due_at', optional($debt->due_at)->format('Y-m-d')) }}">
     </div>
 
     <div class="col-12">
