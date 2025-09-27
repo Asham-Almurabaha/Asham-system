@@ -17,17 +17,6 @@
     </nav>
 </div>
 
-<div class="card shadow-sm mb-3">
-    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        @can('debts.create')
-            <x-button.action href="{{ route('debts.create') }}" variant="success">
-                <i class="bi bi-plus-circle"></i>
-                <span class="ms-1">{{ __('debts::messages.buttons.create') }}</span>
-            </x-button.action>
-        @endcan
-    </div>
-</div>
-
 <div class="row g-3 mb-3" dir="rtl">
     <div class="col-12 col-md-4">
         <div class="kpi-card p-3 h-100">
@@ -61,6 +50,17 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
+        @can('debts.create')
+            <x-button.action href="{{ route('debts.create') }}" variant="success">
+                <i class="bi bi-plus-circle"></i>
+                <span class="ms-1">{{ __('debts::messages.buttons.create') }}</span>
+            </x-button.action>
+        @endcan
     </div>
 </div>
 
