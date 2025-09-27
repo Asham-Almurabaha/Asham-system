@@ -1,0 +1,21 @@
+
+services:
+  # يضيف/يشغّل phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"                 # ادخل من المتصفح: http://localhost:8080
+    environment:
+      PMA_HOST: ${DB_HOST:-mysql} # يقرأ من .env (افتراضي mysql)
+      PMA_PORT: ${DB_PORT:-3306}
+      PMA_USER: ${DB_USERNAME:-sail}
+      PMA_PASSWORD: ${DB_PASSWORD:-password}
+      UPLOAD_LIMIT: 256M
+    depends_on:
+      - mysql                     # تأكد أن خدمة DB اسمها mysql في ملف Sail الأساسي
+
+  # يعرّض منفذ MySQL للخارج (اختياري)
+  mysql:
+    ports:
+      - "3306:3306"
