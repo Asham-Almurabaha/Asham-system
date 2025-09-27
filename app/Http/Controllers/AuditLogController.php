@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -124,6 +125,32 @@ class AuditLogController extends Controller
         return redirect()
             ->route('audit.logs.show', $auditLog)
             ->with($result['type'], $result['message']);
+    }
+
+    public function destroyRange(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'from' => ['required', 'date'],
+            'to'   => ['required', 'date', 'after_or_equal:from'],
+        ]);
+
+        $from = Carbon::parse($data['from'])->startOfDay();
+        $to   = Carbon::parse($data['to'])->endOfDay();
+
+        $query = AuditLog::whereBetween('performed_at', [$from, $to]);
+        $count = (clone $query)->count();
+
+        if ($count === 0) {
+            return redirect()
+                ->route('audit.logs')
+                ->with('info', __('Audit log range delete empty'));
+        }
+
+        $query->delete();
+
+        return redirect()
+            ->route('audit.logs')
+            ->with('success', __('Audit log range delete success', ['count' => $count]));
     }
 
     protected function revertUpdated(AuditLog $log, ?Model $model): array

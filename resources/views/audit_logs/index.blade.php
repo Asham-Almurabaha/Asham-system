@@ -75,6 +75,30 @@
         </div>
     </div>
 
+    @can('audit.logs.purge')
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <form method="POST" action="{{ route('audit.logs.purge') }}" class="row g-2 align-items-end" onsubmit="return confirm(@js(__('Audit log range delete confirm')));">
+                    @csrf
+                    @method('DELETE')
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1">{{ __('From Date') }}</label>
+                        <input type="date" name="from" class="form-control form-control-sm" value="{{ old('from') }}" required>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1">{{ __('To Date') }}</label>
+                        <input type="date" name="to" class="form-control form-control-sm" value="{{ old('to') }}" required>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label mb-1 text-danger">{{ __('Delete Range') }}</label>
+                        <x-button.delete type="submit" size="sm">{{ __('Delete Range') }}</x-button.delete>
+                        <div class="small text-muted mt-2">{{ __('Audit log range delete help') }}</div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endcan
+
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <x-table head-class="table-light" striped bordered class="text-center" :hover="false">

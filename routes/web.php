@@ -127,6 +127,9 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
     Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])
         ->middleware('permission:view-audit-logs')
         ->name('audit.logs.show');
+    Route::delete('/audit-logs/purge', [AuditLogController::class, 'destroyRange'])
+        ->middleware('permission:audit.logs.purge')
+        ->name('audit.logs.purge');
     Route::post('/audit-logs/{auditLog}/revert', [AuditLogController::class, 'revert'])->name('audit.logs.revert');
 
     // المتاح في الحسابات (بنكي/خزنة)
