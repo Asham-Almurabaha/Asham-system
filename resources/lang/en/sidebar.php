@@ -96,6 +96,7 @@ return [
     'Financial Statements' => 'Financial Statements',
     'Financial Status' => 'Financial Status',
     'Operating' => 'Operating',
+    'Expenses' => 'Expenses',
     'Cars' => 'Cars',
     'Motocycles' => 'Motocycles',
     'Add Ledger Entry' => 'Add Ledger Entry',

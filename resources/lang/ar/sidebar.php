@@ -96,6 +96,7 @@ return array (
   'Financial Statements' => 'القوائم المالية',
   'Financial Status' => 'الحالة المالية',
   'Operating' => 'العمليات',
+  'Expenses' => 'المصرفات',
   'Cars' => 'السيارات',
   'Motocycles' => 'الدراجات النارية',
   'Add Ledger Entry' => 'إضافة قيد',

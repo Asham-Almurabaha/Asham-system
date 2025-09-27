@@ -242,6 +242,10 @@ trait SeedsRolesAndPermissions
                     return false;
                 }
 
+                if (str_starts_with($permission, 'contract-claims.') || str_starts_with($permission, 'expenses.')) {
+                    return false;
+                }
+
                 return (
                     str_starts_with($permission, 'ledger.') ||
                     str_starts_with($permission, 'installments.') ||

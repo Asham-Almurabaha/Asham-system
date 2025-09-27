@@ -174,7 +174,7 @@
 
   $router = app('router');
 
-  $operatingExpenseCandidates = [
+  $expenseNavCandidates = [
       [
           'label' => __('sidebar.Cars'),
           'candidates' => [
@@ -199,12 +199,12 @@
       ],
   ];
 
-  $operatingExpenseLinks = [];
+  $expenseNavLinks = [];
 
-  foreach ($operatingExpenseCandidates as $candidate) {
+  foreach ($expenseNavCandidates as $candidate) {
       foreach ($candidate['candidates'] as $routeOption) {
           if ($router->has($routeOption['route'])) {
-              $operatingExpenseLinks[] = [
+              $expenseNavLinks[] = [
                   'route'   => $routeOption['route'],
                   'pattern' => $routeOption['pattern'],
                   'label'   => $candidate['label'],
@@ -214,19 +214,19 @@
       }
   }
 
-  $operatingExpensePatterns = array_map(
+  $expenseNavPatterns = array_map(
       static fn(array $link): string => $link['pattern'],
-      $operatingExpenseLinks
+      $expenseNavLinks
   );
 
-  $operatingOpen = !empty($operatingExpensePatterns) && $isRoute($operatingExpensePatterns);
+  $expensesOpen = !empty($expenseNavPatterns) && $isRoute($expenseNavPatterns);
 
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
       $investorLedgerPatterns,
       $goodsEntryPatterns,
-      $operatingExpensePatterns
+      $expenseNavPatterns
   );
 
   $debtsPatterns = [
@@ -600,17 +600,17 @@
   @endroutecanany
 
 
-  @if (!empty($operatingExpenseLinks))
-  @routecanany($operatingExpensePatterns)
+  @if (!empty($expenseNavLinks))
+  @routecanany($expenseNavPatterns)
   <li class="nav-item">
-    <a class="nav-link {{ $coll($operatingOpen) }}"
-       data-bs-target="#operating-expenses-nav" data-bs-toggle="collapse" href="#"
-       aria-expanded="{{ $operatingOpen ? 'true' : 'false' }}">
-      <i class="bi bi-fuel-pump"></i><span>@lang('sidebar.Operating')</span><i class="bi bi-chevron-down ms-auto"></i>
+    <a class="nav-link {{ $coll($expensesOpen) }}"
+       data-bs-target="#expenses-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $expensesOpen ? 'true' : 'false' }}">
+      <i class="bi bi-receipt"></i><span>@lang('sidebar.Expenses')</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
 
-    <ul id="operating-expenses-nav" class="nav-content collapse {{ $open($operatingOpen) }}" data-bs-parent="#sidebar-nav">
-      @foreach ($operatingExpenseLinks as $expenseLink)
+    <ul id="expenses-nav" class="nav-content collapse {{ $open($expensesOpen) }}" data-bs-parent="#sidebar-nav">
+      @foreach ($expenseNavLinks as $expenseLink)
         @routecanany($expenseLink['pattern'])
         <li>
           <a class="{{ $active($isRoute($expenseLink['pattern'])) }}" href="{{ route($expenseLink['route']) }}">
