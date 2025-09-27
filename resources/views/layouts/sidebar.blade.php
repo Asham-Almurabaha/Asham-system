@@ -176,6 +176,18 @@
 
   $expenseNavCandidates = [
       [
+          'label' => __('expenses::expenses.index_title'),
+          'candidates' => [
+              ['route' => 'expenses.expenses.index',       'pattern' => 'expenses.expenses.*'],
+          ],
+      ],
+      [
+          'label' => __('expenses::types.index_title'),
+          'candidates' => [
+              ['route' => 'expenses.expense-types.index',  'pattern' => 'expenses.expense-types.*'],
+          ],
+      ],
+      [
           'label' => __('sidebar.Cars'),
           'candidates' => [
               ['route' => 'operating.cars.index',          'pattern' => 'operating.cars.*'],

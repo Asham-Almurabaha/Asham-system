@@ -89,6 +89,8 @@ trait SeedsRolesAndPermissions
             'operating.cars.index',
             'operating.motocycles.index',
             'operating.motorcycles.index',
+            'expenses.expense-types.index',
+            'expenses.expenses.index',
             'expenses.cars.index',
             'expenses.motocycles.index',
             'expenses.motorcycles.index',
