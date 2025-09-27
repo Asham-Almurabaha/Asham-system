@@ -143,152 +143,152 @@
                 </td>
                 <td class="text-nowrap">
                     <div class="d-flex flex-wrap justify-content-center gap-2">
-                            <x-button.action
-                                type="button"
-                                variant="secondary"
-                                :outline="true"
-                                size="sm"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#{{ $paymentsCollapseId }}"
-                                aria-expanded="false"
-                                aria-controls="{{ $paymentsCollapseId }}"
-                            >
-                                {{ __('debts::messages.payments.actions.view') }}
-                            </x-button.action>
+                        <x-button.action
+                            type="button"
+                            variant="secondary"
+                            :outline="true"
+                            size="sm"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#{{ $paymentsCollapseId }}"
+                            aria-expanded="false"
+                            aria-controls="{{ $paymentsCollapseId }}"
+                        >
+                            {{ __('debts::messages.payments.actions.view') }}
+                        </x-button.action>
+
+                        @routecan('debts.edit')
+                            @if($outstanding > 0)
+                                <x-button.action
+                                    type="button"
+                                    variant="success"
+                                    :outline="true"
+                                    size="sm"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#{{ $paymentsCollapseId }}"
+                                    aria-expanded="false"
+                                    aria-controls="{{ $paymentsCollapseId }}"
+                                >
+                                    {{ __('debts::messages.payments.actions.pay') }}
+                                </x-button.action>
+                            @endif
+                        @endroutecan
+
+                        @routecan('debts.destroy')
+                            <form action="{{ route('debts.destroy', $debt) }}" method="POST" onsubmit="return confirm('{{ __('debts::messages.confirm_delete') }}');">
+                                @csrf
+                                @method('DELETE')
+                                <x-button.action type="submit" size="sm" variant="danger" :outline="true">
+                                    <i class="bi bi-trash"></i>
+                                </x-button.action>
+                            </form>
+                        @endroutecan
+                    </div>
+                </td>
+            </tr>
+            <tr class="table-light">
+                <td colspan="11" class="text-start">
+                    <div class="collapse" id="{{ $paymentsCollapseId }}">
+                        <div class="px-3 py-3">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+                                <h6 class="fw-semibold mb-0">{{ __('debts::messages.payments.title') }}</h6>
+                                <div class="small text-muted">{{ __('debts::messages.table.outstanding') }}: <strong>{{ number_format($outstanding, 2) }}</strong></div>
+                            </div>
+
+                            <div class="table-responsive mb-3">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center" style="width: 60px;">#</th>
+                                            <th class="text-end" style="width: 160px;">{{ __('debts::messages.payments.fields.amount') }}</th>
+                                            <th style="width: 160px;">{{ __('debts::messages.payments.fields.paid_at') }}</th>
+                                            <th style="width: 200px;">{{ __('debts::messages.payments.fields.account') }}</th>
+                                            <th class="text-start">{{ __('debts::messages.payments.fields.notes') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($debt->payments as $index => $payment)
+                                            <tr>
+                                                <td class="text-center">{{ $index + 1 }}</td>
+                                                <td class="text-end">{{ number_format($payment->amount, 2) }}</td>
+                                                <td>{{ optional($payment->paid_at)->format('Y-m-d') }}</td>
+                                                <td class="text-start">{{ $payment->bankAccount->name ?? $payment->safe->name ?? '-' }}</td>
+                                                <td class="text-start">{{ $payment->notes ?: '-' }}</td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-3">{{ __('debts::messages.payments.empty') }}</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
 
                             @routecan('debts.edit')
                                 @if($outstanding > 0)
-                                    <x-button.action
-                                        type="button"
-                                        variant="success"
-                                        :outline="true"
-                                        size="sm"
-                                        data-bs-toggle="collapse"
-                                        data-bs-target="#{{ $paymentsCollapseId }}"
-                                        aria-expanded="false"
-                                        aria-controls="{{ $paymentsCollapseId }}"
-                                    >
-                                        {{ __('debts::messages.payments.actions.pay') }}
-                                    </x-button.action>
+                                    <form action="{{ $paymentAction }}" method="POST" class="row g-2 align-items-end" id="{{ $paymentFormId }}">
+                                        @csrf
+                                        <input type="hidden" name="context_debt_id" value="{{ $debt->id }}">
+                                        <div class="col-12 col-md-3">
+                                            <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.amount') }}</label>
+                                            <input type="number" name="amount" class="form-control form-control-sm" min="0.01" step="0.01" max="{{ $outstanding }}" value="{{ $amountValue }}" required>
+                                            @if($isCurrentDebt)
+                                                @error('amount') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                            @endif
+                                        </div>
+                                        <div class="col-12 col-md-3">
+                                            <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.paid_at') }}</label>
+                                            <input type="date" name="paid_at" class="form-control form-control-sm" value="{{ $paidAtValue }}" required>
+                                            @if($isCurrentDebt)
+                                                @error('paid_at') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                            @endif
+                                        </div>
+                                        <div class="col-12 col-md-3">
+                                            <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.bank_account') }}</label>
+                                            <select name="bank_account_id" class="form-select form-select-sm" {{ $banks->count() ? '' : 'disabled' }}>
+                                                <option value="">{{ __('debts::messages.placeholders.select_bank') }}</option>
+                                                @foreach($banks as $bank)
+                                                    <option value="{{ $bank->id }}" @selected($oldBank == $bank->id)>{{ $bank->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            @if($isCurrentDebt)
+                                                @error('bank_account_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                            @endif
+                                        </div>
+                                        <div class="col-12 col-md-3">
+                                            <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.safe') }}</label>
+                                            <select name="safe_id" class="form-select form-select-sm" {{ $safes->count() ? '' : 'disabled' }}>
+                                                <option value="">{{ __('debts::messages.placeholders.select_safe') }}</option>
+                                                @foreach($safes as $safe)
+                                                    <option value="{{ $safe->id }}" @selected($oldSafe == $safe->id)>{{ $safe->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <div class="form-text">{{ __('debts::messages.hints.account_choice') }}</div>
+                                            @if($isCurrentDebt)
+                                                @error('safe_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                            @endif
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.notes') }}</label>
+                                            <input type="text" name="notes" class="form-control form-control-sm" value="{{ $oldNotes }}" placeholder="{{ __('debts::messages.payments.placeholders.notes') }}">
+                                            @if($isCurrentDebt)
+                                                @error('notes') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                            @endif
+                                        </div>
+                                        <div class="col-12 col-md-2 d-grid">
+                                            <x-button.action type="submit" variant="success" size="sm">
+                                                <i class="bi bi-cash-stack"></i> {{ __('debts::messages.payments.actions.pay') }}
+                                            </x-button.action>
+                                        </div>
+                                    </form>
+                                @else
+                                    <div class="alert alert-success mb-0" role="alert">
+                                        {{ __('debts::messages.payments.settled') }}
+                                    </div>
                                 @endif
                             @endroutecan
-
-                            @routecan('debts.destroy')
-                                <form action="{{ route('debts.destroy', $debt) }}" method="POST" onsubmit="return confirm('{{ __('debts::messages.confirm_delete') }}');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-button.action type="submit" size="sm" variant="danger" :outline="true">
-                                        <i class="bi bi-trash"></i>
-                                    </x-button.action>
-                                </form>
-                            @endroutecan
                         </div>
-                    </td>
-                </tr>
-                <tr class="table-light">
-                    <td colspan="11" class="text-start">
-                        <div class="collapse" id="{{ $paymentsCollapseId }}">
-                            <div class="px-3 py-3">
-                                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                                    <h6 class="fw-semibold mb-0">{{ __('debts::messages.payments.title') }}</h6>
-                                    <div class="small text-muted">{{ __('debts::messages.table.outstanding') }}: <strong>{{ number_format($outstanding, 2) }}</strong></div>
-                                </div>
-
-                                <div class="table-responsive mb-3">
-                                    <table class="table table-sm align-middle mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th class="text-center" style="width: 60px;">#</th>
-                                                <th class="text-end" style="width: 160px;">{{ __('debts::messages.payments.fields.amount') }}</th>
-                                                <th style="width: 160px;">{{ __('debts::messages.payments.fields.paid_at') }}</th>
-                                                <th style="width: 200px;">{{ __('debts::messages.payments.fields.account') }}</th>
-                                                <th class="text-start">{{ __('debts::messages.payments.fields.notes') }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($debt->payments as $index => $payment)
-                                                <tr>
-                                                    <td class="text-center">{{ $index + 1 }}</td>
-                                                    <td class="text-end">{{ number_format($payment->amount, 2) }}</td>
-                                                    <td>{{ optional($payment->paid_at)->format('Y-m-d') }}</td>
-                                                    <td class="text-start">{{ $payment->bankAccount->name ?? $payment->safe->name ?? '-' }}</td>
-                                                    <td class="text-start">{{ $payment->notes ?: '-' }}</td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="5" class="text-center text-muted py-3">{{ __('debts::messages.payments.empty') }}</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                @routecan('debts.edit')
-                                    @if($outstanding > 0)
-                                        <form action="{{ $paymentAction }}" method="POST" class="row g-2 align-items-end" id="{{ $paymentFormId }}">
-                                            @csrf
-                                            <input type="hidden" name="context_debt_id" value="{{ $debt->id }}">
-                                            <div class="col-12 col-md-3">
-                                                <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.amount') }}</label>
-                                                <input type="number" name="amount" class="form-control form-control-sm" min="0.01" step="0.01" max="{{ $outstanding }}" value="{{ $amountValue }}" required>
-                                                @if($isCurrentDebt)
-                                                    @error('amount') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                                                @endif
-                                            </div>
-                                            <div class="col-12 col-md-3">
-                                                <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.paid_at') }}</label>
-                                                <input type="date" name="paid_at" class="form-control form-control-sm" value="{{ $paidAtValue }}" required>
-                                                @if($isCurrentDebt)
-                                                    @error('paid_at') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                                                @endif
-                                            </div>
-                                            <div class="col-12 col-md-3">
-                                                <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.bank_account') }}</label>
-                                                <select name="bank_account_id" class="form-select form-select-sm" {{ $banks->count() ? '' : 'disabled' }}>
-                                                    <option value="">{{ __('debts::messages.placeholders.select_bank') }}</option>
-                                                    @foreach($banks as $bank)
-                                                        <option value="{{ $bank->id }}" @selected($oldBank == $bank->id)>{{ $bank->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @if($isCurrentDebt)
-                                                    @error('bank_account_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                                                @endif
-                                            </div>
-                                            <div class="col-12 col-md-3">
-                                                <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.safe') }}</label>
-                                                <select name="safe_id" class="form-select form-select-sm" {{ $safes->count() ? '' : 'disabled' }}>
-                                                    <option value="">{{ __('debts::messages.placeholders.select_safe') }}</option>
-                                                    @foreach($safes as $safe)
-                                                        <option value="{{ $safe->id }}" @selected($oldSafe == $safe->id)>{{ $safe->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <div class="form-text">{{ __('debts::messages.hints.account_choice') }}</div>
-                                                @if($isCurrentDebt)
-                                                    @error('safe_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                                                @endif
-                                            </div>
-                                            <div class="col-12 col-md-6">
-                                                <label class="form-label small text-muted">{{ __('debts::messages.payments.fields.notes') }}</label>
-                                                <input type="text" name="notes" class="form-control form-control-sm" value="{{ $oldNotes }}" placeholder="{{ __('debts::messages.payments.placeholders.notes') }}">
-                                                @if($isCurrentDebt)
-                                                    @error('notes') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-                                                @endif
-                                            </div>
-                                            <div class="col-12 col-md-2 d-grid">
-                                                <x-button.action type="submit" variant="success" size="sm">
-                                                    <i class="bi bi-cash-stack"></i> {{ __('debts::messages.payments.actions.pay') }}
-                                                </x-button.action>
-                                            </div>
-                                        </form>
-                                    @else
-                                        <div class="alert alert-success mb-0" role="alert">
-                                            {{ __('debts::messages.payments.settled') }}
-                                        </div>
-                                    @endif
-                                @endroutecan
-                            </div>
-                        </div>
-                    </td>
+                    </div>
+                </td>
             </tr>
         @empty
             <tr>
