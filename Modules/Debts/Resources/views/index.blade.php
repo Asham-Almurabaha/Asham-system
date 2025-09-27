@@ -8,7 +8,7 @@
 
 @section('content')
 <div class="container-xxl py-4">
-    <div class="d-flex flex-wrap align-items-start gap-3 mb-4">
+    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
         <div>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-2">
@@ -17,13 +17,13 @@
                 </ol>
             </nav>
             <h1 class="h4 mb-1">{{ __('debts::messages.page_title') }}</h1>
-            <p class="text-muted mb-0">{{ __('debts::messages.page_heading') }}</p>
+            {{-- <p class="text-muted mb-0">{{ __('debts::messages.page_heading') }}</p> --}}
         </div>
 
-        <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+        <div class="ms-auto d-flex flex-wrap gap-2">
             @can('debts.create')
                 <x-button.action href="{{ route('debts.create') }}" variant="success">
-                    <i class="bi bi-plus-circle me-1"></i>{{ __('debts::messages.buttons.create') }}
+                    <i class="bi bi-plus-lg me-1"></i>{{ __('debts::messages.buttons.create') }}
                 </x-button.action>
             @endcan
         </div>

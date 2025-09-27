@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-xxl py-4">
-        <div class="d-flex flex-wrap align-items-start gap-3 mb-4">
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
             <div>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb mb-2">
@@ -13,10 +13,10 @@
                     </ol>
                 </nav>
                 <h1 class="h4 mb-1">{{ __('notes.title') }}</h1>
-                <p class="text-muted mb-0">{{ __('notes.subtitle') }}</p>
+                {{-- <p class="text-muted mb-0">{{ __('notes.subtitle') }}</p> --}}
             </div>
 
-            <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
+            <div class="ms-auto d-flex flex-wrap gap-2">
                 <x-button.action href="{{ route('notes.create') }}" variant="success">
                     <i class="bi bi-plus-lg me-1"></i>{{ __('notes.actions.new') }}
                 </x-button.action>
