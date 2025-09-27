@@ -3,29 +3,27 @@
 @section('title', __('notes.title'))
 
 @section('content')
-    <div class="pagetitle mb-3">
-        <h1 class="h3 mb-1">{{ __('notes.title') }}</h1>
-        <p class="text-muted mb-0">{{ __('notes.subtitle') }}</p>
-    </div>
-
-    <div class="card shadow-sm mb-3">
-        <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-            <div class="btn-group" role="group" aria-label="Notes Actions">
-                <x-button.action href="{{ route('notes.create') }}" variant="success">
-                    <i class="bi bi-plus-lg"></i> {{ __('notes.actions.new') }}
-                </x-button.action>
+    <div class="container-xxl py-4">
+        <div class="d-flex flex-wrap align-items-start gap-3 mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ __('notes.title') }}</li>
+                    </ol>
+                </nav>
+                <h1 class="h4 mb-1">{{ __('notes.title') }}</h1>
+                <p class="text-muted mb-0">{{ __('notes.subtitle') }}</p>
             </div>
 
             <div class="ms-auto d-flex flex-wrap align-items-center gap-2">
-                <span class="small text-muted">
-                    {{ __('Results') }}: <strong>{{ $notes->total() }}</strong>
-                </span>
+                <x-button.action href="{{ route('notes.create') }}" variant="success">
+                    <i class="bi bi-plus-lg me-1"></i>{{ __('notes.actions.new') }}
+                </x-button.action>
             </div>
         </div>
-    </div>
 
-    <div class="card shadow-sm mb-3">
-        <div class="card-body p-0">
+        <div class="card border-0 shadow-sm mb-3">
             <x-table head-class="table-light position-sticky top-0" class="text-center">
                 <x-slot name="head">
                     <tr>
@@ -131,8 +129,10 @@
         </div>
 
         @if($notes->hasPages())
-            <div class="card-footer bg-white">
-                {{ $notes->withQueryString()->links('pagination::bootstrap-5') }}
+            <div class="card border-0 shadow-sm">
+                <div class="card-footer bg-white border-0">
+                    {{ $notes->withQueryString()->links('pagination::bootstrap-5') }}
+                </div>
             </div>
         @endif
     </div>
