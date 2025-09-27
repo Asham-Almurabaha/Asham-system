@@ -19,11 +19,11 @@
 
 <div class="card shadow-sm mb-3">
     <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
-        @routecan('debts.create')
+        @can('debts.create')
         <x-button.action href="{{ route('debts.create') }}" variant="success">
             <i class="bi bi-plus-circle"></i> {{ __('debts::messages.buttons.create') }}
         </x-button.action>
-        @endroutecan
+        @endcan
 
         <div class="ms-auto d-flex flex-wrap gap-3 align-items-center small">
             <span>{{ __('debts::messages.totals.principal') }}: <strong>{{ number_format($totals['principal'], 2) }}</strong></span>
@@ -156,7 +156,7 @@
                             {{ __('debts::messages.payments.actions.view') }}
                         </x-button.action>
 
-                        @routecan('debts.edit')
+                        @can('debts.edit')
                             @if($outstanding > 0)
                                 <x-button.action
                                     type="button"
@@ -171,9 +171,9 @@
                                     {{ __('debts::messages.payments.actions.pay') }}
                                 </x-button.action>
                             @endif
-                        @endroutecan
+                        @endcan
 
-                        @routecan('debts.destroy')
+                        @can('debts.destroy')
                             <form action="{{ route('debts.destroy', $debt) }}" method="POST" onsubmit="return confirm('{{ __('debts::messages.confirm_delete') }}');">
                                 @csrf
                                 @method('DELETE')
@@ -181,7 +181,7 @@
                                     <i class="bi bi-trash"></i>
                                 </x-button.action>
                             </form>
-                        @endroutecan
+                        @endcan
                     </div>
                 </td>
             </tr>
@@ -223,7 +223,7 @@
                                 </table>
                             </div>
 
-                            @routecan('debts.edit')
+                            @can('debts.edit')
                                 @if($outstanding > 0)
                                     <form action="{{ $paymentAction }}" method="POST" class="row g-2 align-items-end" id="{{ $paymentFormId }}">
                                         @csrf
@@ -281,7 +281,7 @@
                                         </div>
                                     </form>
                                 @endif
-                            @endroutecan
+                            @endcan
 
                             @if($outstanding <= 0)
                                 <div class="alert alert-success mb-0" role="alert">
