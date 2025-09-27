@@ -91,7 +91,8 @@
 
             @php($oldContextDebtId = (string) old('context_debt_id'))
 
-            @forelse($debts as $debt)
+            @if($debts->isNotEmpty())
+                @foreach($debts as $debt)
                 @php
                     $rowNumber = $loop->iteration + ($debts->currentPage() - 1) * $debts->perPage();
                     $paymentsCollapseId = 'debt-payments-'.$debt->id;
@@ -290,11 +291,12 @@
                         </div>
                     </td>
                 </tr>
-            @empty
+                @endforeach
+            @else
                 <tr>
                     <td colspan="11" class="py-5 text-muted">{{ __('debts::messages.table.empty') }}</td>
                 </tr>
-            @endforelse
+            @endif
         </x-table>
 
         @if($debts->hasPages())
