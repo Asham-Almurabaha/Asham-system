@@ -52,7 +52,6 @@ class ExpenseDueNotifier
     {
         return Expense::query()
             ->with('type')
-            ->whereNull('paid_at')
             ->whereDate('due_date', '<=', $date)
             ->when(!$force, function ($query) use ($date) {
                 $query->where(function ($inner) use ($date) {

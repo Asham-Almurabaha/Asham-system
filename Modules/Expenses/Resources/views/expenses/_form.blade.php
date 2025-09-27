@@ -31,8 +31,6 @@
     $oldExpenseType   = old('expense_type_id', $expense ? ($expense->expense_type_id ?? '') : '');
     $oldTitle         = old('title', $expense ? ($expense->title ?? '') : '');
     $oldAmount        = old('amount', $expense ? ($expense->amount ?? '') : '');
-    $oldCurrency      = old('currency_code', $expense ? ($expense->currency_code ?? 'SAR') : 'SAR');
-    $oldReference     = old('reference', $expense ? ($expense->reference ?? '') : '');
     $oldNotes         = old('notes', $expense ? ($expense->notes ?? '') : '');
 
     $oldDueDate = old(
@@ -40,10 +38,6 @@
         $expense ? $toDateStringSafe($expense->due_date ?? null) : ''
     );
 
-    $oldPaidAt = old(
-        'paid_at',
-        $expense ? $toDateStringSafe($expense->paid_at ?? null) : ''
-    );
 @endphp
 
 <div class="row g-3">
@@ -81,7 +75,7 @@
         @error('title') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-6">
         <label for="amount" class="form-label">
             @lang('expenses::expenses.fields.amount') <span class="text-danger">*</span>
         </label>
@@ -100,24 +94,7 @@
         @error('amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    <div class="col-md-4">
-        <label for="currency_code" class="form-label">
-            @lang('expenses::expenses.fields.currency_code')
-        </label>
-        <input
-            type="text"
-            name="currency_code"
-            id="currency_code"
-            class="form-control @error('currency_code') is-invalid @enderror"
-            value="{{ $oldCurrency }}"
-            maxlength="3"
-            style="text-transform: uppercase"
-            dir="ltr"
-        >
-        @error('currency_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="col-md-4">
+    <div class="col-md-6">
         <label for="due_date" class="form-label">
             @lang('expenses::expenses.fields.due_date') <span class="text-danger">*</span>
         </label>
@@ -130,35 +107,6 @@
             required
         >
         @error('due_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="col-md-4">
-        <label for="paid_at" class="form-label">
-            @lang('expenses::expenses.fields.paid_at')
-        </label>
-        <input
-            type="date"
-            name="paid_at"
-            id="paid_at"
-            class="form-control js-date @error('paid_at') is-invalid @enderror"
-            value="{{ $oldPaidAt }}"
-        >
-        @error('paid_at') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="col-md-4">
-        <label for="reference" class="form-label">
-            @lang('expenses::expenses.fields.reference')
-        </label>
-        <input
-            type="text"
-            name="reference"
-            id="reference"
-            class="form-control @error('reference') is-invalid @enderror"
-            value="{{ $oldReference }}"
-            maxlength="190"
-        >
-        @error('reference') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
     <div class="col-12">

@@ -12,10 +12,7 @@ return new class extends Migration {
             $table->foreignId('expense_type_id')->constrained('expense_types')->cascadeOnDelete();
             $table->string('title');
             $table->decimal('amount', 18, 2);
-            $table->string('currency_code', 3)->default('SAR');
             $table->date('due_date')->index();
-            $table->date('paid_at')->nullable();
-            $table->string('reference')->nullable();
             $table->text('notes')->nullable();
             $table->timestamp('last_notified_at')->nullable();
             $table->timestamps();

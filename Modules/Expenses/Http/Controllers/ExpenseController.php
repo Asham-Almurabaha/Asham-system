@@ -25,9 +25,8 @@ class ExpenseController extends Controller
 
         $stats = [
             'total' => Expense::count(),
-            'upcoming' => Expense::query()->whereNull('paid_at')->whereDate('due_date', '>=', $today)->count(),
-            'overdue' => Expense::query()->whereNull('paid_at')->whereDate('due_date', '<', $today)->count(),
-            'paid' => Expense::query()->whereNotNull('paid_at')->count(),
+            'upcoming' => Expense::query()->whereDate('due_date', '>=', $today)->count(),
+            'overdue' => Expense::query()->whereDate('due_date', '<', $today)->count(),
         ];
 
         return view('expenses::expenses.index', [
@@ -88,31 +87,22 @@ class ExpenseController extends Controller
             'expense_type_id' => ['required', Rule::exists('expense_types', 'id')],
             'title' => ['required', 'string', 'max:190'],
             'amount' => ['required', 'numeric', 'min:0'],
-            'currency_code' => ['nullable', 'string', 'size:3'],
             'due_date' => ['required', 'date'],
-            'paid_at' => ['nullable', 'date', 'after_or_equal:due_date'],
             'notes' => ['nullable', 'string'],
-            'reference' => ['nullable', 'string', 'max:190'],
         ], [], [
             'expense_type_id' => __('expenses::expenses.fields.expense_type_id'),
             'title' => __('expenses::expenses.fields.title'),
             'amount' => __('expenses::expenses.fields.amount'),
-            'currency_code' => __('expenses::expenses.fields.currency_code'),
             'due_date' => __('expenses::expenses.fields.due_date'),
-            'paid_at' => __('expenses::expenses.fields.paid_at'),
             'notes' => __('expenses::expenses.fields.notes'),
-            'reference' => __('expenses::expenses.fields.reference'),
         ]);
 
         return [
             'expense_type_id' => (int) $validated['expense_type_id'],
             'title' => $this->cleanString($validated['title'] ?? ''),
             'amount' => $this->normalizeAmount($validated['amount'] ?? 0),
-            'currency_code' => $this->normalizeCurrency($validated['currency_code'] ?? null),
             'due_date' => $validated['due_date'],
-            'paid_at' => $validated['paid_at'] ?? null,
             'notes' => $this->cleanText($validated['notes'] ?? null),
-            'reference' => $this->cleanString($validated['reference'] ?? null),
         ];
     }
 
@@ -140,10 +130,4 @@ class ExpenseController extends Controller
         return round($numeric, 2);
     }
 
-    private function normalizeCurrency(?string $value): string
-    {
-        $value = $this->cleanString($value);
-
-        return $value ? mb_strtoupper($value) : 'SAR';
-    }
 }

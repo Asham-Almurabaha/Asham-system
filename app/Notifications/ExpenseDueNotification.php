@@ -39,17 +39,13 @@ class ExpenseDueNotification extends Notification implements ShouldQueue
             ->line(__('expenses::notifications.mail.intro', ['date' => $this->targetDate->toDateString(), 'count' => $count]));
 
         $this->expenses->each(function (Expense $expense, int $index) use (&$mail) {
-            $line = ($index + 1).'. '.$expense->title.' — '.number_format($expense->amount, 2).' '.$expense->currency_code;
+            $line = ($index + 1).'. '.$expense->title.' — '.number_format($expense->amount, 2);
 
             if ($expense->type) {
                 $line .= ' ('.$expense->type->name.')';
             }
 
             $line .= ' — '.__('expenses::notifications.mail.due_on', ['date' => $expense->due_date?->toDateString()]);
-
-            if ($expense->reference) {
-                $line .= ' — '.__('expenses::notifications.mail.reference', ['reference' => $expense->reference]);
-            }
 
             $mail->line($line);
 
@@ -75,9 +71,7 @@ class ExpenseDueNotification extends Notification implements ShouldQueue
                     'id' => $expense->id,
                     'title' => $expense->title,
                     'amount' => (float) $expense->amount,
-                    'currency_code' => $expense->currency_code,
                     'due_date' => optional($expense->due_date)->toDateString(),
-                    'reference' => $expense->reference,
                     'type' => $expense->type?->name,
                     'url' => $this->expenseUrl($expense),
                 ];

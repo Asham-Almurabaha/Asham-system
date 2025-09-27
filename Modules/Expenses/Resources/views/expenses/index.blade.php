@@ -48,10 +48,10 @@
             <div class="col-12 col-md-4">
                 <div class="kpi-card p-3 h-100">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                        <div class="kpi-icon"><i class="bi bi-collection fs-4 text-success"></i></div>
                         <div class="flex-grow-1">
-                            <div class="subnote">@lang('expenses::expenses.filters.paid')</div>
-                            <div class="kpi-value fw-bold text-success">{{ number_format($stats['paid'], 2) }}</div>
+                            <div class="subnote">@lang('expenses::expenses.filters.total')</div>
+                            <div class="kpi-value fw-bold text-success">{{ number_format($stats['total'], 2) }}</div>
                         </div>
                     </div>
                 </div>
@@ -71,9 +71,7 @@
                         <th scope="col">@lang('expenses::expenses.fields.title')</th>
                         <th scope="col">@lang('expenses::expenses.fields.expense_type_id')</th>
                         <th scope="col" class="text-end">@lang('expenses::expenses.fields.amount')</th>
-                        <th scope="col">@lang('expenses::expenses.fields.currency_code')</th>
                         <th scope="col">@lang('expenses::expenses.fields.due_date')</th>
-                        <th scope="col">@lang('expenses::expenses.fields.paid_at')</th>
                         <th scope="col" style="width:150px">@lang('expenses::expenses.fields.status')</th>
                         <th scope="col" class="text-end" style="width:200px">@lang('expenses::expenses.actions.manage')</th>
                     </tr>
@@ -84,13 +82,9 @@
                         <td class="fw-semibold">{{ $expense->title }}</td>
                         <td>{{ optional($expense->type)->name ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td class="text-end">{{ number_format($expense->amount, 2) }}</td>
-                        <td>{{ $expense->currency_code }}</td>
                         <td>{{ optional($expense->due_date)->toDateString() }}</td>
-                        <td>{{ optional($expense->paid_at)->toDateString() ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td>
-                            @if($expense->paid_at)
-                                <span class="badge bg-success-subtle text-success">@lang('expenses::expenses.status_labels.paid')</span>
-                            @elseif($expense->due_date && $expense->due_date->lt($today))
+                            @if($expense->due_date && $expense->due_date->lt($today))
                                 <span class="badge bg-danger-subtle text-danger">@lang('expenses::expenses.status_labels.overdue')</span>
                             @else
                                 <span class="badge bg-warning-subtle text-warning">@lang('expenses::expenses.status_labels.upcoming')</span>
@@ -111,7 +105,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">@lang('expenses::expenses.empty')</td>
+                        <td colspan="7" class="text-center text-muted py-4">@lang('expenses::expenses.empty')</td>
                     </tr>
                 @endforelse
             </x-table>

@@ -16,23 +16,15 @@ class Expense extends Model
         'expense_type_id',
         'title',
         'amount',
-        'currency_code',
         'due_date',
-        'paid_at',
         'notes',
         'last_notified_at',
-        'reference',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'due_date' => 'date',
-        'paid_at' => 'date',
         'last_notified_at' => 'datetime',
-    ];
-
-    protected $attributes = [
-        'currency_code' => 'SAR',
     ];
 
     public function type(): BelongsTo
@@ -45,11 +37,6 @@ class Expense extends Model
         $today = Carbon::today();
 
         return $query->whereDate('due_date', '<=', $today);
-    }
-
-    public function getIsPaidAttribute(): bool
-    {
-        return $this->paid_at !== null;
     }
 
     public function markNotified(): void
