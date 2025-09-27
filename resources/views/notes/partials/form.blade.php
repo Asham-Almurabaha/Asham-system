@@ -22,7 +22,7 @@
 
     <div class="col-12 col-md-6">
         <label for="reminder_at" class="form-label">{{ __('notes.fields.reminder_at') }}</label>
-        <input type="datetime-local" name="reminder_at" id="reminder_at" value="{{ $reminderValue }}" class="form-control js-date">
+        <input type="datetime-local" name="reminder_at" id="reminder_at" value="{{ $reminderValue }}" class="form-control js-date" placeholder="{{ __('YYYY-MM-DD') }}">
         <div class="form-text">{{ __('notes.helpers.reminder_at') }}</div>
     </div>
 </div>
