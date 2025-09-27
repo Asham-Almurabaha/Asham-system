@@ -63,9 +63,13 @@
         @endphp
 
         <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-light border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span class="fw-semibold">@lang('expenses::expenses.filters.title')</span>
+                <span class="small text-muted">@lang('expenses::expenses.filters.results', ['count' => $expenses->total()])</span>
+            </div>
             <div class="card-body">
                 <form method="GET" action="{{ route('expenses.expenses.index') }}" class="row gy-3 gx-3 align-items-end" id="filtersForm">
-                    <div class="col-12 col-md-3 col-lg-2">
+                    <div class="col-12 col-md-4 col-xl-2">
                         <label class="form-label small text-muted" for="filterStatus">@lang('expenses::expenses.filters.status')</label>
                         <select id="filterStatus" name="status" class="form-select form-select-sm">
                             <option value="" @selected(($filters['status'] ?? '') === '')>@lang('expenses::expenses.filters.all')</option>
@@ -75,7 +79,7 @@
                         </select>
                     </div>
 
-                    <div class="col-12 col-md-3 col-lg-2">
+                    <div class="col-12 col-md-4 col-xl-2">
                         <label class="form-label small text-muted" for="filterType">@lang('expenses::expenses.filters.type')</label>
                         <select id="filterType" name="expense_type_id" class="form-select form-select-sm">
                             <option value="">@lang('expenses::expenses.filters.all')</option>
@@ -84,30 +88,17 @@
                             @endforeach
                         </select>
                     </div>
-
-                    <div class="col-12 col-md-3 col-lg-2">
-                        <label class="form-label small text-muted" for="filterDueFrom">@lang('expenses::expenses.filters.due_from')</label>
-                        <input id="filterDueFrom" type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="col-12 col-md-3 col-lg-2">
-                        <label class="form-label small text-muted" for="filterDueTo">@lang('expenses::expenses.filters.due_to')</label>
-                        <input id="filterDueTo" type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" class="form-control form-control-sm">
-                    </div>
-
-                    <div class="col-12 col-md-4 col-lg-3">
-                        <label class="form-label small text-muted" for="filterSearch">@lang('expenses::expenses.filters.search')</label>
-                        <input id="filterSearch" type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="@lang('expenses::expenses.filters.search_placeholder')">
-                    </div>
-
-                    <div class="col-12 col-md-8 col-lg-3">
-                        <div class="d-flex gap-2 justify-content-md-end">
-                            <a href="{{ route('expenses.expenses.index') }}" class="btn btn-link text-decoration-none px-2">
-                                @lang('expenses::expenses.filters.reset')
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                @lang('expenses::expenses.filters.apply')
-                            </button>
+                  
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-sm-end">
+                            <x-button.action type="submit" variant="primary" size="sm" class="w-100">
+                                <i class="bi bi-funnel"></i>
+                                <span class="ms-1">@lang('expenses::expenses.filters.apply')</span>
+                            </x-button.action>
+                            <x-button.action href="{{ route('expenses.expenses.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                <span class="ms-1">@lang('expenses::expenses.filters.reset')</span>
+                            </x-button.action>
                         </div>
                     </div>
                 </form>

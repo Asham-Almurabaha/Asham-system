@@ -15,6 +15,8 @@ return [
         'manage' => 'الإجراءات',
     ],
     'filters' => [
+        'title' => 'خيارات التصفية',
+        'results' => 'عدد النتائج: :count',
         'upcoming' => 'مستحقة قريباً',
         'overdue' => 'متأخرة',
         'paid' => 'مسددة',

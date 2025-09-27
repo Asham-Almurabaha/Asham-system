@@ -15,6 +15,8 @@ return [
         'manage' => 'Actions',
     ],
     'filters' => [
+        'title' => 'Filters',
+        'results' => 'Results: :count',
         'upcoming' => 'Upcoming',
         'overdue' => 'Overdue',
         'paid' => 'Paid',
