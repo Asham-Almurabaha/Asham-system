@@ -9,7 +9,7 @@
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-body">
+        <div class="card-body p-20">
             <form action="{{ route('notes.update', $note) }}" method="POST" class="needs-validation" novalidate>
                 @csrf
                 @method('PUT')
