@@ -89,61 +89,60 @@
                 </tr>
             </x-slot>
 
-            @php($oldContextDebtId = (string) old('context_debt_id'))
+        @php($oldContextDebtId = (string) old('context_debt_id'))
 
-            @if($debts->isNotEmpty())
-                @foreach($debts as $debt)
-                @php
-                    $rowNumber = $loop->iteration + ($debts->currentPage() - 1) * $debts->perPage();
-                    $paymentsCollapseId = 'debt-payments-'.$debt->id;
-                    $paymentFormId = $paymentsCollapseId.'-form';
-                    $outstanding = max($debt->outstanding_amount, 0);
-                    $accountName = optional($debt->bankAccount)->name ?? optional($debt->safe)->name ?? '—';
-                    $accountLabel = $debt->bankAccount
-                        ? __('debts::messages.fields.bank_account')
-                        : ($debt->safe ? __('debts::messages.fields.safe') : null);
-                    $paymentAction = route('debts.payments.store', $debt);
-                    $queryString = request()->getQueryString();
-                    if ($queryString) {
-                        $paymentAction .= '?'.$queryString;
-                    }
-                    $isCurrentDebt = $oldContextDebtId === (string) $debt->id;
-                    $defaultAmount = number_format($outstanding, 2, '.', '');
-                    $amountValue = $isCurrentDebt ? old('amount', $defaultAmount) : $defaultAmount;
-                    $paidAtValue = $isCurrentDebt ? old('paid_at', now()->format('Y-m-d')) : now()->format('Y-m-d');
-                    $oldBank = $isCurrentDebt ? old('bank_account_id') : null;
-                    $oldSafe = $isCurrentDebt ? old('safe_id') : null;
-                    $oldNotes = $isCurrentDebt ? old('notes') : '';
-                @endphp
-                <tr>
-                    <td class="text-muted">{{ $rowNumber }}</td>
-                    <td class="text-start">
-                        <div class="fw-semibold">{{ $debt->counterparty_name ?? ($debt->customer->name ?? $debt->investor->name ?? '-') }}</div>
-                        @if($debt->notes)
-                            <div class="small text-muted" title="{{ $debt->notes }}">{{ Str::limit($debt->notes, 80) }}</div>
-                        @endif
-                    </td>
-                    <td class="text-start">{{ __('debts::messages.types.'.$debt->party_type) }}</td>
-                    <td class="text-start">
-                        <div>{{ $accountName }}</div>
-                        @if($accountLabel)
-                            <div class="text-muted small">{{ $accountLabel }}</div>
-                        @endif
-                    </td>
-                    <td class="text-end">{{ number_format($debt->principal_amount, 2) }}</td>
-                    <td class="text-end">{{ number_format($debt->paid_amount, 2) }}</td>
-                    <td class="text-end">{{ number_format($debt->outstanding_amount, 2) }}</td>
-                    <td>{{ $debt->issued_at?->format('Y-m-d') }}</td>
-                    <td>{{ $debt->due_at?->format('Y-m-d') ?? '-' }}</td>
-                    <td>
-                        @if($debt->status === 'settled')
-                            <span class="badge bg-success">{{ __('debts::messages.statuses.settled') }}</span>
-                        @else
-                            <span class="badge bg-warning text-dark">{{ __('debts::messages.statuses.open') }}</span>
-                        @endif
-                    </td>
-                    <td class="text-nowrap">
-                        <div class="d-flex flex-wrap justify-content-center gap-2">
+        @forelse($debts as $debt)
+            @php
+                $rowNumber = $loop->iteration + ($debts->currentPage() - 1) * $debts->perPage();
+                $paymentsCollapseId = 'debt-payments-'.$debt->id;
+                $paymentFormId = $paymentsCollapseId.'-form';
+                $outstanding = max($debt->outstanding_amount, 0);
+                $accountName = optional($debt->bankAccount)->name ?? optional($debt->safe)->name ?? '—';
+                $accountLabel = $debt->bankAccount
+                    ? __('debts::messages.fields.bank_account')
+                    : ($debt->safe ? __('debts::messages.fields.safe') : null);
+                $paymentAction = route('debts.payments.store', $debt);
+                $queryString = request()->getQueryString();
+                if ($queryString) {
+                    $paymentAction .= '?'.$queryString;
+                }
+                $isCurrentDebt = $oldContextDebtId === (string) $debt->id;
+                $defaultAmount = number_format($outstanding, 2, '.', '');
+                $amountValue = $isCurrentDebt ? old('amount', $defaultAmount) : $defaultAmount;
+                $paidAtValue = $isCurrentDebt ? old('paid_at', now()->format('Y-m-d')) : now()->format('Y-m-d');
+                $oldBank = $isCurrentDebt ? old('bank_account_id') : null;
+                $oldSafe = $isCurrentDebt ? old('safe_id') : null;
+                $oldNotes = $isCurrentDebt ? old('notes') : '';
+            @endphp
+            <tr>
+                <td class="text-muted">{{ $rowNumber }}</td>
+                <td class="text-start">
+                    <div class="fw-semibold">{{ $debt->counterparty_name ?? ($debt->customer->name ?? $debt->investor->name ?? '-') }}</div>
+                    @if($debt->notes)
+                        <div class="small text-muted" title="{{ $debt->notes }}">{{ Str::limit($debt->notes, 80) }}</div>
+                    @endif
+                </td>
+                <td class="text-start">{{ __('debts::messages.types.'.$debt->party_type) }}</td>
+                <td class="text-start">
+                    <div>{{ $accountName }}</div>
+                    @if($accountLabel)
+                        <div class="text-muted small">{{ $accountLabel }}</div>
+                    @endif
+                </td>
+                <td class="text-end">{{ number_format($debt->principal_amount, 2) }}</td>
+                <td class="text-end">{{ number_format($debt->paid_amount, 2) }}</td>
+                <td class="text-end">{{ number_format($debt->outstanding_amount, 2) }}</td>
+                <td>{{ $debt->issued_at?->format('Y-m-d') }}</td>
+                <td>{{ $debt->due_at?->format('Y-m-d') ?? '-' }}</td>
+                <td>
+                    @if($debt->status === 'settled')
+                        <span class="badge bg-success">{{ __('debts::messages.statuses.settled') }}</span>
+                    @else
+                        <span class="badge bg-warning text-dark">{{ __('debts::messages.statuses.open') }}</span>
+                    @endif
+                </td>
+                <td class="text-nowrap">
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
                             <x-button.action
                                 type="button"
                                 variant="secondary"
@@ -290,13 +289,12 @@
                             </div>
                         </div>
                     </td>
-                </tr>
-                @endforeach
-            @else
-                <tr>
-                    <td colspan="11" class="py-5 text-muted">{{ __('debts::messages.table.empty') }}</td>
-                </tr>
-            @endif
+            </tr>
+        @empty
+            <tr>
+                <td colspan="11" class="py-5 text-muted">{{ __('debts::messages.table.empty') }}</td>
+            </tr>
+        @endforelse
         </x-table>
 
         @if($debts->hasPages())
