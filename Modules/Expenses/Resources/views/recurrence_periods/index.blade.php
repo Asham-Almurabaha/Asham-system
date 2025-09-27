@@ -34,7 +34,6 @@
                 <x-slot name="head">
                     <tr>
                         <th scope="col" class="text-center" style="width:70px">#</th>
-                        <th scope="col">@lang('expenses::recurrence_periods.fields.code')</th>
                         <th scope="col">@lang('expenses::recurrence_periods.fields.name')</th>
                         <th scope="col">@lang('expenses::recurrence_periods.fields.description')</th>
                         <th scope="col" class="text-center">@lang('expenses::recurrence_periods.fields.related_types')</th>
@@ -45,8 +44,7 @@
                 @forelse($recurrencePeriods as $recurrencePeriod)
                     <tr>
                         <td class="text-center">{{ $loop->iteration }}</td>
-                        <td class="fw-semibold">{{ $recurrencePeriod->code }}</td>
-                        <td>{{ $recurrencePeriod->name }}</td>
+                        <td class="fw-semibold">{{ $recurrencePeriod->name }}</td>
                         <td>{{ $recurrencePeriod->description ?: __('expenses::recurrence_periods.fields.not_available') }}</td>
                         <td class="text-center">{{ $recurrencePeriod->expense_types_count }}</td>
                         <td class="text-center">
@@ -80,7 +78,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="6" class="text-center text-muted py-4">
                             @lang('expenses::recurrence_periods.empty')
                         </td>
                     </tr>

@@ -9,8 +9,7 @@ return new class extends Migration {
     {
         Schema::create('expense_recurrence_periods', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 50)->unique();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->boolean('is_protected')->default(true);
             $table->text('description')->nullable();
             $table->timestamps();

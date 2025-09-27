@@ -11,7 +11,6 @@ class ExpenseRecurrencePeriod extends Model
     use HasFactory;
 
     protected $fillable = [
-        'code',
         'name',
         'description',
         'is_protected',

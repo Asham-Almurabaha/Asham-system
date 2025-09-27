@@ -8,18 +8,6 @@
 
 <div class="row g-3">
     <div class="col-md-6">
-        <label for="code" class="form-label">@lang('expenses::recurrence_periods.fields.code') <span class="text-danger">*</span></label>
-        <input type="text"
-               name="code"
-               id="code"
-               class="form-control @error('code') is-invalid @enderror"
-               value="{{ old('code', $recurrencePeriod->code ?? '') }}"
-               maxlength="190"
-               required>
-        @error('code') <div class="invalid-feedback">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="col-md-6">
         <label for="name" class="form-label">@lang('expenses::recurrence_periods.fields.name') <span class="text-danger">*</span></label>
         <input type="text"
                name="name"

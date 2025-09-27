@@ -15,7 +15,6 @@ return [
         'manage' => 'Actions',
     ],
     'fields' => [
-        'code' => 'Code',
         'name' => 'Name',
         'description' => 'Description',
         'is_protected' => 'Protection',

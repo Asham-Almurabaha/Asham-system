@@ -87,17 +87,14 @@ class ExpenseRecurrencePeriodController extends Controller
     private function validateRecurrencePeriod(Request $request, ?int $ignoreId = null): array
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:190', Rule::unique('expense_recurrence_periods', 'code')->ignore($ignoreId)],
             'name' => ['required', 'string', 'max:190', Rule::unique('expense_recurrence_periods', 'name')->ignore($ignoreId)],
             'description' => ['nullable', 'string'],
         ], [], [
-            'code' => __('expenses::recurrence_periods.fields.code'),
             'name' => __('expenses::recurrence_periods.fields.name'),
             'description' => __('expenses::recurrence_periods.fields.description'),
         ]);
 
         return [
-            'code' => $this->cleanCode($validated['code'] ?? ''),
             'name' => $this->cleanString($validated['name'] ?? ''),
             'description' => $this->cleanText($validated['description'] ?? null),
         ];
@@ -122,10 +119,4 @@ class ExpenseRecurrencePeriodController extends Controller
         return $value === '' ? null : $value;
     }
 
-    private function cleanCode(?string $value): string
-    {
-        $value = $this->cleanString($value);
-
-        return mb_strtolower(str_replace(' ', '_', $value));
-    }
 }

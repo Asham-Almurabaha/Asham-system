@@ -125,10 +125,13 @@ class LookupsDatabaseSeeder extends Seeder
         $this->seedCategoryTransactionStatuses($now, $transactionStatusIds, $categoryIds);
 
         $recurrencePeriodIds = $this->syncNamedRecords('expense_recurrence_periods', [
-            ['code' => 'monthly', 'name' => 'شهري', 'description' => 'يتكرر كل شهر', 'is_protected' => true],
-            ['code' => 'semi_annual', 'name' => 'نصف سنوي', 'description' => 'يتكرر مرتين في السنة', 'is_protected' => true],
-            ['code' => 'other', 'name' => 'أخرى', 'description' => 'فترة تكرار مخصصة أو غير منتظمة', 'is_protected' => true],
-        ], $now, 'code');
+            ['name' => 'شهري', 'description' => 'يتكرر كل شهر', 'is_protected' => true],
+            ['name' => 'نصف سنوي', 'description' => 'يتكرر مرتين في السنة', 'is_protected' => true],
+            ['name' => 'أخرى', 'description' => 'فترة تكرار مخصصة أو غير منتظمة', 'is_protected' => true],
+        ], $now);
+
+        $monthlyRecurrenceId = $recurrencePeriodIds['شهري'] ?? null;
+        $otherRecurrenceId = $recurrencePeriodIds['أخرى'] ?? null;
 
         $this->syncNamedRecords('expense_types', [
             [
@@ -137,7 +140,7 @@ class LookupsDatabaseSeeder extends Seeder
                 'default_amount' => 0,
                 'currency_code' => 'SAR',
                 'is_recurring' => true,
-                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+                'expense_recurrence_period_id' => $monthlyRecurrenceId,
             ],
             [
                 'name' => 'أقساط السيارات',
@@ -145,7 +148,7 @@ class LookupsDatabaseSeeder extends Seeder
                 'default_amount' => 0,
                 'currency_code' => 'SAR',
                 'is_recurring' => true,
-                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+                'expense_recurrence_period_id' => $monthlyRecurrenceId,
             ],
             [
                 'name' => 'أقساط القروض',
@@ -153,7 +156,7 @@ class LookupsDatabaseSeeder extends Seeder
                 'default_amount' => 0,
                 'currency_code' => 'SAR',
                 'is_recurring' => true,
-                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+                'expense_recurrence_period_id' => $monthlyRecurrenceId,
             ],
             [
                 'name' => 'الرواتب',
@@ -161,7 +164,7 @@ class LookupsDatabaseSeeder extends Seeder
                 'default_amount' => 0,
                 'currency_code' => 'SAR',
                 'is_recurring' => true,
-                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+                'expense_recurrence_period_id' => $monthlyRecurrenceId,
             ],
             [
                 'name' => 'مصروفات أخرى',
@@ -169,7 +172,7 @@ class LookupsDatabaseSeeder extends Seeder
                 'default_amount' => 0,
                 'currency_code' => 'SAR',
                 'is_recurring' => false,
-                'expense_recurrence_period_id' => $recurrencePeriodIds['other'] ?? null,
+                'expense_recurrence_period_id' => $otherRecurrenceId,
             ],
         ], $now);
     }

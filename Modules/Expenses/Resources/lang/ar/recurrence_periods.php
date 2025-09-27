@@ -15,7 +15,6 @@ return [
         'manage' => 'الإجراءات',
     ],
     'fields' => [
-        'code' => 'الرمز',
         'name' => 'الاسم',
         'description' => 'الوصف',
         'is_protected' => 'الحماية',
