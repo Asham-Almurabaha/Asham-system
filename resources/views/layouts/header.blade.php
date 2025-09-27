@@ -15,10 +15,19 @@
   $zakatNotifications = $notificationsData['zakat'] ?? ['count' => 0, 'items' => []];
   $zakatCount = (int) ($zakatNotifications['count'] ?? 0);
   $zakatItems = collect($zakatNotifications['items'] ?? []);
+  $installmentsNotifications = $notificationsData['installments'] ?? ['count' => 0, 'items' => []];
+  $installmentsCount = (int) ($installmentsNotifications['count'] ?? 0);
+  $installmentsItems = collect($installmentsNotifications['items'] ?? []);
   $notesNotifications = $notificationsData['notes'] ?? ['count' => 0, 'items' => []];
   $notesCount = (int) ($notesNotifications['count'] ?? 0);
   $notesItems = collect($notesNotifications['items'] ?? []);
   $canViewNotes = auth()->user()?->can('notes.index') ?? false;
+  $canViewContracts = auth()->user()?->can('contracts.index') ?? false;
+
+  if (!$canViewContracts) {
+    $installmentsCount = 0;
+    $installmentsItems = collect();
+  }
 
   if (!$canViewNotes) {
     $notesCount = 0;
@@ -85,6 +94,43 @@
             {{ trans_choice('notifications.total_count', $notificationsTotal, ['count' => number_format($notificationsTotal)]) }}
           </span>
         </li>
+
+        @if($canViewContracts && $installmentsItems->isNotEmpty())
+          <li class="dropdown-header d-flex align-items-center justify-content-between pt-3 pb-2">
+            <span class="notifications-heading small text-uppercase fw-semibold">{{ __('notifications.installments_title') }}</span>
+            <span class="badge bg-success-subtle text-success">
+              {{ trans_choice('notifications.installments_count', $installmentsCount, ['count' => number_format($installmentsCount)]) }}
+            </span>
+          </li>
+          @foreach($installmentsItems as $item)
+            @php
+              $dueDate = $item['due_date'] ? \Illuminate\Support\Carbon::parse($item['due_date'])->locale($locale) : null;
+              $formattedDate = $dueDate ? $dueDate->translatedFormat('Y-m-d') : null;
+              $remainingAmount = number_format((float) ($item['remaining_amount'] ?? $item['due_amount'] ?? 0), 2);
+              $installmentNumber = (int) ($item['installment_number'] ?? 0);
+            @endphp
+            <li class="notification-item">
+              <a class="notification-link" href="{{ route('contracts.show', $item['contract_id']) }}">
+                <span class="notification-icon" aria-hidden="true">
+                  <i class="bi bi-calendar-event"></i>
+                </span>
+                <div class="notification-content">
+                  <span class="notification-title">{{ $item['customer_name'] ?? __('notifications.installments_unknown_customer') }}</span>
+                  @if(!empty($item['contract_number']))
+                    <span class="notification-meta">{{ __('notifications.installments_contract_number', ['number' => $item['contract_number']]) }}</span>
+                  @endif
+                  @if($installmentNumber > 0)
+                    <span class="notification-meta">{{ __('notifications.installments_installment_number', ['number' => number_format($installmentNumber)]) }}</span>
+                  @endif
+                  <span class="notification-meta">{{ __('notifications.installments_remaining_amount', ['amount' => $remainingAmount, 'currency' => $item['currency'] ?? config('app.currency_symbol', 'ر.س')]) }}</span>
+                  @if($formattedDate)
+                    <span class="notification-status">{{ __('notifications.installments_due_today', ['date' => $formattedDate]) }}</span>
+                  @endif
+                </div>
+              </a>
+            </li>
+          @endforeach
+        @endif
 
         @if($canViewNotes && $notesItems->isNotEmpty())
           <li class="dropdown-header d-flex align-items-center justify-content-between pt-3 pb-2">
@@ -173,12 +219,15 @@
           @endforeach
         @endif
 
-        @if($notesItems->isEmpty() && $zakatItems->isEmpty())
+        @if($installmentsItems->isEmpty() && $notesItems->isEmpty() && $zakatItems->isEmpty())
           <li class="notifications-empty">{{ __('notifications.no_notifications') }}</li>
         @endif
 
         <li class="dropdown-footer notifications-footer">
           <div class="d-flex flex-column gap-2">
+            @if($canViewContracts)
+              <a class="notifications-footer-link" href="{{ route('contracts.index') }}">{{ __('notifications.view_contracts') }}</a>
+            @endif
             @if($canViewNotes)
               <a class="notifications-footer-link" href="{{ route('notes.index') }}">{{ __('notes.notifications.view_all') }}</a>
             @endif

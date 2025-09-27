@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Modules\Contracts\Services\DueInstallmentsNotifier;
 use Modules\Investors\DTOs\ZakatDueInvestor;
 use Modules\Investors\Services\ZakatDueNotifier;
 
@@ -140,6 +141,10 @@ class ViewServiceProvider extends ServiceProvider
                     'count' => 0,
                     'items' => [],
                 ],
+                'installments' => [
+                    'count' => 0,
+                    'items' => [],
+                ],
                 'notes' => [
                     'count' => 0,
                     'items' => [],
@@ -150,6 +155,29 @@ class ViewServiceProvider extends ServiceProvider
                 $view->with('headerNotifications', $notifications);
 
                 return;
+            }
+
+            if (Schema::hasTable('contract_installments') && Schema::hasTable('contracts')) {
+                $user = Auth::user();
+
+                if ($user && $user->can('contracts.index')) {
+                    $locale = app()->getLocale();
+                    $cacheKey = "header.installments.notifications.{$locale}";
+
+                    $data = Cache::remember($cacheKey, 60, function () {
+                        return app(DueInstallmentsNotifier::class)->today();
+                    });
+
+                    $count = (int) ($data['count'] ?? 0);
+                    $items = $data['items'] ?? [];
+
+                    $notifications['installments'] = [
+                        'count' => $count,
+                        'items' => array_values($items),
+                    ];
+
+                    $notifications['total'] += $count;
+                }
             }
 
             if (Schema::hasTable('investors') && Schema::hasTable('ledger_entries')) {
