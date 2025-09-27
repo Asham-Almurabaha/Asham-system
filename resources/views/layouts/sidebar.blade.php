@@ -256,16 +256,6 @@
   </li>
   @endroutecanany
 
-  {{-- سجل النشاط --}}
-  @routecanany(['audit.logs', 'audit.logs.*', 'view-audit-logs'])
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('audit.logs')) }} {{ $active($isRoute('audit.logs')) }}"
-       href="{{ route('audit.logs') }}">
-      <i class="bi bi-clipboard-data"></i><span>@lang('sidebar.Audit Logs')</span>
-    </a>
-  </li>
-  @endroutecanany
-
   {{-- Customers --}}
   @routecanany(array_merge(['customers.dashboard'], $customerManagePatterns))
   <li class="nav-item">
@@ -896,4 +886,16 @@
     </ul>
   </li>
   @endroutecanany
+
+  
+  {{-- سجل النشاط --}}
+  @routecanany(['audit.logs', 'audit.logs.*', 'view-audit-logs'])
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('audit.logs')) }} {{ $active($isRoute('audit.logs')) }}"
+       href="{{ route('audit.logs') }}">
+      <i class="bi bi-clipboard-data"></i><span>@lang('sidebar.Audit Logs')</span>
+    </a>
+  </li>
+  @endroutecanany
+
 </ul>
