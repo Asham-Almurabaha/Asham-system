@@ -73,7 +73,7 @@ class DebtController extends Controller
             'principal' => (float) $totalsQuery->sum('principal_amount'),
             'paid' => (float) (clone $totalsQuery)->sum('paid_amount'),
         ];
-        $totals['outstanding'] = round($totals['principal'] - $totals['paid'], 2);
+        $totals['outstanding'] = max(round($totals['principal'] - $totals['paid'], 2), 0);
 
         return view('debts::index', [
             'debts' => $debts,

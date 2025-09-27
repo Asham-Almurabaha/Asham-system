@@ -11,7 +11,7 @@
     <h1 class="h3 mb-1">{{ __('debts::messages.page_heading') }}</h1>
     <nav>
         <ol class="breadcrumb">
-            <li class="breadcrumb-item">@lang('sidebar.Accounts')</li>
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
             <li class="breadcrumb-item active">{{ __('debts::messages.page_title') }}</li>
         </ol>
     </nav>
@@ -131,7 +131,7 @@
                 </td>
                 <td class="text-end">{{ number_format($debt->principal_amount, 2) }}</td>
                 <td class="text-end">{{ number_format($debt->paid_amount, 2) }}</td>
-                <td class="text-end">{{ number_format($debt->outstanding_amount, 2) }}</td>
+                <td class="text-end">{{ number_format($outstanding, 2) }}</td>
                 <td>{{ $debt->issued_at?->format('Y-m-d') }}</td>
                 <td>{{ $debt->due_at?->format('Y-m-d') ?? '-' }}</td>
                 <td>
