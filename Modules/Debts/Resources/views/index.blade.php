@@ -116,7 +116,9 @@
                     </tr>
                 </x-slot>
 
-                @php($oldContextDebtId = (string) old('context_debt_id'))
+                @php
+                    $oldContextDebtId = (string) old('context_debt_id');
+                @endphp
 
                 @forelse($debts as $debt)
                     @php
@@ -161,8 +163,8 @@
                         <td class="text-end">{{ number_format($debt->principal_amount, 2) }}</td>
                         <td class="text-end">{{ number_format($debt->paid_amount, 2) }}</td>
                         <td class="text-end">{{ number_format($outstanding, 2) }}</td>
-                        <td>{{ $debt->issued_at?->format('Y-m-d') }}</td>
-                        <td>{{ $debt->due_at?->format('Y-m-d') ?? '-' }}</td>
+                        <td>{{ optional($debt->issued_at)->format('Y-m-d') }}</td>
+                        <td>{{ optional($debt->due_at)->format('Y-m-d') ?? '-' }}</td>
                         <td>
                             @if($debt->status === 'settled')
                                 <span class="badge rounded-pill bg-success-subtle text-success-emphasis px-3 py-2">{{ __('debts::messages.statuses.settled') }}</span>
