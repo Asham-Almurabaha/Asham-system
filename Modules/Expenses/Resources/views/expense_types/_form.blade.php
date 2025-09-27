@@ -5,6 +5,8 @@
     $isUpdate = $expenseType && ($expenseType->exists ?? false);
     $submitVariant = $isUpdate ? 'primary' : 'success';
     $recurrencePeriods = $recurrencePeriods ?? [];
+    $isRecurring = old('is_recurring', $expenseType?->is_recurring ? '1' : '0');
+    $isRecurring = in_array($isRecurring, ['1', 1, true, 'on'], true) ? '1' : '0';
 @endphp
 
 <div class="row g-3">
@@ -47,7 +49,7 @@
         @error('currency_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    <div class="col-md-6">
+    <div id="recurrence-period-wrapper" @class(['col-md-6', 'd-none' => $isRecurring !== '1'])>
         <label for="expense_recurrence_period_id" class="form-label">@lang('expenses::types.fields.recurrence_period')</label>
         <select name="expense_recurrence_period_id"
                 id="expense_recurrence_period_id"
@@ -64,10 +66,6 @@
 
     <div class="col-md-6">
         <div class="form-check mt-4">
-            @php
-                $isRecurring = old('is_recurring', $expenseType?->is_recurring ? '1' : '0');
-                $isRecurring = in_array($isRecurring, ['1', 1, true, 'on'], true) ? '1' : '0';
-            @endphp
             <input type="checkbox"
                    name="is_recurring"
                    id="is_recurring"
@@ -96,3 +94,25 @@
     </x-button.action>
     <x-button.action href="{{ $cancelRoute }}" variant="secondary" :outline="true">@lang('expenses::types.actions.cancel')</x-button.action>
 </div>
+
+@once
+    @push('scripts')
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const recurrenceCheckbox = document.getElementById('is_recurring');
+            const recurrenceWrapper = document.getElementById('recurrence-period-wrapper');
+
+            if (!recurrenceCheckbox || !recurrenceWrapper) {
+              return;
+            }
+
+            const toggleRecurrenceWrapper = function () {
+              recurrenceWrapper.classList.toggle('d-none', !recurrenceCheckbox.checked);
+            };
+
+            toggleRecurrenceWrapper();
+            recurrenceCheckbox.addEventListener('change', toggleRecurrenceWrapper);
+          });
+        </script>
+    @endpush
+@endonce
