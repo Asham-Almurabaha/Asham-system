@@ -114,11 +114,11 @@
                     @method('DELETE')
                     <div class="col-6 col-md-3">
                         <label class="form-label mb-1">{{ __('From Date') }}</label>
-                        <input type="date" name="from" class="form-control form-control-sm" value="{{ old('from') }}" required>
+                        <input type="date" name="from" class="form-control form-control-sm js-date" value="{{ old('from') }}" required>
                     </div>
                     <div class="col-6 col-md-3">
                         <label class="form-label mb-1">{{ __('To Date') }}</label>
-                        <input type="date" name="to" class="form-control form-control-sm" value="{{ old('to') }}" required>
+                        <input type="date" name="to" class="form-control form-control-sm js-date" value="{{ old('to') }}" required>
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="d-flex align-items-center gap-2">
