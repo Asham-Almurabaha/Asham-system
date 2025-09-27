@@ -231,49 +231,53 @@
                             </div>
                         </td>
                     </tr>
-                    <tr class="bg-body-tertiary">
-                        <td colspan="11" class="p-0">
+                    <tr class="table-light">
+                        <td colspan="11" class="text-start">
                             <div class="collapse {{ $collapseShowClass }}" id="{{ $paymentsCollapseId }}">
-                                <div class="px-4 py-4">
-                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
-                                        <h6 class="fw-semibold mb-0">{{ __('debts::messages.payments.title') }}</h6>
-                                        <div class="small text-muted">{{ __('debts::messages.table.outstanding') }}:
-                                            <strong>{{ number_format($outstanding, 2) }}</strong>
+                                <div class="px-3 py-3">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                                        <div class="fw-semibold text-muted">{{ __('debts::messages.payments.title') }}</div>
+                                        <div class="d-flex flex-wrap gap-2 small">
+                                            <span class="badge bg-light text-dark border">{{ __('debts::messages.totals.principal') }}: {{ number_format($debt->principal_amount, 2) }}</span>
+                                            <span class="badge bg-light text-dark border">{{ __('debts::messages.totals.paid') }}: {{ number_format($debt->paid_amount, 2) }}</span>
+                                            <span class="badge {{ $outstanding > 0 ? 'bg-warning text-dark' : 'bg-success' }}">{{ __('debts::messages.totals.outstanding') }}: {{ number_format($outstanding, 2) }}</span>
                                         </div>
                                     </div>
 
-                                    <div class="table-responsive mb-4">
-                                        <table class="table table-sm table-striped align-middle mb-0">
-                                            <thead class="table-light">
+                                    @if($debt->payments->isNotEmpty())
+                                        <x-table small bordered head-class="table-secondary">
+                                            <x-slot name="head">
                                                 <tr>
                                                     <th class="text-center" style="width: 60px;">#</th>
                                                     <th class="text-end" style="width: 140px;">{{ __('debts::messages.payments.fields.amount') }}</th>
                                                     <th style="width: 160px;">{{ __('debts::messages.payments.fields.paid_at') }}</th>
-                                                    <th style="width: 220px;">{{ __('debts::messages.payments.fields.account') }}</th>
+                                                    <th style="width: 220px;" class="text-start">{{ __('debts::messages.payments.fields.account') }}</th>
                                                     <th class="text-start">{{ __('debts::messages.payments.fields.notes') }}</th>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($debt->payments as $index => $payment)
-                                                    <tr>
-                                                        <td class="text-center">{{ $index + 1 }}</td>
-                                                        <td class="text-end">{{ number_format($payment->amount, 2) }}</td>
-                                                        <td>{{ optional($payment->paid_at)->format('Y-m-d') }}</td>
-                                                        <td class="text-start">{{ $payment->bankAccount->name ?? $payment->safe->name ?? '-' }}</td>
-                                                        <td class="text-start">{{ $payment->notes ?: '-' }}</td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="5" class="text-center text-muted py-3">{{ __('debts::messages.payments.empty') }}</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                            </x-slot>
+
+                                            @foreach($debt->payments as $index => $payment)
+                                                <tr>
+                                                    <td class="text-center">{{ $index + 1 }}</td>
+                                                    <td class="text-end">{{ number_format($payment->amount, 2) }}</td>
+                                                    <td>{{ optional($payment->paid_at)->format('Y-m-d') }}</td>
+                                                    <td class="text-start">{{ $payment->bankAccount->name ?? $payment->safe->name ?? '-' }}</td>
+                                                    <td class="text-start">{{ $payment->notes ?: '-' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </x-table>
+                                    @else
+                                        <div class="text-muted small">{{ __('debts::messages.payments.empty') }}</div>
+                                    @endif
 
                                     @can('debts.edit')
                                         @if($outstanding > 0)
-                                            <form action="{{ $paymentAction }}" method="POST" class="row g-3 align-items-end" id="{{ $paymentFormId }}">
+                                            <form
+                                                action="{{ $paymentAction }}"
+                                                method="POST"
+                                                class="row g-3 align-items-end mt-3"
+                                                id="{{ $paymentFormId }}"
+                                            >
                                                 @csrf
                                                 <input type="hidden" name="context_debt_id" value="{{ $debt->id }}">
                                                 <div class="col-12 col-md-3">
