@@ -280,12 +280,14 @@
                                             </x-button.action>
                                         </div>
                                     </form>
-                                @else
-                                    <div class="alert alert-success mb-0" role="alert">
-                                        {{ __('debts::messages.payments.settled') }}
-                                    </div>
                                 @endif
                             @endroutecan
+
+                            @if($outstanding <= 0)
+                                <div class="alert alert-success mb-0" role="alert">
+                                    {{ __('debts::messages.payments.settled') }}
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </td>
