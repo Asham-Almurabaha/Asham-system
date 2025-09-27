@@ -19,6 +19,8 @@ return [
     'party_role_customer' => 'Customer',
     'party_role_guarantor' => 'Guarantor',
     'claim_amount' => 'Claim Amount',
+    'claim_amount_remaining_hint' => 'Contract remaining: :remaining',
+    'claim_amount_legal_fee_hint' => 'Legal fee = Claim amount (:claim) - Contract remaining (:remaining) = :legal_fee',
     'claim_date' => 'Claim Date',
     'document_number' => 'Document Number',
     'claim_status' => 'Claim Status',

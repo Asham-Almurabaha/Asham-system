@@ -19,6 +19,8 @@ return [
     'party_role_customer' => 'العميل',
     'party_role_guarantor' => 'الكفيل',
     'claim_amount' => 'مبلغ الرفع',
+    'claim_amount_remaining_hint' => 'المتبقي في العقد: :remaining',
+    'claim_amount_legal_fee_hint' => 'قيمة المحاماة = مبلغ المطالبة (:claim) - المتبقي في العقد (:remaining) = :legal_fee',
     'claim_date' => 'تاريخ الرفع',
     'document_number' => 'رقم السند',
     'claim_status' => 'حالة المطالبة',

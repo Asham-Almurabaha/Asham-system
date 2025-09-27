@@ -9,7 +9,6 @@ use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
-use Modules\Contracts\Entities\ContractClaimPayment;
 use Modules\Contracts\Services\ClaimPaymentDistributionService;
 use Modules\Contracts\Services\ContractStatusRefresher;
 use Modules\Contracts\Http\Requests\ApplyContractClaimDiscountRequest;
@@ -680,49 +679,7 @@ class ContractClaimController extends Controller
 
     private function calculateContractOutstanding(Contract $contract): float
     {
-        $contract->loadMissing([
-            'installments:id,contract_id,payment_amount',
-            'claims:id,contract_id,discount_amount',
-            'claims.payments:id,contract_claim_id,amount',
-        ]);
-
-        $totalValue = round((float) ($contract->total_value ?? 0), 2);
-
-        $installmentPayments = 0.0;
-        if ($contract->relationLoaded('installments')) {
-            $installmentPayments = (float) $contract->installments
-                ->sum(fn ($installment) => (float) ($installment->payment_amount ?? 0));
-        } else {
-            $installmentPayments = (float) $contract->installments()->sum('payment_amount');
-        }
-
-        $claimPayments = 0.0;
-        $claimDiscounts = 0.0;
-
-        if ($contract->relationLoaded('claims')) {
-            foreach ($contract->claims as $contractClaim) {
-                $claimDiscounts += (float) ($contractClaim->discount_amount ?? 0);
-
-                if ($contractClaim->relationLoaded('payments')) {
-                    $claimPayments += (float) $contractClaim->payments
-                        ->sum(fn ($payment) => (float) ($payment->amount ?? 0));
-                } else {
-                    $claimPayments += (float) $contractClaim->payments()->sum('amount');
-                }
-            }
-        } else {
-            $claimPayments = (float) ContractClaimPayment::query()
-                ->whereHas('claim', fn ($query) => $query->where('contract_id', $contract->id))
-                ->sum('amount');
-
-            $claimDiscounts = (float) ContractClaim::query()
-                ->where('contract_id', $contract->id)
-                ->sum('discount_amount');
-        }
-
-        $outstanding = round($totalValue - $installmentPayments - $claimPayments - $claimDiscounts, 2);
-
-        return $outstanding > 0 ? $outstanding : 0.0;
+        return $contract->outstandingAmount();
     }
 
     private function resolveClaimStatusId(array $names): int
