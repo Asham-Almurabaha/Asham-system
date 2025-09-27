@@ -172,11 +172,61 @@
       'accounts.entries.goods.sales.*',
   ];
 
+  $router = app('router');
+
+  $operatingExpenseCandidates = [
+      [
+          'label' => __('sidebar.Cars'),
+          'candidates' => [
+              ['route' => 'operating.cars.index',          'pattern' => 'operating.cars.*'],
+              ['route' => 'expenses.cars.index',           'pattern' => 'expenses.cars.*'],
+              ['route' => 'car-expenses.index',            'pattern' => 'car-expenses.*'],
+              ['route' => 'cars.expenses.index',           'pattern' => 'cars.expenses.*'],
+          ],
+      ],
+      [
+          'label' => __('sidebar.Motocycles'),
+          'candidates' => [
+              ['route' => 'operating.motocycles.index',    'pattern' => 'operating.motocycles.*'],
+              ['route' => 'operating.motorcycles.index',   'pattern' => 'operating.motorcycles.*'],
+              ['route' => 'expenses.motocycles.index',     'pattern' => 'expenses.motocycles.*'],
+              ['route' => 'expenses.motorcycles.index',    'pattern' => 'expenses.motorcycles.*'],
+              ['route' => 'motocycle-expenses.index',      'pattern' => 'motocycle-expenses.*'],
+              ['route' => 'motorcycle-expenses.index',     'pattern' => 'motorcycle-expenses.*'],
+              ['route' => 'motocycles.expenses.index',     'pattern' => 'motocycles.expenses.*'],
+              ['route' => 'motorcycles.expenses.index',    'pattern' => 'motorcycles.expenses.*'],
+          ],
+      ],
+  ];
+
+  $operatingExpenseLinks = [];
+
+  foreach ($operatingExpenseCandidates as $candidate) {
+      foreach ($candidate['candidates'] as $routeOption) {
+          if ($router->has($routeOption['route'])) {
+              $operatingExpenseLinks[] = [
+                  'route'   => $routeOption['route'],
+                  'pattern' => $routeOption['pattern'],
+                  'label'   => $candidate['label'],
+              ];
+              break;
+          }
+      }
+  }
+
+  $operatingExpensePatterns = array_map(
+      static fn(array $link): string => $link['pattern'],
+      $operatingExpenseLinks
+  );
+
+  $operatingOpen = !empty($operatingExpensePatterns) && $isRoute($operatingExpensePatterns);
+
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
       $investorLedgerPatterns,
-      $goodsEntryPatterns
+      $goodsEntryPatterns,
+      $operatingExpensePatterns
   );
 
   $debtsPatterns = [
@@ -548,6 +598,31 @@
     </ul>
   </li>
   @endroutecanany
+
+
+  @if (!empty($operatingExpenseLinks))
+  @routecanany($operatingExpensePatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($operatingOpen) }}"
+       data-bs-target="#operating-expenses-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $operatingOpen ? 'true' : 'false' }}">
+      <i class="bi bi-fuel-pump"></i><span>@lang('sidebar.Operating')</span><i class="bi bi-chevron-down ms-auto"></i>
+    </a>
+
+    <ul id="operating-expenses-nav" class="nav-content collapse {{ $open($operatingOpen) }}" data-bs-parent="#sidebar-nav">
+      @foreach ($operatingExpenseLinks as $expenseLink)
+        @routecanany($expenseLink['pattern'])
+        <li>
+          <a class="{{ $active($isRoute($expenseLink['pattern'])) }}" href="{{ route($expenseLink['route']) }}">
+            <i class="bi bi-circle"></i><span>{{ $expenseLink['label'] }}</span>
+          </a>
+        </li>
+        @endroutecanany
+      @endforeach
+    </ul>
+  </li>
+  @endroutecanany
+  @endif
 
 
   {{-- استيرادات البيانات --}}
