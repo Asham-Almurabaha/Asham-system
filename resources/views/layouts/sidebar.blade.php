@@ -684,6 +684,14 @@
       </li>
       @endroutecanany
 
+      @routecanany('settings.database.index')
+      <li>
+        <a class="{{ $active($isRoute('settings.database.*')) }}" href="{{ route('settings.database.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Database Backup & Restore')</span>
+        </a>
+      </li>
+      @endroutecanany
+
       @auth
       <li>
         <a class="{{ $active($isRoute('settings.account.edit')) }}" href="{{ route('settings.account.edit') }}">

@@ -186,6 +186,8 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'backup_file' => 'backup file',
+    ],
 
 ];

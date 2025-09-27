@@ -26,6 +26,7 @@ return [
     'Settings' => 'Settings',
     'General Settings' => 'General Settings',
     'General Setting' => 'General Setting',
+    'Database Backup & Restore' => 'Database Backup & Restore',
     'Account Settings' => 'Account Settings',
     'Users and Permissions' => 'Users and Permissions',
     'Manage Roles' => 'Manage Roles',

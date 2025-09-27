@@ -9,6 +9,7 @@ use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Accounts\GoodsEntriesController;
 use App\Http\Controllers\Accounts\GoodsSalesEntriesController;
+use App\Http\Controllers\Setting\DatabaseBackupController;
 use App\Http\Controllers\Setting\PermissionManagementController;
 use App\Http\Controllers\Setting\RoleManagementController;
 use App\Http\Controllers\Setting\RolePermissionController;
@@ -55,6 +56,15 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
     // الإعدادات
     Route::prefix('settings')->group(function () {
         Route::resource('settings', SettingController::class);
+
+        Route::get('database', [DatabaseBackupController::class, 'index'])
+            ->name('settings.database.index');
+
+        Route::post('database/export', [DatabaseBackupController::class, 'export'])
+            ->name('settings.database.export');
+        Route::post('database/import', [DatabaseBackupController::class, 'import'])
+            ->middleware('role:admin')
+            ->name('settings.database.import');
 
         Route::get('account', [AccountSettingsController::class, 'edit'])
             ->name('settings.account.edit')

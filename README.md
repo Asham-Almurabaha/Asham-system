@@ -56,6 +56,21 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## Database backup upload limits
+
+This project includes a database backup tool that exports the database contents to a raw `.sql` dump and can import fairly larg
+e archives. To keep the upload workflow from failing with `POST Content-Length of ... exceeds the limit` errors you should keep
+the PHP limits, Laravel validation rule, and UI help text in sync:
+
+- `.env` &rarr; adjust `DB_BACKUP_UPLOAD_MAX_FILESIZE`, `DB_BACKUP_POST_MAX_SIZE`, and `DB_BACKUP_IMPORT_MAX_KB` to the limits
+  you want to enforce within Laravel.
+- `public/.htaccess` &rarr; update the `php_value upload_max_filesize` and `php_value post_max_size` directives if you need to
+  raise the Apache/PHP module limits beyond the default 256&nbsp;MB bundled with the project.
+- `public/.user.ini` &rarr; update the same values when the application runs behind FastCGI or PHP-FPM instead of the Apache
+  module.
+
+After changing any of the environment values run `php artisan config:clear` so the configuration cache picks up the new numbers.
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

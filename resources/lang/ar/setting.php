@@ -28,5 +28,17 @@ return [
     'Update Password Button' => 'حفظ كلمة المرور',
     'Profile Updated' => 'تم تحديث بيانات الملف الشخصي بنجاح.',
     'Password Updated' => 'تم تحديث كلمة المرور بنجاح.',
+    'Database Backup Title' => 'النسخ الاحتياطي والاسترداد',
+    'Database Backup Heading' => 'النسخ الاحتياطي والاسترداد',
+    'Database Backup Tools' => 'أدوات النسخ الاحتياطي لقاعدة البيانات',
+    'Database Backup Description' => 'قم بإنشاء نسخة احتياطية قابلة للتنزيل من قاعدة البيانات أو استعادة النظام من ملف نسخ سابق.',
+    'Download Database Backup' => 'تحميل نسخة احتياطية لقاعدة البيانات',
+    'Import Database Backup' => 'استيراد نسخة احتياطية لقاعدة البيانات',
+    'Select Backup File' => 'اختر ملف النسخة الاحتياطية',
+    'Database Import Size Help' => 'الحد الأقصى لحجم الملف المسموح به هو :size ميجابايت.',
+    'Database Import Success' => 'تم استيراد نسخة قاعدة البيانات بنجاح.',
+    'Database Import Error' => 'تعذر استيراد النسخة الاحتياطية. تأكد من اختيار ملف تصدير صالح.',
+    'Database Import Too Large' => 'حجم النسخة الاحتياطية المختارة يتجاوز الحد المسموح به (:size ميجابايت). يرجى رفع ملف أصغر أو زيادة الحد.',
+    'Database Export Error' => 'تعذر إنشاء نسخة احتياطية لقاعدة البيانات. يرجى مراجعة سجلات النظام.',
 ];
 

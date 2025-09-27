@@ -177,6 +177,7 @@ trait SeedsRolesAndPermissions
             'ledger.store',
             'nationalities.index',
             'product_types.index',
+            'settings.database.index',
             'settings.account.edit',
             'settings.index',
             'settings.permissions.index',
@@ -277,6 +278,7 @@ trait SeedsRolesAndPermissions
                         'ajax.investors.liquidity',
                         'investors.cash',
                         'investors.liquidity',
+                        'settings.database.export',
                     ], true)
                 );
             })),
@@ -288,6 +290,10 @@ trait SeedsRolesAndPermissions
      */
     protected function isAdminOnlyPermission(string $permission): bool
     {
+        if (in_array($permission, $this->settingsPermissionsAvailableToAll(), true)) {
+            return false;
+        }
+
         if (in_array($permission, $this->adminOnlyPermissionNames(), true)) {
             return true;
         }
@@ -356,6 +362,19 @@ trait SeedsRolesAndPermissions
             'contracts.export',
             'ledger.import',
             'ledger.export',
+        ];
+    }
+
+    /**
+     * Settings permissions that should remain available to all authenticated users.
+     *
+     * @return array<int, string>
+     */
+    protected function settingsPermissionsAvailableToAll(): array
+    {
+        return [
+            'settings.database.index',
+            'settings.database.export',
         ];
     }
 

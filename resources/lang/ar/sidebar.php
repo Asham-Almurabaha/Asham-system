@@ -26,6 +26,7 @@ return array (
   'Settings' => 'الإعدادات',
   'General Settings' => 'الإعدادات العامة',
   'General Setting' => 'الإعدادات العامة',
+  'Database Backup & Restore' => 'النسخ الاحتياطي والاسترداد',
   'Account Settings' => 'إعدادات الحساب',
   'Users and Permissions' => 'المستخدمون والصلاحيات',
   'Manage Roles' => 'إدارة الأدوار',

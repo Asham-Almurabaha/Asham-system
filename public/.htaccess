@@ -5,6 +5,20 @@
 
     RewriteEngine On
 
+    # Ensure large database backup uploads can pass through PHP before validation
+    <IfModule mod_php.c>
+        php_value upload_max_filesize 256M
+        php_value post_max_size 256M
+    </IfModule>
+    <IfModule mod_php7.c>
+        php_value upload_max_filesize 256M
+        php_value post_max_size 256M
+    </IfModule>
+    <IfModule mod_php8.c>
+        php_value upload_max_filesize 256M
+        php_value post_max_size 256M
+    </IfModule>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

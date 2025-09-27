@@ -7,11 +7,31 @@ use App\Providers\AuthServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\Request;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 $modulesPath = realpath(__DIR__.'/../Modules');
+
+$defaultUploadLimit = '256M';
+
+$configuredUploadLimit = $_ENV['DB_BACKUP_UPLOAD_MAX_FILESIZE']
+    ?? $_SERVER['DB_BACKUP_UPLOAD_MAX_FILESIZE']
+    ?? $defaultUploadLimit;
+
+if (! empty($configuredUploadLimit)) {
+    @ini_set('upload_max_filesize', (string) $configuredUploadLimit);
+}
+
+$configuredPostLimit = $_ENV['DB_BACKUP_POST_MAX_SIZE']
+    ?? $_SERVER['DB_BACKUP_POST_MAX_SIZE']
+    ?? $configuredUploadLimit;
+
+if (! empty($configuredPostLimit)) {
+    @ini_set('post_max_size', (string) $configuredPostLimit);
+}
 
 $moduleProviders = [];
 
@@ -57,6 +77,27 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->renderable(function (PostTooLargeException $exception, Request $request) {
+            if (! $request->routeIs('settings.database.import')) {
+                return null;
+            }
+
+            $maxKilobytes = (int) config('backup.import.max_upload_kilobytes', 0);
+            $maxMegabytes = $maxKilobytes > 0
+                ? (int) ceil($maxKilobytes / 1024)
+                : null;
+
+            $message = $maxMegabytes
+                ? __('setting.Database Import Too Large', ['size' => number_format($maxMegabytes)])
+                : __('setting.Database Import Error');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => $message,
+                ], 413);
+            }
+
+            return back()->with('error', $message);
+        });
     })
     ->create();
