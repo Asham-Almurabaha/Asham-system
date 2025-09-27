@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use RuntimeException;
 use Spatie\DbDumper\Databases\PostgreSql;
@@ -80,15 +82,32 @@ class DatabaseBackupController extends Controller
     {
         $maxKilobytes = (int) config('backup.import.max_upload_kilobytes', 0);
 
-        $rules = ['required', 'file', 'mimes:zip,sql'];
+        $rules = ['required', 'file'];
 
         if ($maxKilobytes > 0) {
             $rules[] = 'max:'.$maxKilobytes;
         }
 
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'backup_file' => $rules,
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            $file = $request->file('backup_file');
+
+            if (! $file) {
+                return;
+            }
+
+            if (! $this->isValidBackupExtension($file)) {
+                $validator->errors()->add('backup_file', __('validation.mimes', [
+                    'attribute' => __('validation.attributes.backup_file'),
+                    'values' => 'zip, sql',
+                ]));
+            }
+        });
+
+        $validator->validate();
 
         $file = $request->file('backup_file');
 
@@ -147,6 +166,20 @@ class DatabaseBackupController extends Controller
                 ->back()
                 ->with('error', __('setting.Database Import Error'));
         }
+    }
+
+    /**
+     * Determine if the uploaded backup file has an allowed extension.
+     */
+    private function isValidBackupExtension(UploadedFile $file): bool
+    {
+        $extension = Str::lower($file->getClientOriginalExtension());
+
+        if ($extension === '') {
+            $extension = Str::lower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
+        }
+
+        return in_array($extension, ['zip', 'sql'], true);
     }
 
     /**
@@ -415,21 +448,73 @@ class DatabaseBackupController extends Controller
 
         $statements = [];
         $current = '';
+        $lineBuffer = '';
         $length = strlen($sql);
         $inString = false;
         $stringDelimiter = '';
         $inLineComment = false;
         $inBlockComment = false;
+        $delimiter = ';';
+        $delimiterLength = strlen($delimiter);
+
+        $parseDelimiterDirective = static function (string $line) use (&$delimiter, &$delimiterLength, &$current, &$lineBuffer): bool {
+            $trimmedLine = trim($line);
+
+            if ($trimmedLine === '') {
+                return false;
+            }
+
+            if (substr($trimmedLine, 0, 2) === '/*!') {
+                $withoutPrefix = preg_replace('/^\/\*!\d+\s*/', '', $trimmedLine);
+
+                if ($withoutPrefix !== null && $withoutPrefix !== '') {
+                    $commentEnd = strpos($withoutPrefix, '*/');
+
+                    if ($commentEnd !== false) {
+                        $withoutPrefix = substr($withoutPrefix, 0, $commentEnd);
+                    }
+
+                    $candidate = trim($withoutPrefix);
+
+                    if ($candidate !== '') {
+                        $trimmedLine = $candidate;
+                    }
+                }
+            }
+
+            if (! preg_match('/^DELIMITER\s+(\S+)/i', $trimmedLine, $matches)) {
+                return false;
+            }
+
+            $newDelimiter = $matches[1] !== '' ? $matches[1] : ';';
+
+            if ($newDelimiter === '') {
+                $newDelimiter = ';';
+            }
+
+            $delimiter = $newDelimiter;
+            $delimiterLength = strlen($delimiter);
+
+            $lineLength = strlen($lineBuffer);
+
+            if ($lineLength > 0 && $lineLength <= strlen($current)) {
+                $current = substr($current, 0, -$lineLength);
+            }
+
+            $lineBuffer = '';
+            $current = rtrim($current, "\r\n");
+
+            return true;
+        };
 
         for ($i = 0; $i < $length; $i++) {
             $char = $sql[$i];
             $next = $sql[$i + 1] ?? '';
 
             if ($inLineComment) {
-                if ($char === "\n") {
+                if ($char === "\n" || ($char === "\r" && $next !== "\n")) {
                     $inLineComment = false;
-                } elseif ($char === "\r" && $next !== "\n") {
-                    $inLineComment = false;
+                    $lineBuffer = '';
                 }
 
                 continue;
@@ -441,11 +526,16 @@ class DatabaseBackupController extends Controller
                     $i++;
                 }
 
+                if ($char === "\n" || ($char === "\r" && $next !== "\n")) {
+                    $lineBuffer = '';
+                }
+
                 continue;
             }
 
             if ($inString) {
                 $current .= $char;
+                $lineBuffer .= $char;
 
                 if ($char === $stringDelimiter) {
                     $escaped = false;
@@ -462,13 +552,9 @@ class DatabaseBackupController extends Controller
                     }
                 }
 
-                continue;
-            }
-
-            if ($char === "'" || $char === '"' || $char === '`') {
-                $inString = true;
-                $stringDelimiter = $char;
-                $current .= $char;
+                if ($char === "\n" || ($char === "\r" && $next !== "\n")) {
+                    $lineBuffer = '';
+                }
 
                 continue;
             }
@@ -494,7 +580,7 @@ class DatabaseBackupController extends Controller
                 continue;
             }
 
-            if ($char === ';') {
+            if ($delimiterLength > 0 && substr($sql, $i, $delimiterLength) === $delimiter) {
                 $trimmed = trim($current);
 
                 if ($trimmed !== '') {
@@ -502,11 +588,36 @@ class DatabaseBackupController extends Controller
                 }
 
                 $current = '';
+                $lineBuffer = '';
+
+                $i += $delimiterLength - 1;
+
+                continue;
+            }
+
+            if ($char === "'" || $char === '"' || $char === '`') {
+                $inString = true;
+                $stringDelimiter = $char;
+                $current .= $char;
+                $lineBuffer .= $char;
 
                 continue;
             }
 
             $current .= $char;
+            $lineBuffer .= $char;
+
+            if ($char === "\n" || ($char === "\r" && $next !== "\n")) {
+                if ($parseDelimiterDirective($lineBuffer)) {
+                    continue;
+                }
+
+                $lineBuffer = '';
+            }
+        }
+
+        if ($lineBuffer !== '') {
+            $parseDelimiterDirective($lineBuffer);
         }
 
         $trimmed = trim($current);
