@@ -28,6 +28,7 @@
                 <tr>
                     <th scope="col" style="width:80px" class="text-center">#</th>
                     <th scope="col">@lang('lookups::transaction_types.Name')</th>
+                    <th scope="col" class="text-center" style="width:160px">@lang('lookups::messages.status.column')</th>
                     <th scope="col" class="text-end" style="width:180px">@lang('lookups::transaction_types.Actions')</th>
                 </tr>
             </x-slot>
@@ -35,20 +36,32 @@
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td class="fw-semibold text-start">{{ $type->name }}</td>
+                    <td class="text-center">
+                        @include('lookups::components.protection-status', ['isProtected' => $type->is_protected])
+                    </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <x-button.action href="{{ route('transaction_types.edit', $type->id) }}" variant="primary" :outline="true" size="sm">@lang('lookups::transaction_types.Edit')</x-button.action>
-                            @include('lookups::components.delete-button', [
-                                'action' => route('transaction_types.destroy', $type->id),
-                                'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
-                                'label' => __('lookups::transaction_types.Delete'),
-                            ])
+                            <x-button.action
+                                href="{{ route('transaction_types.edit', $type->id) }}"
+                                variant="primary"
+                                :outline="true"
+                                size="sm"
+                                :disabled="$type->is_protected"
+                            >@lang('lookups::transaction_types.Edit')</x-button.action>
+
+                            @if(! $type->is_protected)
+                                @include('lookups::components.delete-button', [
+                                    'action' => route('transaction_types.destroy', $type->id),
+                                    'confirm' => __('lookups::transaction_types.Are you sure you want to delete this transaction type?'),
+                                    'label' => __('lookups::transaction_types.Delete'),
+                                ])
+                            @endif
                         </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="text-center text-muted py-4">@lang('lookups::transaction_types.No transaction types yet.')</td>
+                    <td colspan="4" class="text-center text-muted py-4">@lang('lookups::transaction_types.No transaction types yet.')</td>
                 </tr>
             @endforelse
         </x-table>

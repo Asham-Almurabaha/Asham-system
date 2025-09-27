@@ -29,6 +29,7 @@
                     <th scope="col" style="width:80px" class="text-center">#</th>
                     <th scope="col" style="width:260px">{{ __('Status Name') }}</th>
                     <th scope="col">{{ __('Transaction Type') }}</th>
+                    <th scope="col" class="text-center" style="width:180px">@lang('lookups::messages.status.column')</th>
                     <th scope="col" class="text-end" style="width:200px">{{ __('Actions') }}</th>
                 </tr>
             </x-slot>
@@ -37,19 +38,31 @@
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td class="fw-semibold">{{ $status->name }}</td>
                     <td class="text-start">{{ $status->transactionType->name ?? '-' }}</td>
+                    <td class="text-center">
+                        @include('lookups::components.protection-status', ['isProtected' => $status->is_protected])
+                    </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <x-button.action href="{{ route('transaction_statuses.edit', $status->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button.action>
-                            @include('lookups::components.delete-button', [
-                                'action' => route('transaction_statuses.destroy', $status->id),
-                                'confirm' => __('Are you sure to delete this status?'),
-                            ])
+                            <x-button.action
+                                href="{{ route('transaction_statuses.edit', $status->id) }}"
+                                variant="primary"
+                                :outline="true"
+                                size="sm"
+                                :disabled="$status->is_protected"
+                            >{{ __('Edit') }}</x-button.action>
+
+                            @if(! $status->is_protected)
+                                @include('lookups::components.delete-button', [
+                                    'action' => route('transaction_statuses.destroy', $status->id),
+                                    'confirm' => __('Are you sure to delete this status?'),
+                                ])
+                            @endif
                         </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center text-muted py-4">{{ __('No statuses found.') }}</td>
+                    <td colspan="5" class="text-center text-muted py-4">{{ __('No statuses found.') }}</td>
                 </tr>
             @endforelse
         </x-table>
