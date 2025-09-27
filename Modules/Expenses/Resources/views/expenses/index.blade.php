@@ -25,28 +25,37 @@
             </div>
         </div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="text-muted small">@lang('expenses::expenses.filters.upcoming')</div>
-                        <div class="fs-4 fw-semibold">{{ number_format($stats['upcoming']) }}</div>
+        <div class="row g-3 mb-3" dir="rtl">
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-calendar-event fs-4 text-primary"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="subnote">@lang('expenses::expenses.filters.upcoming')</div>
+                            <div class="kpi-value fw-bold">{{ number_format($stats['upcoming'], 2) }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="text-muted small text-danger">@lang('expenses::expenses.filters.overdue')</div>
-                        <div class="fs-4 fw-semibold text-danger">{{ number_format($stats['overdue']) }}</div>
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-exclamation-octagon fs-4 text-danger"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="subnote">@lang('expenses::expenses.filters.overdue')</div>
+                            <div class="kpi-value fw-bold text-danger">{{ number_format($stats['overdue'], 2) }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="text-muted small">@lang('expenses::expenses.filters.paid')</div>
-                        <div class="fs-4 fw-semibold text-success">{{ number_format($stats['paid']) }}</div>
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="subnote">@lang('expenses::expenses.filters.paid')</div>
+                            <div class="kpi-value fw-bold text-success">{{ number_format($stats['paid'], 2) }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
