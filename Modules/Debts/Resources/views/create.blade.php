@@ -19,7 +19,7 @@
 @endif
 
 <div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card-body p-4">
         <form method="POST" action="{{ route('debts.store') }}" class="vstack gap-3">
             @csrf
 
