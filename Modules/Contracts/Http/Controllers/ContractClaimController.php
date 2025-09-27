@@ -116,6 +116,36 @@ class ContractClaimController extends Controller
 
             $claim = ContractClaim::create($payload);
 
+            $contract = $claim->contract()
+                ->with([
+                    'installments:id,contract_id,payment_amount',
+                    'claims:id,contract_id,discount_amount',
+                    'claims.payments:id,contract_claim_id,amount',
+                ])
+                ->first();
+
+            if ($contract) {
+                $claimAmount = round((float) $claim->claim_amount, 2);
+                $contractOutstanding = round($this->calculateContractOutstanding($contract), 2);
+                $legalFeeValue = round($claimAmount - $contractOutstanding, 2);
+
+                $formattedClaimAmount = number_format($claimAmount, 2, '.', '');
+                $formattedOutstanding = number_format($contractOutstanding, 2, '.', '');
+                $formattedLegalFee = number_format($legalFeeValue, 2, '.', '');
+
+                $contract->notes()->create([
+                    'note_date' => $claim->claim_date
+                        ? $claim->claim_date->toDateString()
+                        : now()->toDateString(),
+                    'note' => sprintf(
+                        'قيمة المحاماة = مبلغ المطالبة (%s) - المتبقي في العقد (%s) = %s',
+                        $formattedClaimAmount,
+                        $formattedOutstanding,
+                        $formattedLegalFee
+                    ),
+                ]);
+            }
+
             $this->updateRelatedStatuses($claim);
 
             return $claim;
