@@ -401,6 +401,14 @@
       </li>
       @endroutecanany
 
+      @routecanany('ledger.transfer.create')
+      <li>
+        <a class="{{ $active($isRoute('ledger.transfer.create')) }}" href="{{ route('ledger.transfer.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Internal Transfer')</span>
+        </a>
+      </li>
+      @endroutecanany
+
       @routecanany(['ledger.index', 'ledger.create', 'ledger.store', 'ledger.transfer.*', 'ledger.split.*'])
       <li>
         <a class="{{ $active($isRoute(['ledger.index'])) }}" href="{{ route('ledger.index') }}">
