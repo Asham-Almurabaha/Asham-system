@@ -184,21 +184,6 @@
 
                 <div class="d-flex flex-column align-items-end gap-1">
                     <x-button.action
-                        href="{{ route('dashboard.daily-ledger.print', ['date' => now()->toDateString()]) }}"
-                        variant="secondary"
-                        :outline="true"
-                        size="sm"
-                        class="d-inline-flex align-items-center gap-2"
-                        target="_blank"
-                        rel="noopener"
-                    >
-                        <i class="bi bi-printer" aria-hidden="true"></i>
-                        <span class="d-none d-md-inline">{{ __('dashboard.Print Daily Ledger') }}</span>
-                    </x-button.action>
-                </div>
-
-                <div class="d-flex flex-column align-items-end gap-1">
-                    <x-button.action
                         type="button"
                         variant="secondary"
                         :outline="true"

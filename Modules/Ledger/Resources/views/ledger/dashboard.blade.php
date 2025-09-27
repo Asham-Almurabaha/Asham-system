@@ -17,6 +17,18 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4" dir="rtl">
     <div class="flex-grow-1"></div>
     <div class="btn-group" role="group">
+        <x-button.action
+            href="{{ route('dashboard.daily-ledger.print', ['date' => now()->toDateString()]) }}"
+            variant="secondary"
+            :outline="true"
+            size="sm"
+            class="d-inline-flex align-items-center gap-2"
+            target="_blank"
+            rel="noopener"
+        >
+            <i class="bi bi-printer" aria-hidden="true"></i>
+            <span class="d-none d-md-inline">{{ __('dashboard.Print Daily Ledger') }}</span>
+        </x-button.action>
         <x-button.action href="{{ route('ledger.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
             <i class="bi bi-journal-text"></i>
             <span>تفاصيل القيود</span>
