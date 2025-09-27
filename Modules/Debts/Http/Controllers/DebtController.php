@@ -3,6 +3,7 @@
 namespace Modules\Debts\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -32,8 +33,23 @@ class DebtController extends Controller
             'search' => $request->string('search')->toString(),
         ];
 
-        $query = Debt::query()
-            ->with([
+        $debts = $this->buildIndexQuery($filters)
+            ->paginate(20)
+            ->withQueryString();
+
+        $totals = $this->calculateTotals($filters);
+
+        return view('debts::index', [
+            'debts' => $debts,
+            'totals' => $totals,
+            'filters' => $filters,
+        ] + $this->formLookups());
+    }
+
+    protected function buildIndexQuery(array $filters): Builder
+    {
+        return $this->applyFilters(
+            Debt::query()->with([
                 'customer:id,name',
                 'investor:id,name',
                 'bankAccount:id,name',
@@ -42,44 +58,54 @@ class DebtController extends Controller
                     ->with(['bankAccount:id,name', 'safe:id,name'])
                     ->orderByDesc('paid_at')
                     ->orderByDesc('id'),
-            ])
+            ]),
+            $filters
+        )
             ->orderByDesc('issued_at')
             ->orderByDesc('id');
+    }
 
-        if ($filters['party_type']) {
+    protected function calculateTotals(array $filters): array
+    {
+        $totalsRow = $this->applyFilters(Debt::query(), $filters)
+            ->selectRaw('COALESCE(SUM(principal_amount), 0) as principal_total')
+            ->selectRaw('COALESCE(SUM(paid_amount), 0) as paid_total')
+            ->toBase()
+            ->first();
+
+        $principal = (float) ($totalsRow->principal_total ?? 0);
+        $paid = (float) ($totalsRow->paid_total ?? 0);
+
+        return [
+            'principal' => $principal,
+            'paid' => $paid,
+            'outstanding' => max(round($principal - $paid, 2), 0),
+        ];
+    }
+
+    protected function applyFilters(Builder $query, array $filters): Builder
+    {
+        if (! empty($filters['party_type'])) {
             $query->where('party_type', $filters['party_type']);
         }
 
-        if ($filters['status'] === 'open') {
+        if (($filters['status'] ?? null) === 'open') {
             $query->whereColumn('principal_amount', '>', 'paid_amount');
-        } elseif ($filters['status'] === 'settled') {
+        } elseif (($filters['status'] ?? null) === 'settled') {
             $query->whereColumn('principal_amount', '<=', 'paid_amount');
         }
 
-        if ($filters['search']) {
+        if (! empty($filters['search'])) {
             $search = '%'.$filters['search'].'%';
-            $query->where(function ($q) use ($search) {
+            $query->where(function (Builder $q) use ($search) {
                 $q->where('counterparty_name', 'like', $search)
                     ->orWhere('notes', 'like', $search)
-                    ->orWhereHas('customer', fn ($sub) => $sub->where('name', 'like', $search))
-                    ->orWhereHas('investor', fn ($sub) => $sub->where('name', 'like', $search));
+                    ->orWhereHas('customer', fn (Builder $sub) => $sub->where('name', 'like', $search))
+                    ->orWhereHas('investor', fn (Builder $sub) => $sub->where('name', 'like', $search));
             });
         }
 
-        $debts = $query->paginate(20)->withQueryString();
-
-        $totalsQuery = clone $query;
-        $totals = [
-            'principal' => (float) $totalsQuery->sum('principal_amount'),
-            'paid' => (float) (clone $totalsQuery)->sum('paid_amount'),
-        ];
-        $totals['outstanding'] = max(round($totals['principal'] - $totals['paid'], 2), 0);
-
-        return view('debts::index', [
-            'debts' => $debts,
-            'totals' => $totals,
-            'filters' => $filters,
-        ] + $this->formLookups());
+        return $query;
     }
 
     public function create(): View
