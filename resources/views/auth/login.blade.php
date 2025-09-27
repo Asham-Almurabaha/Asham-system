@@ -77,6 +77,7 @@
         <input  id="remember"
                 type="checkbox"
                 name="remember"
+                value="1"
                 class="form-check-input"
                 {{ old('remember') ? 'checked' : '' }}>
         <label class="form-check-label" for="remember">{{ __('Remember Me') }}</label>
@@ -95,7 +96,7 @@
         @endif
 
         <p class="small mb-0">
-          {{ __("Don't have account?") }}
+          {{ __("Don't have an account?") }}
           <a href="{{ route('register') }}">{{ __('Create an account') }}</a>
         </p>
       </div>

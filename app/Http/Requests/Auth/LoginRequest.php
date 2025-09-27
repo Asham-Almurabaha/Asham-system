@@ -32,6 +32,7 @@ class LoginRequest extends FormRequest
             // الحقل يدعم البريد الإلكتروني أو اسم المستخدم، لذا نكتفي بالتحقق من كونه نصًا.
             'email' => ['required', 'string'],
             'password' => ['required', 'string'],
+            'remember' => ['nullable', 'boolean'],
         ];
     }
 
