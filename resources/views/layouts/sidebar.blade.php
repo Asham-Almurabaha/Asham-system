@@ -227,7 +227,9 @@
       $expenseNavLinks
   );
 
-  $expensesOpen = !empty($expenseNavPatterns) && $isRoute($expenseNavPatterns);
+  $expensesActive = !empty($expenseNavPatterns) && $isRoute($expenseNavPatterns);
+  $primaryExpenseLink = $expenseNavLinks[0] ?? null;
+  $additionalExpenseLinks = $primaryExpenseLink ? array_slice($expenseNavLinks, 1) : [];
 
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
@@ -611,17 +613,17 @@
   @endroutecanany
 
 
-  @if (!empty($expenseNavLinks))
+  @if ($primaryExpenseLink)
   @routecanany($expenseNavPatterns)
   <li class="nav-item">
-    <a class="nav-link {{ $coll($expensesOpen) }}"
-       data-bs-target="#expenses-nav" data-bs-toggle="collapse" href="#"
-       aria-expanded="{{ $expensesOpen ? 'true' : 'false' }}">
-      <i class="bi bi-receipt"></i><span>@lang('sidebar.Expenses')</span><i class="bi bi-chevron-down ms-auto"></i>
+    <a class="nav-link {{ $coll($expensesActive) }} {{ $active($expensesActive) }}"
+       href="{{ route($primaryExpenseLink['route']) }}">
+      <i class="bi bi-receipt"></i><span>@lang('sidebar.Expenses')</span>
     </a>
 
-    <ul id="expenses-nav" class="nav-content collapse {{ $open($expensesOpen) }}" data-bs-parent="#sidebar-nav">
-      @foreach ($expenseNavLinks as $expenseLink)
+    @if (!empty($additionalExpenseLinks))
+    <ul class="nav-content {{ $open($expensesActive) }}">
+      @foreach ($additionalExpenseLinks as $expenseLink)
         @routecanany($expenseLink['pattern'])
         <li>
           <a class="{{ $active($isRoute($expenseLink['pattern'])) }}" href="{{ route($expenseLink['route']) }}">
@@ -631,6 +633,7 @@
         @endroutecanany
       @endforeach
     </ul>
+    @endif
   </li>
   @endroutecanany
   @endif
