@@ -132,6 +132,7 @@
     $mukatabaTotal = (float)($officeKpis['mukataba']['total'] ?? 0);
     $profitTotal   = (float)($officeKpis['profit']['total']   ?? 0);
     $salesDisplay  = (float)($officeKpis['sales']['total']    ?? 0);
+    $legalTotal    = (float)($officeKpis['legal']['total']    ?? 0);
 @endphp
 
 {{-- كروت: الحسابات البنكية + الخزن --}}
@@ -273,7 +274,7 @@
 
 {{-- كروت إضافية: المكاتبة / فرق البيع / ربح المكتب (داخل فقط) --}}
 <div class="row g-3 mb-3" dir="rtl">
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6 col-xl-3">
         <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-journal-text fs-4 text-primary"></i></div>
@@ -286,7 +287,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6 col-xl-3">
         <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-bag-check fs-4 text-success"></i></div>
@@ -299,7 +300,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6 col-xl-3">
         <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-briefcase fs-4 text-warning"></i></div>
@@ -309,6 +310,19 @@
                 </div>
             </div>
             <div class="kpi-value fw-bold text-success">{{ number_format($profitTotal,2) }}</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="kpi-card pretty p-3">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="kpi-icon"><i class="bi bi-shield-check fs-4 text-info"></i></div>
+                <div>
+                    <div class="fw-bold">محاماة المكتب</div>
+                    <div class="subnote">مجمّعة من خدمة المكتب</div>
+                </div>
+            </div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($legalTotal,2) }}</div>
         </div>
     </div>
 </div>

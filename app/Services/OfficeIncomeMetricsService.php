@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 class OfficeIncomeMetricsService
 {
     /**
-     * يبني مؤشرات المكتب: بطاقات / المكاتبة / ربح المكتب / فرق البيع
+     * يبني مؤشرات المكتب: بطاقات / المكاتبة / ربح المكتب / فرق البيع / محاماة المكتب
      * - يعتمد على قيود المكتب فقط (is_office = true) واتجاه داخل فقط (direction = 'in')
      *
      * @param array $filters
@@ -19,14 +19,15 @@ class OfficeIncomeMetricsService
      *   - account_type: 'bank'|'safe'|''
      *   - bank_ids: int[] , safe_ids: int[]
      *   - status_ids: int[]
-     *   - types: array{cards?:int[],mukataba?:int[],profit?:int[],sales?:int[]}
-     *   - keywords: array{cards?:string[],mukataba?:string[],profit?:string[],sales?:string[]}
+     *   - types: array{cards?:int[],mukataba?:int[],profit?:int[],sales?:int[],legal?:int[]}
+     *   - keywords: array{cards?:string[],mukataba?:string[],profit?:string[],sales?:string[],legal?:string[]}
      *
      * @return array{
      *   cards:   array{ total: float, by_bank: array<int,array{id:int,name:string,sum:float}>, by_safe: array<int,array{id:int,name:string,sum:float}>, top_statuses: array<int,array{name:string,sum:float}> },
      *   mukataba:array{ total: float, by_bank: array<int,array{id:int,name:string,sum:float}>, by_safe: array<int,array{id:int,name:string,sum:float}>, top_statuses: array<int,array{name:string,sum:float}> },
      *   profit:  array{ total: float, by_bank: array<int,array{id:int,name:string,sum:float}>, by_safe: array<int,array{id:int,name:string,sum:float}>, top_statuses: array<int,array{name:string,sum:float}> },
-     *   sales:   array{ total: float, by_bank: array<int,array{id:int,name:string,sum:float}>, by_safe: array<int,array{id:int,name:string,sum:float}>, top_statuses: array<int,array{name:string,sum:float}> }
+     *   sales:   array{ total: float, by_bank: array<int,array{id:int,name:string,sum:float}>, by_safe: array<int,array{id:int,name:string,sum:float}>, top_statuses: array<int,array{name:string,sum:float}> },
+     *   legal:   array{ total: float, by_bank: array<int,array{id:int,name:string,sum:float}>, by_safe: array<int,array{id:int,name:string,sum:float}>, top_statuses: array<int,array{name:string,sum:float}> }
      * }
      */
     public function build(array $filters = []): array
@@ -38,6 +39,8 @@ class OfficeIncomeMetricsService
             'profit'   => ['ربح','أرباح','عوائد','عمولة','عمولات','profit','revenue','return','commission'],
             // ✅ فرق البيع
             'sales'    => ['بيع','مبيع','مبيعات','sale','sales','فرق بيع','فرق البيع'],
+            // ✅ محاماة المكتب
+            'legal'    => ['محاماة','محاماه','محامي','legal','attorney','law','lawyer'],
         ];
 
         $keywords = array_replace_recursive($defaultKeywords, $filters['keywords'] ?? []);
@@ -49,6 +52,8 @@ class OfficeIncomeMetricsService
             'profit'   => ['keywords' => $keywords['profit'] ?? []   , 'type_ids' => $filters['types']['profit']   ?? []],
             // ✅ sales
             'sales'    => ['keywords' => $keywords['sales'] ?? []    , 'type_ids' => $filters['types']['sales']    ?? []],
+            // ✅ legal
+            'legal'    => ['keywords' => $keywords['legal'] ?? []    , 'type_ids' => $filters['types']['legal']    ?? []],
         ];
 
         $out = [];
