@@ -18,9 +18,7 @@
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <x-button.refresh :href="route('audit.logs')" class="btn-sm" />
-                <x-button.print variant="primary" size="sm" class="no-print" onclick="window.print()">
-                    {{ __('Print') }}
-                </x-button.print>
+                
             </div>
         </div>
     </div>
@@ -163,19 +161,19 @@
                             <td class="fw-semibold">{{ class_basename($log->auditable_type) }}</td>
                             <td><span class="badge bg-secondary-subtle text-secondary-emphasis">{{ $log->auditable_id }}</span></td>
                             <td>
-                            @php
-                                $color = match($log->event) {
-                                    'created' => 'success',
-                                    'updated' => 'warning',
-                                    'deleted' => 'danger',
-                                    'restored' => 'info',
-                                    default => 'secondary'
-                                };
-                            @endphp
-                                $badgeClass = "bg-$color-subtle text-$color-emphasis";
-                            @endphp
-                            <span class="badge {{ $badgeClass }} text-uppercase">{{ $log->event }}</span>
-                        </td>
+                                @php
+                                    $color = match($log->event) {
+                                        'created' => 'success',
+                                        'updated' => 'warning',
+                                        'deleted' => 'danger',
+                                        'restored' => 'info',
+                                        default => 'secondary'
+                                    };
+
+                                    $badgeClass = "bg-{$color}-subtle text-{$color}-emphasis";
+                                @endphp
+                                <span class="badge {{ $badgeClass }} text-uppercase">{{ $log->event }}</span>
+                            </td>
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-semibold">{{ $log->user?->name ?? __('Undefined') }}</span>
