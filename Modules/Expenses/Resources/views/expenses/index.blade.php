@@ -58,23 +58,61 @@
             </div>
         </div>
 
-        <ul class="nav nav-pills mb-3">
-            <li class="nav-item">
-                <a class="nav-link {{ $status === 'upcoming' ? 'active' : '' }}" href="{{ route('expenses.expenses.index', ['status' => 'upcoming']) }}">
-                    @lang('expenses::expenses.filters.upcoming')
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $status === 'overdue' ? 'active' : '' }}" href="{{ route('expenses.expenses.index', ['status' => 'overdue']) }}">
-                    @lang('expenses::expenses.filters.overdue')
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $status === 'paid' ? 'active' : '' }}" href="{{ route('expenses.expenses.index', ['status' => 'paid']) }}">
-                    @lang('expenses::expenses.filters.paid')
-                </a>
-            </li>
-        </ul>
+        @php
+            $filters = (array) ($filters ?? []);
+        @endphp
+
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ route('expenses.expenses.index') }}" class="row gy-3 gx-3 align-items-end" id="filtersForm">
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small text-muted" for="filterStatus">@lang('expenses::expenses.filters.status')</label>
+                        <select id="filterStatus" name="status" class="form-select form-select-sm">
+                            <option value="" @selected(($filters['status'] ?? '') === '')>@lang('expenses::expenses.filters.all')</option>
+                            <option value="upcoming" @selected(($filters['status'] ?? 'upcoming') === 'upcoming')>@lang('expenses::expenses.filters.upcoming')</option>
+                            <option value="overdue" @selected(($filters['status'] ?? '') === 'overdue')>@lang('expenses::expenses.filters.overdue')</option>
+                            <option value="paid" @selected(($filters['status'] ?? '') === 'paid')>@lang('expenses::expenses.filters.paid')</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small text-muted" for="filterType">@lang('expenses::expenses.filters.type')</label>
+                        <select id="filterType" name="expense_type_id" class="form-select form-select-sm">
+                            <option value="">@lang('expenses::expenses.filters.all')</option>
+                            @foreach($types as $id => $name)
+                                <option value="{{ $id }}" @selected((string) ($filters['expense_type_id'] ?? '') === (string) $id)>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small text-muted" for="filterDueFrom">@lang('expenses::expenses.filters.due_from')</label>
+                        <input id="filterDueFrom" type="date" name="due_from" value="{{ $filters['due_from'] ?? '' }}" class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label small text-muted" for="filterDueTo">@lang('expenses::expenses.filters.due_to')</label>
+                        <input id="filterDueTo" type="date" name="due_to" value="{{ $filters['due_to'] ?? '' }}" class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-12 col-md-4 col-lg-3">
+                        <label class="form-label small text-muted" for="filterSearch">@lang('expenses::expenses.filters.search')</label>
+                        <input id="filterSearch" type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="@lang('expenses::expenses.filters.search_placeholder')">
+                    </div>
+
+                    <div class="col-12 col-md-8 col-lg-3">
+                        <div class="d-flex gap-2 justify-content-md-end">
+                            <a href="{{ route('expenses.expenses.index') }}" class="btn btn-link text-decoration-none px-2">
+                                @lang('expenses::expenses.filters.reset')
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                @lang('expenses::expenses.filters.apply')
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         <div class="card border-0 shadow-sm">
             <x-table head-class="table-light">
@@ -96,7 +134,7 @@
                     <tr>
                         <td class="text-center">{{ $expenses->firstItem() + $loop->index }}</td>
                         <td class="fw-semibold">{{ $expense->title }}</td>
-                        <td>{{ $expense->type?->name ?? __('expenses::expenses.fields.not_available') }}</td>
+                        <td>{{ optional($expense->type)->name ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td class="text-end">{{ number_format($expense->amount, 2) }}</td>
                         <td>{{ $expense->currency_code }}</td>
                         <td>{{ optional($expense->due_date)->toDateString() }}</td>
