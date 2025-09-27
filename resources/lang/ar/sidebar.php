@@ -25,6 +25,8 @@ return array (
   'Contracts Dashboard' => 'لوحة تحكم العقود',
   'Claims' => 'المطالبات',
   'Ledger' => 'دفتر القيود',
+  'Debts' => 'المديونيات',
+  'Manage Debts' => 'إدارة المديونيات',
   'Settings' => 'الإعدادات',
   'General Settings' => 'الإعدادات العامة',
   'General Setting' => 'الإعدادات العامة',

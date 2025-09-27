@@ -25,6 +25,8 @@ return [
     'Contracts Dashboard' => 'Contracts Dashboard',
     'Claims' => 'Claims',
     'Ledger' => 'Ledger',
+    'Debts' => 'Debts',
+    'Manage Debts' => 'Manage Debts',
     'Settings' => 'Settings',
     'General Settings' => 'General Settings',
     'General Setting' => 'General Setting',

@@ -151,7 +151,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'زكاة المال', 'type' => 'سحب'],
             ['name' => 'مديونية', 'type' => 'سحب'],
             ['name' => 'سداد مديونية', 'type' => 'إيداع'],
-            
+
         ];
 
         $records = [];
@@ -198,9 +198,10 @@ class LookupsDatabaseSeeder extends Seeder
             ['status' => 'رأس المال', 'category' => 'المستثمرين'],
             ['status' => 'زكاة المال', 'category' => 'المستثمرين'],
             ['status' => 'مديونية', 'category' => 'المكتب'],
+            ['status' => 'مديونية', 'category' => 'المستثمرين'],
             ['status' => 'سداد مديونية', 'category' => 'المكتب'],
+            ['status' => 'سداد مديونية', 'category' => 'المستثمرين'],
 
-            
         ];
 
         foreach ($pairs as $pair) {

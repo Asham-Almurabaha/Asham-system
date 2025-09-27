@@ -164,6 +164,7 @@ trait SeedsRolesAndPermissions
             'investors.show',
             'investors.store',
             'investors.update',
+            'debts.index',
             'ledger.create',
             'ledger.dashboard',
             'ledger.export',

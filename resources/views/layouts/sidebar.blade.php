@@ -41,7 +41,8 @@
   $accountsOpen = $isRoute('ledger.*')
       || $isRoute('investors.ledger.*')
       || $isRoute('accounts.entries.goods.pay.*')
-      || $isRoute('accounts.entries.goods.sales.*');
+      || $isRoute('accounts.entries.goods.sales.*')
+      || $isRoute('debts.*');
 
   // فتح مجموعة استيرادات البيانات؟
   $dataImportsOpen = $isRoute([
@@ -172,11 +173,16 @@
       'accounts.entries.goods.sales.*',
   ];
 
+  $debtsPatterns = [
+      'debts.*',
+  ];
+
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
       $investorLedgerPatterns,
-      $goodsEntryPatterns
+      $goodsEntryPatterns,
+      $debtsPatterns
   );
 
   $dataImportPatterns = [
@@ -420,6 +426,14 @@
       <li>
         <a class="{{ $active($isRoute(['ledger.index'])) }}" href="{{ route('ledger.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Ledger')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($debtsPatterns)
+      <li>
+        <a class="{{ $active($isRoute('debts.*')) }}" href="{{ route('debts.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Debts')</span>
         </a>
       </li>
       @endroutecanany
