@@ -1,7 +1,9 @@
 <?php
 
 return array (
-  'Dashboard' => 'لوحة التحكم',
+    'Dashboard' => 'لوحة التحكم',
+    'Notes' => 'الملاحظات',
+    'Manage Notes' => 'إدارة الملاحظات',
   'Audit Logs' => 'سجل النشاط',
   'Customers' => 'العملاء',
   'Customers Dashboard' => 'لوحة تحكم العملاء',

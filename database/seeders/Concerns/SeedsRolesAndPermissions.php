@@ -143,6 +143,7 @@ trait SeedsRolesAndPermissions
             'guarantors.update',
             'installment_statuses.index',
             'installment_types.index',
+            'notes.index',
             'investors.cash',
             'investors.create',
             'investors.dashboard',

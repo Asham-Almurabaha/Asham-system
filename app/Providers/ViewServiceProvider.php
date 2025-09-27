@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Note;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Support\Carbon;
 use Modules\Investors\DTOs\ZakatDueInvestor;
 use Modules\Investors\Services\ZakatDueNotifier;
 
@@ -138,6 +140,10 @@ class ViewServiceProvider extends ServiceProvider
                     'count' => 0,
                     'items' => [],
                 ],
+                'notes' => [
+                    'count' => 0,
+                    'items' => [],
+                ],
             ];
 
             if (!Auth::check()) {
@@ -146,42 +152,74 @@ class ViewServiceProvider extends ServiceProvider
                 return;
             }
 
-            if (!Schema::hasTable('investors') || !Schema::hasTable('ledger_entries')) {
-                $view->with('headerNotifications', $notifications);
+            if (Schema::hasTable('investors') && Schema::hasTable('ledger_entries')) {
+                $locale = app()->getLocale();
+                $cacheKey = "header.zakat.notifications.{$locale}";
 
-                return;
+                $data = Cache::remember($cacheKey, 60, function () {
+                    $report = app(ZakatDueNotifier::class)->preview();
+
+                    return [
+                        'count' => $report->investorsCount(),
+                        'items' => $report->entries
+                            ->map(function (ZakatDueInvestor $entry) {
+                                return [
+                                    'id' => $entry->investor->getKey(),
+                                    'name' => $entry->investor->name,
+                                    'due_date' => $entry->dueDate->toDateString(),
+                                    'days_overdue' => $entry->daysOverdue,
+                                    'amount' => $entry->amount,
+                                    'currency' => $entry->currencySymbol,
+                                ];
+                            })
+                            ->take(5)
+                            ->values()
+                            ->all(),
+                    ];
+                });
+
+                $notifications['total'] = (int) ($data['count'] ?? 0);
+                $notifications['zakat'] = [
+                    'count' => (int) ($data['count'] ?? 0),
+                    'items' => $data['items'] ?? [],
+                ];
             }
 
-            $locale = app()->getLocale();
-            $cacheKey = "header.zakat.notifications.{$locale}";
+            if (Schema::hasTable('notes')) {
+                $user = Auth::user();
 
-            $data = Cache::remember($cacheKey, 60, function () {
-                $report = app(ZakatDueNotifier::class)->preview();
-
-                return [
-                    'count' => $report->investorsCount(),
-                    'items' => $report->entries
-                        ->map(function (ZakatDueInvestor $entry) {
-                            return [
-                                'id' => $entry->investor->getKey(),
-                                'name' => $entry->investor->name,
-                                'due_date' => $entry->dueDate->toDateString(),
-                                'days_overdue' => $entry->daysOverdue,
-                                'amount' => $entry->amount,
-                                'currency' => $entry->currencySymbol,
-                            ];
-                        })
+                if ($user && $user->can('notes.index')) {
+                    $notes = Note::query()
+                        ->where('user_id', $user->getKey())
+                        ->whereNull('completed_at')
+                        ->whereNotNull('reminder_at')
+                        ->orderBy('reminder_at')
                         ->take(5)
-                        ->values()
-                        ->all(),
-                ];
-            });
+                        ->get();
 
-            $notifications['total'] = (int) ($data['count'] ?? 0);
-            $notifications['zakat'] = [
-                'count' => (int) ($data['count'] ?? 0),
-                'items' => $data['items'] ?? [],
-            ];
+                    $now = Carbon::now();
+
+                    $dueCount = $notes->filter(fn(Note $note) => $note->reminder_at && $note->reminder_at->lte($now))->count();
+
+                    $notifications['notes'] = [
+                        'count' => $dueCount,
+                        'items' => $notes->map(function (Note $note) use ($now) {
+                            $reminderAt = $note->reminder_at?->copy();
+
+                            return [
+                                'id' => $note->getKey(),
+                                'title' => $note->title,
+                                'reminder_at' => $reminderAt?->toIso8601String(),
+                                'is_due' => $reminderAt ? $reminderAt->lte($now) : false,
+                                'is_overdue' => $reminderAt ? $reminderAt->lt($now) : false,
+                                'diff_days' => $reminderAt ? $reminderAt->diffInDays($now, false) : null,
+                            ];
+                        })->all(),
+                    ];
+
+                    $notifications['total'] += $dueCount;
+                }
+            }
 
             $view->with('headerNotifications', $notifications);
         });

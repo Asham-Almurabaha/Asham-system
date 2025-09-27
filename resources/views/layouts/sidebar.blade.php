@@ -262,6 +262,15 @@
   </li>
   @endroutecanany
 
+  @routecanany('notes.index')
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('notes.*')) }} {{ $active($isRoute('notes.*')) }}"
+       href="{{ route('notes.index') }}">
+      <i class="bi bi-stickies"></i><span>@lang('sidebar.Notes')</span>
+    </a>
+  </li>
+  @endroutecanany
+
   {{-- Customers --}}
   @routecanany(array_merge(['customers.dashboard'], $customerManagePatterns))
   <li class="nav-item">

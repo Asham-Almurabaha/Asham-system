@@ -16,6 +16,7 @@ use App\Http\Controllers\Setting\RolePermissionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\AccountSettingsController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
+use App\Http\Controllers\NoteController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -88,6 +89,10 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
     require base_path('Modules/Guarantors/Routes/web.php');
     require base_path('Modules/Investors/Routes/web.php');
     require base_path('Modules/Contracts/Routes/web.php');
+
+    Route::resource('notes', NoteController::class)->except(['show']);
+    Route::patch('notes/{note}/complete', [NoteController::class, 'complete'])->name('notes.complete');
+    Route::patch('notes/{note}/reopen', [NoteController::class, 'reopen'])->name('notes.reopen');
 
     Route::prefix('accounts/entries/goods')->name('accounts.entries.goods.pay.')->group(function () {
         Route::get('/', [GoodsEntriesController::class, 'index'])

@@ -2,6 +2,8 @@
 
 return [
     'Dashboard' => 'Dashboard',
+    'Notes' => 'Notes',
+    'Manage Notes' => 'Manage Notes',
     'Audit Logs' => 'Audit Logs',
     'Customers' => 'Customers',
     'Customers Dashboard' => 'Customers Dashboard',

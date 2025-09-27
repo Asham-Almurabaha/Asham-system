@@ -15,6 +15,15 @@
   $zakatNotifications = $notificationsData['zakat'] ?? ['count' => 0, 'items' => []];
   $zakatCount = (int) ($zakatNotifications['count'] ?? 0);
   $zakatItems = collect($zakatNotifications['items'] ?? []);
+  $notesNotifications = $notificationsData['notes'] ?? ['count' => 0, 'items' => []];
+  $notesCount = (int) ($notesNotifications['count'] ?? 0);
+  $notesItems = collect($notesNotifications['items'] ?? []);
+  $canViewNotes = auth()->user()?->can('notes.index') ?? false;
+
+  if (!$canViewNotes) {
+    $notesCount = 0;
+    $notesItems = collect();
+  }
   $searchMinChars = 2;
   $searchConfig = [
     'endpoint' => route('global-search'),
@@ -70,46 +79,111 @@
         <li class="dropdown-header notifications-header">
           <div>
             <span class="notifications-heading">{{ __('notifications.title') }}</span>
-            <span class="notifications-subheading">{{ __('notifications.zakat_due_title') }}</span>
+            <span class="notifications-subheading">{{ __('notifications.subtitle') }}</span>
           </div>
           <span class="badge bg-primary-subtle text-primary notifications-count">
-            {{ trans_choice('notifications.zakat_due_count', $zakatCount, ['count' => number_format($zakatCount)]) }}
+            {{ trans_choice('notifications.total_count', $notificationsTotal, ['count' => number_format($notificationsTotal)]) }}
           </span>
         </li>
 
-        @forelse ($zakatItems as $item)
-          @php
-            $dueDate = \Illuminate\Support\Carbon::parse($item['due_date'])->locale($locale);
-            $formattedDate = $dueDate->translatedFormat('Y-m-d');
-            $daysOverdue = $item['days_overdue'];
-          @endphp
-          <li class="notification-item">
-            <a class="notification-link" href="{{ route('investors.show', $item['id']) }}">
-              <span class="notification-icon" aria-hidden="true">
-                <i class="bi bi-exclamation-triangle"></i>
-              </span>
-              <div class="notification-content">
-                <span class="notification-title">{{ $item['name'] }}</span>
-                <span class="notification-meta">
-                  {{ __('notifications.zakat_due_amount', ['amount' => number_format((float) $item['amount'], 2), 'currency' => $item['currency']]) }}
-                </span>
-                <span class="notification-meta">
-                  {{ __('notifications.zakat_due_due_date', ['date' => $formattedDate]) }}
-                </span>
-                @if(!is_null($daysOverdue) && $daysOverdue >= 0)
-                  <span class="notification-status">
-                    {{ trans_choice('notifications.zakat_due_days_overdue', (int) $daysOverdue, ['days' => number_format((int) $daysOverdue)]) }}
-                  </span>
-                @endif
-              </div>
-            </a>
+        @if($canViewNotes && $notesItems->isNotEmpty())
+          <li class="dropdown-header d-flex align-items-center justify-content-between pt-3 pb-2">
+            <span class="notifications-heading small text-uppercase fw-semibold">{{ __('notifications.notes_title') }}</span>
+            <span class="badge bg-info-subtle text-info">
+              {{ trans_choice('notifications.notes_due_count', $notesCount, ['count' => number_format($notesCount)]) }}
+            </span>
           </li>
-        @empty
+          @foreach($notesItems as $item)
+            @php
+              $reminderAt = $item['reminder_at'] ? \Illuminate\Support\Carbon::parse($item['reminder_at'])->locale($locale) : null;
+              $formattedReminder = $reminderAt ? $reminderAt->translatedFormat('Y-m-d H:i') : null;
+              $diffDays = $item['diff_days'] ?? null;
+              $statusMessage = null;
+
+              if (!empty($item['is_due'])) {
+                  if (!empty($item['is_overdue']) && $diffDays !== null && $diffDays > 0) {
+                      $statusMessage = trans_choice('notes.notifications.overdue', (int) $diffDays, ['count' => number_format((int) $diffDays)]);
+                  } else {
+                      $statusMessage = __('notes.notifications.due_now');
+                  }
+              } elseif ($reminderAt) {
+                  if ($diffDays !== null) {
+                      $daysUntil = abs((int) $diffDays);
+                      if ($daysUntil === 0) {
+                          $statusMessage = __('notes.notifications.due_today');
+                      } elseif ($daysUntil > 0) {
+                          $statusMessage = trans_choice('notes.notifications.upcoming', $daysUntil, ['count' => number_format($daysUntil)]);
+                      }
+                  }
+              }
+            @endphp
+            <li class="notification-item">
+              <a class="notification-link" href="{{ route('notes.edit', $item['id']) }}">
+                <span class="notification-icon" aria-hidden="true">
+                  <i class="bi bi-stickies"></i>
+                </span>
+                <div class="notification-content">
+                  <span class="notification-title">{{ $item['title'] }}</span>
+                  @if($formattedReminder)
+                    <span class="notification-meta">{{ __('notes.notifications.reminder_on', ['date' => $formattedReminder]) }}</span>
+                  @endif
+                  @if($statusMessage)
+                    <span class="notification-status">{{ $statusMessage }}</span>
+                  @endif
+                </div>
+              </a>
+            </li>
+          @endforeach
+        @endif
+
+        @if($zakatItems->isNotEmpty())
+          <li class="dropdown-header d-flex align-items-center justify-content-between pt-3 pb-2">
+            <span class="notifications-heading small text-uppercase fw-semibold">{{ __('notifications.zakat_due_title') }}</span>
+            <span class="badge bg-warning-subtle text-warning">
+              {{ trans_choice('notifications.zakat_due_count', $zakatCount, ['count' => number_format($zakatCount)]) }}
+            </span>
+          </li>
+          @foreach ($zakatItems as $item)
+            @php
+              $dueDate = \Illuminate\Support\Carbon::parse($item['due_date'])->locale($locale);
+              $formattedDate = $dueDate->translatedFormat('Y-m-d');
+              $daysOverdue = $item['days_overdue'];
+            @endphp
+            <li class="notification-item">
+              <a class="notification-link" href="{{ route('investors.show', $item['id']) }}">
+                <span class="notification-icon" aria-hidden="true">
+                  <i class="bi bi-exclamation-triangle"></i>
+                </span>
+                <div class="notification-content">
+                  <span class="notification-title">{{ $item['name'] }}</span>
+                  <span class="notification-meta">
+                    {{ __('notifications.zakat_due_amount', ['amount' => number_format((float) $item['amount'], 2), 'currency' => $item['currency']]) }}
+                  </span>
+                  <span class="notification-meta">
+                    {{ __('notifications.zakat_due_due_date', ['date' => $formattedDate]) }}
+                  </span>
+                  @if(!is_null($daysOverdue) && $daysOverdue >= 0)
+                    <span class="notification-status">
+                      {{ trans_choice('notifications.zakat_due_days_overdue', (int) $daysOverdue, ['days' => number_format((int) $daysOverdue)]) }}
+                    </span>
+                  @endif
+                </div>
+              </a>
+            </li>
+          @endforeach
+        @endif
+
+        @if($notesItems->isEmpty() && $zakatItems->isEmpty())
           <li class="notifications-empty">{{ __('notifications.no_notifications') }}</li>
-        @endforelse
+        @endif
 
         <li class="dropdown-footer notifications-footer">
-          <a class="notifications-footer-link" href="{{ route('investors.index') }}">{{ __('notifications.view_all') }}</a>
+          <div class="d-flex flex-column gap-2">
+            @if($canViewNotes)
+              <a class="notifications-footer-link" href="{{ route('notes.index') }}">{{ __('notes.notifications.view_all') }}</a>
+            @endif
+            <a class="notifications-footer-link" href="{{ route('investors.index') }}">{{ __('notifications.view_all') }}</a>
+          </div>
         </li>
       </ul>
     </li>
