@@ -14,8 +14,8 @@
         </a>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table align-middle mb-0">
                     <thead>
@@ -86,8 +86,13 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
-                                    {{ __('notes.empty') }}
+                                <td colspan="5" class="py-5 text-center">
+                                    <div class="text-muted">{{ __('notes.empty') }}</div>
+                                    <div class="mt-3">
+                                        <x-button.action href="{{ route('notes.create') }}" variant="success" size="sm">
+                                            + {{ __('notes.actions.new') }}
+                                        </x-button.action>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse

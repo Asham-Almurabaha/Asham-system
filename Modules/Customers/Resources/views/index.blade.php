@@ -26,87 +26,11 @@
     <nav><ol class="breadcrumb"><li class="breadcrumb-item active">{{ __('Customers') }}</li></ol></nav>
 </div>
 
-{{-- @php
-    $allTotal    = (int)($customersTotalAll ?? 0);
-    $allActive   = (int)($activeCustomersTotalAll ?? 0);
-    $allInactive = max($allTotal - $allActive, 0);
 
-    $activePct   = $allTotal > 0 ? round(($allActive   / $allTotal) * 100, 1) : 0;
-    $inactivePct = $allTotal > 0 ? round(($allInactive / $allTotal) * 100, 1) : 0;
-
-    $newThisMonthAll = (int)($newCustomersThisMonthAll ?? 0);
-    $newThisWeekAll  = (int)($newCustomersThisWeekAll  ?? 0);
-@endphp --}}
-
-{{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"> --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
 
 
-{{-- ====== General Cards ====== --}}
-{{-- <div class="row g-4 mb-3" dir="rtl">
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-people fs-4 text-primary"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('Total Customers — All System') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($allTotal) }}</div>
-                    <div class="subnote">{{ __('Not affected by filters') }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-person-check fs-4 text-success"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('Active Customers') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($allActive) }}</div>
-                    <div class="subnote">{{ __('Active Percentage') }}: {{ number_format($activePct,1) }}%</div>
-                </div>
-            </div>
-            <div class="mt-3">
-                <div class="progress bar-8">
-                    <div class="progress-bar" style="width: {{ $activePct }}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-person-x fs-4 text-danger"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('Inactive') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($allInactive) }}</div>
-                    <div class="subnote">{{ __('Percentage') }}: {{ number_format($inactivePct,1) }}%</div>
-                </div>
-            </div>
-            <div class="mt-3">
-                <div class="progress bar-8">
-                    <div class="progress-bar bg-danger" style="width: {{ $inactivePct }}%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-md-3">
-        <div class="kpi-card p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="kpi-icon"><i class="bi bi-calendar2-plus fs-4 text-primary"></i></div>
-                <div class="flex-grow-1">
-                    <div class="subnote">{{ __('New Customers This Month') }}</div>
-                    <div class="kpi-value fw-bold">{{ number_format($newThisMonthAll) }}</div>
-                    <div class="subnote">{{ __('This Week') }}: {{ number_format($newThisWeekAll) }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div> --}}
 
 {{-- ====== Toolbar ====== --}}
 <div class="card shadow-sm mb-3 ">
