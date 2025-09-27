@@ -28,6 +28,14 @@ class DatabaseBackupController extends Controller
     }
 
     /**
+     * Display the database restore page.
+     */
+    public function restore()
+    {
+        return view('settings.database-restore');
+    }
+
+    /**
      * Trigger a database-only backup and return it as a download response.
      */
     public function export()

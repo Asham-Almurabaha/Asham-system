@@ -31,34 +31,19 @@
                   <i class="bi bi-download me-1"></i>@lang('setting.Download Database Backup')
                 </x-button.action>
               </form>
-            @endcan
-
-            @can('settings.database.import')
-              <form method="POST" action="{{ route('settings.database.import') }}" enctype="multipart/form-data" class="d-flex gap-2 align-items-center flex-wrap">
-                @csrf
-                <div>
-                  <label for="backup_file" class="form-label mb-1 small text-muted">@lang('setting.Select Backup File')</label>
-                  <input type="file" name="backup_file" id="backup_file" class="form-control" required accept=".zip,.sql">
-                  @php
-                    $maxKilobytes = (int) config('backup.import.max_upload_kilobytes', 0);
-                    $maxMegabytes = $maxKilobytes > 0 ? (int) ceil($maxKilobytes / 1024) : null;
-                  @endphp
-                  @if ($maxMegabytes)
-                    <div class="form-text small text-muted">
-                      @lang('setting.Database Import Size Help', ['size' => number_format($maxMegabytes)])
-                    </div>
-                  @endif
-                  @error('backup_file')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
-                  @enderror
-                </div>
-                <x-button.action type="submit" variant="primary">
-                  <i class="bi bi-upload me-1"></i>@lang('setting.Import Database Backup')
-                </x-button.action>
-              </form>
+            @else
+              <div class="alert alert-warning mb-0" role="alert">
+                @lang('setting.Database Backup Permission Warning')
+              </div>
             @endcan
           </div>
         </div>
+      </div>
+
+      <div class="mt-4">
+        <x-button.action href="{{ route('settings.database.restore') }}" variant="link" class="px-0">
+          <i class="bi bi-arrow-counterclockwise me-1"></i>@lang('setting.Go To Database Restore')
+        </x-button.action>
       </div>
     </div>
   </div>

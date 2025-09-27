@@ -199,6 +199,7 @@
 
   $settingsPermissionPatterns = [
       'settings.*',
+      'settings.database.*',
       'settings.account.*',
       'nationalities.*',
       'titles.*',
@@ -223,7 +224,12 @@
       'users.*',
   ];
 
-  $settingsGeneralPatterns = ['settings.index', 'settings.account.*'];
+  $settingsGeneralPatterns = [
+      'settings.index',
+      'settings.account.*',
+      'settings.database.index',
+      'settings.database.restore',
+  ];
   $settingsPeoplePatterns = [
       'nationalities.*',
       'titles.*',
@@ -694,8 +700,16 @@
 
       @routecanany('settings.database.index')
       <li>
-        <a class="{{ $active($isRoute('settings.database.*')) }}" href="{{ route('settings.database.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Database Backup & Restore')</span>
+        <a class="{{ $active($isRoute('settings.database.index')) }}" href="{{ route('settings.database.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Database Backup')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('settings.database.restore')
+      <li>
+        <a class="{{ $active($isRoute('settings.database.restore')) }}" href="{{ route('settings.database.restore') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Database Restore')</span>
         </a>
       </li>
       @endroutecanany

@@ -178,6 +178,7 @@ trait SeedsRolesAndPermissions
             'nationalities.index',
             'product_types.index',
             'settings.database.index',
+            'settings.database.restore',
             'settings.account.edit',
             'settings.index',
             'settings.permissions.index',
@@ -317,6 +318,8 @@ trait SeedsRolesAndPermissions
         return [
             'view-audit-logs',
             'installments.cancel_payment',
+            'settings.database.import',
+            'settings.database.restore',
         ];
     }
 

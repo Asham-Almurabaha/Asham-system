@@ -60,6 +60,10 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
         Route::get('database', [DatabaseBackupController::class, 'index'])
             ->name('settings.database.index');
 
+        Route::get('database/restore', [DatabaseBackupController::class, 'restore'])
+            ->middleware('role:admin')
+            ->name('settings.database.restore');
+
         Route::post('database/export', [DatabaseBackupController::class, 'export'])
             ->name('settings.database.export');
         Route::post('database/import', [DatabaseBackupController::class, 'import'])
