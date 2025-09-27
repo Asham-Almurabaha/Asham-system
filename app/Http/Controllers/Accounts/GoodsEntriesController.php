@@ -57,7 +57,7 @@ class GoodsEntriesController extends Controller
         }
 
         return redirect()
-            ->route('accounts.entries.goods.index')
+            ->route('accounts.entries.goods.pay.index')
             ->with('success', 'تم حفظ قيد شراء البضائع بنجاح.')
             ->with('goods_active_tab', 'purchase');
     }
@@ -76,7 +76,7 @@ class GoodsEntriesController extends Controller
         }
 
         return redirect()
-            ->route('accounts.entries.goods.index')
+            ->route('accounts.entries.goods.pay.index')
             ->with('success', 'تم حفظ القيد المُجزّأ للبضائع بنجاح.')
             ->with('goods_active_tab', 'partial');
     }

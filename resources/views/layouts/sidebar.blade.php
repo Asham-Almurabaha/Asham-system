@@ -40,7 +40,7 @@
   // فتح مجموعة الحسابات؟
   $accountsOpen = $isRoute('ledger.*')
       || $isRoute('investors.ledger.*')
-      || $isRoute('accounts.entries.goods.*')
+      || $isRoute('accounts.entries.goods.pay.*')
       || $isRoute('accounts.entries.goods.sales.*');
 
   // فتح مجموعة استيرادات البيانات؟
@@ -168,7 +168,7 @@
   ];
 
   $goodsEntryPatterns = [
-      'accounts.entries.goods.*',
+      'accounts.entries.goods.pay.*',
       'accounts.entries.goods.sales.*',
   ];
 
@@ -507,9 +507,9 @@
       <li class="nav-heading">@lang('sidebar.Goods Entries')</li>
       @endroutecanany
 
-      @routecanany('accounts.entries.goods.*')
+      @routecanany('accounts.entries.goods.pay.*')
       <li>
-        <a class="{{ $active($isRoute('accounts.entries.goods.*')) }}" href="{{ route('accounts.entries.goods.index') }}">
+        <a class="{{ $active($isRoute('accounts.entries.goods.pay.*')) }}" href="{{ route('accounts.entries.goods.pay.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Goods Purchase')</span>
         </a>
       </li>

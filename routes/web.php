@@ -89,7 +89,7 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
     require base_path('Modules/Investors/Routes/web.php');
     require base_path('Modules/Contracts/Routes/web.php');
 
-    Route::prefix('accounts/entries/goods')->name('accounts.entries.goods.')->group(function () {
+    Route::prefix('accounts/entries/goods')->name('accounts.entries.goods.pay.')->group(function () {
         Route::get('/', [GoodsEntriesController::class, 'index'])
             ->name('index')
             ->middleware('permission:accounts.entries.view');

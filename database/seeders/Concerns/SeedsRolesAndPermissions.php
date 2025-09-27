@@ -84,7 +84,7 @@ trait SeedsRolesAndPermissions
     {
         return [
             'accounts.bank-accounts.index',
-            'accounts.entries.goods.index',
+            'accounts.entries.goods.pay.index',
             'accounts.entries.goods.sales.index',
             'accounts.safes.index',
             'ajax.investors.liquidity',
