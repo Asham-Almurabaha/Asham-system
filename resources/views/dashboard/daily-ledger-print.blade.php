@@ -17,8 +17,6 @@
     $safeAccounts = collect($safeReport->get('accounts', []));
 
     $formatAmount = fn ($value) => number_format((float) $value, 2);
-    $directionLabel = fn ($direction) => $direction === 'in' ? __('dashboard.In') : __('dashboard.Out');
-    $directionClass = fn ($direction) => $direction === 'in' ? 'text-success' : 'text-danger';
 @endphp
 
 @push('styles')
@@ -49,8 +47,35 @@
         .table td, .table th {
             vertical-align: middle;
         }
-        .note-text {
-            white-space: pre-wrap;
+        .table thead th {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .table-ledger td,
+        .table-ledger th {
+            text-align: center;
+        }
+        .table-ledger .account-column,
+        .table-ledger th.account-column {
+            text-align: start;
+        }
+        .badge-soft {
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 0.35rem 0.65rem;
+            display: inline-block;
+        }
+        .badge-soft-neutral {
+            background-color: #f1f3f5;
+            color: #495057;
+            border: 1px solid rgba(73, 80, 87, 0.15);
+        }
+        .badge-soft-primary {
+            background-color: rgba(13, 110, 253, 0.12);
+            color: #0d6efd;
+            border: 1px solid rgba(13, 110, 253, 0.2);
         }
     </style>
 @endpush
@@ -133,26 +158,22 @@
         <div class="mb-4">
             <div class="section-title">{{ __('reports.Bank Ledger Entries') }}</div>
             <div class="table-responsive">
-                <table class="table table-bordered table-sm align-middle">
+                <table class="table table-bordered table-striped table-sm align-middle table-ledger">
                     <thead class="table-light">
                         <tr>
                             <th style="width:40px">#</th>
-                            <th>@lang('app.Date')</th>
-                            <th>{{ __('dashboard.Account') }}</th>
-                            <th>{{ __('reports.Cash Direction') }}</th>
-                            <th class="text-end">@lang('app.Amount')</th>
+                            <th class="account-column">{{ __('dashboard.Account') }}</th>
+                            <th>@lang('app.Amount')</th>
                             <th>@lang('app.Status')</th>
                             <th>@lang('app.Type')</th>
-                            <th>@lang('app.Investor')</th>
-                            <th>{{ __('reports.Reference') }}</th>
-                            <th>@lang('app.Notes')</th>
+                            <th>@lang('app.Party')</th>
                         </tr>
                     </thead>
                     <tbody>
                         @php $rowNumber = 1; @endphp
                         @foreach($bankAccounts as $account)
                             <tr class="account-header">
-                                <td colspan="10">
+                                <td colspan="6" class="text-start">
                                     {{ $account['name'] }}
                                     <span class="ms-2 text-success">{{ __('dashboard.In') }}: {{ $formatAmount($account['total_in'] ?? 0) }}</span>
                                     <span class="ms-2 text-danger">{{ __('dashboard.Out') }}: {{ $formatAmount($account['total_out'] ?? 0) }}</span>
@@ -162,15 +183,24 @@
                             @foreach($account['entries'] as $entry)
                                 <tr>
                                     <td>{{ $rowNumber++ }}</td>
-                                    <td>{{ $entry['date'] ?? $reportDateLabel }}</td>
-                                    <td>{{ $entry['account_name'] ?? $account['name'] }}</td>
-                                    <td class="fw-semibold {{ $directionClass($entry['direction']) }}">{{ $directionLabel($entry['direction']) }}</td>
-                                    <td class="text-end {{ $directionClass($entry['direction']) }}">{{ $formatAmount($entry['amount'] ?? 0) }}</td>
-                                    <td>{{ $entry['status'] ?? '—' }}</td>
-                                    <td>{{ $entry['type'] ?? '—' }}</td>
-                                    <td>{{ $entry['investor'] ?? ($entry['is_office'] ? __('reports.Office Entry') : '—') }}</td>
-                                    <td>{{ $entry['ref'] ?? '—' }}</td>
-                                    <td class="note-text">{{ $entry['notes'] ?? '—' }}</td>
+                                    <td class="account-column">{{ $entry['account_name'] ?? $account['name'] }}</td>
+                                    <td class="fw-semibold">{{ $formatAmount($entry['amount'] ?? 0) }}</td>
+                                    <td>
+                                        @php $status = $entry['status'] ?? null; @endphp
+                                        {{ $status ?: '—' }}
+                                    </td>
+                                    <td>
+                                        @php $type = $entry['type'] ?? null; @endphp
+                                        {{ $type ?: '—' }}
+                                    </td>
+                                    <td>
+                                        @php
+                                            $party = ($entry['is_office'] ?? false)
+                                                ? __('dashboard.Office')
+                                                : ($entry['investor'] ?? null);
+                                        @endphp
+                                        {{ $party ?: '—' }}
+                                    </td>
                                 </tr>
                             @endforeach
                         @endforeach
@@ -184,26 +214,22 @@
         <div>
             <div class="section-title">{{ __('reports.Safe Ledger Entries') }}</div>
             <div class="table-responsive">
-                <table class="table table-bordered table-sm align-middle">
+                <table class="table table-bordered table-striped table-sm align-middle table-ledger">
                     <thead class="table-light">
                         <tr>
                             <th style="width:40px">#</th>
-                            <th>@lang('app.Date')</th>
-                            <th>{{ __('dashboard.Account') }}</th>
-                            <th>{{ __('reports.Cash Direction') }}</th>
-                            <th class="text-end">@lang('app.Amount')</th>
+                            <th class="account-column">{{ __('dashboard.Account') }}</th>
+                            <th>@lang('app.Amount')</th>
                             <th>@lang('app.Status')</th>
                             <th>@lang('app.Type')</th>
-                            <th>@lang('app.Investor')</th>
-                            <th>{{ __('reports.Reference') }}</th>
-                            <th>@lang('app.Notes')</th>
+                            <th>@lang('app.Party')</th>
                         </tr>
                     </thead>
                     <tbody>
                         @php $rowNumber = 1; @endphp
                         @foreach($safeAccounts as $account)
                             <tr class="account-header">
-                                <td colspan="10">
+                                <td colspan="6" class="text-start">
                                     {{ $account['name'] }}
                                     <span class="ms-2 text-success">{{ __('dashboard.In') }}: {{ $formatAmount($account['total_in'] ?? 0) }}</span>
                                     <span class="ms-2 text-danger">{{ __('dashboard.Out') }}: {{ $formatAmount($account['total_out'] ?? 0) }}</span>
@@ -213,15 +239,24 @@
                             @foreach($account['entries'] as $entry)
                                 <tr>
                                     <td>{{ $rowNumber++ }}</td>
-                                    <td>{{ $entry['date'] ?? $reportDateLabel }}</td>
-                                    <td>{{ $entry['account_name'] ?? $account['name'] }}</td>
-                                    <td class="fw-semibold {{ $directionClass($entry['direction']) }}">{{ $directionLabel($entry['direction']) }}</td>
-                                    <td class="text-end {{ $directionClass($entry['direction']) }}">{{ $formatAmount($entry['amount'] ?? 0) }}</td>
-                                    <td>{{ $entry['status'] ?? '—' }}</td>
-                                    <td>{{ $entry['type'] ?? '—' }}</td>
-                                    <td>{{ $entry['investor'] ?? ($entry['is_office'] ? __('reports.Office Entry') : '—') }}</td>
-                                    <td>{{ $entry['ref'] ?? '—' }}</td>
-                                    <td class="note-text">{{ $entry['notes'] ?? '—' }}</td>
+                                    <td class="account-column">{{ $entry['account_name'] ?? $account['name'] }}</td>
+                                    <td class="fw-semibold">{{ $formatAmount($entry['amount'] ?? 0) }}</td>
+                                    <td>
+                                        @php $status = $entry['status'] ?? null; @endphp
+                                        {{ $status ?: '—' }}
+                                    </td>
+                                    <td>
+                                        @php $type = $entry['type'] ?? null; @endphp
+                                        {{ $type ?: '—' }}
+                                    </td>
+                                    <td>
+                                        @php
+                                            $party = ($entry['is_office'] ?? false)
+                                                ? __('dashboard.Office')
+                                                : ($entry['investor'] ?? null);
+                                        @endphp
+                                        {{ $party ?: '—' }}
+                                    </td>
                                 </tr>
                             @endforeach
                         @endforeach

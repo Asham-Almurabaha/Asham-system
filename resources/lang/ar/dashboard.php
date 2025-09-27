@@ -25,6 +25,7 @@ return [
     'Top 10 Investors (Positive Net Liquidity)' => 'أفضل 10 مستثمرين (صافي سيولة موجب)',
     'Total Net Displayed' => 'إجمالي الصافي المعروض',
     'Investor' => 'المستثمر',
+    'Office' => 'المكتب',
     'In' => 'داخل',
     'Out' => 'خارج',
     'Net' => 'الصافي',
@@ -72,5 +73,5 @@ return [
     'Refreshing guarantor statuses' => 'جارٍ تحديث حالات الكفلاء…',
     'Refresh statuses success' => 'تم تحديث الحالات بنجاح.',
     'Refresh statuses error' => 'تعذّر تحديث الحالات. حاول مرة أخرى.',
-    'Print Daily Ledger' => 'تقرير قيود اليوم (طباعة)',
+    'Print Daily Ledger' => 'تقرير قيود اليوم',
 ];

@@ -25,6 +25,7 @@ return [
     'Top 10 Investors (Positive Net Liquidity)' => 'Top 10 Investors (Positive Net Liquidity)',
     'Total Net Displayed' => 'Total Net Displayed',
     'Investor' => 'Investor',
+    'Office' => 'Office',
     'In' => 'In',
     'Out' => 'Out',
     'Net' => 'Net',
