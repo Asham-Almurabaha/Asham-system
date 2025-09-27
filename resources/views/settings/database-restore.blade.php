@@ -79,7 +79,7 @@
                   :help-text="$dropzoneHelp"
                   :submit-text="__('setting.Database Restore Submit Button')"
                   :selected-label="__('setting.Database Restore Selected Label')"
-                  accept=".zip,.sql"
+                  accept=".zip,.sql,.enc"
                   button-icon="bi-arrow-counterclockwise"
                   input-name="backup_file"
                   id-prefix="database-restore"

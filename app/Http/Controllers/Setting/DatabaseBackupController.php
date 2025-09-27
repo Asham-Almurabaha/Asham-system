@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Setting;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -55,21 +57,26 @@ class DatabaseBackupController extends Controller
 
         $driver = $connectionConfig['driver'] ?? $connectionName;
         $timestamp = now()->format('Y-m-d_H-i-s');
-        $fileName = "database-backup-{$timestamp}.sql";
+        $plainFileName = "database-backup-{$timestamp}.sql";
+        $encryptedFileName = $plainFileName.'.enc';
         $exportDirectory = storage_path('app/database-exports');
-        $filePath = $exportDirectory.DIRECTORY_SEPARATOR.$fileName;
+        $plainFilePath = $exportDirectory.DIRECTORY_SEPARATOR.$plainFileName;
+        $encryptedFilePath = $exportDirectory.DIRECTORY_SEPARATOR.$encryptedFileName;
 
         File::ensureDirectoryExists($exportDirectory);
 
         $connection = DB::connection($connectionName);
 
         try {
-            $this->dumpDatabaseToFile($driver, $connectionConfig, $filePath, $connection);
+            $this->dumpDatabaseToFile($driver, $connectionConfig, $plainFilePath, $connection);
+            $this->encryptBackupFile($plainFilePath, $encryptedFilePath);
 
-            return response()->download($filePath, $fileName)->deleteFileAfterSend(true);
+            return response()->download($encryptedFilePath, $encryptedFileName)->deleteFileAfterSend(true);
         } catch (Throwable $e) {
-            if (File::exists($filePath)) {
-                File::delete($filePath);
+            foreach ([$plainFilePath, $encryptedFilePath] as $path) {
+                if (File::exists($path)) {
+                    File::delete($path);
+                }
             }
 
             Log::error('Database backup export failed.', [
@@ -110,7 +117,7 @@ class DatabaseBackupController extends Controller
             if (! $this->isValidBackupExtension($file)) {
                 $validator->errors()->add('backup_file', __('validation.mimes', [
                     'attribute' => __('validation.attributes.backup_file'),
-                    'values' => 'zip, sql',
+                    'values' => 'zip, sql, enc',
                 ]));
             }
         });
@@ -122,7 +129,10 @@ class DatabaseBackupController extends Controller
         $reenableOnFailure = null;
 
         try {
-            $sql = $this->extractSqlFromUpload($file->getRealPath(), (string) $file->getClientOriginalExtension());
+            $sql = $this->extractSqlFromUpload(
+                $file->getRealPath(),
+                (string) $file->getClientOriginalExtension()
+            );
 
             $driver = DB::getDriverName();
             $disableCommand = null;
@@ -187,7 +197,7 @@ class DatabaseBackupController extends Controller
             $extension = Str::lower(pathinfo($file->getClientOriginalName(), PATHINFO_EXTENSION));
         }
 
-        return in_array($extension, ['zip', 'sql'], true);
+        return in_array($extension, ['zip', 'sql', 'enc'], true);
     }
 
     /**
@@ -195,16 +205,58 @@ class DatabaseBackupController extends Controller
      */
     private function extractSqlFromUpload(string $path, string $extension): string
     {
-        if (strtolower($extension) === 'sql') {
+        $extension = strtolower($extension);
+
+        if ($extension === 'enc') {
+            $decrypted = $this->decryptBackupFile($path);
+
+            if ($this->looksLikeZipArchive($decrypted)) {
+                $temporaryArchive = storage_path('app/import-'.Str::uuid().'.zip');
+                File::ensureDirectoryExists(dirname($temporaryArchive));
+                File::put($temporaryArchive, $decrypted);
+
+                try {
+                    return $this->extractSqlFromArchive($temporaryArchive);
+                } finally {
+                    File::delete($temporaryArchive);
+                }
+            }
+
+            return $decrypted;
+        }
+
+        if ($extension === 'sql') {
             return File::get($path);
         }
 
-        $temporaryDirectory = storage_path('app/import-' . Str::uuid());
+        return $this->extractSqlFromArchive($path);
+    }
+
+    /**
+     * Determine whether the provided contents represent a ZIP archive.
+     */
+    private function looksLikeZipArchive(string $contents): bool
+    {
+        if (strlen($contents) < 4) {
+            return false;
+        }
+
+        $signature = substr($contents, 0, 4);
+
+        return in_array($signature, ["PK\x03\x04", "PK\x05\x06", "PK\x07\x08"], true);
+    }
+
+    /**
+     * Extract SQL contents from the provided archive path.
+     */
+    private function extractSqlFromArchive(string $archivePath): string
+    {
+        $temporaryDirectory = storage_path('app/import-'.Str::uuid());
         File::makeDirectory($temporaryDirectory, 0755, true, true);
 
         try {
             $archive = new ZipArchive();
-            if ($archive->open($path) !== true) {
+            if ($archive->open($archivePath) !== true) {
                 throw new \RuntimeException('Unable to open the uploaded archive.');
             }
 
@@ -216,16 +268,68 @@ class DatabaseBackupController extends Controller
 
             $sqlFile = collect(File::allFiles($temporaryDirectory))
                 ->first(function ($file) {
-                    return Str::endsWith($file->getFilename(), '.sql');
+                    return Str::endsWith($file->getFilename(), ['.sql', '.sql.enc']);
                 });
 
             if (! $sqlFile) {
                 throw new FileNotFoundException('No SQL dump found inside the archive.');
             }
 
-            return File::get($sqlFile->getRealPath());
+            $contents = File::get($sqlFile->getRealPath());
+
+            if (Str::endsWith($sqlFile->getFilename(), '.enc')) {
+                $temporaryFile = $sqlFile->getRealPath();
+
+                return $this->decryptBackupContents($contents, $temporaryFile);
+            }
+
+            return $contents;
         } finally {
             File::deleteDirectory($temporaryDirectory);
+        }
+    }
+
+    /**
+     * Encrypt the generated backup and remove the plain-text dump.
+     */
+    private function encryptBackupFile(string $sourcePath, string $destinationPath): void
+    {
+        if (! File::exists($sourcePath)) {
+            throw new FileNotFoundException("Backup source file not found at {$sourcePath}.");
+        }
+
+        $contents = File::get($sourcePath);
+        $encrypted = Crypt::encryptString($contents);
+
+        File::put($destinationPath, $encrypted);
+        File::delete($sourcePath);
+    }
+
+    /**
+     * Decrypt an encrypted backup file stored on disk.
+     */
+    private function decryptBackupFile(string $path): string
+    {
+        $contents = File::get($path);
+
+        return $this->decryptBackupContents($contents, $path);
+    }
+
+    /**
+     * Decrypt the provided backup contents and report detailed errors.
+     */
+    private function decryptBackupContents(string $contents, ?string $contextPath = null): string
+    {
+        try {
+            return Crypt::decryptString($contents);
+        } catch (DecryptException $e) {
+            $message = 'Unable to decrypt the uploaded backup file.';
+
+            if ($contextPath) {
+                $message .= " ({$contextPath})";
+            }
+
+            throw new RuntimeException($message, previous: $e);
         }
     }
 
