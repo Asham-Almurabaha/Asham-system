@@ -189,36 +189,14 @@
     </li>
 
     {{-- تبديل اللغة --}}
-    <li class="nav-item dropdown">
-      <a class="nav-link nav-icon d-flex align-items-center" href="#" role="button"
-         data-bs-toggle="dropdown" aria-expanded="false" aria-label="{{ __('Switch language') }}" title="{{ __('Switch language') }}">
+    <li class="nav-item">
+      <a class="nav-link nav-icon d-flex align-items-center"
+        href="{{ route('lang.switch', $locale === 'ar' ? 'en' : 'ar') }}"
+        aria-label="{{ __('app.switch_language') }}"
+        title="{{ __('app.switch_language') }}">
         <i class="bi bi-translate me-1"></i>
-        <span class="badge bg-primary badge-number">{{ $currentLocaleBadge }}</span>
+        <span>{{ strtoupper($locale) }}</span>
       </a>
-      <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-        <li>
-          @if($locale === 'ar')
-            <a class="dropdown-item d-flex align-items-center active disabled" href="#" aria-disabled="true">
-              <span class="me-2">🇸🇦</span> <span>{{ __('Arabic') }}</span>
-            </a>
-          @else
-            <a class="dropdown-item d-flex align-items-center" href="{{ route('lang.switch', 'ar') }}">
-              <span class="me-2">🇸🇦</span> <span>{{ __('Arabic') }}</span>
-            </a>
-          @endif
-        </li>
-        <li>
-          @if($locale === 'en')
-            <a class="dropdown-item d-flex align-items-center active disabled" href="#" aria-disabled="true">
-              <span class="me-2">🇺🇸</span> <span>{{ __('English') }}</span>
-            </a>
-          @else
-            <a class="dropdown-item d-flex align-items-center" href="{{ route('lang.switch', 'en') }}">
-              <span class="me-2">🇺🇸</span> <span>{{ __('English') }}</span>
-            </a>
-          @endif
-        </li>
-      </ul>
     </li>
 
     @if (Auth::check())
