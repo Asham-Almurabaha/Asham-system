@@ -14,13 +14,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
+use Modules\Investors\Entities\InvestorTransaction;
 use Modules\Lookups\Entities\ContractStatus;
+use Modules\Contracts\Services\ContractStatusUpdater;
 use Modules\Contracts\Services\InstallmentPaymentDistributionService;
 use Modules\Contracts\Services\InstallmentStatusService;
 
 class ContractInstallmentController extends Controller
 {
-    public function __construct(private InstallmentPaymentDistributionService $paymentDistribution)
+    public function __construct(
+        private InstallmentPaymentDistributionService $paymentDistribution,
+        private ContractStatusUpdater $contractStatusUpdater,
+    )
     {
     }
 
@@ -145,9 +150,132 @@ class ContractInstallmentController extends Controller
                     ->orderBy('installment_number')
                     ->first();
             }
+
+            if ($canApplyStatusesAndDistributions) {
+                $freshContract = $contract->fresh(['installments.installmentStatus', 'investors', 'contractStatus']);
+                if ($freshContract) {
+                    $this->contractStatusUpdater->refreshContract($freshContract);
+                }
+            }
         });
 
         return response()->json(['success' => true]);
+    }
+
+    public function cancelInstallmentPayment(Request $request, ContractInstallment $installment)
+    {
+        try {
+            $freshInstallment = null;
+
+            DB::transaction(function () use ($installment, &$freshInstallment) {
+                $installment = ContractInstallment::whereKey($installment->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $installment->loadMissing(['contract.investors', 'installmentStatus']);
+                $contract = $installment->contract;
+
+                $investorStatusId = TransactionStatus::where('name', 'سداد قسط')->value('id');
+                if ($investorStatusId) {
+                    LedgerEntry::where('installment_id', $installment->id)
+                        ->where('transaction_status_id', $investorStatusId)
+                        ->delete();
+
+                    $investorTransactions = InvestorTransaction::where('contract_id', $contract->id)
+                        ->where('installment_id', $installment->id)
+                        ->where('status_id', $investorStatusId)
+                        ->get(['id']);
+
+                    if ($investorTransactions->isNotEmpty()) {
+                        $investorRefs = $investorTransactions
+                            ->map(fn ($transaction) => 'IT-' . $transaction->id)
+                            ->all();
+
+                        if (!empty($investorRefs)) {
+                            LedgerEntry::whereIn('ref', $investorRefs)->delete();
+                        }
+
+                        InvestorTransaction::whereIn('id', $investorTransactions->pluck('id')->all())->delete();
+                    }
+                }
+
+                $officeStatusId = TransactionStatus::where('name', 'ربح المكتب')->value('id');
+                if ($officeStatusId) {
+                    LedgerEntry::where('installment_id', $installment->id)
+                        ->where('transaction_status_id', $officeStatusId)
+                        ->delete();
+
+                    $officeTransactions = OfficeTransaction::where('contract_id', $contract->id)
+                        ->where('installment_id', $installment->id)
+                        ->where('status_id', $officeStatusId)
+                        ->get(['id']);
+
+                    if ($officeTransactions->isNotEmpty()) {
+                        $officeRefs = $officeTransactions
+                            ->map(fn ($transaction) => 'OT-' . $transaction->id)
+                            ->all();
+
+                        if (!empty($officeRefs)) {
+                            LedgerEntry::whereIn('ref', $officeRefs)->delete();
+                        }
+
+                        OfficeTransaction::whereIn('id', $officeTransactions->pluck('id')->all())->delete();
+                    }
+                }
+
+                $installment->payment_amount = 0;
+                $installment->payment_date   = null;
+                $installment->notes          = $this->stripPaymentNotes($installment->notes);
+                $installment->installment_status_id = null;
+                $installment->save();
+
+                $freshInstallment = $installment->fresh(['installmentStatus', 'contract.investors']);
+
+                $freshContract = $contract->fresh(['installments.installmentStatus', 'investors', 'contractStatus']);
+                if ($freshContract) {
+                    $this->contractStatusUpdater->refreshContract($freshContract);
+                }
+            });
+
+            if (!$freshInstallment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'تعذّر تحديث بيانات القسط بعد الإلغاء.',
+                ], 500);
+            }
+
+            $statusName = $freshInstallment->installmentStatus->name ?? null;
+            $badge = 'secondary';
+            if ($statusName === 'مدفوع كامل' || $statusName === 'مدفوع مبكر') {
+                $badge = 'success';
+            } elseif ($statusName === 'مطلوب') {
+                $badge = 'info';
+            } elseif ($statusName === 'مؤجل' || $statusName === 'مدفوع جزئي') {
+                $badge = 'warning';
+            } elseif ($statusName === 'معلق') {
+                $badge = 'primary';
+            } elseif ($statusName === 'متعثر' || $statusName === 'متأخر') {
+                $badge = 'danger';
+            }
+
+            return response()->json([
+                'success' => true,
+                'installment' => [
+                    'id'             => $freshInstallment->id,
+                    'status_name'    => $statusName,
+                    'badge_class'    => $badge,
+                    'payment_amount' => (float) $freshInstallment->payment_amount,
+                    'payment_date'   => $freshInstallment->payment_date,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'تعذّر إلغاء سداد هذا القسط: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -280,6 +408,57 @@ class ContractInstallmentController extends Controller
     public function updateStatus(ContractInstallment $installment)
     {
         InstallmentStatusService::recalculate($installment);
+    }
+
+    private function stripPaymentNotes(?string $notes): ?string
+    {
+        if ($notes === null) {
+            return null;
+        }
+
+        $lines = preg_split("/(\r\n|\n|\r)/", $notes) ?: [];
+        $kept  = [];
+
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if ($trimmed === '') {
+                continue;
+            }
+
+            if (str_starts_with($trimmed, '- دفع مبلغ')) {
+                continue;
+            }
+
+            $kept[] = $trimmed;
+        }
+
+        if (empty($kept)) {
+            return null;
+        }
+
+        if (count($kept) === 1 && $kept[0] === 'تفاصيل الدفعات:') {
+            return null;
+        }
+
+        $hasHeader = false;
+        $hasBullet = false;
+
+        foreach ($kept as $item) {
+            $itemTrimmed = trim($item);
+            if ($itemTrimmed === 'تفاصيل الدفعات:') {
+                $hasHeader = true;
+            }
+
+            if (str_starts_with($itemTrimmed, '- ')) {
+                $hasBullet = true;
+            }
+        }
+
+        if ($hasBullet && !$hasHeader) {
+            array_unshift($kept, 'تفاصيل الدفعات:');
+        }
+
+        return implode("\n", $kept);
     }
 
     private function validatePaymentSource(?int $bankId, ?int $safeId): void

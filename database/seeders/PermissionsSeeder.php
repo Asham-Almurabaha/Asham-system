@@ -2,59 +2,53 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Database\Seeders\Concerns\SeedsRolesAndPermissions;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionsSeeder extends Seeder
 {
+    use SeedsRolesAndPermissions;
+
+    protected string $guard = 'web';
+
     public function run(): void
     {
-        $guard = 'web'; // عدّله لو عندك غارد مختلف
+        $this->seedRolesAndPermissions();
 
-        // 1) أنشئ الصلاحيات (مثال – عدل القائمة حسب مشروعك)
-        $permissions = [
-            'users.view', 'users.create', 'users.update', 'users.delete',
-            'accounts.entries.view', 'accounts.entries.create',
-        ];
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name'              => 'Admin',
+                'password'          => Hash::make('admin@123'),
+                'email_verified_at' => now(),
+            ]
+        );
 
-        foreach ($permissions as $p) {
-            Permission::findOrCreate($p, $guard);
+        $testUser = User::firstOrCreate(
+            ['email' => 'test@test.com'],
+            [
+                'name'              => 'Test',
+                'password'          => Hash::make('test@123'),
+                'email_verified_at' => now(),
+            ]
+        );
+
+        $adminRole = Role::where('name', 'admin')
+            ->where('guard_name', $this->guardName())
+            ->first();
+
+        if ($adminRole && !$adminUser->hasRole($adminRole)) {
+            $adminUser->assignRole($adminRole);
         }
 
-        $adminRole   = Role::findOrCreate('admin', $guard);
-        $manager = Role::findOrCreate('manager', $guard);
-        $entry   = Role::findOrCreate('data-entry', $guard);
-        $viewer  = Role::findOrCreate('viewer', $guard);
+        $viewerRole = Role::where('name', 'viewer')
+            ->where('guard_name', $this->guardName())
+            ->first();
 
-        // $adminRole->syncPermissions(Permission::where('guard_name', $guard)->get());
-        // $adminRole->givePermissionTo(Permission::where('guard_name', $guard)->get());
-        // $adminRole->givePermissionTo(Permission::all());
-        $adminRole->syncPermissions(Permission::all());
-
-        $adminuser = User::firstOrCreate(
-            [
-            'name' => 'Admin',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt('admin@123'),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $testnuser = User::firstOrCreate(
-            [
-            'name' => 'Test',
-            'email' => 'test@test.com',
-            'password' => bcrypt('test@123'),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        if (!$adminuser->hasRole('admin')) {
-            $adminuser->assignRole($adminRole);
+        if ($viewerRole && !$testUser->hasRole($viewerRole)) {
+            $testUser->assignRole($viewerRole);
         }
-
-        
     }
 }

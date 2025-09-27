@@ -169,6 +169,21 @@ return [
     'enable_wildcard_permission' => false,
 
     /*
+     * Automatically enforce permissions for authenticated, named routes.
+     */
+    'auto' => [
+        'enforce' => env('PERMISSION_AUTO_ENFORCE', true),
+        'ignore' => [
+            'dashboard',
+            'home',
+            'logout',
+            'audit.logs',
+            'password.*',
+            'verification.*',
+        ],
+    ],
+
+    /*
      * The class to use for interpreting wildcard permissions.
      * If you need to modify delimiters, override the class and specify its name here.
      */

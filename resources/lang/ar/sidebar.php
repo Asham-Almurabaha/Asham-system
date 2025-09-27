@@ -2,6 +2,7 @@
 
 return array (
   'Dashboard' => 'لوحة التحكم',
+  'Audit Logs' => 'سجل النشاط',
   'Customers' => 'العملاء',
   'Customers Dashboard' => 'لوحة تحكم العملاء',
   'Manage Customers' => 'إدارة العملاء',
@@ -25,6 +26,7 @@ return array (
   'Settings' => 'الإعدادات',
   'General Settings' => 'الإعدادات العامة',
   'General Setting' => 'الإعدادات العامة',
+  'Account Settings' => 'إعدادات الحساب',
   'Users and Permissions' => 'المستخدمون والصلاحيات',
   'Manage Roles' => 'إدارة الأدوار',
   'Manage Role Permissions' => 'إدارة صلاحيات الأدوار',

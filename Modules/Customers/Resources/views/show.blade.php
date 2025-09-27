@@ -42,6 +42,44 @@
         $last_payment_date    = is_object($instObj) ? $instObj->last_payment_date  : ($instObj['last_payment_date'] ?? null);
 
         $nf = fn($n,$d=2) => is_null($n) ? '—' : number_format((float)$n, $d);
+
+        // Monthly payment report context
+        $periodContextData   = (array) ($periodContext ?? []);
+        $periodMonthsOptions = (array) ($periodMonths ?? []);
+        $periodYearsOptions  = (array) ($periodYears ?? []);
+
+        $monthlyReport            = (array) ($monthlyPaymentReport ?? []);
+        $monthlyContractsColl     = collect($monthlyReport['contracts'] ?? []);
+        $monthlyContractsCount    = (int) ($monthlyReport['contracts_count'] ?? $monthlyContractsColl->count());
+        $monthlyInstallmentsCount = (int) ($monthlyReport['installments_count'] ?? $monthlyContractsColl->sum(fn($row) => (int) ($row['installment_count'] ?? 0)));
+        $monthlyTotalDue          = (float) ($monthlyReport['total_due'] ?? 0.0);
+        $monthlyTotalPaid         = (float) ($monthlyReport['total_paid'] ?? 0.0);
+        $monthlyTotalRemaining    = (float) ($monthlyReport['total_remaining'] ?? max($monthlyTotalDue - $monthlyTotalPaid, 0));
+        $monthlyPaidPct           = $monthlyTotalDue > 0 ? round(($monthlyTotalPaid / $monthlyTotalDue) * 100, 1) : 0.0;
+        $monthlyPeriodLabel       = (string) ($monthlyReport['period_label'] ?? ($periodContextData['label'] ?? ''));
+        $monthlyPeriodStart       = $monthlyReport['period_start'] ?? ($periodContextData['start'] ?? null);
+        $monthlyPeriodEnd         = $monthlyReport['period_end'] ?? ($periodContextData['end'] ?? null);
+
+        $formatPeriodValue = function ($value) {
+            if ($value instanceof \Carbon\CarbonInterface) {
+                return $value->format('Y-m-d');
+            }
+            if ($value instanceof \DateTimeInterface) {
+                return $value->format('Y-m-d');
+            }
+
+            return $value ? (string) $value : null;
+        };
+
+        $monthlyPeriodStartLabel = $formatPeriodValue($monthlyPeriodStart);
+        $monthlyPeriodEndLabel   = $formatPeriodValue($monthlyPeriodEnd);
+
+        if (!$monthlyPeriodLabel && $monthlyPeriodStartLabel && $monthlyPeriodEndLabel) {
+            $monthlyPeriodLabel = $monthlyPeriodStartLabel . ' — ' . $monthlyPeriodEndLabel;
+        }
+
+        $selectedPeriodMonth = (int) ($periodContextData['month'] ?? ($monthlyReport['month'] ?? now()->month));
+        $selectedPeriodYear  = (int) ($periodContextData['year'] ?? ($monthlyReport['year'] ?? now()->year));
     @endphp
 
     {{-- ====== HERO ====== --}}
@@ -67,6 +105,9 @@
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2">
+                <x-button.action href="{{ route('customers.reports.monthly.print', array_merge(['customer' => $customer->id], request()->only(['period_month','period_year']))) }}" variant="secondary" target="_blank">
+                    <i class="bi bi-printer me-1"></i> {{ __('customers::messages.Print Monthly Report') }}
+                </x-button.action>
                 <x-button.action href="{{ route('customers.edit', $customer) }}" variant="primary">
                     <i class="bi bi-pencil-square me-1"></i> {{ __('Edit') }}
                 </x-button.action>
@@ -279,6 +320,139 @@
         </div>
     </div>
     {{-- ====== End of contracts and installments cards ====== --}}
+
+    {{-- ====== Monthly payment report for this customer ====== --}}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div class="d-flex flex-column gap-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="fw-bold fs-5">{{ __('Monthly Payment Report') }}</div>
+                    @if(!empty($monthlyPeriodLabel))
+                        <span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>{{ $monthlyPeriodLabel }}</span>
+                        </span>
+                    @endif
+                </div>
+                <div class="small text-muted">{{ __('Contracts with recorded payments during the selected period.') }}</div>
+            </div>
+            <form action="{{ route('customers.show', $customer) }}" method="GET" class="d-flex flex-wrap align-items-end justify-content-end gap-2">
+                @foreach(request()->except(['period_month','period_year','page']) as $k => $v)
+                    @if(is_array($v))
+                        @foreach($v as $vv)
+                            <input type="hidden" name="{{ $k }}[]" value="{{ $vv }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                    @endif
+                @endforeach
+                <div class="d-flex flex-column">
+                    <label class="form-label small mb-1" for="period_month">{{ __('Month') }}</label>
+                    <select name="period_month" id="period_month" class="form-select form-select-sm">
+                        @foreach($periodMonthsOptions as $value => $label)
+                            <option value="{{ $value }}" @selected($selectedPeriodMonth === (int) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="d-flex flex-column">
+                    <label class="form-label small mb-1" for="period_year">{{ __('Year') }}</label>
+                    <select name="period_year" id="period_year" class="form-select form-select-sm">
+                        @foreach($periodYearsOptions as $value => $label)
+                            <option value="{{ $value }}" @selected($selectedPeriodYear === (int) $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="d-flex align-items-end gap-2">
+                    <x-button.action type="submit" variant="primary" :outline="true" size="sm">
+                        <i class="bi bi-save2 me-1"></i> {{ __('Update') }}
+                    </x-button.action>
+                    <x-button.action href="{{ route('customers.show', $customer) }}" variant="secondary" :outline="true" size="sm">
+                        {{ __('Clear') }}
+                    </x-button.action>
+                </div>
+            </form>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-4">
+                    <div class="kpi-card p-3 h-100">
+                        <div class="small text-muted mb-1">{{ __('Contracts with payments') }}</div>
+                        <div class="fs-3 fw-bold">{{ number_format($monthlyContractsCount) }}</div>
+                        <div class="small text-muted">{{ __('Contracts in period') }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="kpi-card p-3 h-100">
+                        <div class="small text-muted mb-1">{{ __('Installments Recorded') }}</div>
+                        <div class="fs-3 fw-bold">{{ number_format($monthlyInstallmentsCount) }}</div>
+                        <div class="small text-muted">{{ __('Installments in period') }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="kpi-card p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-muted">{{ __('Total Due in Period') }}</span>
+                            <span class="fw-bold">{{ number_format($monthlyTotalDue, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-muted">{{ __('Total Paid in Period') }}</span>
+                            <span class="fw-bold text-success">{{ number_format($monthlyTotalPaid, 2) }}</span>
+                        </div>
+                        <div class="progress" style="height:8px;">
+                            <div class="progress-bar" style="width: {{ $monthlyPaidPct }}%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mt-1">
+                            <span>{{ __('Paid Percentage') }}: {{ number_format($monthlyPaidPct,1) }}%</span>
+                            <span>{{ __('Remaining') }}: {{ number_format($monthlyTotalRemaining, 2) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                @if($monthlyContractsColl->isNotEmpty())
+                    <x-table head-class="table-light">
+                        <x-slot name="head">
+                            <tr>
+                                <th style="width:160px">{{ __('Contract Number') }}</th>
+                                <th style="width:140px">{{ __('Start Date') }}</th>
+                                <th>{{ __('Status') }}</th>
+                                <th class="text-end" style="width:140px">{{ __('Installments') }}</th>
+                                <th class="text-end" style="width:140px">{{ __('Due Amount') }}</th>
+                                <th class="text-end" style="width:140px">{{ __('Paid Amount') }}</th>
+                                <th class="text-end" style="width:140px">{{ __('Remaining') }}</th>
+                                <th style="width:140px">{{ __('Last Payment') }}</th>
+                            </tr>
+                        </x-slot>
+                        @foreach($monthlyContractsColl as $row)
+                            @php
+                                $contractNumber   = (string) ($row['contract_number'] ?? ($row['contract_id'] ?? '—'));
+                                $contractStatus   = $row['status_name'] ?? '—';
+                                $contractStart    = $row['start_date'] ?? null;
+                                $installmentsCnt  = (int) ($row['installment_count'] ?? 0);
+                                $dueSum           = (float) ($row['due_sum'] ?? 0.0);
+                                $paidSum          = (float) ($row['paid_sum'] ?? 0.0);
+                                $remainingSum     = (float) ($row['remaining_sum'] ?? max($dueSum - $paidSum, 0));
+                                $lastPaymentDate  = $row['last_payment_date'] ?? null;
+                            @endphp
+                            <tr>
+                                <td>{{ $contractNumber }}</td>
+                                <td>{{ $contractStart ?: '—' }}</td>
+                                <td>{{ $contractStatus ?: '—' }}</td>
+                                <td class="text-end">{{ number_format($installmentsCnt) }}</td>
+                                <td class="text-end">{{ number_format($dueSum, 2) }}</td>
+                                <td class="text-end text-success">{{ number_format($paidSum, 2) }}</td>
+                                <td class="text-end">{{ number_format($remainingSum, 2) }}</td>
+                                <td>{{ $lastPaymentDate ?: '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </x-table>
+                @else
+                    <div class="text-muted text-center py-4">{{ __('No payments were recorded during this period for the customer contracts.') }}</div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     {{-- ====== Active contracts table: Paid and remaining ====== --}}
     @php

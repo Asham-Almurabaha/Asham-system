@@ -13,6 +13,7 @@ use App\Http\Controllers\Setting\PermissionManagementController;
 use App\Http\Controllers\Setting\RoleManagementController;
 use App\Http\Controllers\Setting\RolePermissionController;
 use App\Http\Controllers\Setting\SettingController;
+use App\Http\Controllers\Setting\AccountSettingsController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
 use App\Models\Setting;
 use App\Models\User;
@@ -35,7 +36,7 @@ Route::view('/loading', 'loading', [
     'setting' => Setting::first(),
 ])->name('loading');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'permission.route'])->group(function () {
 
     Route::get('/global-search', GlobalSearchController::class)
         ->name('global-search');
@@ -54,6 +55,18 @@ Route::middleware('auth')->group(function () {
     // الإعدادات
     Route::prefix('settings')->group(function () {
         Route::resource('settings', SettingController::class);
+
+        Route::get('account', [AccountSettingsController::class, 'edit'])
+            ->name('settings.account.edit')
+            ->withoutMiddleware('permission.route');
+
+        Route::put('account/profile', [AccountSettingsController::class, 'updateProfile'])
+            ->name('settings.account.profile.update')
+            ->withoutMiddleware('permission.route');
+
+        Route::put('account/password', [AccountSettingsController::class, 'updatePassword'])
+            ->name('settings.account.password.update')
+            ->withoutMiddleware('permission.route');
     });
 
     // CRUDات رئيسية
@@ -94,7 +107,13 @@ Route::middleware('auth')->group(function () {
         ->name('product-types.available');
 
     // سجلات التدقيق
-    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])
+        ->middleware('permission:view-audit-logs')
+        ->name('audit.logs');
+    Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])
+        ->middleware('permission:view-audit-logs')
+        ->name('audit.logs.show');
+    Route::post('/audit-logs/{auditLog}/revert', [AuditLogController::class, 'revert'])->name('audit.logs.revert');
 
     // المتاح في الحسابات (بنكي/خزنة)
     Route::get('/ajax/accounts/availability',      [AjaxAccountController::class, 'availability'])->name('ajax.accounts.availability');

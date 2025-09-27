@@ -523,6 +523,16 @@ class CustomerController extends Controller
             'to_due'     => $parseDate($request->input('to_due')),
         ];
 
+        $periodContext = $this->resolveInstallmentPeriodContext($request);
+        $periodMonths  = $this->periodMonthOptions();
+        $periodYears   = $this->periodYearOptions();
+
+        $monthlyPaymentReport = $this->buildCustomerMonthlyPaymentReport(
+            (int) $customer->id,
+            $periodContext['start'],
+            $periodContext['end']
+        );
+
         // بناء تفاصيل العميل (DTOs)
         $details = $detailsSvc->build($customer->id, $filters);
 
@@ -626,6 +636,33 @@ class CustomerController extends Controller
 
             // الفلاتر بعد التنظيف لإعادة ملؤها في الواجهة
             'filters'           => $filters,
+            'periodContext'     => $periodContext,
+            'periodMonths'      => $periodMonths,
+            'periodYears'       => $periodYears,
+            'monthlyPaymentReport' => $monthlyPaymentReport,
+        ]);
+    }
+
+    public function printMonthlyPayments(Customer $customer, Request $request)
+    {
+        $customer->loadMissing(['customerStatus:id,name', 'nationality:id,name', 'title:id,name']);
+
+        $periodContext = $this->resolveInstallmentPeriodContext($request);
+        $periodMonths  = $this->periodMonthOptions();
+        $periodYears   = $this->periodYearOptions();
+
+        $report = $this->buildCustomerMonthlyPaymentReport(
+            (int) $customer->id,
+            $periodContext['start'],
+            $periodContext['end']
+        );
+
+        return view('customers::reports.monthly-payments-print', [
+            'customer'      => $customer,
+            'report'        => $report,
+            'periodContext' => $periodContext,
+            'periodMonths'  => $periodMonths,
+            'periodYears'   => $periodYears,
         ]);
     }
 
@@ -1087,6 +1124,127 @@ class CustomerController extends Controller
         if (Schema::hasColumn('contracts', 'closed_at')) {
             $query->whereNull('closed_at');
         }
+    }
+
+    private function buildCustomerMonthlyPaymentReport(int $customerId, Carbon $periodStart, Carbon $periodEnd): array
+    {
+        $start = $periodStart->copy()->startOfDay();
+        $end   = $periodEnd->copy()->endOfDay();
+
+        if ($customerId <= 0) {
+            return [
+                'period_start'        => $start->toDateString(),
+                'period_end'          => $end->toDateString(),
+                'period_label'        => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
+                'month'               => (int) $start->month,
+                'year'                => (int) $start->year,
+                'contracts_count'     => 0,
+                'installments_count'  => 0,
+                'total_due'           => 0.0,
+                'total_paid'          => 0.0,
+                'total_remaining'     => 0.0,
+                'contracts'           => [],
+            ];
+        }
+
+        $installments = ContractInstallment::query()
+            ->with([
+                'contract:id,customer_id,contract_number,start_date,contract_status_id',
+                'contract.contractStatus:id,name',
+                'installmentStatus:id,name',
+            ])
+            ->whereHas('contract', fn ($q) => $q->where('customer_id', $customerId))
+            ->whereNotNull('payment_date')
+            ->whereBetween('payment_date', [$start->toDateString(), $end->toDateString()])
+            ->orderBy('payment_date')
+            ->get();
+
+        if ($installments->isEmpty()) {
+            return [
+                'period_start'        => $start->toDateString(),
+                'period_end'          => $end->toDateString(),
+                'period_label'        => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
+                'month'               => (int) $start->month,
+                'year'                => (int) $start->year,
+                'contracts_count'     => 0,
+                'installments_count'  => 0,
+                'total_due'           => 0.0,
+                'total_paid'          => 0.0,
+                'total_remaining'     => 0.0,
+                'contracts'           => [],
+            ];
+        }
+
+        $contracts = [];
+        $totalDue = 0.0;
+        $totalPaid = 0.0;
+        $totalRemaining = 0.0;
+        $installmentsCount = 0;
+
+        foreach ($installments->groupBy('contract_id') as $contractId => $items) {
+            $contractModel = $items->first()->contract;
+            $contractNumber = $contractModel->contract_number ?? (string) $contractId;
+            $statusName = optional($contractModel->contractStatus)->name;
+            $startDate = $contractModel->start_date ?? null;
+            $startDateFormatted = $startDate ? Carbon::parse($startDate)->format('Y-m-d') : null;
+
+            $contractDue = 0.0;
+            $contractPaid = 0.0;
+            $contractRemaining = 0.0;
+            $lastPayment = null;
+            $lastPaymentAmount = null;
+
+            foreach ($items as $installment) {
+                $dueAmount = (float) ($installment->due_amount ?? 0.0);
+                $rawPaid = (float) ($installment->payment_amount ?? 0.0);
+                $paidEffective = $dueAmount > 0 ? min($dueAmount, max($rawPaid, 0.0)) : max($rawPaid, 0.0);
+                $remaining = max($dueAmount - $paidEffective, 0.0);
+                $paymentDate = $installment->payment_date ? Carbon::parse($installment->payment_date) : null;
+
+                if ($paymentDate && (!$lastPayment || $paymentDate->gt($lastPayment) || ($paymentDate->eq($lastPayment) && ($paidEffective >= ($lastPaymentAmount ?? PHP_FLOAT_MIN))))) {
+                    $lastPayment = $paymentDate;
+                    $lastPaymentAmount = $paidEffective;
+                }
+
+                $contractDue += $dueAmount;
+                $contractPaid += $paidEffective;
+                $contractRemaining += $remaining;
+                $installmentsCount++;
+            }
+
+            $totalDue += $contractDue;
+            $totalPaid += $contractPaid;
+            $totalRemaining += $contractRemaining;
+
+            $contracts[] = [
+                'contract_id'        => (int) $contractId,
+                'contract_number'    => $contractNumber,
+                'status_name'        => $statusName,
+                'start_date'         => $startDateFormatted,
+                'installment_count'  => count($items),
+                'due_sum'            => round($contractDue, 2),
+                'paid_sum'           => round($contractPaid, 2),
+                'remaining_sum'      => round($contractRemaining, 2),
+                'last_payment_date'  => $lastPayment?->format('Y-m-d'),
+                'last_payment_amount' => $lastPaymentAmount !== null ? round($lastPaymentAmount, 2) : null,
+            ];
+        }
+
+        usort($contracts, fn ($a, $b) => strnatcasecmp((string) ($a['contract_number'] ?? ''), (string) ($b['contract_number'] ?? '')));
+
+        return [
+            'period_start'        => $start->toDateString(),
+            'period_end'          => $end->toDateString(),
+            'period_label'        => $start->format('Y-m-d') . ' — ' . $end->format('Y-m-d'),
+            'month'               => (int) $start->month,
+            'year'                => (int) $start->year,
+            'contracts_count'     => count($contracts),
+            'installments_count'  => $installmentsCount,
+            'total_due'           => round($totalDue, 2),
+            'total_paid'          => round($totalPaid, 2),
+            'total_remaining'     => round($totalRemaining, 2),
+            'contracts'           => $contracts,
+        ];
     }
 
     private function resolveInstallmentPeriodContext(Request $request): array

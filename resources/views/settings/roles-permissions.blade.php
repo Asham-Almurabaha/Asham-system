@@ -42,6 +42,59 @@
       height: 100%;
     }
 
+    .settings-roles-permissions .permission-toolbar {
+      border: 1px solid var(--bs-border-color);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--bs-body-secondary-bg, rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.08));
+    }
+
+    .settings-roles-permissions .permission-toolbar .btn {
+      border-radius: 999px;
+    }
+
+    .settings-roles-permissions .permission-toolbar .btn.active {
+      background-color: rgba(var(--bs-primary-rgb), 0.12);
+      border-color: rgba(var(--bs-primary-rgb), 0.32);
+      color: var(--bs-primary);
+    }
+
+    .settings-roles-permissions .permission-toolbar .summary-pill {
+      border-radius: 999px;
+      background-color: rgba(var(--bs-primary-rgb), 0.08);
+      color: var(--bs-primary);
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .settings-roles-permissions .permission-toolbar .summary-pill .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background-color: rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.12);
+      color: var(--bs-secondary-color, var(--bs-gray-700));
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .settings-roles-permissions .permission-toolbar .status-unsaved {
+      background-color: rgba(var(--bs-warning-rgb), 0.18);
+      color: var(--bs-warning);
+    }
+
+    .settings-roles-permissions .permission-toolbar .result-counter {
+      font-size: 0.75rem;
+      color: var(--bs-secondary-color, var(--bs-gray-600));
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
     .settings-roles-permissions .permission-card:hover,
     .settings-roles-permissions .permission-card:focus-within {
       border-color: rgba(var(--bs-primary-rgb), 0.55);
@@ -177,6 +230,21 @@
 
       .settings-roles-permissions .toolbar-divider {
         display: none;
+      }
+
+      .settings-roles-permissions .permission-toolbar {
+        padding: 1rem;
+      }
+
+      .settings-roles-permissions .permission-toolbar .d-flex {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      .settings-roles-permissions .permission-toolbar .btn-group,
+      .settings-roles-permissions .permission-toolbar .btn {
+        width: 100%;
       }
     }
 
@@ -362,7 +430,7 @@
                 @method('PUT')
 
                 <div class="row g-3 align-items-end mb-4">
-                  <div class="col-lg-7">
+                  <div class="col-12 col-lg-7">
                     <label for="permission-search" class="form-label small fw-semibold text-muted text-uppercase">@lang('permissions.Filter Permissions')</label>
                     <div class="input-group search-input-group">
                       <span class="input-group-text bg-body"><i class="bi bi-search"></i></span>
@@ -372,6 +440,35 @@
                       </x-button.action>
                     </div>
                     <div class="form-text">@lang('permissions.Permission Search Help')</div>
+                  </div>
+                  <div class="col-12 col-lg-5">
+                    <div class="permission-toolbar h-100 d-flex flex-column justify-content-center gap-2">
+                      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span class="summary-pill">
+                          <i class="bi bi-check2-circle"></i>
+                          <span data-permission-selection-summary data-template="@lang('permissions.Permission Selection Summary Template')"></span>
+                          <span class="status-indicator" data-permission-dirty-indicator data-saved-text="@lang('permissions.Unsaved Changes Saved')" data-dirty-text="@lang('permissions.Unsaved Changes Dirty')">
+                            <i class="bi bi-cloud-check-fill"></i>
+                            <span>@lang('permissions.Unsaved Changes Saved')</span>
+                          </span>
+                        </span>
+                        <span class="result-counter" data-permission-result-count data-template="@lang('permissions.Permission Result Count')">
+                          <i class="bi bi-list-check"></i>
+                          <span></span>
+                        </span>
+                      </div>
+                      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="@lang('permissions.Permission Assignment Filter Label')">
+                          <button type="button" class="btn btn-outline-primary active" data-permission-filter="all">@lang('permissions.Permission Assignment Filter All')</button>
+                          <button type="button" class="btn btn-outline-primary" data-permission-filter="assigned">@lang('permissions.Permission Assignment Filter Assigned')</button>
+                          <button type="button" class="btn btn-outline-primary" data-permission-filter="unassigned">@lang('permissions.Permission Assignment Filter Unassigned')</button>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="@lang('permissions.Permission Bulk Actions Label')">
+                          <button type="button" class="btn btn-outline-secondary" data-permission-bulk="select">@lang('permissions.Select All Permissions')</button>
+                          <button type="button" class="btn btn-outline-secondary" data-permission-bulk="clear">@lang('permissions.Deselect All Permissions')</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -409,10 +506,13 @@
                               @php
                                 $permissionId = 'permission-'.$index.'-'.Str::slug($permission->name);
                               @endphp
-                              <div class="col-12 col-md-6 col-xl-4" data-permission-card data-permission-group="{{ $index }}" data-permission="{{ Str::lower($permission->name) }}" data-permission-label="{{ Str::lower($permissionLabels[$permission->name] ?? $permission->name) }}">
+                              @php
+                                $isAssigned = in_array($permission->name, $selectedPermissions, true);
+                              @endphp
+                              <div class="col-12 col-md-6 col-xl-4" data-permission-card data-permission-group="{{ $index }}" data-permission="{{ Str::lower($permission->name) }}" data-permission-label="{{ Str::lower($permissionLabels[$permission->name] ?? $permission->name) }}" data-permission-assigned="{{ $isAssigned ? '1' : '0' }}">
                                 <div class="permission-card">
                                   <div class="form-check d-flex align-items-start m-0">
-                                    <input class="form-check-input flex-shrink-0" type="checkbox" name="permissions[]" value="{{ $permission->name }}" id="{{ $permissionId }}" @checked(in_array($permission->name, $selectedPermissions, true))>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox" name="permissions[]" value="{{ $permission->name }}" id="{{ $permissionId }}" @checked($isAssigned)>
                                     <label class="form-check-label" for="{{ $permissionId }}">
                                       <span class="permission-name">{{ $permissionLabels[$permission->name] ?? $permission->name }}</span>
                                       <span class="permission-meta">{{ $permission->name }}</span>
@@ -461,18 +561,70 @@
       const permissionClear = root.querySelector('#permission-search-clear');
       const permissionCards = root.querySelectorAll('[data-permission-card]');
       const groupContainers = root.querySelectorAll('[data-permission-group-container]');
+      const selectionSummary = root.querySelector('[data-permission-selection-summary]');
+      const dirtyIndicator = root.querySelector('[data-permission-dirty-indicator]');
+      const resultCounter = root.querySelector('[data-permission-result-count] span');
+      const filterButtons = root.querySelectorAll('[data-permission-filter]');
+      const bulkButtons = root.querySelectorAll('[data-permission-bulk]');
       const emptyResults = root.querySelector('#permissions-empty-results');
       const emptyText = emptyResults ? emptyResults.querySelector('[data-permission-empty-text]') : null;
       const emptyTemplate = emptyResults ? emptyResults.getAttribute('data-empty-template') : null;
+      const initialSelections = new Set(@json($selectedPermissions));
+
+      let currentFilter = 'all';
 
       if (emptyResults && emptyText) {
         emptyResults.setAttribute('data-default-text', emptyText.textContent);
       }
 
+      const getCheckedInputs = () => Array.from(root.querySelectorAll('[data-permission-card] input[type="checkbox"]:checked'));
+
+      const updateSelectionSummary = () => {
+        if (!selectionSummary) {
+          return;
+        }
+
+        const template = selectionSummary.getAttribute('data-template') || '';
+        const total = permissionCards.length;
+        const selected = getCheckedInputs().length;
+        selectionSummary.textContent = template
+          .replace(':selected', new Intl.NumberFormat().format(selected))
+          .replace(':total', new Intl.NumberFormat().format(total));
+
+        if (dirtyIndicator) {
+          const dirtyText = dirtyIndicator.getAttribute('data-dirty-text') || '';
+          const savedText = dirtyIndicator.getAttribute('data-saved-text') || '';
+          const isDirty = (() => {
+            if (initialSelections.size !== selected) {
+              return true;
+            }
+            const currentValues = new Set(getCheckedInputs().map(input => input.value));
+            if (currentValues.size !== initialSelections.size) {
+              return true;
+            }
+            for (const value of currentValues) {
+              if (!initialSelections.has(value)) {
+                return true;
+              }
+            }
+            return false;
+          })();
+
+          dirtyIndicator.classList.toggle('status-unsaved', isDirty);
+          dirtyIndicator.innerHTML = `
+            <i class="bi ${isDirty ? 'bi-exclamation-triangle-fill' : 'bi-cloud-check-fill'}"></i>
+            <span>${isDirty ? dirtyText : savedText}</span>
+          `;
+        }
+      };
+
       const updatePermissionVisibility = () => {
         if (!permissionCards.length) {
           if (emptyResults) {
             emptyResults.classList.add('d-none');
+          }
+          if (resultCounter) {
+            resultCounter.textContent = '';
           }
           return;
         }
@@ -482,7 +634,12 @@
 
         permissionCards.forEach(card => {
           const datasetValue = (card.dataset.permission || '') + ' ' + (card.dataset.permissionLabel || '');
-          const matches = query === '' || datasetValue.includes(query);
+          const checkbox = card.querySelector('input[type="checkbox"]');
+          const matchesFilter = currentFilter === 'all'
+            || (currentFilter === 'assigned' && checkbox?.checked)
+            || (currentFilter === 'unassigned' && !checkbox?.checked);
+          const matchesQuery = query === '' || datasetValue.includes(query);
+          const matches = matchesFilter && matchesQuery;
           card.classList.toggle('d-none', !matches);
           if (matches) {
             visibleCount += 1;
@@ -505,6 +662,13 @@
           } else if (emptyText) {
             emptyText.textContent = emptyResults.getAttribute('data-default-text') || '';
           }
+        }
+
+        if (resultCounter) {
+          const template = resultCounter.parentElement?.getAttribute('data-template') || '';
+          resultCounter.textContent = template
+            .replace(':count', new Intl.NumberFormat().format(visibleCount))
+            .replace(':total', new Intl.NumberFormat().format(permissionCards.length));
         }
       };
 
@@ -539,6 +703,33 @@
         });
       });
 
+      filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const filter = button.getAttribute('data-permission-filter') || 'all';
+          currentFilter = filter;
+          filterButtons.forEach(btn => btn.classList.toggle('active', btn === button));
+          updatePermissionVisibility();
+        });
+      });
+
+      bulkButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const action = button.getAttribute('data-permission-bulk');
+          const shouldSelect = action === 'select';
+          root.querySelectorAll('[data-permission-card] input[type="checkbox"]').forEach(input => {
+            input.checked = shouldSelect;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+        });
+      });
+
+      root.querySelectorAll('[data-permission-card] input[type="checkbox"]').forEach(input => {
+        input.addEventListener('change', () => {
+          updateSelectionSummary();
+          updatePermissionVisibility();
+        });
+      });
+
       const accordion = root.querySelector('#rolePermissionsAccordion');
       const expandAllBtn = root.querySelector('[data-action="expand-all"]');
       const collapseAllBtn = root.querySelector('[data-action="collapse-all"]');
@@ -561,6 +752,7 @@
       expandAllBtn?.addEventListener('click', () => setAccordionState(true));
       collapseAllBtn?.addEventListener('click', () => setAccordionState(false));
 
+      updateSelectionSummary();
       updatePermissionVisibility();
 
     });

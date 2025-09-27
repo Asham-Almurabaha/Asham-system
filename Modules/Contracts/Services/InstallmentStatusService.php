@@ -10,8 +10,12 @@ class InstallmentStatusService
 {
     /**
      * Recalculate the installment status using the same logic as manual payments.
+     *
+     * @param  ContractInstallment  $installment
+     * @param  bool                 $force         When true, bypasses the investor-share check so the
+     *                                             status still reflects the latest payment state.
      */
-    public static function recalculate(ContractInstallment $installment): void
+    public static function recalculate(ContractInstallment $installment, bool $force = false): void
     {
         // Ensure we have the relations used in the calculations.
         $installment->loadMissing('contract.investors', 'installmentStatus');
@@ -23,7 +27,7 @@ class InstallmentStatusService
         }
 
         // Only apply statuses if the investors' shares add up to 100% (same as manual flow).
-        if (round($sumPct, 2) !== 100.00) {
+        if (!$force && round($sumPct, 2) !== 100.00) {
             return;
         }
 
