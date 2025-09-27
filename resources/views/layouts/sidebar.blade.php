@@ -22,6 +22,7 @@
       || $isRoute('categories.*')
       || $isRoute('transaction_statuses.*')
       || $isRoute('transaction_types.*')
+      || $isRoute('expenses.expense-types.*')
       || $isRoute('accounts.bank-accounts.*')
       || $isRoute('accounts.safes.*')
       || $isRoute('product_types.*')
@@ -182,12 +183,6 @@
           ],
       ],
       [
-          'label' => __('expenses::types.index_title'),
-          'candidates' => [
-              ['route' => 'expenses.expense-types.index',  'pattern' => 'expenses.expense-types.*'],
-          ],
-      ],
-      [
           'label' => __('sidebar.Cars'),
           'candidates' => [
               ['route' => 'operating.cars.index',          'pattern' => 'operating.cars.*'],
@@ -288,6 +283,7 @@
       'settings.roles.permissions*',
       'settings.permissions.*',
       'users.*',
+      'expenses.expense-types.*',
   ];
 
   $settingsGeneralPatterns = [
@@ -306,6 +302,7 @@
   $settingsClaimsPatterns = ['claim_statuses.*', 'claimants.*', 'claim_payers.*'];
   $settingsInstallmentPatterns = ['installment_types.*', 'installment_statuses.*'];
   $settingsTransactionPatterns = ['transaction_types.*', 'transaction_statuses.*', 'categories.*'];
+  $settingsExpensesPatterns = ['expenses.expense-types.*'];
   $settingsAccountsPatterns = ['accounts.bank-accounts.*', 'accounts.safes.*'];
   $settingsProductsPatterns = ['product_types.*', 'products.*'];
   $settingsUsersPatterns = [
@@ -952,6 +949,18 @@
       <li>
         <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($settingsExpensesPatterns)
+      <li class="nav-heading">@lang('sidebar.Expenses')</li>
+      @endroutecanany
+
+      @routecanany('expenses.expense-types.*')
+      <li>
+        <a class="{{ $active($isRoute('expenses.expense-types.*')) }}" href="{{ route('expenses.expense-types.index') }}">
+          <i class="bi bi-circle"></i><span>{{ __('expenses::types.index_title') }}</span>
         </a>
       </li>
       @endroutecanany
