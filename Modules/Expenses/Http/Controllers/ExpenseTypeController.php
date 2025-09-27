@@ -7,20 +7,23 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Modules\Expenses\Entities\ExpenseType;
+use Modules\Lookups\Entities\ExpenseRecurrencePeriod;
+use Modules\Lookups\Entities\ExpenseType;
 
 class ExpenseTypeController extends Controller
 {
     public function index(): View
     {
-        $types = ExpenseType::query()->orderBy('name')->get();
+        $types = ExpenseType::query()->with('recurrencePeriod')->orderBy('name')->get();
 
         return view('expenses::expense_types.index', compact('types'));
     }
 
     public function create(): View
     {
-        return view('expenses::expense_types.create');
+        return view('expenses::expense_types.create', [
+            'recurrencePeriods' => $this->recurrencePeriodOptions(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -38,6 +41,7 @@ class ExpenseTypeController extends Controller
     {
         return view('expenses::expense_types.edit', [
             'expenseType' => $expense_type,
+            'recurrencePeriods' => $this->recurrencePeriodOptions(),
         ]);
     }
 
@@ -75,14 +79,14 @@ class ExpenseTypeController extends Controller
             'default_amount' => ['nullable', 'numeric', 'min:0'],
             'currency_code' => ['nullable', 'string', 'size:3'],
             'is_recurring' => ['nullable', 'boolean'],
-            'recurrence_interval' => ['nullable', 'string', 'max:50'],
+            'expense_recurrence_period_id' => ['nullable', 'integer', 'exists:expense_recurrence_periods,id'],
         ], [], [
             'name' => __('expenses::types.fields.name'),
             'description' => __('expenses::types.fields.description'),
             'default_amount' => __('expenses::types.fields.default_amount'),
             'currency_code' => __('expenses::types.fields.currency_code'),
             'is_recurring' => __('expenses::types.fields.is_recurring'),
-            'recurrence_interval' => __('expenses::types.fields.recurrence_interval'),
+            'expense_recurrence_period_id' => __('expenses::types.fields.recurrence_period'),
         ]);
 
         return [
@@ -91,8 +95,16 @@ class ExpenseTypeController extends Controller
             'default_amount' => $this->normalizeAmount($validated['default_amount'] ?? 0),
             'currency_code' => $this->normalizeCurrency($validated['currency_code'] ?? null),
             'is_recurring' => $request->boolean('is_recurring'),
-            'recurrence_interval' => $this->cleanString($validated['recurrence_interval'] ?? null),
+            'expense_recurrence_period_id' => $validated['expense_recurrence_period_id'] ?? null,
         ];
+    }
+
+    private function recurrencePeriodOptions(): array
+    {
+        return ExpenseRecurrencePeriod::query()
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->toArray();
     }
 
     private function cleanString(?string $value): ?string

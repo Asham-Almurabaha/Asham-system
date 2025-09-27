@@ -123,6 +123,55 @@ class LookupsDatabaseSeeder extends Seeder
         ], $now);
 
         $this->seedCategoryTransactionStatuses($now, $transactionStatusIds, $categoryIds);
+
+        $recurrencePeriodIds = $this->syncNamedRecords('expense_recurrence_periods', [
+            ['code' => 'monthly', 'name' => 'شهري', 'description' => 'يتكرر كل شهر', 'is_protected' => true],
+            ['code' => 'semi_annual', 'name' => 'نصف سنوي', 'description' => 'يتكرر مرتين في السنة', 'is_protected' => true],
+            ['code' => 'other', 'name' => 'أخرى', 'description' => 'فترة تكرار مخصصة أو غير منتظمة', 'is_protected' => true],
+        ], $now, 'code');
+
+        $this->syncNamedRecords('expense_types', [
+            [
+                'name' => 'الإيجارات',
+                'description' => 'المصروفات الخاصة بإيجار المكاتب أو الفروع',
+                'default_amount' => 0,
+                'currency_code' => 'SAR',
+                'is_recurring' => true,
+                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+            ],
+            [
+                'name' => 'أقساط السيارات',
+                'description' => 'الأقساط الشهرية لتمويل السيارات التابعة للشركة',
+                'default_amount' => 0,
+                'currency_code' => 'SAR',
+                'is_recurring' => true,
+                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+            ],
+            [
+                'name' => 'أقساط القروض',
+                'description' => 'أقساط التمويلات أو القروض البنكية',
+                'default_amount' => 0,
+                'currency_code' => 'SAR',
+                'is_recurring' => true,
+                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+            ],
+            [
+                'name' => 'الرواتب',
+                'description' => 'رواتب وأجور الموظفين والعاملين',
+                'default_amount' => 0,
+                'currency_code' => 'SAR',
+                'is_recurring' => true,
+                'expense_recurrence_period_id' => $recurrencePeriodIds['monthly'] ?? null,
+            ],
+            [
+                'name' => 'مصروفات أخرى',
+                'description' => 'مصروفات متنوعة لا تنتمي للأنواع الرئيسية',
+                'default_amount' => 0,
+                'currency_code' => 'SAR',
+                'is_recurring' => false,
+                'expense_recurrence_period_id' => $recurrencePeriodIds['other'] ?? null,
+            ],
+        ], $now);
     }
 
     private function seedTransactionStatuses(Carbon $now, array $transactionTypeIds): array

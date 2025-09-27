@@ -33,7 +33,7 @@
                         <th scope="col" class="text-end">@lang('expenses::types.fields.default_amount')</th>
                         <th scope="col">@lang('expenses::types.fields.currency_code')</th>
                         <th scope="col">@lang('expenses::types.fields.is_recurring')</th>
-                        <th scope="col">@lang('expenses::types.fields.recurrence_interval')</th>
+                        <th scope="col">@lang('expenses::types.fields.recurrence_period')</th>
                         <th scope="col" class="text-end" style="width:220px">@lang('expenses::types.actions.manage')</th>
                     </tr>
                 </x-slot>
@@ -51,7 +51,7 @@
                                 <span class="badge bg-secondary-subtle text-muted">@lang('expenses::types.status.one_time')</span>
                             @endif
                         </td>
-                        <td>{{ $type->recurrence_interval ?? __('expenses::types.fields.not_available') }}</td>
+                        <td>{{ $type->recurrencePeriod->name ?? __('expenses::types.fields.not_available') }}</td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
                                 <x-button.action href="{{ route('expenses.expense-types.edit', $type) }}" variant="primary" :outline="true" size="sm">

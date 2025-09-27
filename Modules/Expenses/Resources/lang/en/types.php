@@ -20,7 +20,7 @@ return [
         'default_amount' => 'Default Amount',
         'currency_code' => 'Currency',
         'is_recurring' => 'Recurring',
-        'recurrence_interval' => 'Recurrence Interval',
+        'recurrence_period' => 'Recurrence Period',
         'created_at' => 'Created At',
         'updated_at' => 'Updated At',
         'not_available' => 'Not available',

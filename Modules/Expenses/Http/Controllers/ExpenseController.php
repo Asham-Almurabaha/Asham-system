@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Modules\Expenses\Entities\Expense;
-use Modules\Expenses\Entities\ExpenseType;
+use Modules\Lookups\Entities\ExpenseType;
 
 class ExpenseController extends Controller
 {

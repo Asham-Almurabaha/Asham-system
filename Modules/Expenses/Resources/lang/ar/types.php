@@ -20,7 +20,7 @@ return [
         'default_amount' => 'المبلغ الافتراضي',
         'currency_code' => 'رمز العملة',
         'is_recurring' => 'متكرر',
-        'recurrence_interval' => 'فترة التكرار',
+        'recurrence_period' => 'دورية التكرار',
         'created_at' => 'تاريخ الإنشاء',
         'updated_at' => 'آخر تحديث',
         'not_available' => 'غير متوفر',

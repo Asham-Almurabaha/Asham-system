@@ -4,6 +4,7 @@
     $cancelRoute = $cancelRoute ?? route('expenses.expense-types.index');
     $isUpdate = $expenseType && ($expenseType->exists ?? false);
     $submitVariant = $isUpdate ? 'primary' : 'success';
+    $recurrencePeriods = $recurrencePeriods ?? [];
 @endphp
 
 <div class="row g-3">
@@ -47,15 +48,18 @@
     </div>
 
     <div class="col-md-6">
-        <label for="recurrence_interval" class="form-label">@lang('expenses::types.fields.recurrence_interval')</label>
-        <input type="text"
-               name="recurrence_interval"
-               id="recurrence_interval"
-               class="form-control @error('recurrence_interval') is-invalid @enderror"
-               value="{{ old('recurrence_interval', $expenseType->recurrence_interval ?? '') }}"
-               maxlength="50">
-        <div class="form-text">@lang('expenses::types.status.recurring')</div>
-        @error('recurrence_interval') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        <label for="expense_recurrence_period_id" class="form-label">@lang('expenses::types.fields.recurrence_period')</label>
+        <select name="expense_recurrence_period_id"
+                id="expense_recurrence_period_id"
+                class="form-select @error('expense_recurrence_period_id') is-invalid @enderror">
+            <option value="">@lang('expenses::types.fields.not_available')</option>
+            @foreach($recurrencePeriods as $id => $label)
+                <option value="{{ $id }}" @selected((string) old('expense_recurrence_period_id', $expenseType->expense_recurrence_period_id ?? '') === (string) $id)>
+                    {{ $label }}
+                </option>
+            @endforeach
+        </select>
+        @error('expense_recurrence_period_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
     <div class="col-md-6">

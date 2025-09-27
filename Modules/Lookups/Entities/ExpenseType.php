@@ -1,10 +1,12 @@
 <?php
 
-namespace Modules\Expenses\Entities;
+namespace Modules\Lookups\Entities;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Modules\Expenses\Entities\Expense;
 
 class ExpenseType extends Model
 {
@@ -16,7 +18,7 @@ class ExpenseType extends Model
         'default_amount',
         'currency_code',
         'is_recurring',
-        'recurrence_interval',
+        'expense_recurrence_period_id',
     ];
 
     protected $casts = [
@@ -27,5 +29,10 @@ class ExpenseType extends Model
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
+    }
+
+    public function recurrencePeriod(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseRecurrencePeriod::class, 'expense_recurrence_period_id');
     }
 }
