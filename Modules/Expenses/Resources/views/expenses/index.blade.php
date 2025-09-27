@@ -19,9 +19,6 @@
                 <x-button.action href="{{ route('expenses.expenses.create') }}" variant="success">
                     <i class="bi bi-plus-lg me-1"></i>@lang('expenses::expenses.actions.create')
                 </x-button.action>
-                <x-button.action href="{{ route('expenses.expense-types.index') }}" variant="secondary" :outline="true">
-                    <i class="bi bi-gear me-1"></i>@lang('expenses::types.index_title')
-                </x-button.action>
             </div>
         </div>
 
