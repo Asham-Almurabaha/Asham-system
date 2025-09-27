@@ -329,14 +329,7 @@
   </li>
   @endroutecanany
 
-  @routecanany('notes.index')
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('notes.*')) }} {{ $active($isRoute('notes.*')) }}"
-       href="{{ route('notes.index') }}">
-      <i class="bi bi-stickies"></i><span>@lang('sidebar.Notes')</span>
-    </a>
-  </li>
-  @endroutecanany
+  
 
   {{-- Customers --}}
   @routecanany(array_merge(['customers.dashboard'], $customerManagePatterns))
@@ -452,26 +445,6 @@
       @endroutecanany
 
     </ul>
-  </li>
-  @endroutecanany
-
-  {{-- المطالبات --}}
-  @routecanany($contractClaimsPatterns)
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('contract-claims.*')) }} {{ $active($isRoute('contract-claims.*')) }}"
-       href="{{ route('contract-claims.index') }}">
-      <i class="bi bi-exclamation-octagon"></i><span>@lang('sidebar.Claims')</span>
-    </a>
-  </li>
-  @endroutecanany
-
-  {{-- المديونيات --}}
-  @routecanany($debtsPatterns)
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('debts.*')) }} {{ $active($isRoute('debts.*')) }}"
-       href="{{ route('debts.index') }}">
-      <i class="bi bi-cash-coin"></i><span>@lang('sidebar.Debts')</span>
-    </a>
   </li>
   @endroutecanany
 
@@ -612,8 +585,15 @@
   </li>
   @endroutecanany
 
+  @routecanany('notes.index')
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('notes.*')) }} {{ $active($isRoute('notes.*')) }}"
+       href="{{ route('notes.index') }}">
+      <i class="bi bi-stickies"></i><span>@lang('sidebar.Notes')</span>
+    </a>
+  </li>
+  @endroutecanany
 
-  @if ($primaryExpenseLink)
   @routecanany($expenseNavPatterns)
   <li class="nav-item">
     <a class="nav-link {{ $coll($expensesActive) }} {{ $active($expensesActive) }}"
@@ -636,7 +616,26 @@
     @endif
   </li>
   @endroutecanany
-  @endif
+
+  {{-- المديونيات --}}
+  @routecanany($debtsPatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('debts.*')) }} {{ $active($isRoute('debts.*')) }}"
+       href="{{ route('debts.index') }}">
+      <i class="bi bi-cash-coin"></i><span>@lang('sidebar.Debts')</span>
+    </a>
+  </li>
+  @endroutecanany
+
+  {{-- المطالبات --}}
+  @routecanany($contractClaimsPatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('contract-claims.*')) }} {{ $active($isRoute('contract-claims.*')) }}"
+       href="{{ route('contract-claims.index') }}">
+      <i class="bi bi-exclamation-octagon"></i><span>@lang('sidebar.Claims')</span>
+    </a>
+  </li>
+  @endroutecanany
 
 
   {{-- استيرادات البيانات --}}
