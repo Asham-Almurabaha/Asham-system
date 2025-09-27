@@ -122,11 +122,13 @@
                         <input type="date" name="to" class="form-control form-control-sm" value="{{ old('to') }}" required>
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-label mb-1 text-danger">{{ __('Delete Range') }}</label>
-                        <x-button.delete type="submit" size="sm" class="d-flex align-items-center gap-2">
-                            <i class="bi bi-trash"></i>
-                            <span>{{ __('Delete Range') }}</span>
-                        </x-button.delete>
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="audit-log-delete-range" class="form-label mb-0 text-danger">{{ __('Delete Range') }}</label>
+                            <x-button.delete id="audit-log-delete-range" type="submit" size="sm" class="d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-trash"></i>
+                                <span>{{ __('Delete Range') }}</span>
+                            </x-button.delete>
+                        </div>
                         <div class="small text-muted mt-2">{{ __('Audit log range delete help') }}</div>
                     </div>
                 </form>
