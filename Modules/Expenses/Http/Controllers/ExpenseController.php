@@ -17,46 +17,11 @@ class ExpenseController extends Controller
     {
         $today = Carbon::today();
 
-        $filters = [
-            'status' => $request->has('status') ? $request->query('status') : 'upcoming',
-            'expense_type_id' => $request->query('expense_type_id'),
-            'due_from' => $request->query('due_from'),
-            'due_to' => $request->query('due_to'),
-            'search' => $request->query('search'),
-        ];
-
-        $filters['search'] = $this->cleanString($filters['search']);
-
-        $query = Expense::query()->with('type');
-
-        if ($filters['status'] === 'overdue') {
-            $query->whereNull('paid_at')->whereDate('due_date', '<', $today);
-        } elseif ($filters['status'] === 'paid') {
-            $query->whereNotNull('paid_at');
-        } elseif ($filters['status'] === 'upcoming') {
-            $query->whereNull('paid_at')->whereDate('due_date', '>=', $today);
-        }
-
-        if (!empty($filters['expense_type_id'])) {
-            $query->where('expense_type_id', (int) $filters['expense_type_id']);
-        }
-
-        if (!empty($filters['due_from'])) {
-            $query->whereDate('due_date', '>=', $filters['due_from']);
-        }
-
-        if (!empty($filters['due_to'])) {
-            $query->whereDate('due_date', '<=', $filters['due_to']);
-        }
-
-        if (!empty($filters['search'])) {
-            $query->where(function ($builder) use ($filters) {
-                $builder->where('title', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('reference', 'like', '%' . $filters['search'] . '%');
-            });
-        }
-
-        $expenses = $query->orderBy('due_date')->orderBy('id')->paginate(20)->withQueryString();
+        $expenses = Expense::query()
+            ->with('type')
+            ->orderBy('due_date')
+            ->orderBy('id')
+            ->paginate(20);
 
         $stats = [
             'total' => Expense::count(),
@@ -68,8 +33,6 @@ class ExpenseController extends Controller
         return view('expenses::expenses.index', [
             'expenses' => $expenses,
             'stats' => $stats,
-            'filters' => $filters,
-            'types' => $this->typeOptions(),
         ]);
     }
 

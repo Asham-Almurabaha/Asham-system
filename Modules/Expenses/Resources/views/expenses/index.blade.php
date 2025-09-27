@@ -58,51 +58,8 @@
             </div>
         </div>
 
-        @php
-            $filters = (array) ($filters ?? []);
-        @endphp
-
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-light border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <span class="fw-semibold">@lang('expenses::expenses.filters.title')</span>
-                <span class="small text-muted">@lang('expenses::expenses.filters.results', ['count' => $expenses->total()])</span>
-            </div>
-            <div class="card-body">
-                <form method="GET" action="{{ route('expenses.expenses.index') }}" class="row gy-3 gx-3 align-items-end" id="filtersForm">
-                    <div class="col-12 col-md-4 col-xl-2">
-                        <label class="form-label small text-muted" for="filterStatus">@lang('expenses::expenses.filters.status')</label>
-                        <select id="filterStatus" name="status" class="form-select form-select-sm">
-                            <option value="" @selected(($filters['status'] ?? '') === '')>@lang('expenses::expenses.filters.all')</option>
-                            <option value="upcoming" @selected(($filters['status'] ?? 'upcoming') === 'upcoming')>@lang('expenses::expenses.filters.upcoming')</option>
-                            <option value="overdue" @selected(($filters['status'] ?? '') === 'overdue')>@lang('expenses::expenses.filters.overdue')</option>
-                            <option value="paid" @selected(($filters['status'] ?? '') === 'paid')>@lang('expenses::expenses.filters.paid')</option>
-                        </select>
-                    </div>
-
-                    <div class="col-12 col-md-4 col-xl-2">
-                        <label class="form-label small text-muted" for="filterType">@lang('expenses::expenses.filters.type')</label>
-                        <select id="filterType" name="expense_type_id" class="form-select form-select-sm">
-                            <option value="">@lang('expenses::expenses.filters.all')</option>
-                            @foreach($types as $id => $name)
-                                <option value="{{ $id }}" @selected((string) ($filters['expense_type_id'] ?? '') === (string) $id)>{{ $name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                  
-                    <div class="col-12 col-md-6 col-xl-3">
-                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-sm-end">
-                            <x-button.action type="submit" variant="primary" size="sm" class="w-100">
-                                <i class="bi bi-funnel"></i>
-                                <span class="ms-1">@lang('expenses::expenses.filters.apply')</span>
-                            </x-button.action>
-                            <x-button.action href="{{ route('expenses.expenses.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">
-                                <i class="bi bi-arrow-counterclockwise"></i>
-                                <span class="ms-1">@lang('expenses::expenses.filters.reset')</span>
-                            </x-button.action>
-                        </div>
-                    </div>
-                </form>
-            </div>
+        <div class="d-flex justify-content-end mb-3">
+            <span class="small text-muted">@lang('expenses::expenses.filters.results', ['count' => $expenses->total()])</span>
         </div>
 
         <div class="card border-0 shadow-sm">

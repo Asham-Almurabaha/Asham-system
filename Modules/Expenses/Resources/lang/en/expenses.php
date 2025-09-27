@@ -47,5 +47,5 @@ return [
         'overdue' => 'Overdue',
         'paid' => 'Paid',
     ],
-    'empty' => 'No expenses found for the selected filter.',
+    'empty' => 'No expenses available at the moment.',
 ];
