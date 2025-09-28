@@ -132,13 +132,13 @@
 
                 @php
                     $oldContextDebtId = (string) old('context_debt_id');
+                    $todayDate = now()->format('Y-m-d');
                 @endphp
 
                 @forelse($debts as $debt)
                     @php
                         $rowNumber = $loop->iteration + ($debts->currentPage() - 1) * $debts->perPage();
                         $paymentsCollapseId = 'debt-payments-'.$debt->id;
-                        $paymentFormId = $paymentsCollapseId.'-form';
                         $outstanding = max($debt->outstanding_amount, 0);
                         $accountName = optional($debt->bankAccount)->name ?? optional($debt->safe)->name ?? '—';
                         $accountLabel = $debt->bankAccount
@@ -150,9 +150,11 @@
                             $paymentAction .= '?'.$queryString;
                         }
                         $isCurrentDebt = $oldContextDebtId === (string) $debt->id;
+                        $debtName = $debt->counterparty_name ?? ($debt->customer->name ?? $debt->investor->name ?? '-');
                         $defaultAmount = number_format($outstanding, 2, '.', '');
                         $amountValue = $isCurrentDebt ? old('amount', $defaultAmount) : $defaultAmount;
-                        $paidAtValue = $isCurrentDebt ? old('paid_at', now()->format('Y-m-d')) : now()->format('Y-m-d');
+                        $defaultPaidAt = $todayDate;
+                        $paidAtValue = $isCurrentDebt ? old('paid_at', $defaultPaidAt) : $defaultPaidAt;
                         $oldBank = $isCurrentDebt ? old('bank_account_id') : null;
                         $oldSafe = $isCurrentDebt ? old('safe_id') : null;
                         $oldNotes = $isCurrentDebt ? old('notes') : '';
@@ -162,7 +164,7 @@
                     <tr>
                         <td class="text-muted text-center">{{ $rowNumber }}</td>
                         <td class="text-start">
-                            <div class="fw-semibold">{{ $debt->counterparty_name ?? ($debt->customer->name ?? $debt->investor->name ?? '-') }}</div>
+                            <div class="fw-semibold">{{ $debtName }}</div>
                             @if($debt->notes)
                                 <div class="small text-muted" title="{{ $debt->notes }}">{{ Str::limit($debt->notes, 80) }}</div>
                             @endif
@@ -208,10 +210,21 @@
                                             type="button"
                                             variant="success"
                                             size="sm"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target="#{{ $paymentsCollapseId }}"
-                                            aria-expanded="{{ $collapseShowClass ? 'true' : 'false' }}"
-                                            aria-controls="{{ $paymentsCollapseId }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#debtPaymentModal"
+                                            data-debt-payment-trigger="1"
+                                            data-payment-action="{{ $paymentAction }}"
+                                            data-debt-id="{{ $debt->id }}"
+                                            data-debt-name="{{ e($debtName) }}"
+                                            data-outstanding="{{ $defaultAmount }}"
+                                            data-outstanding-formatted="{{ number_format($outstanding, 2) }}"
+                                            data-amount-default="{{ $defaultAmount }}"
+                                            data-old-amount="{{ $isCurrentDebt ? $amountValue : '' }}"
+                                            data-paid-at-default="{{ $defaultPaidAt }}"
+                                            data-old-paid-at="{{ $isCurrentDebt ? $paidAtValue : '' }}"
+                                            data-old-bank="{{ $oldBank ?? '' }}"
+                                            data-old-safe="{{ $oldSafe ?? '' }}"
+                                            data-old-notes="{{ e($oldNotes) }}"
                                         >
                                             <i class="bi bi-cash-coin"></i>
                                             <span class="ms-1">{{ __('debts::messages.payments.actions.pay') }}</span>
@@ -272,77 +285,9 @@
 
                                     @can('debts.edit')
                                         @if($outstanding > 0)
-                                            <form
-                                                action="{{ $paymentAction }}"
-                                                method="POST"
-                                                class="row g-3 align-items-end mt-3"
-                                                id="{{ $paymentFormId }}"
-                                            >
-                                                @csrf
-                                                <input type="hidden" name="context_debt_id" value="{{ $debt->id }}">
-                                                <div class="col-12 col-md-3">
-                                                    <label class="form-label small text-muted" for="amount-{{ $debt->id }}">{{ __('debts::messages.payments.fields.amount') }}</label>
-                                                    <input id="amount-{{ $debt->id }}" type="number" name="amount" class="form-control form-control-sm" min="0.01" step="0.01" max="{{ $outstanding }}" value="{{ $amountValue }}" required>
-                                                    @if($isCurrentDebt)
-                                                        @error('amount')
-                                                            <div class="text-danger small mt-1">{{ $message }}</div>
-                                                        @enderror
-                                                    @endif
-                                                </div>
-                                                <div class="col-12 col-md-3">
-                                                    <label class="form-label small text-muted" for="paid-at-{{ $debt->id }}">{{ __('debts::messages.payments.fields.paid_at') }}</label>
-                                                    <input id="paid-at-{{ $debt->id }}" type="date" name="paid_at" class="form-control form-control-sm" value="{{ $paidAtValue }}" required>
-                                                    @if($isCurrentDebt)
-                                                        @error('paid_at')
-                                                            <div class="text-danger small mt-1">{{ $message }}</div>
-                                                        @enderror
-                                                    @endif
-                                                </div>
-                                                <div class="col-12 col-md-3">
-                                                    <label class="form-label small text-muted" for="bank-{{ $debt->id }}">{{ __('debts::messages.payments.fields.bank_account') }}</label>
-                                                    <select id="bank-{{ $debt->id }}" name="bank_account_id" class="form-select form-select-sm" {{ $banks->count() ? '' : 'disabled' }}>
-                                                        <option value="">{{ __('debts::messages.placeholders.select_bank') }}</option>
-                                                        @foreach($banks as $bank)
-                                                            <option value="{{ $bank->id }}" @selected($oldBank == $bank->id)>{{ $bank->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    @if($isCurrentDebt)
-                                                        @error('bank_account_id')
-                                                            <div class="text-danger small mt-1">{{ $message }}</div>
-                                                        @enderror
-                                                    @endif
-                                                </div>
-                                                <div class="col-12 col-md-3">
-                                                    <label class="form-label small text-muted" for="safe-{{ $debt->id }}">{{ __('debts::messages.payments.fields.safe') }}</label>
-                                                    <select id="safe-{{ $debt->id }}" name="safe_id" class="form-select form-select-sm" {{ $safes->count() ? '' : 'disabled' }}>
-                                                        <option value="">{{ __('debts::messages.placeholders.select_safe') }}</option>
-                                                        @foreach($safes as $safe)
-                                                            <option value="{{ $safe->id }}" @selected($oldSafe == $safe->id)>{{ $safe->name }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    <div class="form-text">{{ __('debts::messages.hints.account_choice') }}</div>
-                                                    @if($isCurrentDebt)
-                                                        @error('safe_id')
-                                                            <div class="text-danger small mt-1">{{ $message }}</div>
-                                                        @enderror
-                                                    @endif
-                                                </div>
-                                                <div class="col-12 col-md-6">
-                                                    <label class="form-label small text-muted" for="notes-{{ $debt->id }}">{{ __('debts::messages.payments.fields.notes') }}</label>
-                                                    <input id="notes-{{ $debt->id }}" type="text" name="notes" class="form-control form-control-sm" value="{{ $oldNotes }}" placeholder="{{ __('debts::messages.payments.placeholders.notes') }}">
-                                                    @if($isCurrentDebt)
-                                                        @error('notes')
-                                                            <div class="text-danger small mt-1">{{ $message }}</div>
-                                                        @enderror
-                                                    @endif
-                                                </div>
-                                                <div class="col-12 col-md-2 ms-auto d-grid">
-                                                    <x-button.action type="submit" variant="success" size="sm">
-                                                        <i class="bi bi-cash-stack"></i>
-                                                        <span class="ms-1">{{ __('debts::messages.payments.actions.pay') }}</span>
-                                                    </x-button.action>
-                                                </div>
-                                            </form>
+                                            <div class="alert alert-info mt-3 mb-0" role="alert">
+                                                {{ __('debts::messages.payments.use_modal_hint') }}
+                                            </div>
                                         @endif
                                     @endcan
 
@@ -370,8 +315,228 @@
         @endif
     </div>
 </div>
+
+<div
+    class="modal fade"
+    id="debtPaymentModal"
+    tabindex="-1"
+    aria-labelledby="debtPaymentModalLabel"
+    aria-hidden="true"
+    data-reopen-id="{{ $oldContextDebtId }}"
+>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST">
+                @csrf
+                <input type="hidden" name="context_debt_id" value="{{ $oldContextDebtId }}">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="debtPaymentModalLabel">{{ __('debts::messages.payments.actions.pay') }}</h5>
+                        <div class="small text-muted mt-1" data-role="debt-name">—</div>
+                    </div>
+                    <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <span class="badge bg-light text-dark border">
+                            {{ __('debts::messages.totals.outstanding') }}:
+                            <span data-role="outstanding-amount">—</span>
+                        </span>
+                    </div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small text-muted" for="modal-debt-amount">{{ __('debts::messages.payments.fields.amount') }}</label>
+                            <input
+                                id="modal-debt-amount"
+                                type="number"
+                                name="amount"
+                                class="form-control form-control-sm"
+                                min="0.01"
+                                step="0.01"
+                                value="{{ old('amount') }}"
+                                required
+                            >
+                            @error('amount')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small text-muted" for="modal-debt-paid-at">{{ __('debts::messages.payments.fields.paid_at') }}</label>
+                            <input
+                                id="modal-debt-paid-at"
+                                type="date"
+                                name="paid_at"
+                                class="form-control form-control-sm"
+                                value="{{ old('paid_at') }}"
+                                required
+                            >
+                            @error('paid_at')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small text-muted" for="modal-debt-bank">{{ __('debts::messages.payments.fields.bank_account') }}</label>
+                            <select
+                                id="modal-debt-bank"
+                                name="bank_account_id"
+                                class="form-select form-select-sm"
+                                {{ $banks->count() ? '' : 'disabled' }}
+                            >
+                                <option value="">{{ __('debts::messages.placeholders.select_bank') }}</option>
+                                @foreach($banks as $bank)
+                                    <option value="{{ $bank->id }}" @selected(old('bank_account_id') == $bank->id)>{{ $bank->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('bank_account_id')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label small text-muted" for="modal-debt-safe">{{ __('debts::messages.payments.fields.safe') }}</label>
+                            <select
+                                id="modal-debt-safe"
+                                name="safe_id"
+                                class="form-select form-select-sm"
+                                {{ $safes->count() ? '' : 'disabled' }}
+                            >
+                                <option value="">{{ __('debts::messages.placeholders.select_safe') }}</option>
+                                @foreach($safes as $safe)
+                                    <option value="{{ $safe->id }}" @selected(old('safe_id') == $safe->id)>{{ $safe->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">{{ __('debts::messages.hints.account_choice') }}</div>
+                            @error('safe_id')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label class="form-label small text-muted" for="modal-debt-notes">{{ __('debts::messages.payments.fields.notes') }}</label>
+                            <input
+                                id="modal-debt-notes"
+                                type="text"
+                                name="notes"
+                                class="form-control form-control-sm"
+                                value="{{ old('notes') }}"
+                                placeholder="{{ __('debts::messages.payments.placeholders.notes') }}"
+                            >
+                            @error('notes')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <x-button.action type="button" variant="secondary" :outline="true" data-bs-dismiss="modal">{{ __('debts::messages.buttons.cancel') }}</x-button.action>
+                    <x-button.action type="submit" variant="success">
+                        <i class="bi bi-cash-stack"></i>
+                        <span class="ms-1">{{ __('debts::messages.payments.actions.pay') }}</span>
+                    </x-button.action>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalElement = document.getElementById('debtPaymentModal');
+            if (!modalElement) {
+                return;
+            }
+
+            var form = modalElement.querySelector('form');
+            var amountInput = modalElement.querySelector('input[name="amount"]');
+            var paidAtInput = modalElement.querySelector('input[name="paid_at"]');
+            var bankSelect = modalElement.querySelector('select[name="bank_account_id"]');
+            var safeSelect = modalElement.querySelector('select[name="safe_id"]');
+            var notesInput = modalElement.querySelector('input[name="notes"]');
+            var contextInput = modalElement.querySelector('input[name="context_debt_id"]');
+            var debtNameTarget = modalElement.querySelector('[data-role="debt-name"]');
+            var outstandingTarget = modalElement.querySelector('[data-role="outstanding-amount"]');
+
+            if (!form || !amountInput || !paidAtInput || !bankSelect || !safeSelect || !notesInput || !contextInput) {
+                return;
+            }
+
+            var cloneDataset = function (dataset) {
+                return dataset ? Object.assign({}, dataset) : {};
+            };
+
+            var resetSelect = function (selectElement, value) {
+                if (!selectElement) {
+                    return;
+                }
+
+                selectElement.value = value || '';
+            };
+
+            var applyDataset = function (data) {
+                var amount = data.oldAmount && data.oldAmount.length ? data.oldAmount : (data.amountDefault || '');
+                amountInput.value = amount;
+
+                if (data.outstanding && data.outstanding.length) {
+                    amountInput.setAttribute('max', data.outstanding);
+                } else {
+                    amountInput.removeAttribute('max');
+                }
+
+                var paidAt = data.oldPaidAt && data.oldPaidAt.length ? data.oldPaidAt : (data.paidAtDefault || '');
+                paidAtInput.value = paidAt;
+
+                resetSelect(bankSelect, data.oldBank || '');
+                resetSelect(safeSelect, data.oldSafe || '');
+                notesInput.value = data.oldNotes && data.oldNotes.length ? data.oldNotes : '';
+                contextInput.value = data.debtId || '';
+
+                if (debtNameTarget) {
+                    debtNameTarget.textContent = data.debtName || '—';
+                }
+
+                if (outstandingTarget) {
+                    outstandingTarget.textContent = data.outstandingFormatted || data.outstanding || '—';
+                }
+
+                if (form && data.paymentAction) {
+                    form.setAttribute('action', data.paymentAction);
+                }
+            };
+
+            var modalInstance = window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalElement) : null;
+            var pendingDataset = null;
+
+            modalElement.addEventListener('show.bs.modal', function (event) {
+                var dataset = null;
+
+                if (event.relatedTarget && event.relatedTarget.dataset && event.relatedTarget.dataset.debtPaymentTrigger !== undefined) {
+                    dataset = cloneDataset(event.relatedTarget.dataset);
+                } else if (pendingDataset) {
+                    dataset = cloneDataset(pendingDataset);
+                    pendingDataset = null;
+                }
+
+                if (!dataset) {
+                    return;
+                }
+
+                applyDataset(dataset);
+            });
+
+            var reopenId = modalElement.getAttribute('data-reopen-id');
+            if (reopenId) {
+                var trigger = document.querySelector('[data-debt-payment-trigger][data-debt-id="' + reopenId + '"]');
+                if (trigger) {
+                    pendingDataset = cloneDataset(trigger.dataset);
+                    if (modalInstance) {
+                        modalInstance.show();
+                    }
+                }
+            }
+        });
+    </script>
 @endpush

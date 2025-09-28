@@ -97,6 +97,7 @@ return [
         ],
         'empty' => 'No payments recorded yet.',
         'settled' => 'This debt is already settled.',
+        'use_modal_hint' => 'Use the "Record payment" action above to add a new payment.',
     ],
     'placeholders' => [
         'select_account' => 'Select an account or safe',
