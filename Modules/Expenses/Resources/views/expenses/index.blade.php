@@ -193,13 +193,6 @@
                                     </x-button.action>
                                 @endif
 
-                                <span
-                                    class="badge bg-success-subtle text-success align-self-center {{ $isManuallySettled ? '' : 'd-none' }}"
-                                    data-expense-complete-indicator="1"
-                                >
-                                    <i class="bi bi-check2-circle me-1"></i>@lang('expenses::expenses.completion.indicator')
-                                </span>
-
                                 @if ($outstanding > 0)
                                     <div @class(['d-inline', 'd-none' => $isManuallySettled]) data-expense-hideable="1">
                                         <x-button.action

@@ -65,7 +65,7 @@
         @endphp
 
         <div class="card shadow-sm mb-3">
-            <div class="card-body">
+            <div class="card-body p-4">
                 <div class="d-flex flex-wrap gap-3 justify-content-between align-items-start mb-3">
                     <div>
                         <div class="text-muted small mb-1">@lang('expenses::expenses.fields.title')</div>
@@ -74,7 +74,6 @@
                     </div>
 
                     <div class="d-flex flex-wrap gap-2 align-items-center">
-                        <span class="{{ $statusBadgeClass }}">{{ $statusLabel }}</span>
                         <x-button.action href="{{ route('expenses.expenses.edit', $expense) }}" variant="primary" :outline="true" size="sm">
                             @lang('expenses::expenses.actions.edit')
                         </x-button.action>
@@ -86,18 +85,6 @@
                         ])
                     </div>
                 </div>
-
-                @if ($isManuallySettled)
-                    <div class="alert alert-success d-flex align-items-center gap-2 py-2 px-3 mb-0">
-                        <i class="bi bi-check2-circle fs-4"></i>
-                        <div>
-                            <div class="fw-semibold mb-1">@lang('expenses::expenses.completion.indicator')</div>
-                            @if (filled($expense->notes))
-                                <div class="mb-0 small text-muted">@lang('expenses::expenses.completion.notes_prefix')</div>
-                            @endif
-                        </div>
-                    </div>
-                @endif
 
                 <h3 class="h6 text-uppercase text-muted mt-4 mb-3">@lang('expenses::expenses.sections.overview')</h3>
                 <div class="row g-3">
@@ -122,7 +109,7 @@
         </div>
 
         <div class="card shadow-sm mb-3">
-            <div class="card-body">
+            <div class="card-body p-4">
                 <h2 class="h5 mb-3">@lang('expenses::expenses.sections.payment_summary')</h2>
                 <div class="row g-3 text-center text-md-start">
                     <div class="col-md-4">
@@ -142,7 +129,7 @@
         </div>
 
         <div class="card shadow-sm mb-3">
-            <div class="card-body">
+            <div class="card-body p-4">
                 <h2 class="h5 mb-3">@lang('expenses::expenses.sections.history')</h2>
 
                 @if ($expense->payments->isNotEmpty())
@@ -177,7 +164,7 @@
         </div>
 
         <div class="card shadow-sm">
-            <div class="card-body">
+            <div class="card-body p-4">
                 <h2 class="h5 mb-3">@lang('expenses::expenses.sections.notes')</h2>
 
                 @if (filled($expense->notes))
