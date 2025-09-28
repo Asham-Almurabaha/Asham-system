@@ -203,6 +203,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'زكاة المال', 'type' => 'سحب'],
             ['name' => 'مديونية', 'type' => 'سحب'],
             ['name' => 'سداد مديونية', 'type' => 'إيداع'],
+            ['name' => 'مصروفات', 'type' => 'سحب'],
 
         ];
 
