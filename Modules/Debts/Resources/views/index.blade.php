@@ -27,39 +27,37 @@
     </div>
 </div>
 
-<div class="card shadow-sm mb-3">
-    <div class="card-body">
-        <div class="row g-3" dir="rtl">
-            <div class="col-12 col-md-4">
-                <div class="kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon"><i class="bi bi-pie-chart fs-4 text-primary"></i></div>
-                        <div class="flex-grow-1">
-                            <div class="subnote">{{ __('debts::messages.totals.principal') }}</div>
-                            <div class="kpi-value fw-bold">{{ number_format($totals['principal'], 2) }}</div>
-                        </div>
+<div class="card-body">
+    <div class="row g-3" dir="rtl">
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon"><i class="bi bi-pie-chart fs-4 text-primary"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="subnote">{{ __('debts::messages.totals.principal') }}</div>
+                        <div class="kpi-value fw-bold">{{ number_format($totals['principal'], 2) }}</div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-4">
-                <div class="kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
-                        <div class="flex-grow-1">
-                            <div class="subnote">{{ __('debts::messages.totals.paid') }}</div>
-                            <div class="kpi-value fw-bold">{{ number_format($totals['paid'], 2) }}</div>
-                        </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="subnote">{{ __('debts::messages.totals.paid') }}</div>
+                        <div class="kpi-value fw-bold">{{ number_format($totals['paid'], 2) }}</div>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-4">
-                <div class="kpi-card p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
-                        <div class="flex-grow-1">
-                            <div class="subnote">{{ __('debts::messages.totals.outstanding') }}</div>
-                            <div class="kpi-value fw-bold">{{ number_format($totals['outstanding'], 2) }}</div>
-                        </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card p-3 h-100">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
+                    <div class="flex-grow-1">
+                        <div class="subnote">{{ __('debts::messages.totals.outstanding') }}</div>
+                        <div class="kpi-value fw-bold">{{ number_format($totals['outstanding'], 2) }}</div>
                     </div>
                 </div>
             </div>
