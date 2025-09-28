@@ -13,6 +13,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Modules\Contracts\Services\DueInstallmentsNotifier;
+use Modules\Debts\Services\DebtDueNotifier;
+use Modules\Expenses\Services\ExpenseDueNotifier;
 use Modules\Investors\DTOs\ZakatDueInvestor;
 use Modules\Investors\Services\ZakatDueNotifier;
 
@@ -145,6 +147,14 @@ class ViewServiceProvider extends ServiceProvider
                     'count' => 0,
                     'items' => [],
                 ],
+                'debts' => [
+                    'count' => 0,
+                    'items' => [],
+                ],
+                'expenses' => [
+                    'count' => 0,
+                    'items' => [],
+                ],
                 'notes' => [
                     'count' => 0,
                     'items' => [],
@@ -206,11 +216,57 @@ class ViewServiceProvider extends ServiceProvider
                     ];
                 });
 
-                $notifications['total'] = (int) ($data['count'] ?? 0);
+                $notifications['total'] += (int) ($data['count'] ?? 0);
                 $notifications['zakat'] = [
                     'count' => (int) ($data['count'] ?? 0),
                     'items' => $data['items'] ?? [],
                 ];
+            }
+
+            if (Schema::hasTable('debts')) {
+                $user = Auth::user();
+
+                if ($user && $user->can('debts.index')) {
+                    $locale = app()->getLocale();
+                    $cacheKey = "header.debts.notifications.{$locale}";
+
+                    $data = Cache::remember($cacheKey, 60, function () {
+                        return app(DebtDueNotifier::class)->summary();
+                    });
+
+                    $count = (int) ($data['count'] ?? 0);
+                    $items = $data['items'] ?? [];
+
+                    $notifications['debts'] = [
+                        'count' => $count,
+                        'items' => array_values($items),
+                    ];
+
+                    $notifications['total'] += $count;
+                }
+            }
+
+            if (Schema::hasTable('expenses') && Schema::hasTable('expense_types')) {
+                $user = Auth::user();
+
+                if ($user && $user->can('expenses.expenses.index')) {
+                    $locale = app()->getLocale();
+                    $cacheKey = "header.expenses.notifications.{$locale}";
+
+                    $data = Cache::remember($cacheKey, 60, function () {
+                        return app(ExpenseDueNotifier::class)->headerSummary();
+                    });
+
+                    $count = (int) ($data['count'] ?? 0);
+                    $items = $data['items'] ?? [];
+
+                    $notifications['expenses'] = [
+                        'count' => $count,
+                        'items' => array_values($items),
+                    ];
+
+                    $notifications['total'] += $count;
+                }
             }
 
             if (Schema::hasTable('notes')) {

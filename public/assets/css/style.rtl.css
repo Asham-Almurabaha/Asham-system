@@ -851,25 +851,33 @@ h6 {
   color: #6c757d;
 }
 
-.header-nav .notifications .notifications-footer {
-  padding: 14px 20px;
-  border-top: 1px solid #eaedf1;
-  background: #fff;
-  text-align: center;
+.header-nav .notifications .notifications-body {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.header-nav .notifications .notifications-footer-link {
-  color: #012970;
-  font-weight: 600;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
+.header-nav .notifications .notifications-scroll {
+  max-height: 360px;
+  overflow-y: auto;
 }
 
-.header-nav .notifications .notifications-footer-link:hover {
-  text-decoration: underline;
+.header-nav .notifications .notifications-list {
+  margin: 0;
+  padding: 0;
+}
+
+.header-nav .notifications .notification-status--today,
+.header-nav .notifications .notification-status--upcoming {
+  color: #0d6efd;
+}
+
+.header-nav .notifications .notification-status--overdue {
+  color: #dc3545;
+}
+
+.header-nav .notifications .notification-status--default {
+  color: #6c757d;
 }
 
 @media (min-width: 768px) {
