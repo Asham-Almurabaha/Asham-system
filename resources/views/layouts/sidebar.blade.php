@@ -585,14 +585,7 @@
   </li>
   @endroutecanany
 
-  @routecanany('notes.index')
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('notes.*')) }} {{ $active($isRoute('notes.*')) }}"
-       href="{{ route('notes.index') }}">
-      <i class="bi bi-stickies"></i><span>@lang('sidebar.Notes')</span>
-    </a>
-  </li>
-  @endroutecanany
+  
 
   @routecanany($expenseNavPatterns)
   <li class="nav-item">
@@ -633,6 +626,15 @@
     <a class="nav-link {{ $coll($isRoute('contract-claims.*')) }} {{ $active($isRoute('contract-claims.*')) }}"
        href="{{ route('contract-claims.index') }}">
       <i class="bi bi-exclamation-octagon"></i><span>@lang('sidebar.Claims')</span>
+    </a>
+  </li>
+  @endroutecanany
+
+  @routecanany('notes.index')
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('notes.*')) }} {{ $active($isRoute('notes.*')) }}"
+       href="{{ route('notes.index') }}">
+      <i class="bi bi-stickies"></i><span>@lang('sidebar.Notes')</span>
     </a>
   </li>
   @endroutecanany
