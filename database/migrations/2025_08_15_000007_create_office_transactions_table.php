@@ -24,7 +24,7 @@ class CreateOfficeTransactionsTable extends Migration
             $table->foreignId('contract_claim_id')->nullable()->constrained('contract_claims')->nullOnDelete();
 
             // ربط بدفعة المطالبة (إن وجدت)
-            $table->foreignId('contract_claim_payment_id')->nullable()->constrained('contract_claim_payments')->nullOnDelete();
+            $table->foreignId('contract_claim_payment_id')->nullable();
 
             // ربط بالعقد (القسط)
             $table->foreignId('installment_id')->nullable()->constrained('contract_installments')->onDelete('set null');
