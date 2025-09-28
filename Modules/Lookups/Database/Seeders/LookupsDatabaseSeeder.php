@@ -254,6 +254,8 @@ class LookupsDatabaseSeeder extends Seeder
             ['status' => 'مديونية', 'category' => 'المستثمرين'],
             ['status' => 'سداد مديونية', 'category' => 'المكتب'],
             ['status' => 'سداد مديونية', 'category' => 'المستثمرين'],
+            ['status' => 'مصروفات', 'category' => 'المكتب'],
+
 
         ];
 
