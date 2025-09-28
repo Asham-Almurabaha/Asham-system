@@ -1,10 +1,7 @@
 @extends('layouts.master')
 
 @php
-    use Illuminate\Support\Arr;
     use Illuminate\Support\Str;
-
-    $filterTypes = Arr::only(__('debts::messages.types'), ['other']);
 @endphp
 
 @section('title', __('debts::messages.page_title'))
@@ -75,15 +72,6 @@
     </div>
     <div class="card-body">
         <form method="GET" action="{{ route('debts.index') }}" id="filtersForm" class="row gy-3 gx-3 align-items-end">
-            <div class="col-12 col-md-4 col-xl-3">
-                <label class="form-label small text-muted" for="filterParty">{{ __('debts::messages.filters.party_type') }}</label>
-                <select id="filterParty" name="party_type" class="form-select form-select-sm">
-                    <option value="">{{ __('debts::messages.filters.all') }}</option>
-                    @foreach($filterTypes as $key => $label)
-                        <option value="{{ $key }}" @selected(($filters['party_type'] ?? '') === $key)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
             <div class="col-12 col-md-4 col-xl-3">
                 <label class="form-label small text-muted" for="filterStatus">{{ __('debts::messages.filters.status') }}</label>
                 <select id="filterStatus" name="status" class="form-select form-select-sm">

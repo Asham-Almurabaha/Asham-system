@@ -27,7 +27,6 @@ class DebtController extends Controller
     public function index(Request $request): View
     {
         $filters = [
-            'party_type' => $request->string('party_type')->toString(),
             'status' => $request->string('status')->toString(),
             'search' => $request->string('search')->toString(),
         ];
@@ -84,10 +83,6 @@ class DebtController extends Controller
 
     protected function applyFilters(Builder $query, array $filters): Builder
     {
-        if (! empty($filters['party_type'])) {
-            $query->where('party_type', $filters['party_type']);
-        }
-
         if (($filters['status'] ?? null) === 'open') {
             $query->whereColumn('principal_amount', '>', 'paid_amount');
         } elseif (($filters['status'] ?? null) === 'settled') {
