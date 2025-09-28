@@ -72,6 +72,9 @@ trait SeedsRolesAndPermissions
             'view-audit-logs',
             'accounts.entries.view',
             'accounts.entries.create',
+            'ajax.accounts.availability',
+            'ajax.accounts.availability.bulk',
+            'product-types.available',
         ];
     }
 
@@ -84,8 +87,19 @@ trait SeedsRolesAndPermissions
     {
         return [
             'accounts.bank-accounts.index',
+            'accounts.bank-accounts.create',
+            'accounts.bank-accounts.store',
+            'accounts.bank-accounts.edit',
+            'accounts.bank-accounts.update',
+            'accounts.bank-accounts.destroy',
             'accounts.entries.goods.pay.index',
             'accounts.entries.goods.sales.index',
+            'accounts.safes.index',
+            'accounts.safes.create',
+            'accounts.safes.store',
+            'accounts.safes.edit',
+            'accounts.safes.update',
+            'accounts.safes.destroy',
             'operating.cars.index',
             'operating.motocycles.index',
             'operating.motorcycles.index',
@@ -101,7 +115,6 @@ trait SeedsRolesAndPermissions
             'cars.expenses.index',
             'motocycles.expenses.index',
             'motorcycles.expenses.index',
-            'accounts.safes.index',
             'ajax.investors.liquidity',
             'audit.logs',
             'categories.index',
@@ -253,7 +266,13 @@ trait SeedsRolesAndPermissions
                     str_starts_with($permission, 'ledger.') ||
                     str_starts_with($permission, 'installments.') ||
                     str_starts_with($permission, 'reports.investors.') ||
+                    str_starts_with($permission, 'ajax.accounts.') ||
                     in_array($permission, [
+                        'accounts.bank-accounts.index',
+                        'accounts.safes.index',
+                        'ajax.accounts.availability',
+                        'ajax.accounts.availability.bulk',
+                        'product-types.available',
                         'contracts.index',
                         'contracts.show',
                         'contracts.print',
@@ -312,6 +331,10 @@ trait SeedsRolesAndPermissions
      */
     protected function isAdminOnlyPermission(string $permission): bool
     {
+        if (in_array($permission, $this->sharedAdminPermissionNames(), true)) {
+            return false;
+        }
+
         if (in_array($permission, $this->settingsPermissionsAvailableToAll(), true)) {
             return false;
         }
@@ -337,10 +360,36 @@ trait SeedsRolesAndPermissions
     protected function adminOnlyPermissionNames(): array
     {
         return [
-            'view-audit-logs',
             'installments.cancel_payment',
             'settings.database.import',
             'settings.database.restore',
+        ];
+    }
+
+    /**
+     * Permission names that should be shared with privileged non-admin roles.
+     *
+     * @return array<int, string>
+     */
+    protected function sharedAdminPermissionNames(): array
+    {
+        return [
+            'view-audit-logs',
+            'audit.logs',
+            'audit.logs.show',
+            'ajax.accounts.availability',
+            'ajax.accounts.availability.bulk',
+            'accounts.bank-accounts.index',
+            'accounts.bank-accounts.create',
+            'accounts.bank-accounts.store',
+            'accounts.bank-accounts.edit',
+            'accounts.bank-accounts.update',
+            'accounts.safes.index',
+            'accounts.safes.create',
+            'accounts.safes.store',
+            'accounts.safes.edit',
+            'accounts.safes.update',
+            'product-types.available',
         ];
     }
 
