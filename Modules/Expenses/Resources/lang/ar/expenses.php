@@ -13,6 +13,7 @@ return [
         'cancel' => 'إلغاء',
         'confirm_delete' => 'هل أنت متأكد من رغبتك في حذف هذا المصروف؟',
         'manage' => 'الإجراءات',
+        'payments' => 'السدادات',
     ],
     'filters' => [
         'title' => 'خيارات التصفية',
@@ -34,6 +35,8 @@ return [
         'expense_type_id' => 'نوع المصروف',
         'title' => 'عنوان المصروف',
         'amount' => 'المبلغ',
+        'paid_amount' => 'المسدد',
+        'outstanding_amount' => 'المتبقي',
         'due_date' => 'تاريخ الاستحقاق',
         'notes' => 'ملاحظات إضافية',
         'status' => 'الحالة',
@@ -42,6 +45,7 @@ return [
     'status_labels' => [
         'upcoming' => 'مستحقة قريباً',
         'overdue' => 'متأخرة',
+        'settled' => 'مسدد',
     ],
     'empty' => 'لا توجد مصروفات متاحة حالياً.',
 ];

@@ -13,6 +13,7 @@ return [
         'cancel' => 'Cancel',
         'confirm_delete' => 'Are you sure you want to delete this expense?',
         'manage' => 'Actions',
+        'payments' => 'Payments',
     ],
     'filters' => [
         'title' => 'Filters',
@@ -34,6 +35,8 @@ return [
         'expense_type_id' => 'Expense Type',
         'title' => 'Title',
         'amount' => 'Amount',
+        'paid_amount' => 'Paid',
+        'outstanding_amount' => 'Outstanding',
         'due_date' => 'Due Date',
         'notes' => 'Notes',
         'status' => 'Status',
@@ -42,6 +45,7 @@ return [
     'status_labels' => [
         'upcoming' => 'Upcoming',
         'overdue' => 'Overdue',
+        'settled' => 'Settled',
     ],
     'empty' => 'No expenses available at the moment.',
 ];

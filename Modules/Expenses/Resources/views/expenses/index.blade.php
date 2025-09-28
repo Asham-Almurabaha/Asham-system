@@ -13,7 +13,7 @@
         </nav>
     </div>
 
-    
+    {{-- زر إنشاء --}}
     <div class="card shadow-sm mb-3">
         <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
             <x-button.action href="{{ route('expenses.expenses.create') }}" variant="success">
@@ -22,9 +22,9 @@
         </div>
     </div>
 
-       
-        
-    <div class="card-body">
+    {{-- KPI --}}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
             <div class="row g-3">
                 <div class="col-12 col-md-4">
                     <div class="kpi-card p-3 h-100">
@@ -59,35 +59,43 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </div><!-- /.row -->
+        </div><!-- /.card-body -->
+    </div><!-- /.card -->
 
-
+    {{-- الجدول --}}
     <div class="card shadow-sm">
         <div class="card-body p-0">
             <x-table head-class="table-light">
                 @php $today = \Illuminate\Support\Carbon::today(); @endphp
+
                 <x-slot name="head">
                     <tr>
                         <th scope="col" style="width:60px" class="text-center">#</th>
                         <th scope="col" class="text-start">@lang('expenses::expenses.fields.title')</th>
                         <th scope="col" class="text-start">@lang('expenses::expenses.fields.expense_type_id')</th>
                         <th scope="col" class="text-end">@lang('expenses::expenses.fields.amount')</th>
+                        <th scope="col" class="text-end">@lang('expenses::expenses.fields.paid_amount')</th>
+                        <th scope="col" class="text-end">@lang('expenses::expenses.fields.outstanding_amount')</th>
                         <th scope="col">@lang('expenses::expenses.fields.due_date')</th>
                         <th scope="col" style="width:150px">@lang('expenses::expenses.fields.status')</th>
-                        <th scope="col" class="text-end" style="width:200px">@lang('expenses::expenses.actions.manage')</th>
+                        <th scope="col" class="text-end" style="width:260px">@lang('expenses::expenses.actions.manage')</th>
                     </tr>
                 </x-slot>
+
                 @forelse($expenses as $expense)
                     <tr>
                         <td class="text-center">{{ $expenses->firstItem() + $loop->index }}</td>
                         <td class="text-start fw-semibold">{{ $expense->title }}</td>
                         <td class="text-start">{{ optional($expense->type)->name ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td class="text-end">{{ number_format($expense->amount, 2) }}</td>
+                        <td class="text-end">{{ number_format($expense->paid_amount, 2) }}</td>
+                        <td class="text-end">{{ number_format($expense->outstanding_amount, 2) }}</td>
                         <td>{{ optional($expense->due_date)->toDateString() }}</td>
                         <td>
-                            @if ($expense->due_date && $expense->due_date->lt($today))
+                            @if ($expense->outstanding_amount <= 0)
+                                <span class="badge bg-success-subtle text-success">@lang('expenses::expenses.status_labels.settled')</span>
+                            @elseif ($expense->due_date && $expense->due_date->lt($today))
                                 <span class="badge bg-danger-subtle text-danger">@lang('expenses::expenses.status_labels.overdue')</span>
                             @else
                                 <span class="badge bg-warning-subtle text-warning">@lang('expenses::expenses.status_labels.upcoming')</span>
@@ -95,6 +103,9 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2">
+                                <x-button.action href="{{ route('expenses.payments.create', $expense) }}" variant="dark" :outline="true" size="sm">
+                                    <i class="bi bi-wallet2 me-1"></i>@lang('expenses::expenses.actions.payments')
+                                </x-button.action>
                                 <x-button.action href="{{ route('expenses.expenses.edit', $expense) }}" variant="primary" :outline="true" size="sm">
                                     @lang('expenses::expenses.actions.edit')
                                 </x-button.action>
@@ -108,7 +119,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">@lang('expenses::expenses.empty')</td>
+                        <td colspan="9" class="text-center text-muted py-4">@lang('expenses::expenses.empty')</td>
                     </tr>
                 @endforelse
             </x-table>

@@ -19,6 +19,8 @@ class ExpenseController extends Controller
 
         $expenses = Expense::query()
             ->with('type')
+            ->withCount('payments')
+            ->withSum('payments as payments_total', 'amount')
             ->orderBy('due_date')
             ->orderBy('id')
             ->paginate(20);

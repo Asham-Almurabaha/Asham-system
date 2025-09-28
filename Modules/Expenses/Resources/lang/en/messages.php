@@ -20,4 +20,11 @@ return [
         'updated' => 'Expense updated successfully.',
         'deleted' => 'Expense deleted successfully.',
     ],
+    'payments' => [
+        'created' => 'Expense payment recorded successfully.',
+    ],
+    'validation' => [
+        'account_required' => 'Please select a bank account or a safe.',
+        'account_conflict' => 'Please select either a bank account or a safe, not both.',
+    ],
 ];
