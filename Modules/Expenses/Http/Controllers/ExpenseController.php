@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 use Modules\Expenses\Entities\Expense;
 use Modules\Lookups\Entities\ExpenseType;
 
@@ -18,7 +20,11 @@ class ExpenseController extends Controller
         $today = Carbon::today();
 
         $expenses = Expense::query()
-            ->with('type')
+            ->with(['type', 'payments' => fn ($relation) => $relation
+                ->with(['bankAccount', 'safe'])
+                ->latest('paid_at')
+                ->latest('id')
+            ])
             ->withCount('payments')
             ->withSum('payments as payments_total', 'amount')
             ->orderBy('due_date')
@@ -31,9 +37,14 @@ class ExpenseController extends Controller
             'overdue' => Expense::query()->whereDate('due_date', '<', $today)->count(),
         ];
 
+        $banks = BankAccount::query()->orderBy('name')->get(['id', 'name']);
+        $safes = Safe::query()->orderBy('name')->get(['id', 'name']);
+
         return view('expenses::expenses.index', [
             'expenses' => $expenses,
             'stats' => $stats,
+            'banks' => $banks,
+            'safes' => $safes,
         ]);
     }
 

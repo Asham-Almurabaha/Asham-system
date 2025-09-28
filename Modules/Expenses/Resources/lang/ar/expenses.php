@@ -14,6 +14,8 @@ return [
         'confirm_delete' => 'هل أنت متأكد من رغبتك في حذف هذا المصروف؟',
         'manage' => 'الإجراءات',
         'payments' => 'السدادات',
+        'view_payments' => 'عرض السدادات',
+        'record_payment' => 'تسجيل سداد',
     ],
     'filters' => [
         'title' => 'خيارات التصفية',

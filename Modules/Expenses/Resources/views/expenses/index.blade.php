@@ -66,8 +66,14 @@
     {{-- الجدول --}}
     <div class="card shadow-sm">
         <div class="card-body p-0">
-            <x-table head-class="table-light">
-                @php $today = \Illuminate\Support\Carbon::today(); @endphp
+            <x-table head-class="table-light" class="text-center">
+                @php
+                    $today = \Illuminate\Support\Carbon::today();
+                    $oldContextExpenseId = (string) old('context_expense_id');
+                    $todayDate = now()->format('Y-m-d');
+                    $banksCollection = $banks->values();
+                    $safesCollection = $safes->values();
+                @endphp
 
                 <x-slot name="head">
                     <tr>
@@ -84,8 +90,28 @@
                 </x-slot>
 
                 @forelse($expenses as $expense)
+                    @php
+                        $rowNumber = $expenses->firstItem() + $loop->index;
+                        $paymentsCollapseId = 'expense-payments-' . $expense->id;
+                        $outstanding = max($expense->outstanding_amount, 0);
+                        $paymentAction = route('expenses.payments.store', $expense);
+                        $queryString = request()->getQueryString();
+                        if ($queryString) {
+                            $paymentAction .= '?' . $queryString;
+                        }
+                        $isCurrentExpense = $oldContextExpenseId === (string) $expense->id;
+                        $defaultAmount = number_format($outstanding, 2, '.', '');
+                        $amountValue = $isCurrentExpense ? old('amount', $defaultAmount) : $defaultAmount;
+                        $defaultPaidAt = $todayDate;
+                        $paidAtValue = $isCurrentExpense ? old('paid_at', $defaultPaidAt) : $defaultPaidAt;
+                        $oldBank = $isCurrentExpense ? old('bank_account_id') : null;
+                        $oldSafe = $isCurrentExpense ? old('safe_id') : null;
+                        $oldNotes = $isCurrentExpense ? old('notes') : '';
+                        $collapseShowClass = $isCurrentExpense ? 'show' : '';
+                    @endphp
+
                     <tr>
-                        <td class="text-center">{{ $expenses->firstItem() + $loop->index }}</td>
+                        <td class="text-center">{{ $rowNumber }}</td>
                         <td class="text-start fw-semibold">{{ $expense->title }}</td>
                         <td class="text-start">{{ optional($expense->type)->name ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td class="text-end">{{ number_format($expense->amount, 2) }}</td>
@@ -102,10 +128,46 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <div class="d-inline-flex gap-2">
-                                <x-button.action href="{{ route('expenses.payments.create', $expense) }}" variant="dark" :outline="true" size="sm">
-                                    <i class="bi bi-wallet2 me-1"></i>@lang('expenses::expenses.actions.payments')
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <x-button.action
+                                    type="button"
+                                    variant="secondary"
+                                    :outline="true"
+                                    size="sm"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#{{ $paymentsCollapseId }}"
+                                    aria-expanded="{{ $collapseShowClass ? 'true' : 'false' }}"
+                                    aria-controls="{{ $paymentsCollapseId }}"
+                                >
+                                    @lang('expenses::expenses.actions.view_payments')
                                 </x-button.action>
+
+                                @if ($outstanding > 0)
+                                    <x-button.action
+                                        type="button"
+                                        variant="dark"
+                                        size="sm"
+                                        :outline="true"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#expensePaymentModal"
+                                        data-expense-payment-trigger="1"
+                                        data-payment-action="{{ $paymentAction }}"
+                                        data-expense-id="{{ $expense->id }}"
+                                        data-expense-title="{{ e($expense->title) }}"
+                                        data-outstanding="{{ $defaultAmount }}"
+                                        data-outstanding-formatted="{{ number_format($outstanding, 2) }}"
+                                        data-amount-default="{{ $defaultAmount }}"
+                                        data-old-amount="{{ $isCurrentExpense ? $amountValue : '' }}"
+                                        data-paid-at-default="{{ $defaultPaidAt }}"
+                                        data-old-paid-at="{{ $isCurrentExpense ? $paidAtValue : '' }}"
+                                        data-old-bank="{{ $oldBank ?? '' }}"
+                                        data-old-safe="{{ $oldSafe ?? '' }}"
+                                        data-old-notes="{{ e($oldNotes) }}"
+                                    >
+                                        <i class="bi bi-wallet2 me-1"></i>@lang('expenses::expenses.actions.record_payment')
+                                    </x-button.action>
+                                @endif
+
                                 <x-button.action href="{{ route('expenses.expenses.edit', $expense) }}" variant="primary" :outline="true" size="sm">
                                     @lang('expenses::expenses.actions.edit')
                                 </x-button.action>
@@ -114,6 +176,51 @@
                                     'confirm' => __('expenses::expenses.actions.confirm_delete'),
                                     'label' => __('expenses::expenses.actions.delete'),
                                 ])
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="table-light">
+                        <td colspan="9" class="text-start">
+                            <div class="collapse {{ $collapseShowClass }}" id="{{ $paymentsCollapseId }}">
+                                <div class="px-3 py-3">
+                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                                        <div class="fw-semibold text-muted">@lang('expenses::payments.history.heading')</div>
+                                        <div class="d-flex flex-wrap gap-2 small">
+                                            <span class="badge bg-light text-dark border">@lang('expenses::payments.summary.amount'): {{ number_format($expense->amount, 2) }}</span>
+                                            <span class="badge bg-light text-dark border">@lang('expenses::payments.summary.paid'): {{ number_format($expense->paid_amount, 2) }}</span>
+                                            <span class="badge {{ $outstanding > 0 ? 'bg-warning text-dark' : 'bg-success' }}">@lang('expenses::payments.summary.outstanding'): {{ number_format($outstanding, 2) }}</span>
+                                        </div>
+                                    </div>
+
+                                    @if ($expense->payments->isNotEmpty())
+                                        <x-table small bordered head-class="table-secondary">
+                                            <x-slot name="head">
+                                                <tr>
+                                                    <th class="text-center" style="width:60px">#</th>
+                                                    <th class="text-end" style="width:140px">@lang('expenses::payments.history.table.amount')</th>
+                                                    <th style="width:160px;">@lang('expenses::payments.history.table.paid_at')</th>
+                                                    <th class="text-start" style="width:220px;">@lang('expenses::payments.history.table.account')</th>
+                                                    <th class="text-start">@lang('expenses::payments.history.table.notes')</th>
+                                                </tr>
+                                            </x-slot>
+
+                                            @foreach($expense->payments as $index => $payment)
+                                                @php
+                                                    $accountName = $payment->bankAccount->name ?? $payment->safe->name ?? '—';
+                                                @endphp
+                                                <tr>
+                                                    <td class="text-center">{{ $index + 1 }}</td>
+                                                    <td class="text-end">{{ number_format($payment->amount, 2) }}</td>
+                                                    <td>{{ optional($payment->paid_at)->format('Y-m-d') }}</td>
+                                                    <td class="text-start">{{ $accountName }}</td>
+                                                    <td class="text-start">{{ $payment->notes ?: '—' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </x-table>
+                                    @else
+                                        <div class="text-muted small">@lang('expenses::payments.history.empty')</div>
+                                    @endif
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -131,4 +238,255 @@
             </div>
         @endif
     </div>
+
+    <div class="modal fade" id="expensePaymentModal" tabindex="-1" aria-labelledby="expensePaymentModalLabel" aria-hidden="true" data-reopen-id="{{ $oldContextExpenseId }}">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="POST" class="text-start">
+                    @csrf
+                    <input type="hidden" name="context_expense_id" value="{{ $oldContextExpenseId }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="expensePaymentModalLabel">@lang('expenses::expenses.actions.record_payment')</h5>
+                        <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="@lang('Close')"></x-button.action>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <div class="small text-muted">@lang('expenses::expenses.fields.title')</div>
+                            <div class="fw-semibold" data-role="expense-title">—</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="modal-expense-amount">@lang('expenses::payments.fields.amount')</label>
+                            <input
+                                id="modal-expense-amount"
+                                type="number"
+                                name="amount"
+                                class="form-control"
+                                min="0.01"
+                                step="0.01"
+                                value="{{ old('amount') }}"
+                                required
+                            >
+                            @error('amount')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">
+                                @lang('expenses::payments.summary.outstanding'):
+                                <span data-role="outstanding-amount">—</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="modal-expense-paid-at">@lang('expenses::payments.fields.paid_at')</label>
+                            <input id="modal-expense-paid-at" type="date" name="paid_at" class="form-control" value="{{ old('paid_at') }}" required>
+                            @error('paid_at')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="modal-expense-account">@lang('expenses::payments.history.table.account')</label>
+                            @php($selectedAccount = old('bank_account_id') ? 'bank:' . old('bank_account_id') : (old('safe_id') ? 'safe:' . old('safe_id') : ''))
+                            <select
+                                id="modal-expense-account"
+                                class="form-select"
+                                data-expense-account-picker="1"
+                                data-bank-input="modal-expense-bank"
+                                data-safe-input="modal-expense-safe"
+                                @if ($banksCollection->isEmpty() && $safesCollection->isEmpty()) disabled @endif
+                            >
+                                <option value="" @selected($selectedAccount === '')>@lang('expenses::payments.fields.account_placeholder') / @lang('expenses::payments.fields.safe_placeholder')</option>
+                                @if ($banksCollection->isNotEmpty())
+                                    <optgroup label="@lang('expenses::payments.fields.bank_account_id')">
+                                        @foreach($banksCollection as $bank)
+                                            <option value="bank:{{ $bank->id }}" @selected($selectedAccount === 'bank:' . $bank->id)>{{ $bank->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                                @if ($safesCollection->isNotEmpty())
+                                    <optgroup label="@lang('expenses::payments.fields.safe_id')">
+                                        @foreach($safesCollection as $safe)
+                                            <option value="safe:{{ $safe->id }}" @selected($selectedAccount === 'safe:' . $safe->id)>{{ $safe->name }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
+                            </select>
+                            <input type="hidden" name="bank_account_id" id="modal-expense-bank" value="{{ old('bank_account_id') }}">
+                            <input type="hidden" name="safe_id" id="modal-expense-safe" value="{{ old('safe_id') }}">
+                            <div class="form-text">@lang('expenses::payments.hints.account_choice')</div>
+                            @if ($banksCollection->isEmpty() && $safesCollection->isEmpty())
+                                <div class="text-danger small mt-1">@lang('expenses::payments.history.empty')</div>
+                            @endif
+                            @error('bank_account_id')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                            @error('safe_id')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label" for="modal-expense-notes">@lang('expenses::payments.fields.notes')</label>
+                            <textarea
+                                id="modal-expense-notes"
+                                name="notes"
+                                class="form-control"
+                                rows="2"
+                                placeholder="@lang('expenses::payments.placeholders.notes')"
+                            >{{ old('notes') }}</textarea>
+                            @error('notes')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <x-button.action type="button" variant="light" data-bs-dismiss="modal">@lang('expenses::expenses.actions.cancel')</x-button.action>
+                        <x-button.action type="submit" variant="dark">
+                            @lang('expenses::expenses.actions.record_payment')
+                        </x-button.action>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalElement = document.getElementById('expensePaymentModal');
+            if (!modalElement) {
+                return;
+            }
+
+            var form = modalElement.querySelector('form');
+            var amountInput = modalElement.querySelector('input[name="amount"]');
+            var paidAtInput = modalElement.querySelector('input[name="paid_at"]');
+            var bankInput = modalElement.querySelector('input[name="bank_account_id"]');
+            var safeInput = modalElement.querySelector('input[name="safe_id"]');
+            var accountPicker = modalElement.querySelector('[data-expense-account-picker]');
+            var notesInput = modalElement.querySelector('textarea[name="notes"]');
+            var contextInput = modalElement.querySelector('input[name="context_expense_id"]');
+            var expenseTitleTarget = modalElement.querySelector('[data-role="expense-title"]');
+            var outstandingTarget = modalElement.querySelector('[data-role="outstanding-amount"]');
+
+            if (!form || !amountInput || !paidAtInput || !notesInput || !contextInput) {
+                return;
+            }
+
+            var cloneDataset = function (dataset) {
+                return dataset ? Object.assign({}, dataset) : {};
+            };
+
+            var syncAccountInputs = function (value) {
+                if (bankInput) {
+                    bankInput.value = '';
+                }
+
+                if (safeInput) {
+                    safeInput.value = '';
+                }
+
+                if (!value || typeof value !== 'string') {
+                    return;
+                }
+
+                var parts = value.split(':');
+                if (parts.length !== 2) {
+                    return;
+                }
+
+                if (parts[0] === 'bank' && bankInput) {
+                    bankInput.value = parts[1];
+                }
+
+                if (parts[0] === 'safe' && safeInput) {
+                    safeInput.value = parts[1];
+                }
+            };
+
+            if (accountPicker) {
+                accountPicker.addEventListener('change', function () {
+                    syncAccountInputs(accountPicker.value || '');
+                });
+                syncAccountInputs(accountPicker.value || '');
+            }
+
+            var applyDataset = function (data) {
+                var amount = data.oldAmount && data.oldAmount.length ? data.oldAmount : (data.amountDefault || '');
+                amountInput.value = amount;
+
+                if (data.outstanding && data.outstanding.length) {
+                    amountInput.setAttribute('max', data.outstanding);
+                } else {
+                    amountInput.removeAttribute('max');
+                }
+
+                var paidAt = data.oldPaidAt && data.oldPaidAt.length ? data.oldPaidAt : (data.paidAtDefault || '');
+                paidAtInput.value = paidAt;
+
+                var accountValue = '';
+                if (data.oldBank && data.oldBank.length) {
+                    accountValue = 'bank:' + data.oldBank;
+                } else if (data.oldSafe && data.oldSafe.length) {
+                    accountValue = 'safe:' + data.oldSafe;
+                }
+
+                if (accountPicker) {
+                    accountPicker.value = accountValue;
+                }
+                syncAccountInputs(accountValue);
+
+                notesInput.value = data.oldNotes && data.oldNotes.length ? data.oldNotes : '';
+                contextInput.value = data.expenseId || '';
+
+                if (expenseTitleTarget) {
+                    expenseTitleTarget.textContent = data.expenseTitle || '—';
+                }
+
+                if (outstandingTarget) {
+                    outstandingTarget.textContent = data.outstandingFormatted || data.outstanding || '—';
+                }
+
+                if (form && data.paymentAction) {
+                    form.setAttribute('action', data.paymentAction);
+                }
+            };
+
+            var modalInstance = window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalElement) : null;
+            var pendingDataset = null;
+
+            modalElement.addEventListener('show.bs.modal', function (event) {
+                var dataset = null;
+
+                if (event.relatedTarget && event.relatedTarget.dataset && event.relatedTarget.dataset.expensePaymentTrigger !== undefined) {
+                    dataset = cloneDataset(event.relatedTarget.dataset);
+                } else if (pendingDataset) {
+                    dataset = cloneDataset(pendingDataset);
+                    pendingDataset = null;
+                }
+
+                if (!dataset) {
+                    return;
+                }
+
+                applyDataset(dataset);
+            });
+
+            var reopenId = modalElement.getAttribute('data-reopen-id');
+            if (reopenId) {
+                var trigger = document.querySelector('[data-expense-payment-trigger][data-expense-id="' + reopenId + '"]');
+                if (trigger) {
+                    pendingDataset = cloneDataset(trigger.dataset);
+                    if (modalInstance) {
+                        modalInstance.show();
+                    }
+                }
+            }
+        });
+    </script>
+@endpush

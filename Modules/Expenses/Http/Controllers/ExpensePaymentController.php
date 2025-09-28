@@ -51,7 +51,7 @@ class ExpensePaymentController extends Controller
         });
 
         return redirect()
-            ->route('expenses.expenses.index')
+            ->route('expenses.expenses.index', $request->query())
             ->with('success', __('expenses::messages.payments.created'));
     }
 
