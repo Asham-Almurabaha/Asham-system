@@ -316,14 +316,6 @@
                     <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
                 </div>
                 <div class="modal-body">
-                    
-                    <div class="mb-3">
-                        <span class="badge bg-light text-dark border">
-                            {{ __('debts::messages.totals.outstanding') }}:
-                            <span data-role="outstanding-amount">—</span>
-                        </span>
-                    </div>
-
                     <div class="mb-3">
                         <label class="form-label" for="modal-debt-amount">{{ __('debts::messages.payments.fields.amount') }}</label>
                         <input
@@ -339,6 +331,10 @@
                         @error('amount')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
+                        <div class="form-text">
+                            {{ __('debts::messages.totals.outstanding') }}:
+                            <span data-role="outstanding-amount">—</span>
+                        </div>
                     </div>
 
                     <div class="mb-3">
