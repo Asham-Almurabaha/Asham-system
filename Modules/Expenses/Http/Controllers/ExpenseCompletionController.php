@@ -3,6 +3,7 @@
 namespace Modules\Expenses\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Expenses\Entities\Expense;
@@ -57,12 +58,50 @@ class ExpenseCompletionController extends Controller
             'notes' => $notes,
         ])->save();
 
+        $stats = $this->currentStats();
+
         return response()->json([
             'status' => 'ok',
             'message' => __('expenses::expenses.messages.completed'),
             'notes' => $notes,
             'note_line' => $noteLine,
             'status_label' => __('expenses::expenses.status_labels.completed'),
+            'stats' => $stats,
+            'formatted_stats' => array_map(static fn ($value) => number_format($value, 2), $stats),
         ]);
+    }
+
+    /**
+     * احسب مؤشرات المصروفات الحالية لاستخدامها في الواجهة الأمامية.
+     */
+    private function currentStats(): array
+    {
+        $today = Carbon::today();
+
+        $expenses = Expense::query()
+            ->select(['id', 'amount', 'due_date', 'manual_paid_amount', 'manual_outstanding_amount'])
+            ->withSum('payments as payments_total', 'amount')
+            ->get();
+
+        $stats = [
+            'total' => 0.0,
+            'upcoming' => 0.0,
+            'overdue' => 0.0,
+        ];
+
+        foreach ($expenses as $expense) {
+            $outstanding = (float) $expense->outstanding_amount;
+            $stats['total'] += $outstanding;
+
+            if ($expense->due_date instanceof Carbon) {
+                if ($expense->due_date->lt($today)) {
+                    $stats['overdue'] += $outstanding;
+                } else {
+                    $stats['upcoming'] += $outstanding;
+                }
+            }
+        }
+
+        return array_map(static fn ($value) => round($value, 2), $stats);
     }
 }

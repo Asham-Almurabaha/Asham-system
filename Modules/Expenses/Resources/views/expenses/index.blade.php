@@ -31,7 +31,10 @@
                             <div class="kpi-icon"><i class="bi bi-calendar-event fs-4 text-primary"></i></div>
                             <div class="flex-grow-1">
                                 <div class="subnote">@lang('expenses::expenses.filters.upcoming')</div>
-                                <div class="kpi-value fw-bold">{{ number_format($stats['upcoming'], 2) }}</div>
+                                <div
+                                    class="kpi-value fw-bold"
+                                    data-expense-kpi="upcoming"
+                                >{{ number_format($stats['upcoming'], 2) }}</div>
                             </div>
                         </div>
                     </div>
@@ -42,7 +45,10 @@
                             <div class="kpi-icon"><i class="bi bi-exclamation-octagon fs-4 text-danger"></i></div>
                             <div class="flex-grow-1">
                                 <div class="subnote">@lang('expenses::expenses.filters.overdue')</div>
-                                <div class="kpi-value fw-bold text-danger">{{ number_format($stats['overdue'], 2) }}</div>
+                                <div
+                                    class="kpi-value fw-bold text-danger"
+                                    data-expense-kpi="overdue"
+                                >{{ number_format($stats['overdue'], 2) }}</div>
                             </div>
                         </div>
                     </div>
@@ -53,7 +59,10 @@
                             <div class="kpi-icon"><i class="bi bi-collection fs-4 text-success"></i></div>
                             <div class="flex-grow-1">
                                 <div class="subnote">@lang('expenses::expenses.filters.total')</div>
-                                <div class="kpi-value fw-bold text-success">{{ number_format($stats['total'], 2) }}</div>
+                                <div
+                                    class="kpi-value fw-bold text-success"
+                                    data-expense-kpi="total"
+                                >{{ number_format($stats['total'], 2) }}</div>
                             </div>
                         </div>
                     </div>
@@ -497,6 +506,15 @@
                                         notesArea.textContent = '';
                                         notesArea.classList.add('d-none');
                                     }
+                                }
+
+                                if (data && data.formatted_stats && typeof data.formatted_stats === 'object') {
+                                    Object.keys(data.formatted_stats).forEach(function (key) {
+                                        var kpiElement = document.querySelector('[data-expense-kpi="' + key + '"]');
+                                        if (kpiElement) {
+                                            kpiElement.textContent = data.formatted_stats[key];
+                                        }
+                                    });
                                 }
 
                                 button.classList.add('d-none');
