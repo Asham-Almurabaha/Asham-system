@@ -86,6 +86,21 @@ class ExpenseController extends Controller
             ->with('success', __('expenses::messages.expenses.created'));
     }
 
+    public function show(Expense $expense): View
+    {
+        $expense->load([
+            'type',
+            'payments' => fn ($relation) => $relation
+                ->with(['bankAccount', 'safe'])
+                ->latest('paid_at')
+                ->latest('id'),
+        ]);
+
+        return view('expenses::expenses.show', [
+            'expense' => $expense,
+        ]);
+    }
+
     public function edit(Expense $expense): View
     {
         return view('expenses::expenses.edit', [

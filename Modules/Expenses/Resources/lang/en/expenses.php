@@ -4,6 +4,7 @@ return [
     'index_title' => 'Expense Schedule',
     'create_title' => 'Schedule Expense',
     'edit_title' => 'Edit Expense',
+    'show_title' => 'Expense details',
     'actions' => [
         'create' => 'Add Expense',
         'edit' => 'Edit',
@@ -65,4 +66,11 @@ return [
         'completion_failed' => 'Unable to finish the settlement right now. Please try again later.',
     ],
     'empty' => 'No expenses available at the moment.',
+    'sections' => [
+        'overview' => 'Expense information',
+        'payment_summary' => 'Payment summary',
+        'history' => 'Payment history',
+        'notes' => 'Notes',
+    ],
+    'notes_empty' => 'No notes available for this expense.',
 ];

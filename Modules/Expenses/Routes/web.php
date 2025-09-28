@@ -16,5 +16,5 @@ Route::middleware(['web', 'auth', 'permission.route'])
         Route::get('expenses/{expense}/payments/create', [ExpensePaymentController::class, 'create'])->name('payments.create');
         Route::post('expenses/{expense}/payments', [ExpensePaymentController::class, 'store'])->name('payments.store');
         Route::post('expenses/{expense}/complete', ExpenseCompletionController::class)->name('expenses.complete');
-        Route::resource('expenses', ExpenseController::class)->except(['show']);
+        Route::resource('expenses', ExpenseController::class);
     });

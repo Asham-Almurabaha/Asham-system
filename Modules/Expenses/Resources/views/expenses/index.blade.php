@@ -115,7 +115,14 @@
 
                     <tr>
                         <td class="text-center">{{ $rowNumber }}</td>
-                        <td class="text-start fw-semibold">{{ $expense->title }}</td>
+                        <td class="text-start fw-semibold">
+                            <a
+                                href="{{ route('expenses.expenses.show', $expense) }}"
+                                class="text-decoration-none text-dark"
+                            >
+                                {{ $expense->title }}
+                            </a>
+                        </td>
                         <td class="text-start">{{ optional($expense->type)->name ?? __('expenses::expenses.fields.not_available') }}</td>
                         <td class="text-end" data-expense-amount="1">
                             @if ($isManuallySettled)
@@ -221,25 +228,6 @@
                                     </div>
                                 @endif
 
-                                <div @class(['d-inline', 'd-none' => $isManuallySettled]) data-expense-hideable="1">
-                                    <x-button.action href="{{ route('expenses.expenses.edit', $expense) }}" variant="primary" :outline="true" size="sm">
-                                        @lang('expenses::expenses.actions.edit')
-                                    </x-button.action>
-                                </div>
-                                <div @class(['d-inline', 'd-none' => $isManuallySettled]) data-expense-hideable="1">
-                                    @include('lookups::components.delete-button', [
-                                        'action' => route('expenses.expenses.destroy', $expense),
-                                        'confirm' => __('expenses::expenses.actions.confirm_delete'),
-                                        'label' => __('expenses::expenses.actions.delete'),
-                                    ])
-                                </div>
-                            </div>
-                            <div
-                                class="text-start small text-muted mt-2 {{ $isManuallySettled && $completionNotes !== '' ? '' : 'd-none' }}"
-                                data-expense-notes-area="1"
-                                style="white-space: pre-line;"
-                            >
-                                {{ $isManuallySettled ? $completionNotes : '' }}
                             </div>
                         </td>
                     </tr>
