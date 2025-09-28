@@ -324,9 +324,7 @@
                     <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></x-button.action>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <div class="small text-muted" data-role="debt-name">—</div>
-                    </div>
+                    
                     <div class="mb-3">
                         <span class="badge bg-light text-dark border">
                             {{ __('debts::messages.totals.outstanding') }}:
