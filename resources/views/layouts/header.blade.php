@@ -202,7 +202,7 @@
         $status = $buildStatus($item['days_overdue'] ?? null, $item['days_until_due'] ?? null, 'expenses');
 
         return [
-          'url' => route('expenses.expenses.edit', $item['id']),
+          'url' => route('expenses.expenses.show', $item['id']),
           'icon' => 'bi-wallet2',
           'title' => $item['title'],
           'meta' => array_values(array_filter([
