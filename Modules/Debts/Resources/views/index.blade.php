@@ -7,113 +7,115 @@
 @section('title', __('debts::messages.page_title'))
 
 @section('content')
-<div class="container-xxl py-4">
-    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{ __('debts::messages.page_title') }}</li>
-                </ol>
-            </nav>
-            <h1 class="h4 mb-1">{{ __('debts::messages.page_title') }}</h1>
-            {{-- <p class="text-muted mb-0">{{ __('debts::messages.page_heading') }}</p> --}}
-        </div>
+<div class="pagetitle mb-3">
+    <h1 class="h3 mb-1">{{ __('debts::messages.page_title') }}</h1>
+    <nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ __('debts::messages.page_title') }}</li>
+        </ol>
+    </nav>
+</div>
 
-        <div class="ms-auto d-flex flex-wrap gap-2">
-            @can('debts.create')
-                <x-button.action href="{{ route('debts.create') }}" variant="success">
-                    <i class="bi bi-plus-lg me-1"></i>{{ __('debts::messages.buttons.create') }}
-                </x-button.action>
-            @endcan
-        </div>
+<div class="card shadow-sm mb-3">
+    <div class="card-body d-flex flex-wrap align-items-center gap-2 p-2">
+        @can('debts.create')
+            <x-button.action href="{{ route('debts.create') }}" variant="success">
+                <i class="bi bi-plus-lg me-1"></i>{{ __('debts::messages.buttons.create') }}
+            </x-button.action>
+        @endcan
     </div>
+</div>
 
-    <div class="row g-3 mb-3" dir="rtl">
-        <div class="col-12 col-md-4">
-            <div class="kpi-card p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="kpi-icon"><i class="bi bi-pie-chart fs-4 text-primary"></i></div>
-                    <div class="flex-grow-1">
-                        <div class="subnote">{{ __('debts::messages.totals.principal') }}</div>
-                        <div class="kpi-value fw-bold">{{ number_format($totals['principal'], 2) }}</div>
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-3" dir="rtl">
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-pie-chart fs-4 text-primary"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="subnote">{{ __('debts::messages.totals.principal') }}</div>
+                            <div class="kpi-value fw-bold">{{ number_format($totals['principal'], 2) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="subnote">{{ __('debts::messages.totals.paid') }}</div>
+                            <div class="kpi-value fw-bold">{{ number_format($totals['paid'], 2) }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="kpi-card p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="subnote">{{ __('debts::messages.totals.outstanding') }}</div>
+                            <div class="kpi-value fw-bold">{{ number_format($totals['outstanding'], 2) }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
-            <div class="kpi-card p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="kpi-icon"><i class="bi bi-cash-coin fs-4 text-success"></i></div>
-                    <div class="flex-grow-1">
-                        <div class="subnote">{{ __('debts::messages.totals.paid') }}</div>
-                        <div class="kpi-value fw-bold">{{ number_format($totals['paid'], 2) }}</div>
-                    </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="fw-semibold">{{ __('debts::messages.filters.title') }}</span>
+        <span class="small text-muted">{{ __('debts::messages.filters.results', ['count' => $debts->total()]) }}</span>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ route('debts.index') }}" id="filtersForm" class="row gy-3 gx-3 align-items-end">
+            <div class="col-12 col-md-4 col-xl-3">
+                <label class="form-label small text-muted" for="filterParty">{{ __('debts::messages.filters.party_type') }}</label>
+                <select id="filterParty" name="party_type" class="form-select form-select-sm">
+                    <option value="">{{ __('debts::messages.filters.all') }}</option>
+                    @foreach(__('debts::messages.types') as $key => $label)
+                        <option value="{{ $key }}" @selected(($filters['party_type'] ?? '') === $key)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-12 col-md-4 col-xl-3">
+                <label class="form-label small text-muted" for="filterStatus">{{ __('debts::messages.filters.status') }}</label>
+                <select id="filterStatus" name="status" class="form-select form-select-sm">
+                    <option value="">{{ __('debts::messages.filters.all') }}</option>
+                    @foreach(__('debts::messages.statuses') as $key => $label)
+                        <option value="{{ $key }}" @selected(($filters['status'] ?? '') === $key)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-12 col-md-4 col-xl-3">
+                <label class="form-label small text-muted" for="filterSearch">{{ __('debts::messages.filters.search') }}</label>
+                <input id="filterSearch" type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="{{ __('debts::messages.filters.search_placeholder') }}">
+            </div>
+            <div class="col-12 col-xl-3">
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                    <x-button.action type="submit" variant="primary" size="sm" class="w-100">
+                        <i class="bi bi-funnel"></i>
+                        <span class="ms-1">{{ __('debts::messages.buttons.filter') }}</span>
+                    </x-button.action>
+                    <x-button.action href="{{ route('debts.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        <span class="ms-1">{{ __('debts::messages.buttons.reset') }}</span>
+                    </x-button.action>
                 </div>
             </div>
-        </div>
-        <div class="col-12 col-md-4">
-            <div class="kpi-card p-3 h-100">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="kpi-icon"><i class="bi bi-wallet2 fs-4 text-warning"></i></div>
-                    <div class="flex-grow-1">
-                        <div class="subnote">{{ __('debts::messages.totals.outstanding') }}</div>
-                        <div class="kpi-value fw-bold">{{ number_format($totals['outstanding'], 2) }}</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        </form>
     </div>
+</div>
 
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-header bg-light border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span class="fw-semibold">{{ __('debts::messages.filters.title') }}</span>
-            <span class="small text-muted">{{ __('debts::messages.filters.results', ['count' => $debts->total()]) }}</span>
-        </div>
-        <div class="card-body">
-            <form method="GET" action="{{ route('debts.index') }}" id="filtersForm" class="row gy-3 gx-3 align-items-end">
-                <div class="col-12 col-md-4 col-xl-3">
-                    <label class="form-label small text-muted" for="filterParty">{{ __('debts::messages.filters.party_type') }}</label>
-                    <select id="filterParty" name="party_type" class="form-select form-select-sm">
-                        <option value="">{{ __('debts::messages.filters.all') }}</option>
-                        @foreach(__('debts::messages.types') as $key => $label)
-                            <option value="{{ $key }}" @selected(($filters['party_type'] ?? '') === $key)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-12 col-md-4 col-xl-3">
-                    <label class="form-label small text-muted" for="filterStatus">{{ __('debts::messages.filters.status') }}</label>
-                    <select id="filterStatus" name="status" class="form-select form-select-sm">
-                        <option value="">{{ __('debts::messages.filters.all') }}</option>
-                        @foreach(__('debts::messages.statuses') as $key => $label)
-                            <option value="{{ $key }}" @selected(($filters['status'] ?? '') === $key)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-12 col-md-4 col-xl-3">
-                    <label class="form-label small text-muted" for="filterSearch">{{ __('debts::messages.filters.search') }}</label>
-                    <input id="filterSearch" type="text" name="search" value="{{ $filters['search'] ?? '' }}" class="form-control form-control-sm" placeholder="{{ __('debts::messages.filters.search_placeholder') }}">
-                </div>
-                <div class="col-12 col-xl-3">
-                    <div class="d-flex flex-column flex-sm-row gap-2">
-                        <x-button.action type="submit" variant="primary" size="sm" class="w-100">
-                            <i class="bi bi-funnel"></i>
-                            <span class="ms-1">{{ __('debts::messages.buttons.filter') }}</span>
-                        </x-button.action>
-                        <x-button.action href="{{ route('debts.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                            <span class="ms-1">{{ __('debts::messages.buttons.reset') }}</span>
-                        </x-button.action>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <x-table head-class="table-light align-middle" class="table table-hover align-middle mb-0">
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <x-table head-class="table-light align-middle" class="table table-hover align-middle mb-0">
                 <x-slot name="head">
                     <tr>
                         <th style="width: 60px;" class="text-center">#</th>
