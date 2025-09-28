@@ -17,7 +17,6 @@ use Modules\Debts\Entities\Debt;
 use Modules\Debts\Http\Requests\StoreDebtPaymentRequest;
 use Modules\Debts\Http\Requests\StoreDebtRequest;
 use Modules\Debts\Http\Requests\UpdateDebtRequest;
-use Modules\Investors\Entities\Investor;
 use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Lookups\Entities\TransactionStatus;
 
@@ -195,11 +194,10 @@ class DebtController extends Controller
     protected function formLookups(): array
     {
         $customers = Customer::query()->orderBy('name')->get(['id', 'name']);
-        $investors = Investor::query()->orderBy('name')->get(['id', 'name']);
         $banks = BankAccount::query()->orderBy('name')->get(['id', 'name']);
         $safes = Safe::query()->orderBy('name')->get(['id', 'name']);
 
-        return compact('customers', 'investors', 'banks', 'safes');
+        return compact('customers', 'banks', 'safes');
     }
 
     protected function prepareData(array $data): array
@@ -212,7 +210,9 @@ class DebtController extends Controller
             $data['paid_amount'] = (float) $data['paid_amount'];
         }
 
-        foreach (['customer_id', 'investor_id', 'bank_account_id', 'safe_id'] as $key) {
+        $data['investor_id'] = null;
+
+        foreach (['customer_id', 'bank_account_id', 'safe_id'] as $key) {
             if (empty($data[$key])) {
                 $data[$key] = null;
             }
@@ -226,10 +226,6 @@ class DebtController extends Controller
             if (($data['party_type'] ?? null) === 'customer' && !empty($data['customer_id'])) {
                 $data['counterparty_name'] = Customer::query()
                     ->whereKey($data['customer_id'])
-                    ->value('name');
-            } elseif (($data['party_type'] ?? null) === 'investor' && !empty($data['investor_id'])) {
-                $data['counterparty_name'] = Investor::query()
-                    ->whereKey($data['investor_id'])
                     ->value('name');
             }
         }

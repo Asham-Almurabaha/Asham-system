@@ -1,7 +1,10 @@
 @extends('layouts.master')
 
 @php
+    use Illuminate\Support\Arr;
     use Illuminate\Support\Str;
+
+    $filterTypes = Arr::except(__('debts::messages.types'), ['investor']);
 @endphp
 
 @section('title', __('debts::messages.page_title'))
@@ -76,7 +79,7 @@
                 <label class="form-label small text-muted" for="filterParty">{{ __('debts::messages.filters.party_type') }}</label>
                 <select id="filterParty" name="party_type" class="form-select form-select-sm">
                     <option value="">{{ __('debts::messages.filters.all') }}</option>
-                    @foreach(__('debts::messages.types') as $key => $label)
+                    @foreach($filterTypes as $key => $label)
                         <option value="{{ $key }}" @selected(($filters['party_type'] ?? '') === $key)>{{ $label }}</option>
                     @endforeach
                 </select>

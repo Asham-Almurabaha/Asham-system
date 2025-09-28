@@ -1,5 +1,9 @@
 @php
     $partyType = old('party_type', $debt->party_type ?? 'customer');
+    $availableTypes = \Illuminate\Support\Arr::except(__('debts::messages.types'), ['investor']);
+    if (! array_key_exists($partyType, $availableTypes)) {
+        $partyType = 'other';
+    }
     $initialBank = old('bank_account_id', $debt->bank_account_id ?? null);
     $initialSafe = old('safe_id', $debt->safe_id ?? null);
     $accountPickerValue = $initialBank ? ('bank:'.$initialBank) : ($initialSafe ? ('safe:'.$initialSafe) : '');
@@ -10,15 +14,15 @@
     <div class="col-md-4">
         <label class="form-label">{{ __('debts::messages.fields.party_type') }}</label>
         <select name="party_type" id="party_type" class="form-select" required>
-            @foreach(__('debts::messages.types') as $key => $label)
+            @foreach($availableTypes as $key => $label)
                 <option value="{{ $key }}" @selected($partyType === $key)>{{ $label }}</option>
             @endforeach
         </select>
     </div>
 
-    <div class="col-md-4 js-party-field" data-party="customer">
+    <div class="col-md-4 js-party-field {{ $partyType === 'customer' ? '' : 'd-none' }}" data-party="customer">
         <label class="form-label">{{ __('debts::messages.fields.customer') }}</label>
-        <select name="customer_id" id="customer_id" class="form-select">
+        <select name="customer_id" id="customer_id" class="form-select" {{ $partyType === 'customer' ? '' : 'disabled' }}>
             <option value="">{{ __('debts::messages.filters.all') }}</option>
             @foreach($customers as $customer)
                 <option value="{{ $customer->id }}" @selected(old('customer_id', $debt->customer_id ?? '') == $customer->id)>{{ $customer->name }}</option>
@@ -26,19 +30,9 @@
         </select>
     </div>
 
-    <div class="col-md-4 js-party-field" data-party="investor">
-        <label class="form-label">{{ __('debts::messages.fields.investor') }}</label>
-        <select name="investor_id" id="investor_id" class="form-select">
-            <option value="">{{ __('debts::messages.filters.all') }}</option>
-            @foreach($investors as $investor)
-                <option value="{{ $investor->id }}" @selected(old('investor_id', $debt->investor_id ?? '') == $investor->id)>{{ $investor->name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="col-md-4 js-counterparty-name">
+    <div class="col-md-4 js-counterparty-name {{ $partyType === 'other' ? '' : 'd-none' }}">
         <label class="form-label">{{ __('debts::messages.fields.counterparty_name') }}</label>
-        <input type="text" name="counterparty_name" id="counterparty_name" class="form-control" value="{{ old('counterparty_name', $debt->counterparty_name ?? '') }}">
+        <input type="text" name="counterparty_name" id="counterparty_name" class="form-control" value="{{ old('counterparty_name', $debt->counterparty_name ?? '') }}" {{ $partyType === 'other' ? '' : 'disabled' }}>
     </div>
 
     <div class="col-md-4">

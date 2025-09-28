@@ -15,9 +15,8 @@ class StoreDebtRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'party_type' => ['required', 'in:customer,investor,other'],
+            'party_type' => ['required', 'in:customer,other'],
             'customer_id' => ['nullable', 'required_if:party_type,customer', 'integer', 'exists:customers,id'],
-            'investor_id' => ['nullable', 'required_if:party_type,investor', 'integer', 'exists:investors,id'],
             'counterparty_name' => ['nullable', 'string', 'max:191', 'required_if:party_type,other'],
             'principal_amount' => ['required', 'numeric', 'min:0.01'],
             'issued_at' => ['required', 'date'],
