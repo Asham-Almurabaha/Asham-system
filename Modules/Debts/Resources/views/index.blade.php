@@ -298,14 +298,7 @@
     @endif
 </div>
 
-<div
-    class="modal fade"
-    id="debtPaymentModal"
-    tabindex="-1"
-    aria-labelledby="debtPaymentModalLabel"
-    aria-hidden="true"
-    data-reopen-id="{{ $oldContextDebtId }}"
->
+<div class="modal fade" id="debtPaymentModal" tabindex="-1" aria-labelledby="debtPaymentModalLabel" aria-hidden="true" data-reopen-id="{{ $oldContextDebtId }}" >
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="POST" class="text-start">
@@ -339,14 +332,7 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="modal-debt-paid-at">{{ __('debts::messages.payments.fields.paid_at') }}</label>
-                        <input
-                            id="modal-debt-paid-at"
-                            type="text"
-                            name="paid_at"
-                            class="form-control js-date"
-                            value="{{ old('paid_at') }}"
-                            required
-                        >
+                        <input id="modal-debt-paid-at" type="text" name="paid_at" class="form-control js-date" value="{{ old('paid_at') }}" required >
                         @error('paid_at')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
