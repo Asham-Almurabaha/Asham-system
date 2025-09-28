@@ -23,7 +23,6 @@
     </div>
 
     {{-- KPI --}}
-    <div class="card shadow-sm mb-3">
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-12 col-md-4">
@@ -61,7 +60,6 @@
                 </div>
             </div><!-- /.row -->
         </div><!-- /.card-body -->
-    </div><!-- /.card -->
 
     {{-- الجدول --}}
     <div class="card shadow-sm">
