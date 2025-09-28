@@ -273,12 +273,6 @@
                                     @else
                                         <div class="text-muted small">{{ __('debts::messages.payments.empty') }}</div>
                                     @endif
-
-                                    @if($outstanding <= 0)
-                                        <div class="alert alert-success mt-4 mb-0" role="alert">
-                                            {{ __('debts::messages.payments.settled') }}
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         </td>
