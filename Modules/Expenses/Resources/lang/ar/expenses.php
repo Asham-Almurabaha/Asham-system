@@ -16,6 +16,7 @@ return [
         'payments' => 'السدادات',
         'view_payments' => 'عرض السدادات',
         'record_payment' => 'تسجيل سداد',
+        'complete_settlement' => 'إنهاء السداد',
     ],
     'filters' => [
         'title' => 'خيارات التصفية',
@@ -50,6 +51,18 @@ return [
         'settled' => 'مسدد',
         'due_today' => 'مستحق اليوم',
         'due_in_days' => 'متبقي :days يوم',
+        'completed' => 'منتهي',
+    ],
+    'completion' => [
+        'indicator' => 'تم إنهاء السداد',
+        'notes_prefix' => 'ملاحظات إنهاء السداد',
+        'previous_amount' => 'المبلغ السابق: :amount',
+        'previous_due_date' => 'تاريخ الاستحقاق السابق: :date',
+    ],
+    'messages' => [
+        'completed' => 'تم تحديث حالة المصروف إلى منتهي.',
+        'already_completed' => 'تم إنهاء سداد هذا المصروف مسبقاً.',
+        'completion_failed' => 'تعذر إنهاء السداد حالياً. حاول مرة أخرى لاحقاً.',
     ],
     'empty' => 'لا توجد مصروفات متاحة حالياً.',
 ];

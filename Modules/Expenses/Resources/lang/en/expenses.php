@@ -14,6 +14,9 @@ return [
         'confirm_delete' => 'Are you sure you want to delete this expense?',
         'manage' => 'Actions',
         'payments' => 'Payments',
+        'view_payments' => 'View payments',
+        'record_payment' => 'Record payment',
+        'complete_settlement' => 'Complete settlement',
     ],
     'filters' => [
         'title' => 'Filters',
@@ -48,6 +51,18 @@ return [
         'settled' => 'Settled',
         'due_today' => 'Due today',
         'due_in_days' => ':days days remaining',
+        'completed' => 'Finished',
+    ],
+    'completion' => [
+        'indicator' => 'Settlement finished',
+        'notes_prefix' => 'Settlement notes',
+        'previous_amount' => 'Previous amount: :amount',
+        'previous_due_date' => 'Previous due date: :date',
+    ],
+    'messages' => [
+        'completed' => 'The expense has been marked as finished.',
+        'already_completed' => 'This expense has already been marked as finished.',
+        'completion_failed' => 'Unable to finish the settlement right now. Please try again later.',
     ],
     'empty' => 'No expenses available at the moment.',
 ];

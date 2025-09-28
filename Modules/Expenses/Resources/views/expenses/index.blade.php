@@ -108,18 +108,35 @@
                         $oldSafe = $isCurrentExpense ? old('safe_id') : null;
                         $oldNotes = $isCurrentExpense ? old('notes') : '';
                         $collapseShowClass = $isCurrentExpense ? 'show' : '';
+                        $isManuallySettled = $expense->manual_outstanding_amount !== null && (float) $expense->manual_outstanding_amount <= 0;
+                        $canCompleteManually = $outstanding > 0 && ! $isManuallySettled;
+                        $completionNotes = $isManuallySettled ? trim((string) $expense->notes) : '';
                     @endphp
 
                     <tr>
                         <td class="text-center">{{ $rowNumber }}</td>
                         <td class="text-start fw-semibold">{{ $expense->title }}</td>
                         <td class="text-start">{{ optional($expense->type)->name ?? __('expenses::expenses.fields.not_available') }}</td>
-                        <td class="text-end" data-expense-amount="1">{{ number_format($expense->amount, 2) }}</td>
+                        <td class="text-end" data-expense-amount="1">
+                            @if ($isManuallySettled)
+                                —
+                            @else
+                                {{ number_format($expense->amount, 2) }}
+                            @endif
+                        </td>
                         <td class="text-end">{{ number_format($expense->paid_amount, 2) }}</td>
                         <td class="text-end">{{ number_format($expense->outstanding_amount, 2) }}</td>
-                        <td data-expense-due-date="1">{{ optional($expense->due_date)->toDateString() }}</td>
+                        <td data-expense-due-date="1">
+                            @if ($isManuallySettled)
+                                —
+                            @else
+                                {{ optional($expense->due_date)->toDateString() }}
+                            @endif
+                        </td>
                         <td data-expense-status="1">
-                            @if ($expense->outstanding_amount <= 0)
+                            @if ($isManuallySettled)
+                                <span class="badge bg-success-subtle text-success">@lang('expenses::expenses.status_labels.completed')</span>
+                            @elseif ($expense->outstanding_amount <= 0)
                                 <span class="badge bg-success-subtle text-success">@lang('expenses::expenses.status_labels.settled')</span>
                             @elseif ($expense->due_date && $expense->due_date->lt($today))
                                 <span class="badge bg-danger-subtle text-danger">@lang('expenses::expenses.status_labels.overdue')</span>
@@ -155,26 +172,29 @@
                                 >
                                     @lang('expenses::expenses.actions.view_payments')
                                 </x-button.action>
-
-                                <x-button.action
-                                    type="button"
-                                    variant="success"
-                                    size="sm"
-                                    icon="bi-check2-circle"
-                                    data-expense-complete-trigger="1"
-                                >
-                                    إنهاء السداد
-                                </x-button.action>
+                                
+                                @if ($canCompleteManually)
+                                    <x-button.action
+                                        type="button"
+                                        variant="success"
+                                        size="sm"
+                                        icon="bi-check2-circle"
+                                        data-expense-complete-trigger="1"
+                                        data-expense-complete-url="{{ route('expenses.expenses.complete', $expense) }}"
+                                    >
+                                        @lang('expenses::expenses.actions.complete_settlement')
+                                    </x-button.action>
+                                @endif
 
                                 <span
-                                    class="badge bg-success-subtle text-success align-self-center d-none"
+                                    class="badge bg-success-subtle text-success align-self-center {{ $isManuallySettled ? '' : 'd-none' }}"
                                     data-expense-complete-indicator="1"
                                 >
-                                    <i class="bi bi-check2-circle me-1"></i>تم إنهاء السداد
+                                    <i class="bi bi-check2-circle me-1"></i>@lang('expenses::expenses.completion.indicator')
                                 </span>
 
                                 @if ($outstanding > 0)
-                                    <div class="d-inline" data-expense-hideable="1">
+                                    <div @class(['d-inline', 'd-none' => $isManuallySettled]) data-expense-hideable="1">
                                         <x-button.action
                                             type="button"
                                             variant="dark"
@@ -201,12 +221,12 @@
                                     </div>
                                 @endif
 
-                                <div class="d-inline" data-expense-hideable="1">
+                                <div @class(['d-inline', 'd-none' => $isManuallySettled]) data-expense-hideable="1">
                                     <x-button.action href="{{ route('expenses.expenses.edit', $expense) }}" variant="primary" :outline="true" size="sm">
                                         @lang('expenses::expenses.actions.edit')
                                     </x-button.action>
                                 </div>
-                                <div class="d-inline" data-expense-hideable="1">
+                                <div @class(['d-inline', 'd-none' => $isManuallySettled]) data-expense-hideable="1">
                                     @include('lookups::components.delete-button', [
                                         'action' => route('expenses.expenses.destroy', $expense),
                                         'confirm' => __('expenses::expenses.actions.confirm_delete'),
@@ -214,7 +234,13 @@
                                     ])
                                 </div>
                             </div>
-                            <div class="text-start small text-muted mt-2 d-none" data-expense-notes-area="1"></div>
+                            <div
+                                class="text-start small text-muted mt-2 {{ $isManuallySettled && $completionNotes !== '' ? '' : 'd-none' }}"
+                                data-expense-notes-area="1"
+                                style="white-space: pre-line;"
+                            >
+                                {{ $isManuallySettled ? $completionNotes : '' }}
+                            </div>
                         </td>
                     </tr>
                     <tr class="table-light">
@@ -402,93 +428,108 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var completionButtons = document.querySelectorAll('[data-expense-complete-trigger]');
-
-            var cleanDisplayValue = function (value) {
-                if (typeof value !== 'string') {
-                    return '';
-                }
-
-                var trimmed = value.trim();
-
-                if (!trimmed || trimmed === '—' || trimmed === '-') {
-                    return '';
-                }
-
-                return trimmed;
-            };
-
-            var buildCompletionNote = function (amountText, dueDateText) {
-                var parts = [];
-
-                if (amountText && amountText.length) {
-                    parts.push('المبلغ السابق: ' + amountText);
-                }
-
-                if (dueDateText && dueDateText.length) {
-                    parts.push('تاريخ الاستحقاق السابق: ' + dueDateText);
-                }
-
-                if (!parts.length) {
-                    return '';
-                }
-
-                return 'ملاحظات: ' + parts.join(' | ');
-            };
+            var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            var completionStatusLabel = @json(__('expenses::expenses.status_labels.completed'));
+            var completionErrorMessage = @json(__('expenses::expenses.messages.completion_failed'));
+            var completionAlreadyMessage = @json(__('expenses::expenses.messages.already_completed'));
+            var completedBadgeHtml = '<span class="badge bg-success-subtle text-success">' + completionStatusLabel + '</span>';
 
             if (completionButtons.length) {
                 completionButtons.forEach(function (button) {
                     button.addEventListener('click', function () {
+                        if (button.dataset.loading === '1') {
+                            return;
+                        }
+
+                        var requestUrl = button.getAttribute('data-expense-complete-url');
+                        if (!requestUrl) {
+                            return;
+                        }
+
                         var actionsContainer = button.closest('[data-expense-actions]');
                         var expenseRow = button.closest('tr');
                         var amountCell = expenseRow ? expenseRow.querySelector('[data-expense-amount]') : null;
                         var dueDateCell = expenseRow ? expenseRow.querySelector('[data-expense-due-date]') : null;
                         var statusCell = expenseRow ? expenseRow.querySelector('[data-expense-status]') : null;
-                        var amountOriginal = amountCell ? cleanDisplayValue(amountCell.textContent || '') : '';
-                        var dueDateOriginal = dueDateCell ? cleanDisplayValue(dueDateCell.textContent || '') : '';
+                        var notesAreaContainer = button.closest('td');
+                        var notesArea = notesAreaContainer ? notesAreaContainer.querySelector('[data-expense-notes-area]') : null;
 
-                        if (actionsContainer) {
-                            actionsContainer.querySelectorAll('[data-expense-hideable]').forEach(function (element) {
-                                element.classList.add('d-none');
-                            });
-
-                            var completionIndicator = actionsContainer.querySelector('[data-expense-complete-indicator]');
-                            if (completionIndicator) {
-                                completionIndicator.classList.remove('d-none');
-                            }
-                        }
-
-                        if (amountCell) {
-                            amountCell.textContent = '—';
-                        }
-
-                        if (dueDateCell) {
-                            dueDateCell.textContent = '—';
-                        }
-
-                        if (statusCell) {
-                            statusCell.innerHTML = '<span class="badge bg-success-subtle text-success">منتهي</span>';
-                        }
-
-                        var notesArea = button.closest('td');
-                        if (notesArea) {
-                            notesArea = notesArea.querySelector('[data-expense-notes-area]');
-                        }
-
-                        if (notesArea) {
-                            var notesMessage = buildCompletionNote(amountOriginal, dueDateOriginal);
-
-                            if (notesMessage.length) {
-                                notesArea.textContent = notesMessage;
-                                notesArea.classList.remove('d-none');
-                            } else {
-                                notesArea.textContent = '';
-                                notesArea.classList.add('d-none');
-                            }
-                        }
-
-                        button.classList.add('d-none');
+                        button.dataset.loading = '1';
                         button.setAttribute('disabled', 'disabled');
-                        button.setAttribute('aria-hidden', 'true');
+
+                        fetch(requestUrl, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                        })
+                            .then(function (response) {
+                                if (response.ok) {
+                                    return response.json();
+                                }
+
+                                return response
+                                    .json()
+                                    .catch(function () {
+                                        return {};
+                                    })
+                                    .then(function (data) {
+                                        var message = data && typeof data.message === 'string' ? data.message : '';
+                                        if (!message && response.status === 422) {
+                                            message = completionAlreadyMessage;
+                                        }
+
+                                        throw new Error(message || completionErrorMessage);
+                                    });
+                            })
+                            .then(function (data) {
+                                if (actionsContainer) {
+                                    actionsContainer.querySelectorAll('[data-expense-hideable]').forEach(function (element) {
+                                        element.classList.add('d-none');
+                                    });
+
+                                    var completionIndicator = actionsContainer.querySelector('[data-expense-complete-indicator]');
+                                    if (completionIndicator) {
+                                        completionIndicator.classList.remove('d-none');
+                                    }
+                                }
+
+                                if (amountCell) {
+                                    amountCell.textContent = '—';
+                                }
+
+                                if (dueDateCell) {
+                                    dueDateCell.textContent = '—';
+                                }
+
+                                if (statusCell) {
+                                    statusCell.innerHTML = completedBadgeHtml;
+                                }
+
+                                if (notesArea) {
+                                    var notesText = data && typeof data.notes === 'string' ? data.notes.trim() : '';
+
+                                    if (notesText.length) {
+                                        notesArea.textContent = notesText;
+                                        notesArea.classList.remove('d-none');
+                                    } else {
+                                        notesArea.textContent = '';
+                                        notesArea.classList.add('d-none');
+                                    }
+                                }
+
+                                button.classList.add('d-none');
+                                button.setAttribute('aria-hidden', 'true');
+                            })
+                            .catch(function (error) {
+                                window.alert(error && error.message ? error.message : completionErrorMessage);
+                                button.removeAttribute('disabled');
+                            })
+                            .finally(function () {
+                                delete button.dataset.loading;
+                            });
                     });
                 });
             }
