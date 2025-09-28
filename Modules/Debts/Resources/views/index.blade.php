@@ -274,14 +274,6 @@
                                         <div class="text-muted small">{{ __('debts::messages.payments.empty') }}</div>
                                     @endif
 
-                                    @can('debts.edit')
-                                        @if($outstanding > 0)
-                                            <div class="alert alert-info mt-3 mb-0" role="alert">
-                                                {{ __('debts::messages.payments.use_modal_hint') }}
-                                            </div>
-                                        @endif
-                                    @endcan
-
                                     @if($outstanding <= 0)
                                         <div class="alert alert-success mt-4 mb-0" role="alert">
                                             {{ __('debts::messages.payments.settled') }}
