@@ -1,0 +1,9 @@
+{
+    "name": "nwidart/debts",
+    "type": "laravel-module",
+    "autoload": {
+        "psr-4": {
+            "Modules\\Debts\\": ""
+        }
+    }
+}

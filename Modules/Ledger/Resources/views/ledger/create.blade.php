@@ -548,12 +548,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (type === '2' && cap !== null && val > cap + 1e-9) {
-            amountInput.setCustomValidity('المبلغ يتجاوز الحد المسموح (سيولة المستثمر/متاح الحساب).');
-        } else {
-            amountInput.setCustomValidity('');
+        let message = '';
+        if (!Number.isNaN(val) && val < 0) {
+            message = 'لا يمكن إدخال مبلغ سالب.';
+        } else if (type === '2' && cap !== null && val > cap + 1e-9) {
+            message = 'المبلغ يتجاوز الحد المسموح (سيولة المستثمر/متاح الحساب).';
         }
-        amountInput.classList.toggle('is-invalid', !!amountInput.validationMessage);
+
+        amountInput.setCustomValidity(message);
+        amountInput.classList.toggle('is-invalid', !!message);
     }
 
     async function refreshAvailability() {

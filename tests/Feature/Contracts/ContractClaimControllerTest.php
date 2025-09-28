@@ -10,6 +10,7 @@ use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
+use Modules\Contracts\Entities\ContractNote;
 use Modules\Contracts\Entities\ContractClaimPayment;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Lookups\Database\Seeders\LookupsDatabaseSeeder;
@@ -33,6 +34,86 @@ use Tests\TestCase;
 class ContractClaimControllerTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_storing_claim_records_legal_fee_note(): void
+    {
+        $this->seed(LookupsDatabaseSeeder::class);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $contractStatus = ContractStatus::where('name', 'مطلوب')->firstOrFail();
+        $customerStatus = CustomerStatus::where('name', 'جديد')->firstOrFail();
+        $guarantorStatus = GuarantorStatus::where('name', 'جديد')->firstOrFail();
+        $productType = ProductType::query()->firstOrFail();
+        $installmentType = InstallmentType::query()->firstOrFail();
+
+        $customer = Customer::create([
+            'name' => 'Legal Fee Customer',
+            'national_id' => '11223344556677',
+            'phone' => '0550000000',
+            'email' => 'legal-customer@example.test',
+            'address' => 'Customer Address',
+            'customer_status_id' => $customerStatus->id,
+        ]);
+
+        $guarantor = Guarantor::create([
+            'name' => 'Legal Fee Guarantor',
+            'national_id' => '77665544332211',
+            'phone' => '0550000001',
+            'email' => 'legal-guarantor@example.test',
+            'address' => 'Guarantor Address',
+            'guarantor_status_id' => $guarantorStatus->id,
+        ]);
+
+        $contract = Contract::create([
+            'contract_number' => 'CNT-9001',
+            'customer_id' => $customer->id,
+            'guarantor_id' => $guarantor->id,
+            'contract_status_id' => $contractStatus->id,
+            'product_type_id' => $productType->id,
+            'products_count' => 1,
+            'purchase_price' => 800,
+            'sale_price' => 1000,
+            'contract_value' => 1000,
+            'investor_profit' => 200,
+            'total_value' => 1000,
+            'discount_amount' => 0,
+            'installment_type_id' => $installmentType->id,
+            'installment_value' => 100,
+            'installments_count' => 10,
+            'start_date' => now()->subMonth()->toDateString(),
+            'first_installment_date' => now()->addMonth()->toDateString(),
+            'contract_image' => null,
+            'contract_customer_image' => null,
+            'contract_guarantor_image' => null,
+        ]);
+
+        $claimDate = now()->toDateString();
+
+        $response = $this->post(route('contract-claims.store'), [
+            'contract_id' => $contract->id,
+            'claimant_id' => null,
+            'filed_party_role' => ContractClaim::FILED_PARTY_CUSTOMER,
+            'claim_amount' => 1200,
+            'claim_date' => $claimDate,
+            'document_number' => 'DOC-LEGAL-001',
+        ]);
+
+        $response->assertRedirect(route('contract-claims.index'));
+
+        $note = ContractNote::query()
+            ->where('contract_id', $contract->id)
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($note);
+        $this->assertSame($claimDate, $note->note_date->toDateString());
+        $this->assertSame(
+            'قيمة المحاماة = مبلغ المطالبة (1200.00) - المتبقي في العقد (1000.00) = 200.00',
+            $note->note
+        );
+    }
 
     public function test_new_claim_does_not_reset_contract_status_when_previous_claim_exists(): void
     {

@@ -11,8 +11,8 @@
     $today = now()->toDateString();
 
     $primaryTabLabel = $primaryTabLabel ?? 'قيد شراء بضائع';
-    $primaryFormAction = $primaryFormAction ?? route('accounts.entries.goods.store');
-    $partialFormAction = $partialFormAction ?? route('accounts.entries.goods.store-partial');
+    $primaryFormAction = $primaryFormAction ?? route('accounts.entries.goods.pay.store');
+    $partialFormAction = $partialFormAction ?? route('accounts.entries.goods.pay.store-partial');
 
     $purchaseProducts = $activeTab === 'partial' ? [] : old('products', []);
     $partialProducts = $activeTab === 'partial' ? old('products', []) : [];

@@ -325,11 +325,13 @@
 })();
 
 $('.modal').on('shown.bs.modal', function () {
-    $('.js-date').datepicker({
-        format: 'yyyy-mm-dd',
-        autoclose: true,
-        todayHighlight: true
-    });
+    if (typeof $ !== 'undefined' && $.fn && typeof $.fn.datepicker === 'function') {
+        $('.js-date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        });
+    }
 });
 
 

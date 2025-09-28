@@ -1,7 +1,9 @@
 <?php
 
 return array (
-  'Dashboard' => 'لوحة التحكم',
+    'Dashboard' => 'لوحة التحكم',
+    'Notes' => 'الملاحظات',
+    'Manage Notes' => 'إدارة الملاحظات',
   'Audit Logs' => 'سجل النشاط',
   'Customers' => 'العملاء',
   'Customers Dashboard' => 'لوحة تحكم العملاء',
@@ -23,9 +25,14 @@ return array (
   'Contracts Dashboard' => 'لوحة تحكم العقود',
   'Claims' => 'المطالبات',
   'Ledger' => 'دفتر القيود',
+  'Debts' => 'المديونيات',
+  'Manage Debts' => 'إدارة المديونيات',
   'Settings' => 'الإعدادات',
   'General Settings' => 'الإعدادات العامة',
   'General Setting' => 'الإعدادات العامة',
+  'Database Backup & Restore' => 'النسخ الاحتياطي والاسترداد',
+  'Database Backup' => 'النسخ الاحتياطي لقاعدة البيانات',
+  'Database Restore' => 'استرداد قاعدة البيانات',
   'Account Settings' => 'إعدادات الحساب',
   'Users and Permissions' => 'المستخدمون والصلاحيات',
   'Manage Roles' => 'إدارة الأدوار',
@@ -89,6 +96,7 @@ return array (
   'Financial Statements' => 'القوائم المالية',
   'Financial Status' => 'الحالة المالية',
   'Operating' => 'العمليات',
+  'Expenses' => 'المصروفات',
   'Cars' => 'السيارات',
   'Motocycles' => 'الدراجات النارية',
   'Add Ledger Entry' => 'إضافة قيد',

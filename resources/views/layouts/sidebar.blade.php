@@ -22,6 +22,8 @@
       || $isRoute('categories.*')
       || $isRoute('transaction_statuses.*')
       || $isRoute('transaction_types.*')
+      || $isRoute('expenses.expense-types.*')
+      || $isRoute('expenses.recurrence-periods.*')
       || $isRoute('accounts.bank-accounts.*')
       || $isRoute('accounts.safes.*')
       || $isRoute('product_types.*')
@@ -40,7 +42,7 @@
   // فتح مجموعة الحسابات؟
   $accountsOpen = $isRoute('ledger.*')
       || $isRoute('investors.ledger.*')
-      || $isRoute('accounts.entries.goods.*')
+      || $isRoute('accounts.entries.goods.pay.*')
       || $isRoute('accounts.entries.goods.sales.*');
 
   // فتح مجموعة استيرادات البيانات؟
@@ -168,16 +170,78 @@
   ];
 
   $goodsEntryPatterns = [
-      'accounts.entries.goods.*',
+      'accounts.entries.goods.pay.*',
       'accounts.entries.goods.sales.*',
   ];
+
+  $router = app('router');
+
+  $expenseNavCandidates = [
+      [
+          'label' => __('expenses::expenses.index_title'),
+          'candidates' => [
+              ['route' => 'expenses.expenses.index',       'pattern' => 'expenses.expenses.*'],
+          ],
+      ],
+      [
+          'label' => __('sidebar.Cars'),
+          'candidates' => [
+              ['route' => 'operating.cars.index',          'pattern' => 'operating.cars.*'],
+              ['route' => 'expenses.cars.index',           'pattern' => 'expenses.cars.*'],
+              ['route' => 'car-expenses.index',            'pattern' => 'car-expenses.*'],
+              ['route' => 'cars.expenses.index',           'pattern' => 'cars.expenses.*'],
+          ],
+      ],
+      [
+          'label' => __('sidebar.Motocycles'),
+          'candidates' => [
+              ['route' => 'operating.motocycles.index',    'pattern' => 'operating.motocycles.*'],
+              ['route' => 'operating.motorcycles.index',   'pattern' => 'operating.motorcycles.*'],
+              ['route' => 'expenses.motocycles.index',     'pattern' => 'expenses.motocycles.*'],
+              ['route' => 'expenses.motorcycles.index',    'pattern' => 'expenses.motorcycles.*'],
+              ['route' => 'motocycle-expenses.index',      'pattern' => 'motocycle-expenses.*'],
+              ['route' => 'motorcycle-expenses.index',     'pattern' => 'motorcycle-expenses.*'],
+              ['route' => 'motocycles.expenses.index',     'pattern' => 'motocycles.expenses.*'],
+              ['route' => 'motorcycles.expenses.index',    'pattern' => 'motorcycles.expenses.*'],
+          ],
+      ],
+  ];
+
+  $expenseNavLinks = [];
+
+  foreach ($expenseNavCandidates as $candidate) {
+      foreach ($candidate['candidates'] as $routeOption) {
+          if ($router->has($routeOption['route'])) {
+              $expenseNavLinks[] = [
+                  'route'   => $routeOption['route'],
+                  'pattern' => $routeOption['pattern'],
+                  'label'   => $candidate['label'],
+              ];
+              break;
+          }
+      }
+  }
+
+  $expenseNavPatterns = array_map(
+      static fn(array $link): string => $link['pattern'],
+      $expenseNavLinks
+  );
+
+  $expensesActive = !empty($expenseNavPatterns) && $isRoute($expenseNavPatterns);
+  $primaryExpenseLink = $expenseNavLinks[0] ?? null;
+  $additionalExpenseLinks = $primaryExpenseLink ? array_slice($expenseNavLinks, 1) : [];
 
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
       $investorLedgerPatterns,
-      $goodsEntryPatterns
+      $goodsEntryPatterns,
+      $expenseNavPatterns
   );
+
+  $debtsPatterns = [
+      'debts.*',
+  ];
 
   $dataImportPatterns = [
       'customers.import.*',
@@ -199,6 +263,7 @@
 
   $settingsPermissionPatterns = [
       'settings.*',
+      'settings.database.*',
       'settings.account.*',
       'nationalities.*',
       'titles.*',
@@ -221,9 +286,16 @@
       'settings.roles.permissions*',
       'settings.permissions.*',
       'users.*',
+      'expenses.expense-types.*',
+      'expenses.recurrence-periods.*',
   ];
 
-  $settingsGeneralPatterns = ['settings.index', 'settings.account.*'];
+  $settingsGeneralPatterns = [
+      'settings.index',
+      'settings.account.*',
+      'settings.database.index',
+      'settings.database.restore',
+  ];
   $settingsPeoplePatterns = [
       'nationalities.*',
       'titles.*',
@@ -234,6 +306,7 @@
   $settingsClaimsPatterns = ['claim_statuses.*', 'claimants.*', 'claim_payers.*'];
   $settingsInstallmentPatterns = ['installment_types.*', 'installment_statuses.*'];
   $settingsTransactionPatterns = ['transaction_types.*', 'transaction_statuses.*', 'categories.*'];
+  $settingsExpensesPatterns = ['expenses.expense-types.*', 'expenses.recurrence-periods.*'];
   $settingsAccountsPatterns = ['accounts.bank-accounts.*', 'accounts.safes.*'];
   $settingsProductsPatterns = ['product_types.*', 'products.*'];
   $settingsUsersPatterns = [
@@ -255,6 +328,8 @@
     </a>
   </li>
   @endroutecanany
+
+  
 
   {{-- Customers --}}
   @routecanany(array_merge(['customers.dashboard'], $customerManagePatterns))
@@ -373,16 +448,6 @@
   </li>
   @endroutecanany
 
-  {{-- المطالبات --}}
-  @routecanany($contractClaimsPatterns)
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('contract-claims.*')) }} {{ $active($isRoute('contract-claims.*')) }}"
-       href="{{ route('contract-claims.index') }}">
-      <i class="bi bi-exclamation-octagon"></i><span>@lang('sidebar.Claims')</span>
-    </a>
-  </li>
-  @endroutecanany
-
   {{-- الحسابات --}}
   @routecanany($accountsNavPatterns)
   <li class="nav-item">
@@ -411,6 +476,14 @@
 
       @routecanany($accountsOfficeShortcutPatterns)
       <li class="nav-heading">@lang('sidebar.Office Ledger Entries')</li>
+      @endroutecanany
+
+       @routecanany('ledger.transfer.create')
+      <li>
+        <a class="{{ $active($isRoute('ledger.transfer.create')) }}" href="{{ route('ledger.transfer.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Internal Transfer')</span>
+        </a>
+      </li>
       @endroutecanany
 
       @routecanany('ledger.office.shortcuts.mukataba')
@@ -493,9 +566,9 @@
       <li class="nav-heading">@lang('sidebar.Goods Entries')</li>
       @endroutecanany
 
-      @routecanany('accounts.entries.goods.*')
+      @routecanany('accounts.entries.goods.pay.*')
       <li>
-        <a class="{{ $active($isRoute('accounts.entries.goods.*')) }}" href="{{ route('accounts.entries.goods.index') }}">
+        <a class="{{ $active($isRoute('accounts.entries.goods.pay.*')) }}" href="{{ route('accounts.entries.goods.pay.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Goods Purchase')</span>
         </a>
       </li>
@@ -509,6 +582,59 @@
       </li>
       @endroutecanany
     </ul>
+  </li>
+  @endroutecanany
+
+  {{-- المديونيات --}}
+  @routecanany($debtsPatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('debts.*')) }} {{ $active($isRoute('debts.*')) }}"
+       href="{{ route('debts.index') }}">
+      <i class="bi bi-cash-coin"></i><span>@lang('sidebar.Debts')</span>
+    </a>
+  </li>
+  @endroutecanany
+
+  @routecanany($expenseNavPatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($expensesActive) }} {{ $active($expensesActive) }}"
+       href="{{ route($primaryExpenseLink['route']) }}">
+      <i class="bi bi-receipt"></i><span>@lang('sidebar.Expenses')</span>
+    </a>
+
+    @if (!empty($additionalExpenseLinks))
+    <ul class="nav-content {{ $open($expensesActive) }}">
+      @foreach ($additionalExpenseLinks as $expenseLink)
+        @routecanany($expenseLink['pattern'])
+        <li>
+          <a class="{{ $active($isRoute($expenseLink['pattern'])) }}" href="{{ route($expenseLink['route']) }}">
+            <i class="bi bi-circle"></i><span>{{ $expenseLink['label'] }}</span>
+          </a>
+        </li>
+        @endroutecanany
+      @endforeach
+    </ul>
+    @endif
+  </li>
+  @endroutecanany
+
+
+  {{-- المطالبات --}}
+  @routecanany($contractClaimsPatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('contract-claims.*')) }} {{ $active($isRoute('contract-claims.*')) }}"
+       href="{{ route('contract-claims.index') }}">
+      <i class="bi bi-exclamation-octagon"></i><span>@lang('sidebar.Claims')</span>
+    </a>
+  </li>
+  @endroutecanany
+
+  @routecanany('notes.index')
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('notes.*')) }} {{ $active($isRoute('notes.*')) }}"
+       href="{{ route('notes.index') }}">
+      <i class="bi bi-stickies"></i><span>@lang('sidebar.Notes')</span>
+    </a>
   </li>
   @endroutecanany
 
@@ -684,6 +810,22 @@
       </li>
       @endroutecanany
 
+      @routecanany('settings.database.index')
+      <li>
+        <a class="{{ $active($isRoute('settings.database.index')) }}" href="{{ route('settings.database.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Database Backup')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('settings.database.restore')
+      <li>
+        <a class="{{ $active($isRoute('settings.database.restore')) }}" href="{{ route('settings.database.restore') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Database Restore')</span>
+        </a>
+      </li>
+      @endroutecanany
+
       @auth
       <li>
         <a class="{{ $active($isRoute('settings.account.edit')) }}" href="{{ route('settings.account.edit') }}">
@@ -812,6 +954,26 @@
       <li>
         <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($settingsExpensesPatterns)
+      <li class="nav-heading">@lang('sidebar.Expenses')</li>
+      @endroutecanany
+
+      @routecanany('expenses.expense-types.*')
+      <li>
+        <a class="{{ $active($isRoute('expenses.expense-types.*')) }}" href="{{ route('expenses.expense-types.index') }}">
+          <i class="bi bi-circle"></i><span>{{ __('expenses::types.index_title') }}</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('expenses.recurrence-periods.*')
+      <li>
+        <a class="{{ $active($isRoute('expenses.recurrence-periods.*')) }}" href="{{ route('expenses.recurrence-periods.index') }}">
+          <i class="bi bi-circle"></i><span>{{ __('expenses::recurrence_periods.index_title') }}</span>
         </a>
       </li>
       @endroutecanany

@@ -25,6 +25,7 @@ return [
     'Top 10 Investors (Positive Net Liquidity)' => 'Top 10 Investors (Positive Net Liquidity)',
     'Total Net Displayed' => 'Total Net Displayed',
     'Investor' => 'Investor',
+    'Office' => 'Office',
     'In' => 'In',
     'Out' => 'Out',
     'Net' => 'Net',
@@ -72,4 +73,5 @@ return [
     'Refreshing guarantor statuses' => 'Refreshing guarantor statuses…',
     'Refresh statuses success' => 'Statuses have been refreshed successfully.',
     'Refresh statuses error' => 'Unable to refresh the statuses. Please try again.',
+    'Print Daily Ledger' => "Print Today's Ledger",
 ];

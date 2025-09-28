@@ -4,6 +4,11 @@ return [
     'fields' => [
         'name' => 'Name',
     ],
+    'status' => [
+        'column' => 'Protection Status',
+        'protected' => 'Protected',
+        'editable' => 'Editable',
+    ],
     'nationalities' => [
         'created' => 'Nationality added successfully.',
         'updated' => 'Nationality updated successfully.',

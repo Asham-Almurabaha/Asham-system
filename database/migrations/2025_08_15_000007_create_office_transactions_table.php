@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateOfficeTransactionsTable   extends Migration
+class CreateOfficeTransactionsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -19,6 +19,12 @@ class CreateOfficeTransactionsTable   extends Migration
 
             // ربط بالعقد (اختياري)
             $table->foreignId('contract_id')->nullable()->constrained('contracts')->onDelete('set null');
+
+            // ربط بالمطالبة (إن وجدت)
+            $table->foreignId('contract_claim_id')->nullable()->constrained('contract_claims')->nullOnDelete();
+
+            // ربط بدفعة المطالبة (إن وجدت)
+            $table->foreignId('contract_claim_payment_id')->nullable()->constrained('contract_claim_payments')->nullOnDelete();
 
             // ربط بالعقد (القسط)
             $table->foreignId('installment_id')->nullable()->constrained('contract_installments')->onDelete('set null');
@@ -44,6 +50,6 @@ class CreateOfficeTransactionsTable   extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('investor_transactions');
+        Schema::dropIfExists('office_transactions');
     }
 }

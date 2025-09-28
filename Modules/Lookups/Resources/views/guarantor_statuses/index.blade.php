@@ -28,6 +28,7 @@
                 <tr>
                     <th scope="col" style="width:80px" class="text-center">#</th>
                     <th scope="col">{{ __('Name') }}</th>
+                    <th scope="col" class="text-center" style="width:160px">@lang('lookups::messages.status.column')</th>
                     <th scope="col" class="text-end" style="width:180px">{{ __('Actions') }}</th>
                 </tr>
             </x-slot>
@@ -35,19 +36,31 @@
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td class="fw-semibold text-start">{{ $status->name }}</td>
+                    <td class="text-center">
+                        @include('lookups::components.protection-status', ['isProtected' => $status->is_protected])
+                    </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <x-button.action href="{{ route('guarantor_statuses.edit', $status->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button.action>
-                            @include('lookups::components.delete-button', [
-                                'action' => route('guarantor_statuses.destroy', $status->id),
-                                'confirm' => __('Are you sure to delete this guarantor status?'),
-                            ])
+                            <x-button.action
+                                href="{{ route('guarantor_statuses.edit', $status->id) }}"
+                                variant="primary"
+                                :outline="true"
+                                size="sm"
+                                :disabled="$status->is_protected"
+                            >{{ __('Edit') }}</x-button.action>
+
+                            @if(! $status->is_protected)
+                                @include('lookups::components.delete-button', [
+                                    'action' => route('guarantor_statuses.destroy', $status->id),
+                                    'confirm' => __('Are you sure to delete this guarantor status?'),
+                                ])
+                            @endif
                         </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="3" class="text-center text-muted py-4">{{ __('No guarantor statuses found.') }}</td>
+                    <td colspan="4" class="text-center text-muted py-4">{{ __('No guarantor statuses found.') }}</td>
                 </tr>
             @endforelse
         </x-table>

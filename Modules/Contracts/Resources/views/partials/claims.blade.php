@@ -39,6 +39,26 @@
     $defaultClaimDate = old('claim_date', $todayDate);
     $oldPaymentClaimId = (string) old('payment_claim_id');
     $oldDiscountClaimId = (string) old('discount_claim_id');
+    $contractOutstandingValue = round((float) optional($contract)->outstandingAmount(), 2);
+    $contractOutstandingRaw = number_format($contractOutstandingValue, 2, '.', '');
+    $formattedOutstandingValue = number_format($contractOutstandingValue, 2);
+
+    $oldClaimAmount = old('claim_amount');
+    $hasOldClaimAmount = $oldClaimAmount !== null && $oldClaimAmount !== '';
+    $oldClaimAmountFloat = $hasOldClaimAmount && is_numeric($oldClaimAmount)
+        ? (float) $oldClaimAmount
+        : null;
+
+    $claimAmountHintText = $oldClaimAmountFloat !== null
+        ? __('contracts::claims.claim_amount_legal_fee_hint', [
+            'claim' => number_format($oldClaimAmountFloat, 2),
+            'remaining' => $formattedOutstandingValue,
+            'legal_fee' => number_format($oldClaimAmountFloat - $contractOutstandingValue, 2),
+        ])
+        : __('contracts::claims.claim_amount_remaining_hint', [
+            'remaining' => $formattedOutstandingValue,
+        ]);
+
     $shouldReopenModal = $errors->has('contract_id')
         || $errors->has('filed_party_role')
         || $errors->has('claim_amount')
@@ -251,8 +271,26 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">{{ __('contracts::claims.claim_amount') }}</label>
-                        <input type="number" name="claim_amount" class="form-control" step="0.01" min="0" required value="{{ old('claim_amount') }}">
+                        <label class="form-label" for="claim-amount-input">{{ __('contracts::claims.claim_amount') }}</label>
+                        <input
+                            id="claim-amount-input"
+                            type="number"
+                            name="claim_amount"
+                            class="form-control"
+                            step="0.01"
+                            min="0"
+                            required
+                            value="{{ old('claim_amount') }}"
+                        >
+                        <div
+                            class="form-text"
+                            id="claim-amount-hint"
+                            data-outstanding="{{ $contractOutstandingRaw }}"
+                            data-remaining-template="{{ e(__('contracts::claims.claim_amount_remaining_hint')) }}"
+                            data-legal-fee-template="{{ e(__('contracts::claims.claim_amount_legal_fee_hint')) }}"
+                        >
+                            {{ $claimAmountHintText }}
+                        </div>
                         @error('claim_amount')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -287,6 +325,78 @@
 </div>
 
 @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var modalElement = document.getElementById('addClaimModal');
+            if (!modalElement) {
+                return;
+            }
+
+            var amountInput = modalElement.querySelector('input[name="claim_amount"]');
+            var hintElement = modalElement.querySelector('#claim-amount-hint');
+
+            if (!amountInput || !hintElement) {
+                return;
+            }
+
+            var outstanding = parseFloat(hintElement.dataset.outstanding || '0');
+            var remainingTemplate = hintElement.dataset.remainingTemplate || '';
+            var legalFeeTemplate = hintElement.dataset.legalFeeTemplate || '';
+
+            var formatNumber = function (value) {
+                if (!isFinite(value)) {
+                    return '0.00';
+                }
+
+                return Number(value).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            };
+
+            var fillTemplate = function (template, replacements) {
+                return template.replace(/:([a-z_]+)/gi, function (match, key) {
+                    return Object.prototype.hasOwnProperty.call(replacements, key)
+                        ? replacements[key]
+                        : match;
+                });
+            };
+
+            var updateHint = function () {
+                var raw = amountInput.value.trim();
+
+                if (raw === '') {
+                    hintElement.textContent = remainingTemplate
+                        ? fillTemplate(remainingTemplate, { remaining: formatNumber(outstanding) })
+                        : '';
+                    return;
+                }
+
+                var amount = parseFloat(raw);
+                if (isNaN(amount)) {
+                    hintElement.textContent = remainingTemplate
+                        ? fillTemplate(remainingTemplate, { remaining: formatNumber(outstanding) })
+                        : '';
+                    return;
+                }
+
+                var legalFee = amount - outstanding;
+
+                hintElement.textContent = legalFeeTemplate
+                    ? fillTemplate(legalFeeTemplate, {
+                        claim: formatNumber(amount),
+                        remaining: formatNumber(outstanding),
+                        legal_fee: formatNumber(legalFee)
+                    })
+                    : '';
+            };
+
+            amountInput.addEventListener('input', updateHint);
+            amountInput.addEventListener('change', updateHint);
+
+            updateHint();
+        });
+    </script>
     @if ($shouldReopenModal)
         <script>
             document.addEventListener('DOMContentLoaded', function () {

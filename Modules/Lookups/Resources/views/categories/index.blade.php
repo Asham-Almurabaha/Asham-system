@@ -29,6 +29,7 @@
                     <th scope="col" style="width:70px" class="text-center">#</th>
                     <th scope="col" style="width:240px">{{ __('Name') }}</th>
                     <th scope="col">{{ __('Related Transaction Statuses') }}</th>
+                    <th scope="col" class="text-center" style="width:160px">@lang('lookups::messages.status.column')</th>
                     <th scope="col" class="text-end" style="width:160px">{{ __('Actions') }}</th>
                 </tr>
             </x-slot>
@@ -43,19 +44,31 @@
                             <span class="text-muted">—</span>
                         @endforelse
                     </td>
+                    <td class="text-center">
+                        @include('lookups::components.protection-status', ['isProtected' => $category->is_protected])
+                    </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
-                            <x-button.action href="{{ route('categories.edit', $category->id) }}" variant="primary" :outline="true" size="sm">{{ __('Edit') }}</x-button.action>
-                            @include('lookups::components.delete-button', [
-                                'action' => route('categories.destroy', $category->id),
-                                'confirm' => __('Are you sure to delete this category?'),
-                            ])
+                            <x-button.action
+                                href="{{ route('categories.edit', $category->id) }}"
+                                variant="primary"
+                                :outline="true"
+                                size="sm"
+                                :disabled="$category->is_protected"
+                            >{{ __('Edit') }}</x-button.action>
+
+                            @if(! $category->is_protected)
+                                @include('lookups::components.delete-button', [
+                                    'action' => route('categories.destroy', $category->id),
+                                    'confirm' => __('Are you sure to delete this category?'),
+                                ])
+                            @endif
                         </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center text-muted py-4">{{ __('No categories found.') }}</td>
+                    <td colspan="5" class="text-center text-muted py-4">{{ __('No categories found.') }}</td>
                 </tr>
             @endforelse
         </x-table>

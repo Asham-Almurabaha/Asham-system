@@ -35,6 +35,7 @@ return [
     'Amount' => 'Amount',
     'Type' => 'Type',
     'Status' => 'Status',
+    'Party' => 'Party',
     'Notes' => 'Notes',
     'No withdrawals found for this investor in the current range.' => 'No withdrawals found for this investor in the current range.',
     'Back' => 'Back',

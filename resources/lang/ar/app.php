@@ -35,6 +35,7 @@ return [
     'Amount' => 'المبلغ',
     'Type' => 'النوع',
     'Status' => 'الحالة',
+    'Party' => 'الجهة',
     'Notes' => 'الملاحظات',
     'No withdrawals found for this investor in the current range.' => 'لا توجد مسحوبات مسجلة لهذا المستثمر ضمن النطاق الحالي.',
     'Back' => 'رجوع',

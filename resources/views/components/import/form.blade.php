@@ -11,6 +11,7 @@
     'maxSize' => 10 * 1024 * 1024,
     'invalidFormatMessage' => 'Unsupported file format. Allowed: xlsx, xls, csv',
     'tooLargeMessage' => 'File size exceeds 10MB.',
+    'inputName' => 'file',
 ])
 
 @php
@@ -42,7 +43,7 @@
             <input
                 id="{{ $inputId }}"
                 type="file"
-                name="file"
+                name="{{ $inputName }}"
                 class="position-absolute w-100 h-100 top-0 start-0 opacity-0"
                 accept="{{ $accept }}"
                 required

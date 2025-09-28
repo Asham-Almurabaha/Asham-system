@@ -1,5 +1,42 @@
 <?php
 
+$parseSizeToKilobytes = static function ($value) {
+    if ($value === null) {
+        return null;
+    }
+
+    $raw = trim((string) $value);
+
+    if ($raw === '') {
+        return null;
+    }
+
+    if (! preg_match('/^([0-9]+(?:\.[0-9]+)?)\s*([KMG]?)/i', $raw, $matches)) {
+        return null;
+    }
+
+    $number = (float) $matches[1];
+    $unit = strtolower($matches[2] ?? '');
+
+    $multiplier = match ($unit) {
+        'g' => 1024 * 1024,
+        'm' => 1024,
+        'k' => 1,
+        default => 1 / 1024,
+    };
+
+    return (int) max(0, ceil($number * $multiplier));
+};
+
+$uploadLimit = env('DB_BACKUP_UPLOAD_MAX_FILESIZE', '256M');
+$postLimit = env('DB_BACKUP_POST_MAX_SIZE', '256M');
+
+$maxUploadKilobytes = (int) env('DB_BACKUP_IMPORT_MAX_KB', 0);
+
+if ($maxUploadKilobytes <= 0) {
+    $maxUploadKilobytes = $parseSizeToKilobytes($uploadLimit) ?? 0;
+}
+
 return [
 
     'backup' => [
@@ -115,6 +152,12 @@ return [
 
         'tries' => 1,
         'retry_delay' => 0,
+    ],
+
+    'import' => [
+        'upload_max_filesize' => $uploadLimit,
+        'post_max_size' => $postLimit,
+        'max_upload_kilobytes' => max(0, $maxUploadKilobytes),
     ],
 
 ];

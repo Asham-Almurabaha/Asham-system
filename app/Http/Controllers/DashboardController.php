@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\DashboardDataService;
 use App\Services\ProductAvailabilityService;
+use Carbon\Carbon;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Lookups\Entities\ProductType;
 
 class DashboardController extends Controller
@@ -86,5 +88,111 @@ class DashboardController extends Controller
         $vm['cardsAvailable'] = (int) $items->sum('available');
 
         return view('dashboard.index', $vm);
+    }
+
+    public function printDailyLedger(Request $request)
+    {
+        $dateInput = $request->input('date');
+
+        try {
+            $day = $dateInput ? Carbon::parse($dateInput) : Carbon::today();
+        } catch (\Throwable $e) {
+            $day = Carbon::today();
+        }
+
+        $day = $day->startOfDay();
+        $dateString = $day->toDateString();
+
+        $entries = LedgerEntry::query()
+            ->with(['bankAccount', 'safe', 'status', 'type', 'investor'])
+            ->whereDate('entry_date', $dateString)
+            ->orderBy('entry_date')
+            ->orderBy('id')
+            ->get();
+
+        $buildReport = function ($collection, callable $nameResolver, string $groupKey) {
+            $collection = $collection->values();
+
+            $accounts = $collection
+                ->groupBy($groupKey)
+                ->map(function ($group) use ($nameResolver, $groupKey) {
+                    $first = $group->first();
+
+                    $totalIn = (float) $group->where('direction', 'in')->sum('amount');
+                    $totalOut = (float) $group->where('direction', 'out')->sum('amount');
+
+                    return [
+                        'id' => (int) ($first?->{$groupKey} ?? 0),
+                        'name' => $nameResolver($first),
+                        'total_in' => $totalIn,
+                        'total_out' => $totalOut,
+                        'net' => $totalIn - $totalOut,
+                        'entries' => $group
+                            ->map(function (LedgerEntry $entry) use ($nameResolver) {
+                                return [
+                                    'id' => $entry->id,
+                                    'date' => optional($entry->entry_date)->format('Y-m-d'),
+                                    'ref' => $entry->ref,
+                                    'direction' => $entry->direction,
+                                    'amount' => (float) $entry->amount,
+                                    'status' => optional($entry->status)->name,
+                                    'type' => optional($entry->type)->name,
+                                    'notes' => $entry->notes,
+                                    'investor' => optional($entry->investor)->name,
+                                    'is_office' => (bool) $entry->is_office,
+                                    'account_name' => $nameResolver($entry),
+                                ];
+                            })
+                            ->values()
+                            ->all(),
+                    ];
+                })
+                ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
+                ->values()
+                ->all();
+
+            $totalIn = (float) $collection->where('direction', 'in')->sum('amount');
+            $totalOut = (float) $collection->where('direction', 'out')->sum('amount');
+
+            return [
+                'accounts' => $accounts,
+                'total_in' => $totalIn,
+                'total_out' => $totalOut,
+                'net' => $totalIn - $totalOut,
+                'entries_count' => $collection->count(),
+                'accounts_count' => count($accounts),
+            ];
+        };
+
+        $bankEntries = $entries->filter(fn (LedgerEntry $entry) => !is_null($entry->bank_account_id));
+        $safeEntries = $entries->filter(fn (LedgerEntry $entry) => !is_null($entry->safe_id));
+
+        $bankReport = $buildReport(
+            $bankEntries,
+            fn (LedgerEntry $entry) => $entry->bankAccount?->name ?? ('#' . $entry->bank_account_id),
+            'bank_account_id'
+        );
+
+        $safeReport = $buildReport(
+            $safeEntries,
+            fn (LedgerEntry $entry) => $entry->safe?->name ?? ('#' . $entry->safe_id),
+            'safe_id'
+        );
+
+        $grandTotals = [
+            'total_in' => $bankReport['total_in'] + $safeReport['total_in'],
+            'total_out' => $bankReport['total_out'] + $safeReport['total_out'],
+            'net' => ($bankReport['net'] ?? 0) + ($safeReport['net'] ?? 0),
+            'entries_count' => $entries->count(),
+        ];
+
+        return view('dashboard.daily-ledger-print', [
+            'reportDay' => $day,
+            'reportDate' => $day->format('Y-m-d'),
+            'hasEntries' => $entries->isNotEmpty(),
+            'bankReport' => $bankReport,
+            'safeReport' => $safeReport,
+            'grandTotals' => $grandTotals,
+        ]);
     }
 }

@@ -9,12 +9,14 @@ use App\Http\Controllers\LanguageController;
 // use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Accounts\GoodsEntriesController;
 use App\Http\Controllers\Accounts\GoodsSalesEntriesController;
+use App\Http\Controllers\Setting\DatabaseBackupController;
 use App\Http\Controllers\Setting\PermissionManagementController;
 use App\Http\Controllers\Setting\RoleManagementController;
 use App\Http\Controllers\Setting\RolePermissionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\AccountSettingsController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
+use App\Http\Controllers\NoteController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -52,9 +54,26 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
         ->middleware('can:view-dashboard')
         ->name('dashboard');
 
+    Route::get('/dashboard/daily-ledger/print', [DashboardController::class, 'printDailyLedger'])
+        ->middleware('can:view-dashboard')
+        ->name('dashboard.daily-ledger.print');
+
     // الإعدادات
     Route::prefix('settings')->group(function () {
         Route::resource('settings', SettingController::class);
+
+        Route::get('database', [DatabaseBackupController::class, 'index'])
+            ->name('settings.database.index');
+
+        Route::get('database/restore', [DatabaseBackupController::class, 'restore'])
+            ->middleware('role:admin')
+            ->name('settings.database.restore');
+
+        Route::post('database/export', [DatabaseBackupController::class, 'export'])
+            ->name('settings.database.export');
+        Route::post('database/import', [DatabaseBackupController::class, 'import'])
+            ->middleware('role:admin')
+            ->name('settings.database.import');
 
         Route::get('account', [AccountSettingsController::class, 'edit'])
             ->name('settings.account.edit')
@@ -75,7 +94,11 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
     require base_path('Modules/Investors/Routes/web.php');
     require base_path('Modules/Contracts/Routes/web.php');
 
-    Route::prefix('accounts/entries/goods')->name('accounts.entries.goods.')->group(function () {
+    Route::resource('notes', NoteController::class)->except(['show']);
+    Route::patch('notes/{note}/complete', [NoteController::class, 'complete'])->name('notes.complete');
+    Route::patch('notes/{note}/reopen', [NoteController::class, 'reopen'])->name('notes.reopen');
+
+    Route::prefix('accounts/entries/goods')->name('accounts.entries.goods.pay.')->group(function () {
         Route::get('/', [GoodsEntriesController::class, 'index'])
             ->name('index')
             ->middleware('permission:accounts.entries.view');
@@ -113,6 +136,9 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
     Route::get('/audit-logs/{auditLog}', [AuditLogController::class, 'show'])
         ->middleware('permission:view-audit-logs')
         ->name('audit.logs.show');
+    Route::delete('/audit-logs/purge', [AuditLogController::class, 'destroyRange'])
+        ->middleware('permission:audit.logs.purge')
+        ->name('audit.logs.purge');
     Route::post('/audit-logs/{auditLog}/revert', [AuditLogController::class, 'revert'])->name('audit.logs.revert');
 
     // المتاح في الحسابات (بنكي/خزنة)

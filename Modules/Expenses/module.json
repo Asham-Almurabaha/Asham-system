@@ -1,0 +1,11 @@
+{
+    "name": "Expenses",
+    "alias": "expenses",
+    "description": "Expense tracking and scheduling module",
+    "keywords": [],
+    "version": "1.0.0",
+    "priority": 0,
+    "providers": [
+        "Modules\\Expenses\\Providers\\ExpensesServiceProvider"
+    ]
+}

@@ -875,29 +875,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const direction = currentDirectionType();
         let bankOk = true;
         let safeOk = true;
-        let investorOk = true;
+        let amountOk = true;
+        let bankMsg = '';
+        let safeMsg = '';
+        let amountMsg = '';
+
+        if (bankVal != null && bankVal < 0) {
+            bankOk = false;
+            bankMsg = 'لا يمكن إدخال مبلغ سالب.';
+        }
+        if (safeVal != null && safeVal < 0) {
+            safeOk = false;
+            safeMsg = 'لا يمكن إدخال مبلغ سالب.';
+        }
+        if (total != null && total < 0) {
+            amountOk = false;
+            amountMsg = 'لا يمكن إدخال مبلغ سالب.';
+        }
 
         if (direction === '2') {
-            if (bankAvail !== null && bankVal != null && bankVal > bankAvail + 1e-9) {
+            if (bankOk && bankAvail !== null && bankVal != null && bankVal > bankAvail + 1e-9) {
                 bankOk = false;
+                bankMsg = 'المبلغ أكبر من المتاح في الحساب البنكي';
             }
-            if (safeAvail !== null && safeVal != null && safeVal > safeAvail + 1e-9) {
+            if (safeOk && safeAvail !== null && safeVal != null && safeVal > safeAvail + 1e-9) {
                 safeOk = false;
+                safeMsg = 'المبلغ أكبر من المتاح في الخزنة';
             }
-            if (investorSelected() && investorAvail !== null && total != null && total > investorAvail + 1e-9) {
-                investorOk = false;
+            if (amountOk && investorSelected() && investorAvail !== null && total != null && total > investorAvail + 1e-9) {
+                amountOk = false;
+                amountMsg = 'إجمالي المبلغ أكبر من سيولة المستثمر المتاحة';
             }
         }
 
-        bankShare.setCustomValidity(bankOk ? '' : 'المبلغ أكبر من المتاح في الحساب البنكي');
-        safeShare.setCustomValidity(safeOk ? '' : 'المبلغ أكبر من المتاح في الخزنة');
+        bankShare.setCustomValidity(bankMsg);
+        safeShare.setCustomValidity(safeMsg);
+        amount.setCustomValidity(amountMsg);
+
         bankShare.classList.toggle('is-invalid', !bankOk);
         safeShare.classList.toggle('is-invalid', !safeOk);
+        amount.classList.toggle('is-invalid', !amountOk);
 
-        amount.setCustomValidity(investorOk ? '' : 'إجمالي المبلغ أكبر من سيولة المستثمر المتاحة');
-        amount.classList.toggle('is-invalid', !investorOk);
-
-        let ok = okSum && bankOk && safeOk && investorOk;
+        let ok = okSum && bankOk && safeOk && amountOk;
         if (ok && bankVal && bankVal > 0 && !bankSel.value) {
             ok = false;
         }

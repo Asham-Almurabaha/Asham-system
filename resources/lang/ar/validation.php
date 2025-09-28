@@ -161,7 +161,8 @@ return array (
       'rule-name' => 'custom-message',
     ),
   ),
-  'attributes' => 
+  'attributes' =>
   array (
+    'backup_file' => 'ملف النسخة الاحتياطية',
   ),
 );

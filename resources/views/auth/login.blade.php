@@ -10,20 +10,19 @@
         novalidate>
     @csrf
 
-    {{-- Email --}}
+    {{-- Email / Username --}}
     <div class="col-12">
-      <label for="email" class="form-label">{{ __('Email Address') }}</label>
+      <label for="email" class="form-label">{{ __('Email address or username') }}</label>
       <div class="input-group has-validation">
         <span class="input-group-text" id="emailPrepend">@</span>
         <input  id="email"
-                type="email"
+                type="text"
                 name="email"
                 class="form-control @error('email') is-invalid @enderror"
                 value="{{ old('email') }}"
                 required
                 dir="ltr"
                 autocomplete="username"
-                inputmode="email"
                 autocapitalize="none"
                 spellcheck="false"
                 autofocus
@@ -33,7 +32,7 @@
             <strong>{{ $message }}</strong>
           </div>
         @else
-          <div class="invalid-feedback" id="emailHelp">{{ __('Please enter a valid email address.') }}</div>
+          <div class="invalid-feedback" id="emailHelp">{{ __('Please enter your email or username.') }}</div>
         @enderror
       </div>
     </div>
@@ -78,6 +77,7 @@
         <input  id="remember"
                 type="checkbox"
                 name="remember"
+                value="1"
                 class="form-check-input"
                 {{ old('remember') ? 'checked' : '' }}>
         <label class="form-check-label" for="remember">{{ __('Remember Me') }}</label>
@@ -96,7 +96,7 @@
         @endif
 
         <p class="small mb-0">
-          {{ __("Don't have account?") }}
+          {{ __("Don't have an account?") }}
           <a href="{{ route('register') }}">{{ __('Create an account') }}</a>
         </p>
       </div>

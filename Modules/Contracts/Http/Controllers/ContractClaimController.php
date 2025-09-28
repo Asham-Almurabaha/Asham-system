@@ -9,7 +9,6 @@ use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractClaim;
-use Modules\Contracts\Entities\ContractClaimPayment;
 use Modules\Contracts\Services\ClaimPaymentDistributionService;
 use Modules\Contracts\Services\ContractStatusRefresher;
 use Modules\Contracts\Http\Requests\ApplyContractClaimDiscountRequest;
@@ -115,6 +114,36 @@ class ContractClaimController extends Controller
             $payload['claim_status_id'] = $this->defaultClaimStatusId();
 
             $claim = ContractClaim::create($payload);
+
+            $contract = $claim->contract()
+                ->with([
+                    'installments:id,contract_id,payment_amount',
+                    'claims:id,contract_id,discount_amount',
+                    'claims.payments:id,contract_claim_id,amount',
+                ])
+                ->first();
+
+            if ($contract) {
+                $claimAmount = round((float) $claim->claim_amount, 2);
+                $contractOutstanding = round($this->calculateContractOutstanding($contract), 2);
+                $legalFeeValue = round($claimAmount - $contractOutstanding, 2);
+
+                $formattedClaimAmount = number_format($claimAmount, 2, '.', '');
+                $formattedOutstanding = number_format($contractOutstanding, 2, '.', '');
+                $formattedLegalFee = number_format($legalFeeValue, 2, '.', '');
+
+                $contract->notes()->create([
+                    'note_date' => $claim->claim_date
+                        ? $claim->claim_date->toDateString()
+                        : now()->toDateString(),
+                    'note' => sprintf(
+                        'قيمة المحاماة = مبلغ المطالبة (%s) - المتبقي في العقد (%s) = %s',
+                        $formattedClaimAmount,
+                        $formattedOutstanding,
+                        $formattedLegalFee
+                    ),
+                ]);
+            }
 
             $this->updateRelatedStatuses($claim);
 
@@ -650,49 +679,7 @@ class ContractClaimController extends Controller
 
     private function calculateContractOutstanding(Contract $contract): float
     {
-        $contract->loadMissing([
-            'installments:id,contract_id,payment_amount',
-            'claims:id,contract_id,discount_amount',
-            'claims.payments:id,contract_claim_id,amount',
-        ]);
-
-        $totalValue = round((float) ($contract->total_value ?? 0), 2);
-
-        $installmentPayments = 0.0;
-        if ($contract->relationLoaded('installments')) {
-            $installmentPayments = (float) $contract->installments
-                ->sum(fn ($installment) => (float) ($installment->payment_amount ?? 0));
-        } else {
-            $installmentPayments = (float) $contract->installments()->sum('payment_amount');
-        }
-
-        $claimPayments = 0.0;
-        $claimDiscounts = 0.0;
-
-        if ($contract->relationLoaded('claims')) {
-            foreach ($contract->claims as $contractClaim) {
-                $claimDiscounts += (float) ($contractClaim->discount_amount ?? 0);
-
-                if ($contractClaim->relationLoaded('payments')) {
-                    $claimPayments += (float) $contractClaim->payments
-                        ->sum(fn ($payment) => (float) ($payment->amount ?? 0));
-                } else {
-                    $claimPayments += (float) $contractClaim->payments()->sum('amount');
-                }
-            }
-        } else {
-            $claimPayments = (float) ContractClaimPayment::query()
-                ->whereHas('claim', fn ($query) => $query->where('contract_id', $contract->id))
-                ->sum('amount');
-
-            $claimDiscounts = (float) ContractClaim::query()
-                ->where('contract_id', $contract->id)
-                ->sum('discount_amount');
-        }
-
-        $outstanding = round($totalValue - $installmentPayments - $claimPayments - $claimDiscounts, 2);
-
-        return $outstanding > 0 ? $outstanding : 0.0;
+        return $contract->outstandingAmount();
     }
 
     private function resolveClaimStatusId(array $names): int

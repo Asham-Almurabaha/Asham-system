@@ -4,6 +4,11 @@ return [
     'fields' => [
         'name' => 'الاسم',
     ],
+    'status' => [
+        'column' => 'حالة الحماية',
+        'protected' => 'محمي',
+        'editable' => 'قابل للتعديل',
+    ],
     'nationalities' => [
         'created' => 'تمت إضافة الجنسية بنجاح.',
         'updated' => 'تم تحديث الجنسية بنجاح.',

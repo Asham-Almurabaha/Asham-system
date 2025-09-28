@@ -17,6 +17,18 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4" dir="rtl">
     <div class="flex-grow-1"></div>
     <div class="btn-group" role="group">
+        <x-button.action
+            href="{{ route('dashboard.daily-ledger.print', ['date' => now()->toDateString()]) }}"
+            variant="secondary"
+            :outline="true"
+            size="sm"
+            class="d-inline-flex align-items-center gap-2"
+            target="_blank"
+            rel="noopener"
+        >
+            <i class="bi bi-printer" aria-hidden="true"></i>
+            <span class="d-none d-md-inline">{{ __('dashboard.Print Daily Ledger') }}</span>
+        </x-button.action>
         <x-button.action href="{{ route('ledger.index') }}" variant="primary" class="d-inline-flex align-items-center gap-2 px-3">
             <i class="bi bi-journal-text"></i>
             <span>تفاصيل القيود</span>
@@ -132,6 +144,7 @@
     $mukatabaTotal = (float)($officeKpis['mukataba']['total'] ?? 0);
     $profitTotal   = (float)($officeKpis['profit']['total']   ?? 0);
     $salesDisplay  = (float)($officeKpis['sales']['total']    ?? 0);
+    $legalTotal    = (float)($officeKpis['legal']['total']    ?? 0);
 @endphp
 
 {{-- كروت: الحسابات البنكية + الخزن --}}
@@ -273,7 +286,7 @@
 
 {{-- كروت إضافية: المكاتبة / فرق البيع / ربح المكتب (داخل فقط) --}}
 <div class="row g-3 mb-3" dir="rtl">
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6 col-xl-3">
         <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-journal-text fs-4 text-primary"></i></div>
@@ -286,7 +299,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6 col-xl-3">
         <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-bag-check fs-4 text-success"></i></div>
@@ -299,7 +312,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-md-4">
+    <div class="col-12 col-md-6 col-xl-3">
         <div class="kpi-card pretty p-3">
             <div class="d-flex align-items-center gap-3 mb-2">
                 <div class="kpi-icon"><i class="bi bi-briefcase fs-4 text-warning"></i></div>
@@ -309,6 +322,19 @@
                 </div>
             </div>
             <div class="kpi-value fw-bold text-success">{{ number_format($profitTotal,2) }}</div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="kpi-card pretty p-3">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="kpi-icon"><i class="bi bi-shield-check fs-4 text-info"></i></div>
+                <div>
+                    <div class="fw-bold">محاماة المكتب</div>
+                    <div class="subnote">مجمّعة من خدمة المكتب</div>
+                </div>
+            </div>
+            <div class="kpi-value fw-bold text-success">{{ number_format($legalTotal,2) }}</div>
         </div>
     </div>
 </div>
