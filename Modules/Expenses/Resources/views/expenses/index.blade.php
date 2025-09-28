@@ -114,11 +114,11 @@
                         <td class="text-center">{{ $rowNumber }}</td>
                         <td class="text-start fw-semibold">{{ $expense->title }}</td>
                         <td class="text-start">{{ optional($expense->type)->name ?? __('expenses::expenses.fields.not_available') }}</td>
-                        <td class="text-end">{{ number_format($expense->amount, 2) }}</td>
+                        <td class="text-end" data-expense-amount="1">{{ number_format($expense->amount, 2) }}</td>
                         <td class="text-end">{{ number_format($expense->paid_amount, 2) }}</td>
                         <td class="text-end">{{ number_format($expense->outstanding_amount, 2) }}</td>
-                        <td>{{ optional($expense->due_date)->toDateString() }}</td>
-                        <td>
+                        <td data-expense-due-date="1">{{ optional($expense->due_date)->toDateString() }}</td>
+                        <td data-expense-status="1">
                             @if ($expense->outstanding_amount <= 0)
                                 <span class="badge bg-success-subtle text-success">@lang('expenses::expenses.status_labels.settled')</span>
                             @elseif ($expense->due_date && $expense->due_date->lt($today))
@@ -142,7 +142,7 @@
                             @endif
                         </td>
                         <td class="text-end">
-                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                            <div class="d-flex flex-wrap justify-content-end gap-2" data-expense-actions="1">
                                 <x-button.action
                                     type="button"
                                     variant="secondary"
@@ -156,41 +156,65 @@
                                     @lang('expenses::expenses.actions.view_payments')
                                 </x-button.action>
 
+                                <x-button.action
+                                    type="button"
+                                    variant="success"
+                                    size="sm"
+                                    icon="bi-check2-circle"
+                                    data-expense-complete-trigger="1"
+                                >
+                                    إنهاء السداد
+                                </x-button.action>
+
+                                <span
+                                    class="badge bg-success-subtle text-success align-self-center d-none"
+                                    data-expense-complete-indicator="1"
+                                >
+                                    <i class="bi bi-check2-circle me-1"></i>تم إنهاء السداد
+                                </span>
+
                                 @if ($outstanding > 0)
-                                    <x-button.action
-                                        type="button"
-                                        variant="dark"
-                                        size="sm"
-                                        :outline="true"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#expensePaymentModal"
-                                        data-expense-payment-trigger="1"
-                                        data-payment-action="{{ $paymentAction }}"
-                                        data-expense-id="{{ $expense->id }}"
-                                        data-expense-title="{{ e($expense->title) }}"
-                                        data-outstanding="{{ $defaultAmount }}"
-                                        data-outstanding-formatted="{{ number_format($outstanding, 2) }}"
-                                        data-amount-default="{{ $defaultAmount }}"
-                                        data-old-amount="{{ $isCurrentExpense ? $amountValue : '' }}"
-                                        data-paid-at-default="{{ $defaultPaidAt }}"
-                                        data-old-paid-at="{{ $isCurrentExpense ? $paidAtValue : '' }}"
-                                        data-old-bank="{{ $oldBank ?? '' }}"
-                                        data-old-safe="{{ $oldSafe ?? '' }}"
-                                        data-old-notes="{{ e($oldNotes) }}"
-                                    >
-                                        <i class="bi bi-wallet2 me-1"></i>@lang('expenses::expenses.actions.record_payment')
-                                    </x-button.action>
+                                    <div class="d-inline" data-expense-hideable="1">
+                                        <x-button.action
+                                            type="button"
+                                            variant="dark"
+                                            size="sm"
+                                            :outline="true"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#expensePaymentModal"
+                                            data-expense-payment-trigger="1"
+                                            data-payment-action="{{ $paymentAction }}"
+                                            data-expense-id="{{ $expense->id }}"
+                                            data-expense-title="{{ e($expense->title) }}"
+                                            data-outstanding="{{ $defaultAmount }}"
+                                            data-outstanding-formatted="{{ number_format($outstanding, 2) }}"
+                                            data-amount-default="{{ $defaultAmount }}"
+                                            data-old-amount="{{ $isCurrentExpense ? $amountValue : '' }}"
+                                            data-paid-at-default="{{ $defaultPaidAt }}"
+                                            data-old-paid-at="{{ $isCurrentExpense ? $paidAtValue : '' }}"
+                                            data-old-bank="{{ $oldBank ?? '' }}"
+                                            data-old-safe="{{ $oldSafe ?? '' }}"
+                                            data-old-notes="{{ e($oldNotes) }}"
+                                        >
+                                            <i class="bi bi-wallet2 me-1"></i>@lang('expenses::expenses.actions.record_payment')
+                                        </x-button.action>
+                                    </div>
                                 @endif
 
-                                <x-button.action href="{{ route('expenses.expenses.edit', $expense) }}" variant="primary" :outline="true" size="sm">
-                                    @lang('expenses::expenses.actions.edit')
-                                </x-button.action>
-                                @include('lookups::components.delete-button', [
-                                    'action' => route('expenses.expenses.destroy', $expense),
-                                    'confirm' => __('expenses::expenses.actions.confirm_delete'),
-                                    'label' => __('expenses::expenses.actions.delete'),
-                                ])
+                                <div class="d-inline" data-expense-hideable="1">
+                                    <x-button.action href="{{ route('expenses.expenses.edit', $expense) }}" variant="primary" :outline="true" size="sm">
+                                        @lang('expenses::expenses.actions.edit')
+                                    </x-button.action>
+                                </div>
+                                <div class="d-inline" data-expense-hideable="1">
+                                    @include('lookups::components.delete-button', [
+                                        'action' => route('expenses.expenses.destroy', $expense),
+                                        'confirm' => __('expenses::expenses.actions.confirm_delete'),
+                                        'label' => __('expenses::expenses.actions.delete'),
+                                    ])
+                                </div>
                             </div>
+                            <div class="text-start small text-muted mt-2 d-none" data-expense-notes-area="1"></div>
                         </td>
                     </tr>
                     <tr class="table-light">
@@ -377,6 +401,98 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            var completionButtons = document.querySelectorAll('[data-expense-complete-trigger]');
+
+            var cleanDisplayValue = function (value) {
+                if (typeof value !== 'string') {
+                    return '';
+                }
+
+                var trimmed = value.trim();
+
+                if (!trimmed || trimmed === '—' || trimmed === '-') {
+                    return '';
+                }
+
+                return trimmed;
+            };
+
+            var buildCompletionNote = function (amountText, dueDateText) {
+                var parts = [];
+
+                if (amountText && amountText.length) {
+                    parts.push('المبلغ السابق: ' + amountText);
+                }
+
+                if (dueDateText && dueDateText.length) {
+                    parts.push('تاريخ الاستحقاق السابق: ' + dueDateText);
+                }
+
+                if (!parts.length) {
+                    return '';
+                }
+
+                return 'ملاحظات: ' + parts.join(' | ');
+            };
+
+            if (completionButtons.length) {
+                completionButtons.forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        var actionsContainer = button.closest('[data-expense-actions]');
+                        var expenseRow = button.closest('tr');
+                        var amountCell = expenseRow ? expenseRow.querySelector('[data-expense-amount]') : null;
+                        var dueDateCell = expenseRow ? expenseRow.querySelector('[data-expense-due-date]') : null;
+                        var statusCell = expenseRow ? expenseRow.querySelector('[data-expense-status]') : null;
+                        var amountOriginal = amountCell ? cleanDisplayValue(amountCell.textContent || '') : '';
+                        var dueDateOriginal = dueDateCell ? cleanDisplayValue(dueDateCell.textContent || '') : '';
+
+                        if (actionsContainer) {
+                            actionsContainer.querySelectorAll('[data-expense-hideable]').forEach(function (element) {
+                                element.classList.add('d-none');
+                            });
+
+                            var completionIndicator = actionsContainer.querySelector('[data-expense-complete-indicator]');
+                            if (completionIndicator) {
+                                completionIndicator.classList.remove('d-none');
+                            }
+                        }
+
+                        if (amountCell) {
+                            amountCell.textContent = '—';
+                        }
+
+                        if (dueDateCell) {
+                            dueDateCell.textContent = '—';
+                        }
+
+                        if (statusCell) {
+                            statusCell.innerHTML = '<span class="badge bg-success-subtle text-success">منتهي</span>';
+                        }
+
+                        var notesArea = button.closest('td');
+                        if (notesArea) {
+                            notesArea = notesArea.querySelector('[data-expense-notes-area]');
+                        }
+
+                        if (notesArea) {
+                            var notesMessage = buildCompletionNote(amountOriginal, dueDateOriginal);
+
+                            if (notesMessage.length) {
+                                notesArea.textContent = notesMessage;
+                                notesArea.classList.remove('d-none');
+                            } else {
+                                notesArea.textContent = '';
+                                notesArea.classList.add('d-none');
+                            }
+                        }
+
+                        button.classList.add('d-none');
+                        button.setAttribute('disabled', 'disabled');
+                        button.setAttribute('aria-hidden', 'true');
+                    });
+                });
+            }
+
             var modalElement = document.getElementById('expensePaymentModal');
             if (!modalElement) {
                 return;
