@@ -1,12 +1,12 @@
 <?php
 
-namespace Modules\\Expenses\\Entities;
+namespace Modules\Expenses\Entities;
 
-use Illuminate\\Database\\Eloquent\\Factories\\HasFactory;
-use Illuminate\\Database\\Eloquent\\Model;
-use Illuminate\\Database\\Eloquent\\Relations\\BelongsTo;
-use Modules\\Accounts\\Entities\\BankAccount;
-use Modules\\Accounts\\Entities\\Safe;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 
 class ExpensePayment extends Model
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Modules\\Expenses\\Http\\Requests;
+namespace Modules\Expenses\Http\Requests;
 
-use Illuminate\\Foundation\\Http\\FormRequest;
+use Illuminate\Foundation\Http\FormRequest;
 
 class StoreExpensePaymentRequest extends FormRequest
 {
