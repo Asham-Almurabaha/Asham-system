@@ -123,6 +123,20 @@
                                 <span class="badge bg-success-subtle text-success">@lang('expenses::expenses.status_labels.settled')</span>
                             @elseif ($expense->due_date && $expense->due_date->lt($today))
                                 <span class="badge bg-danger-subtle text-danger">@lang('expenses::expenses.status_labels.overdue')</span>
+                            @elseif ($expense->due_date)
+                                @php
+                                    $daysRemaining = $today->diffInDays($expense->due_date, false);
+                                @endphp
+
+                                @if ($daysRemaining === 0)
+                                    <span class="badge bg-warning-subtle text-warning">@lang('expenses::expenses.status_labels.due_today')</span>
+                                @elseif ($daysRemaining > 0)
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        @lang('expenses::expenses.status_labels.due_in_days', ['days' => $daysRemaining])
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger">@lang('expenses::expenses.status_labels.overdue')</span>
+                                @endif
                             @else
                                 <span class="badge bg-warning-subtle text-warning">@lang('expenses::expenses.status_labels.upcoming')</span>
                             @endif

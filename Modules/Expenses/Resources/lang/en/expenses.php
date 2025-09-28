@@ -46,6 +46,8 @@ return [
         'upcoming' => 'Upcoming',
         'overdue' => 'Overdue',
         'settled' => 'Settled',
+        'due_today' => 'Due today',
+        'due_in_days' => ':days days remaining',
     ],
     'empty' => 'No expenses available at the moment.',
 ];
