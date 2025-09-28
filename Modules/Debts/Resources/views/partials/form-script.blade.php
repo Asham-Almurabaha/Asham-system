@@ -1,11 +1,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const typeSelect = document.getElementById('party_type');
-        const partyFields = document.querySelectorAll('.js-party-field');
-        const counterpartyGroup = document.querySelector('.js-counterparty-name');
-        const counterpartyInput = document.getElementById('counterparty_name');
-
         const accountPicker = document.getElementById('account_picker');
         const bankField = document.getElementById('bank_account_id');
         const safeField = document.getElementById('safe_id');
@@ -16,31 +11,6 @@
         const amountLimitMessageTemplate = @json(__('debts::messages.validation.amount_exceeds_available', ['available' => ':available']));
         let currentAvailability = null;
         let currentAvailabilityFormatted = '—';
-
-        function syncPartyFields() {
-            const type = typeSelect ? typeSelect.value : '';
-            partyFields.forEach(function (field) {
-                const shouldShow = field.dataset.party === type;
-                field.classList.toggle('d-none', !shouldShow);
-                const select = field.querySelector('select');
-                if (select) {
-                    select.disabled = !shouldShow;
-                    if (!shouldShow) {
-                        select.value = '';
-                    }
-                }
-            });
-
-            if (counterpartyGroup && counterpartyInput) {
-                const showCounterparty = type === 'other';
-                counterpartyGroup.classList.toggle('d-none', !showCounterparty);
-                counterpartyInput.disabled = !showCounterparty;
-
-                if (!showCounterparty) {
-                    counterpartyInput.value = '';
-                }
-            }
-        }
 
         function syncAccountHiddenFields() {
             if (!accountPicker || !bankField || !safeField) {
@@ -156,11 +126,6 @@
             } finally {
                 availabilitySpinner.classList.add('d-none');
             }
-        }
-
-        if (typeSelect) {
-            typeSelect.addEventListener('change', syncPartyFields);
-            syncPartyFields();
         }
 
         if (accountPicker) {

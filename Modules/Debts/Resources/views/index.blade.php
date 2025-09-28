@@ -4,7 +4,7 @@
     use Illuminate\Support\Arr;
     use Illuminate\Support\Str;
 
-    $filterTypes = Arr::except(__('debts::messages.types'), ['investor']);
+    $filterTypes = Arr::only(__('debts::messages.types'), ['other']);
 @endphp
 
 @section('title', __('debts::messages.page_title'))

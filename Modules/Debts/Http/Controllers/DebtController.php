@@ -193,11 +193,10 @@ class DebtController extends Controller
 
     protected function formLookups(): array
     {
-        $customers = Customer::query()->orderBy('name')->get(['id', 'name']);
         $banks = BankAccount::query()->orderBy('name')->get(['id', 'name']);
         $safes = Safe::query()->orderBy('name')->get(['id', 'name']);
 
-        return compact('customers', 'banks', 'safes');
+        return compact('banks', 'safes');
     }
 
     protected function prepareData(array $data): array
@@ -211,6 +210,7 @@ class DebtController extends Controller
         }
 
         $data['investor_id'] = null;
+        $data['party_type'] = 'other';
 
         foreach (['customer_id', 'bank_account_id', 'safe_id'] as $key) {
             if (empty($data[$key])) {
@@ -223,11 +223,7 @@ class DebtController extends Controller
         }
 
         if (empty($data['counterparty_name'])) {
-            if (($data['party_type'] ?? null) === 'customer' && !empty($data['customer_id'])) {
-                $data['counterparty_name'] = Customer::query()
-                    ->whereKey($data['customer_id'])
-                    ->value('name');
-            }
+            $data['counterparty_name'] = null;
         }
 
         return $data;

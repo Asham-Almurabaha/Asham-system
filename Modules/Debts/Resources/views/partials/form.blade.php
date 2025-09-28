@@ -1,9 +1,4 @@
 @php
-    $partyType = old('party_type', $debt->party_type ?? 'customer');
-    $availableTypes = \Illuminate\Support\Arr::except(__('debts::messages.types'), ['investor']);
-    if (! array_key_exists($partyType, $availableTypes)) {
-        $partyType = 'other';
-    }
     $initialBank = old('bank_account_id', $debt->bank_account_id ?? null);
     $initialSafe = old('safe_id', $debt->safe_id ?? null);
     $accountPickerValue = $initialBank ? ('bank:'.$initialBank) : ($initialSafe ? ('safe:'.$initialSafe) : '');
@@ -11,28 +6,11 @@
 @endphp
 
 <div class="row g-3">
+    <input type="hidden" name="party_type" value="other">
+
     <div class="col-md-4">
-        <label class="form-label">{{ __('debts::messages.fields.party_type') }}</label>
-        <select name="party_type" id="party_type" class="form-select" required>
-            @foreach($availableTypes as $key => $label)
-                <option value="{{ $key }}" @selected($partyType === $key)>{{ $label }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="col-md-4 js-party-field {{ $partyType === 'customer' ? '' : 'd-none' }}" data-party="customer">
-        <label class="form-label">{{ __('debts::messages.fields.customer') }}</label>
-        <select name="customer_id" id="customer_id" class="form-select" {{ $partyType === 'customer' ? '' : 'disabled' }}>
-            <option value="">{{ __('debts::messages.filters.all') }}</option>
-            @foreach($customers as $customer)
-                <option value="{{ $customer->id }}" @selected(old('customer_id', $debt->customer_id ?? '') == $customer->id)>{{ $customer->name }}</option>
-            @endforeach
-        </select>
-    </div>
-
-    <div class="col-md-4 js-counterparty-name {{ $partyType === 'other' ? '' : 'd-none' }}">
         <label class="form-label">{{ __('debts::messages.fields.counterparty_name') }}</label>
-        <input type="text" name="counterparty_name" id="counterparty_name" class="form-control" value="{{ old('counterparty_name', $debt->counterparty_name ?? '') }}" {{ $partyType === 'other' ? '' : 'disabled' }}>
+        <input type="text" name="counterparty_name" id="counterparty_name" class="form-control" value="{{ old('counterparty_name', $debt->counterparty_name ?? '') }}" required>
     </div>
 
     <div class="col-md-4">
@@ -68,7 +46,6 @@
 
         @error('bank_account_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
         @error('safe_id') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
-        <div class="form-text">{{ __('debts::messages.hints.account_choice') }}</div>
     </div>
 
     <div class="col-md-4">
