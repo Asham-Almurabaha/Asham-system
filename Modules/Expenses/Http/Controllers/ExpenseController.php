@@ -31,11 +31,31 @@ class ExpenseController extends Controller
             ->orderBy('id')
             ->paginate(20);
 
+        $statsExpenses = Expense::query()
+            ->select(['id', 'amount', 'due_date', 'manual_paid_amount', 'manual_outstanding_amount'])
+            ->withSum('payments as payments_total', 'amount')
+            ->get();
+
         $stats = [
-            'total' => Expense::count(),
-            'upcoming' => Expense::query()->whereDate('due_date', '>=', $today)->count(),
-            'overdue' => Expense::query()->whereDate('due_date', '<', $today)->count(),
+            'total' => 0.0,
+            'upcoming' => 0.0,
+            'overdue' => 0.0,
         ];
+
+        foreach ($statsExpenses as $expense) {
+            $outstanding = (float) $expense->outstanding_amount;
+            $stats['total'] += $outstanding;
+
+            if ($expense->due_date instanceof Carbon) {
+                if ($expense->due_date->lt($today)) {
+                    $stats['overdue'] += $outstanding;
+                } else {
+                    $stats['upcoming'] += $outstanding;
+                }
+            }
+        }
+
+        $stats = array_map(static fn ($value) => round($value, 2), $stats);
 
         $banks = BankAccount::query()->orderBy('name')->get(['id', 'name']);
         $safes = Safe::query()->orderBy('name')->get(['id', 'name']);
