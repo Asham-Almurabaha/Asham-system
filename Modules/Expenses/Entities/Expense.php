@@ -18,6 +18,8 @@ class Expense extends Model
         'title',
         'amount',
         'due_date',
+        'manual_paid_amount',
+        'manual_outstanding_amount',
         'notes',
         'last_notified_at',
     ];
@@ -26,6 +28,8 @@ class Expense extends Model
         'amount' => 'decimal:2',
         'due_date' => 'date',
         'last_notified_at' => 'datetime',
+        'manual_paid_amount' => 'decimal:2',
+        'manual_outstanding_amount' => 'decimal:2',
     ];
 
     protected $appends = [
@@ -52,6 +56,11 @@ class Expense extends Model
 
     public function getPaidAmountAttribute(): float
     {
+        if (array_key_exists('manual_paid_amount', $this->attributes)
+            && $this->attributes['manual_paid_amount'] !== null) {
+            return (float) $this->attributes['manual_paid_amount'];
+        }
+
         if (array_key_exists('payments_total', $this->attributes)) {
             return (float) $this->attributes['payments_total'];
         }
@@ -65,6 +74,11 @@ class Expense extends Model
 
     public function getOutstandingAmountAttribute(): float
     {
+        if (array_key_exists('manual_outstanding_amount', $this->attributes)
+            && $this->attributes['manual_outstanding_amount'] !== null) {
+            return (float) $this->attributes['manual_outstanding_amount'];
+        }
+
         $amount = (float) $this->amount;
         $paid = $this->paid_amount;
 

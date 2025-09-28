@@ -4,8 +4,10 @@ namespace Modules\Expenses\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
@@ -44,10 +46,15 @@ class ExpensePaymentController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($expense, $data) {
+            $expense->loadMissing(['type.recurrencePeriod']);
+            $originalDueDate = $expense->due_date ? $expense->due_date->copy() : null;
+
             /** @var ExpensePayment $payment */
             $payment = $expense->payments()->create($data);
 
             $this->logLedgerEntry($payment);
+
+            $this->advanceRecurringExpense($expense, $originalDueDate);
         });
 
         return redirect()
@@ -100,5 +107,73 @@ class ExpensePaymentController extends Controller
             ->first();
 
         return $this->ledgerStatus;
+    }
+
+    protected function advanceRecurringExpense(Expense $expense, ?Carbon $originalDueDate = null): void
+    {
+        $type = $expense->type;
+
+        if (! $type || ! $type->is_recurring) {
+            $this->clearManualAmountOverrides($expense);
+
+            return;
+        }
+
+        $totalPaid = (float) $expense->payments()->sum('amount');
+        $amount = (float) $expense->amount;
+
+        if ($totalPaid < $amount) {
+            $this->clearManualAmountOverrides($expense);
+
+            return;
+        }
+
+        $monthsToAdd = $this->resolveRecurrenceMonths($type->recurrencePeriod?->name);
+
+        if (! $monthsToAdd) {
+            $this->clearManualAmountOverrides($expense);
+
+            return;
+        }
+
+        $currentDueDate = $originalDueDate ?? $expense->due_date;
+
+        $nextDueDate = $currentDueDate instanceof Carbon
+            ? $currentDueDate->copy()->addMonthsNoOverflow($monthsToAdd)
+            : now()->addMonthsNoOverflow($monthsToAdd);
+
+        $expense->forceFill([
+            'due_date' => $nextDueDate,
+            'manual_paid_amount' => 0,
+            'manual_outstanding_amount' => $amount,
+        ])->save();
+    }
+
+    protected function clearManualAmountOverrides(Expense $expense): void
+    {
+        if (is_null($expense->manual_paid_amount) && is_null($expense->manual_outstanding_amount)) {
+            return;
+        }
+
+        $expense->forceFill([
+            'manual_paid_amount' => null,
+            'manual_outstanding_amount' => null,
+        ])->save();
+    }
+
+    protected function resolveRecurrenceMonths(?string $periodName): ?int
+    {
+        if (! $periodName) {
+            return null;
+        }
+
+        $normalized = Str::of($periodName)->trim()->lower()->value();
+
+        return match ($normalized) {
+            'شهري', 'شهرى', 'شهرية', 'شهر', 'monthly', 'month', '1 month' => 1,
+            'نصف سنوي', 'نصف سنوى', 'نصف سنوية', 'semi annual', 'semi-annual', 'semiannual', 'every 6 months', 'six months', '6 months' => 6,
+            'سنوي', 'سنوى', 'سنويا', 'سنوية', 'yearly', 'annual', 'annually', '12 months', '12 month' => 12,
+            default => null,
+        };
     }
 }
