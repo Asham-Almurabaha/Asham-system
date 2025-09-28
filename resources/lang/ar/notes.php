@@ -47,6 +47,8 @@ return [
 
     'empty' => 'لا توجد ملاحظات بعد.',
 
+    'results_count' => 'عدد النتائج: :count',
+
     'notifications' => [
         'title' => 'الملاحظات',
         'due_today' => 'تذكير مستحق اليوم',

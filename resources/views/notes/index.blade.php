@@ -3,28 +3,27 @@
 @section('title', __('notes.title'))
 
 @section('content')
-    <div class="container-xxl py-4">
-        <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-            <div>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-2">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ __('notes.title') }}</li>
-                    </ol>
-                </nav>
-                <h1 class="h4 mb-1">{{ __('notes.title') }}</h1>
-                {{-- <p class="text-muted mb-0">{{ __('notes.subtitle') }}</p> --}}
-            </div>
+    <div class="pagetitle mb-3">
+        <h1 class="h3 mb-1">{{ __('notes.title') }}</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">@lang('sidebar.Dashboard')</a></li>
+                <li class="breadcrumb-item active">{{ __('notes.title') }}</li>
+            </ol>
+        </nav>
+    </div>
 
-            <div class="ms-auto d-flex flex-wrap gap-2">
-                <x-button.action href="{{ route('notes.create') }}" variant="success">
-                    <i class="bi bi-plus-lg me-1"></i>{{ __('notes.actions.new') }}
-                </x-button.action>
-            </div>
+    <div class="card shadow-sm mb-3">
+        <div class="card-body d-flex flex-wrap gap-2 align-items-center p-2">
+            <x-button.action href="{{ route('notes.create') }}" variant="success">
+                <i class="bi bi-plus-lg me-1"></i>{{ __('notes.actions.new') }}
+            </x-button.action>
         </div>
+    </div>
 
-        <div class="card border-0 shadow-sm mb-3">
-            <x-table head-class="table-light position-sticky top-0" class="text-center">
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <x-table head-class="table-light" class="text-center">
                 <x-slot name="head">
                     <tr>
                         <th style="width:60px">#</th>
@@ -67,7 +66,7 @@
                         </td>
                         <td class="text-start">{{ \Illuminate\Support\Str::limit($note->content, 140) }}</td>
                         <td>
-                            @if($reminder)
+                            @if ($reminder)
                                 <span class="badge {{ $reminderClasses[$statusKey] ?? 'bg-secondary-subtle text-secondary' }}">
                                     {{ $reminder->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
                                 </span>
@@ -83,7 +82,7 @@
                                 <a href="{{ route('notes.edit', $note) }}" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                @if(!$completed)
+                                @if (! $completed)
                                     <form action="{{ route('notes.complete', $note) }}" method="POST" onsubmit="return confirm('{{ __('notes.confirmations.complete') }}');">
                                         @csrf
                                         @method('PATCH')
@@ -113,10 +112,7 @@
                 @empty
                     <tr>
                         <td colspan="6" class="py-5 text-center">
-                            <div class="text-muted">
-                                {{ __('notes.empty') }}
-                                <a href="{{ route('notes.index') }}" class="ms-1">{{ __('View All') }}</a>
-                            </div>
+                            <div class="text-muted">{{ __('notes.empty') }}</div>
                             <div class="mt-3">
                                 <x-button.action href="{{ route('notes.create') }}" variant="success" size="sm">
                                     + {{ __('notes.actions.new') }}
@@ -128,11 +124,9 @@
             </x-table>
         </div>
 
-        @if($notes->hasPages())
-            <div class="card border-0 shadow-sm">
-                <div class="card-footer bg-white border-0">
-                    {{ $notes->withQueryString()->links('pagination::bootstrap-5') }}
-                </div>
+        @if ($notes->hasPages())
+            <div class="card-footer bg-white">
+                {{ $notes->withQueryString()->links('pagination::bootstrap-5') }}
             </div>
         @endif
     </div>

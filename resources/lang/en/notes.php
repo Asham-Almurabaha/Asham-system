@@ -47,6 +47,8 @@ return [
 
     'empty' => 'You have not created any notes yet.',
 
+    'results_count' => 'Results: :count',
+
     'notifications' => [
         'title' => 'Notes',
         'due_today' => 'Reminder due today',
