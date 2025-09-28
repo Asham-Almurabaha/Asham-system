@@ -44,9 +44,13 @@ return [
     ],
     'hints' => [
         'account_choice' => 'اختر حسابًا بنكيًا أو خزانة لتسجيل السداد.',
+        'account_available' => 'المتاح في الحساب:',
     ],
     'placeholders' => [
         'notes' => 'أدخل ملاحظات إضافية (اختياري)',
+    ],
+    'validation' => [
+        'amount_exceeds_available' => 'المبلغ يتجاوز الرصيد المتاح في الحساب (:available).',
     ],
     'ledger' => [
         'notes' => 'سداد مصروف رقم :id (:title)',

@@ -42,7 +42,14 @@ return [
     'alerts' => [
         'settled' => 'This expense is fully paid. New payments are disabled.',
     ],
+    'hints' => [
+        'account_choice' => 'Choose a bank account or safe to record the payment.',
+        'account_available' => 'Available balance:',
+    ],
     'ledger' => [
         'notes' => 'Expense payment #:id (:title)',
+    ],
+    'validation' => [
+        'amount_exceeds_available' => 'The amount exceeds the available balance (:available).',
     ],
 ];

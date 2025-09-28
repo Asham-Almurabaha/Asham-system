@@ -314,6 +314,11 @@
                             <input type="hidden" name="bank_account_id" id="modal-expense-bank" value="{{ old('bank_account_id') }}">
                             <input type="hidden" name="safe_id" id="modal-expense-safe" value="{{ old('safe_id') }}">
                             <div class="form-text">@lang('expenses::payments.hints.account_choice')</div>
+                            <div class="form-text mt-2" data-role="account-availability">
+                                <span class="text-muted">@lang('expenses::payments.hints.account_available')</span>
+                                <strong data-role="account-availability-value">—</strong>
+                                <span class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true" data-role="account-availability-spinner"></span>
+                            </div>
                             @if ($banksCollection->isEmpty() && $safesCollection->isEmpty())
                                 <div class="text-danger small mt-1">@lang('expenses::payments.history.empty')</div>
                             @endif
@@ -373,6 +378,13 @@
             var contextInput = modalElement.querySelector('input[name="context_expense_id"]');
             var expenseTitleTarget = modalElement.querySelector('[data-role="expense-title"]');
             var outstandingTarget = modalElement.querySelector('[data-role="outstanding-amount"]');
+            var availabilityValue = modalElement.querySelector('[data-role="account-availability-value"]');
+            var availabilitySpinner = modalElement.querySelector('[data-role="account-availability-spinner"]');
+            var availabilityUrl = @json(route('ajax.accounts.availability'));
+            var amountLimitMessageTemplate = @json(__('expenses::payments.validation.amount_exceeds_available', ['available' => ':available']));
+            var currentAvailability = null;
+            var currentAvailabilityFormatted = '—';
+            var outstandingLimit = null;
 
             if (!form || !amountInput || !paidAtInput || !notesInput || !contextInput) {
                 return;
@@ -380,6 +392,107 @@
 
             var cloneDataset = function (dataset) {
                 return dataset ? Object.assign({}, dataset) : {};
+            };
+
+            var updateAmountMax = function () {
+                if (!amountInput) {
+                    return;
+                }
+
+                var limit = null;
+
+                if (Number.isFinite(outstandingLimit)) {
+                    limit = outstandingLimit;
+                }
+
+                if (Number.isFinite(currentAvailability)) {
+                    limit = limit === null ? currentAvailability : Math.min(limit, currentAvailability);
+                }
+
+                if (Number.isFinite(limit)) {
+                    amountInput.max = limit.toFixed(2);
+                } else if (Number.isFinite(outstandingLimit)) {
+                    amountInput.max = outstandingLimit.toFixed(2);
+                } else {
+                    amountInput.removeAttribute('max');
+                }
+            };
+
+            var setOutstandingLimit = function (value) {
+                if (!amountInput) {
+                    return;
+                }
+
+                var numeric = null;
+
+                if (typeof value === 'number') {
+                    numeric = value;
+                } else if (typeof value === 'string' && value.length) {
+                    var parsed = Number(value);
+                    if (Number.isFinite(parsed)) {
+                        numeric = parsed;
+                    }
+                }
+
+                outstandingLimit = Number.isFinite(numeric) ? numeric : null;
+
+                updateAmountMax();
+            };
+
+            var enforceAmountLimit = function () {
+                if (!amountInput) {
+                    return;
+                }
+
+                var value = Number(amountInput.value);
+
+                if (Number.isFinite(currentAvailability) && Number.isFinite(value) && value > currentAvailability + 0.00001) {
+                    var formatted = currentAvailabilityFormatted && currentAvailabilityFormatted.length
+                        ? currentAvailabilityFormatted
+                        : currentAvailability.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        });
+
+                    amountInput.setCustomValidity(amountLimitMessageTemplate.replace(':available', formatted));
+                } else {
+                    amountInput.setCustomValidity('');
+                }
+            };
+
+            var setCurrentAvailability = function (value, formatted) {
+                if (!amountInput) {
+                    currentAvailability = null;
+                    currentAvailabilityFormatted = '—';
+                    return;
+                }
+
+                var numeric = null;
+
+                if (typeof value === 'number') {
+                    numeric = value;
+                } else if (typeof value === 'string' && value.length) {
+                    var parsed = Number(value);
+                    if (Number.isFinite(parsed)) {
+                        numeric = parsed;
+                    }
+                }
+
+                if (Number.isFinite(numeric) && numeric >= 0) {
+                    currentAvailability = numeric;
+                    currentAvailabilityFormatted = formatted && formatted.length
+                        ? formatted
+                        : numeric.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        });
+                } else {
+                    currentAvailability = null;
+                    currentAvailabilityFormatted = '—';
+                }
+
+                updateAmountMax();
+                enforceAmountLimit();
             };
 
             var syncAccountInputs = function (value) {
@@ -409,9 +522,83 @@
                 }
             };
 
+            var refreshAccountAvailability = function (value) {
+                if (!availabilityValue || !availabilitySpinner || !availabilityUrl) {
+                    setCurrentAvailability(null);
+                    if (availabilityValue) {
+                        availabilityValue.textContent = '—';
+                    }
+                    return;
+                }
+
+                availabilityValue.textContent = '—';
+                setCurrentAvailability(null);
+
+                if (!value || typeof value !== 'string') {
+                    return;
+                }
+
+                var parts = value.split(':');
+                if (parts.length !== 2) {
+                    return;
+                }
+
+                var accountType = parts[0];
+                var accountId = parts[1];
+
+                if (!accountType || !accountId) {
+                    return;
+                }
+
+                availabilitySpinner.classList.remove('d-none');
+
+                var params = new URLSearchParams({
+                    account_type: accountType,
+                    account_id: accountId,
+                });
+
+                fetch(availabilityUrl + '?' + params.toString(), {
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                }).then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+
+                    return response.json();
+                }).then(function (data) {
+                    if (data && data.success) {
+                        var availableRaw = (typeof data.available !== 'undefined' && data.available !== null)
+                            ? Number(data.available)
+                            : 0;
+
+                        var formatted = data.available_formatted && data.available_formatted.length
+                            ? data.available_formatted
+                            : availableRaw.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+
+                        availabilityValue.textContent = formatted;
+                        setCurrentAvailability(availableRaw, formatted);
+                    } else {
+                        availabilityValue.textContent = '—';
+                        setCurrentAvailability(null);
+                    }
+                }).catch(function () {
+                    availabilityValue.textContent = '—';
+                    setCurrentAvailability(null);
+                }).finally(function () {
+                    availabilitySpinner.classList.add('d-none');
+                });
+            };
+
             if (accountPicker) {
                 accountPicker.addEventListener('change', function () {
                     syncAccountInputs(accountPicker.value || '');
+                    refreshAccountAvailability(accountPicker.value || '');
+                    enforceAmountLimit();
                 });
                 syncAccountInputs(accountPicker.value || '');
             }
@@ -419,12 +606,8 @@
             var applyDataset = function (data) {
                 var amount = data.oldAmount && data.oldAmount.length ? data.oldAmount : (data.amountDefault || '');
                 amountInput.value = amount;
-
-                if (data.outstanding && data.outstanding.length) {
-                    amountInput.setAttribute('max', data.outstanding);
-                } else {
-                    amountInput.removeAttribute('max');
-                }
+                setOutstandingLimit(data.outstanding || '');
+                setCurrentAvailability(null);
 
                 var paidAt = data.oldPaidAt && data.oldPaidAt.length ? data.oldPaidAt : (data.paidAtDefault || '');
                 paidAtInput.value = paidAt;
@@ -440,6 +623,10 @@
                     accountPicker.value = accountValue;
                 }
                 syncAccountInputs(accountValue);
+                if (availabilityValue) {
+                    availabilityValue.textContent = '—';
+                }
+                refreshAccountAvailability(accountValue);
 
                 notesInput.value = data.oldNotes && data.oldNotes.length ? data.oldNotes : '';
                 contextInput.value = data.expenseId || '';
@@ -456,6 +643,10 @@
                     form.setAttribute('action', data.paymentAction);
                 }
             };
+
+            if (amountInput) {
+                amountInput.addEventListener('input', enforceAmountLimit);
+            }
 
             var modalInstance = window.bootstrap ? window.bootstrap.Modal.getOrCreateInstance(modalElement) : null;
             var pendingDataset = null;
