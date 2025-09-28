@@ -30,6 +30,7 @@ class Debt extends Model
         'issued_at',
         'due_at',
         'notes',
+        'last_notified_at',
     ];
 
     protected $casts = [
@@ -37,6 +38,7 @@ class Debt extends Model
         'due_at' => 'date',
         'principal_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'last_notified_at' => 'datetime',
     ];
 
     public function customer()

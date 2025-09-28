@@ -57,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Console\Commands\CheckTranslations::class,
         \App\Console\Commands\SendZakatDueNotifications::class,
         \App\Console\Commands\SendExpenseDueNotifications::class,
+        \App\Console\Commands\SendDebtDueNotifications::class,
     ])
     ->withProviders([
         AppServiceProvider::class,

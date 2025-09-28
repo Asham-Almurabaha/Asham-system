@@ -3,6 +3,7 @@
 namespace Modules\Debts\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Modules\Debts\Services\DebtDueNotifier;
 
 class DebtsServiceProvider extends ServiceProvider
 {
@@ -16,6 +17,6 @@ class DebtsServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        //
+        $this->app->singleton(DebtDueNotifier::class, fn () => new DebtDueNotifier());
     }
 }

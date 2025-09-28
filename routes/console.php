@@ -11,3 +11,7 @@ Artisan::command('inspire', function () {
 if ($time = config('notifications.zakat.daily_at')) {
     Schedule::command('zakat:notify')->dailyAt($time)->withoutOverlapping();
 }
+
+if ($time = config('notifications.debts.daily_at')) {
+    Schedule::command('debts:notify-due')->dailyAt($time)->withoutOverlapping();
+}
