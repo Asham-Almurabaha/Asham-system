@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'header' => [
+        'cache_ttl_seconds' => (int) env('HEADER_NOTIFICATIONS_CACHE_TTL', 60),
+    ],
     'zakat' => [
         'emails' => array_values(array_filter(array_map(
             static fn ($email) => is_string($email) ? trim($email) : null,

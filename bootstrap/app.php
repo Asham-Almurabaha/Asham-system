@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureRoutePermission;
 use App\Http\Middleware\SetLocale;
 use App\Providers\AppServiceProvider;
 use App\Providers\AuthServiceProvider;
+use App\Providers\NotificationServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -62,6 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         AppServiceProvider::class,
         AuthServiceProvider::class,
+        NotificationServiceProvider::class,
         ...$moduleProviders,
     ])
     ->withMiddleware(function ($middleware) {
