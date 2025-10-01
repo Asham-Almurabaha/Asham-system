@@ -124,7 +124,7 @@
           <th class="text-end">{{ __('companies::companies.Disbursed Share') }}</th>
           <th class="text-end">{{ __('companies::companies.Repaid Share') }}</th>
           <th class="text-end">{{ __('companies::companies.Outstanding Share') }}</th>
-          <th style="width:150px">{{ __('companies::companies.Actions') }}</th>
+          
         </tr>
       </x-slot>
 
@@ -168,20 +168,11 @@
           <td class="text-end">{{ number_format((float) $transaction->disbursed_amount, 2) }}</td>
           <td class="text-end">{{ number_format((float) $transaction->repaid_amount, 2) }}</td>
           <td class="text-end fw-semibold">{{ number_format((float) $transaction->outstanding_amount, 2) }}</td>
-          <td>
-            <div class="btn-group btn-group-sm" role="group">
-              <x-button.action href="{{ route('company-transactions.show', $transaction) }}" variant="secondary" :outline="true" size="sm">
-                {{ __('companies::companies.View') }}
-              </x-button.action>
-              <x-button.action href="{{ route('company-transactions.edit', $transaction) }}" variant="primary" :outline="true" size="sm">
-                {{ __('companies::companies.Edit') }}
-              </x-button.action>
-            </div>
-          </td>
+          
         </tr>
       @empty
         <tr>
-          <td colspan="10" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
+          <td colspan="9" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
         </tr>
       @endforelse
     </x-table>
