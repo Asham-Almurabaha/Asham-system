@@ -25,7 +25,7 @@
 @endphp
 
 <div class="card shadow-sm mb-4" dir="rtl">
-    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 p-20">
         <div>
             <p class="text-muted mb-1">{{ __('companies::companies.Company Dashboard Intro') }}</p>
             <span class="badge bg-light text-dark border">{{ __('companies::companies.Total Companies') }}: {{ number_format($overallTotals['companies'] ?? 0) }}</span>
