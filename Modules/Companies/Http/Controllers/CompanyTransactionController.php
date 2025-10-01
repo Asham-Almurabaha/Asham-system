@@ -118,7 +118,7 @@ class CompanyTransactionController extends Controller
         });
 
         return redirect()
-            ->route('company-transactions.show', $transaction)
+            ->route('company-transactions.create')
             ->with('success', __('companies::messages.transactions.created'));
     }
 
