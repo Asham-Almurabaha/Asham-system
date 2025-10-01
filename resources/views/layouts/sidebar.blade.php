@@ -1015,15 +1015,7 @@
       @routecanany($companyManagePatterns)
       <li>
         <a class="{{ $active($isRoute($companyManagePatterns)) }}" href="{{ route('companies.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Companies')</span>
-        </a>
-      </li>
-      @endroutecanany
-
-      @routecanany($companyCreatePatterns)
-      <li>
-        <a class="{{ $active($isRoute($companyCreatePatterns)) }}" href="{{ route('companies.create') }}">
-          <i class="bi bi-circle"></i><span>@lang('companies::companies.Add Company')</span>
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Companies')</span>
         </a>
       </li>
       @endroutecanany
