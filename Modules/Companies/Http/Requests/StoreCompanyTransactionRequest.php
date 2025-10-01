@@ -5,6 +5,7 @@ namespace Modules\Companies\Http\Requests;
 use App\Support\AccountAvailability;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Modules\Companies\Entities\CompanyDisbursementStatus;
 
 class StoreCompanyTransactionRequest extends FormRequest
 {
@@ -21,7 +22,8 @@ class StoreCompanyTransactionRequest extends FormRequest
             'entry_mode' => ['nullable', Rule::in(['single', 'split'])],
             'company_disbursement_status_id' => [
                 'required',
-                Rule::exists('company_disbursement_statuses', 'id'),
+                Rule::exists('statuses', 'id')
+                    ->where(fn ($query) => $query->where('domain', CompanyDisbursementStatus::DOMAIN)),
             ],
             'bank_account_id' => ['nullable', Rule::exists('bank_accounts', 'id')],
             'safe_id' => ['nullable', Rule::exists('safes', 'id')],

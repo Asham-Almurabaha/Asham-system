@@ -18,6 +18,8 @@ class CompaniesDatabaseSeeder extends Seeder
         foreach ($statuses as $name) {
             CompanyDisbursementStatus::query()->firstOrCreate([
                 'name' => $name,
+            ], [
+                'is_protected' => true,
             ]);
         }
     }

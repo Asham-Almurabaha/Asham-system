@@ -4,6 +4,7 @@ namespace Modules\Companies\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Modules\Companies\Entities\CompanyDisbursementStatus;
 
 class StoreCompanyDisbursementStatusRequest extends FormRequest
 {
@@ -19,7 +20,8 @@ class StoreCompanyDisbursementStatusRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('company_disbursement_statuses', 'name'),
+                Rule::unique('statuses', 'name')
+                    ->where(fn ($query) => $query->where('domain', CompanyDisbursementStatus::DOMAIN)),
             ],
         ];
     }

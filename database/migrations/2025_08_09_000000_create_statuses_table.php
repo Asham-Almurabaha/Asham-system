@@ -7,15 +7,20 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('company_disbursement_statuses', function (Blueprint $table) {
+        Schema::create('statuses', function (Blueprint $table) {
             $table->id();
+            $table->string('domain');
             $table->string('name');
+            $table->boolean('is_protected')->default(false);
             $table->timestamps();
+
+            $table->unique(['domain', 'name']);
+            $table->index('domain');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('company_disbursement_statuses');
+        Schema::dropIfExists('statuses');
     }
 };

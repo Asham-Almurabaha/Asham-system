@@ -80,36 +80,14 @@ class CompanyController extends Controller
             'is_active' => (bool) $data['is_active'],
         ]);
 
-        $redirectRoute = $request->user()?->can('companies.show')
-            ? ['companies.show', $company]
-            : ['companies.index'];
-
         return redirect()
-            ->route(...$redirectRoute)
+            ->route('companies.index')
             ->with('success', __('companies::messages.companies.created'));
     }
 
-    public function show(Company $company, Request $request): View
+    public function show(Company $company): RedirectResponse
     {
-        $company->loadMissing([
-            'allocations.transaction.status',
-            'allocations.transaction.bankAccount',
-            'allocations.transaction.safe',
-            'allocations.transaction.allocations',
-        ]);
-
-        $transactions = $this->paginatedTransactions($company);
-        $transactionSummaries = $this->summariesForTransactions($transactions->getCollection(), $company);
-
-        $summary = $this->summariesFor(collect([$company]))->get($company->id, [
-            'allocations_total' => 0.0,
-            'disbursed_share' => 0.0,
-            'repaid_share' => 0.0,
-            'outstanding_share' => 0.0,
-            'active_transactions' => 0,
-        ]);
-
-        return view('companies::companies.show', compact('company', 'transactions', 'summary', 'transactionSummaries'));
+        return redirect()->route('companies.index');
     }
 
     public function edit(Company $company): View
@@ -127,12 +105,8 @@ class CompanyController extends Controller
             'is_active' => (bool) $data['is_active'],
         ])->save();
 
-        $redirectRoute = $request->user()?->can('companies.show')
-            ? ['companies.show', $company]
-            : ['companies.index'];
-
         return redirect()
-            ->route(...$redirectRoute)
+            ->route('companies.index')
             ->with('success', __('companies::messages.companies.updated'));
     }
 

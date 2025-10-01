@@ -8,7 +8,6 @@
   <nav>
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ route('companies.index') }}">{{ __('companies::companies.Companies') }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ route('companies.show', $company) }}">{{ $company->name }}</a></li>
       <li class="breadcrumb-item active">{{ __('companies::companies.Edit Company') }}</li>
     </ol>
   </nav>
@@ -50,7 +49,7 @@
 
       <div class="d-flex align-items-center gap-2 mt-4">
         <x-button.action type="submit" variant="primary">{{ __('companies::companies.Update Company') }}</x-button.action>
-        <x-button.secondary href="{{ route('companies.show', $company) }}">{{ __('companies::companies.Cancel') }}</x-button.secondary>
+        <x-button.secondary href="{{ route('companies.index') }}">{{ __('companies::companies.Cancel') }}</x-button.secondary>
       </div>
     </form>
   </div>

@@ -23,7 +23,9 @@ class UpdateCompanyDisbursementStatusRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('company_disbursement_statuses', 'name')->ignore($status?->id),
+                Rule::unique('statuses', 'name')
+                    ->ignore($status?->id)
+                    ->where(fn ($query) => $query->where('domain', CompanyDisbursementStatus::DOMAIN)),
             ],
         ];
     }
