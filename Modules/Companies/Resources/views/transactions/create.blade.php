@@ -9,6 +9,9 @@
     $defaultStatusId = $defaultStatusId ?? null;
     $includeInactiveAccounts = $includeInactiveAccounts ?? false;
     $storeRoute = $storeRoute ?? 'company-transactions.store';
+    $entryHint = $entryHint ?? __('companies::companies.CompanyEntryHint');
+    $entryModeHelp = $entryModeHelp ?? __('companies::companies.CompanyEntryModeHelp');
+    $categoryLabel = $categoryLabel ?? __('companies::companies.OfficeCategoryLabel');
 
     $today = now()->format('Y-m-d');
     $activeMode = old('entry_mode', 'single');
@@ -68,10 +71,10 @@
   <div class="card-body p-4">
     <div class="alert alert-info d-flex justify-content-between align-items-center">
       <div>
-        {{ __('companies::companies.CompanyEntryHint') }}
-        <div class="small text-muted mt-1">{{ __('companies::companies.CompanyEntryModeHelp') }}</div>
+        {{ $entryHint }}
+        <div class="small text-muted mt-1">{{ $entryModeHelp }}</div>
       </div>
-      <span class="badge rounded-pill bg-primary">{{ __('companies::companies.OfficeCategoryLabel') }}</span>
+      <span class="badge rounded-pill bg-primary">{{ $categoryLabel }}</span>
     </div>
 
     <ul class="nav nav-tabs" id="companyEntryTabs" role="tablist">

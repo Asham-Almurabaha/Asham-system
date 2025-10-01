@@ -62,6 +62,8 @@ class CompanyTransactionController extends Controller
             'breadcrumb_route' => route('company-transactions.expenses.create'),
             'breadcrumb_label' => __('companies::companies.Company Expenses Title'),
             'store_route' => 'company-transactions.expenses.store',
+            'entry_hint' => __('companies::companies.CompanyExpenseEntryHint'),
+            'category_label' => __('companies::companies.InvestorCategoryLabel'),
         ]);
     }
 
@@ -76,6 +78,8 @@ class CompanyTransactionController extends Controller
             'breadcrumb_route' => route('company-transactions.expenses.payments.create'),
             'breadcrumb_label' => __('companies::companies.Company Expense Payments Title'),
             'store_route' => 'company-transactions.expenses.payments.store',
+            'entry_hint' => __('companies::companies.CompanyExpenseEntryHint'),
+            'category_label' => __('companies::companies.InvestorCategoryLabel'),
         ]);
     }
 
@@ -334,6 +338,8 @@ class CompanyTransactionController extends Controller
             'breadcrumbRoute' => $options['breadcrumb_route'] ?? route('company-transactions.index'),
             'breadcrumbLabel' => $options['breadcrumb_label'] ?? __('companies::companies.Company Transactions'),
             'storeRoute' => $options['store_route'] ?? 'company-transactions.store',
+            'entryHint' => $options['entry_hint'] ?? null,
+            'categoryLabel' => $options['category_label'] ?? null,
         ]);
     }
 
