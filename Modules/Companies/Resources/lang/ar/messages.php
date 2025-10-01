@@ -20,6 +20,7 @@ return [
         'allocations_required' => 'أضف توزيعاً واحداً على الأقل للشركات.',
         'allocation_total_mismatch' => 'يجب أن يساوي مجموع التوزيعات إجمالي مبلغ العملية.',
         'availability_fetch_error' => 'تعذّر الحصول على المتاح للحساب.',
+        'amount_exceeds_availability' => 'لا يمكن صرف مبلغ أكبر من المتاح في الحساب.',
     ],
     'disbursement_statuses' => [
         'created' => 'تم إنشاء حالة الصرف بنجاح.',

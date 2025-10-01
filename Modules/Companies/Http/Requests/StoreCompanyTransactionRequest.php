@@ -2,6 +2,7 @@
 
 namespace Modules\Companies\Http\Requests;
 
+use App\Support\AccountAvailability;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,7 +16,6 @@ class StoreCompanyTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reference' => ['nullable', 'string', 'max:190'],
             'transaction_date' => ['required', 'date'],
             'total_amount' => ['required', 'numeric', 'min:0.01'],
             'entry_mode' => ['nullable', Rule::in(['single', 'split'])],
@@ -75,6 +75,7 @@ class StoreCompanyTransactionRequest extends FormRequest
             $safeAmount = $this->toFloat($this->input('safe_amount'));
             $totalAmount = $this->toFloat($this->input('total_amount', 0));
             $mode = $this->input('entry_mode');
+            $exceedsMessage = __('companies::messages.transactions.amount_exceeds_availability');
 
             if ($mode === 'split' || ($bankAmount > 0 && $safeAmount > 0)) {
                 $mode = 'split';
@@ -103,6 +104,22 @@ class StoreCompanyTransactionRequest extends FormRequest
                 if ($bankAmount > 0 && $safeAmount > 0) {
                     $validator->errors()->add('bank_amount', __('companies::messages.transactions.single_mode_conflict'));
                     $validator->errors()->add('safe_amount', __('companies::messages.transactions.single_mode_conflict'));
+                }
+            }
+
+            if ($bankAmount > 0 && $bankAccount) {
+                $available = AccountAvailability::availableBalance('bank', (int) $bankAccount);
+
+                if (!is_null($available) && $this->round2($bankAmount) > $this->round2($available)) {
+                    $validator->errors()->add('bank_amount', $exceedsMessage);
+                }
+            }
+
+            if ($safeAmount > 0 && $safe) {
+                $available = AccountAvailability::availableBalance('safe', (int) $safe);
+
+                if (!is_null($available) && $this->round2($safeAmount) > $this->round2($available)) {
+                    $validator->errors()->add('safe_amount', $exceedsMessage);
                 }
             }
 

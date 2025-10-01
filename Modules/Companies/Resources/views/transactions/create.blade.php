@@ -97,12 +97,6 @@
           </div>
 
           <div class="col-md-4">
-            <label for="single_reference" class="form-label">{{ __('companies::companies.Reference') }}</label>
-            <input type="text" name="reference" id="single_reference" value="{{ old('reference') }}" class="form-control @error('reference') is-invalid @enderror" maxlength="190">
-            @error('reference') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
             <label for="single_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.01" min="0.01" name="total_amount" id="single_total_amount" value="{{ $singleTotalAmount }}" class="form-control @error('total_amount') is-invalid @enderror" required>
             @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -229,12 +223,6 @@
           </div>
 
           <div class="col-md-4">
-            <label for="split_reference" class="form-label">{{ __('companies::companies.Reference') }}</label>
-            <input type="text" name="reference" id="split_reference" value="{{ $activeMode === 'split' ? old('reference') : '' }}" class="form-control @error('reference') is-invalid @enderror" maxlength="190">
-            @error('reference') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
             <label for="split_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.01" min="0.01" name="total_amount" id="split_total_amount" value="{{ $splitTotalAmount }}" class="form-control @error('total_amount') is-invalid @enderror" required>
             @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -260,6 +248,12 @@
               @endforeach
             </select>
             @error('bank_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            <div class="form-text mt-1" id="split_bank_availability">
+              <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
+              <strong id="split_bank_availability_value">—</strong>
+              <span id="split_bank_availability_spinner" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+            </div>
+            <div class="text-danger small mt-1 d-none" id="split_bank_error"></div>
           </div>
 
           <div class="col-md-4">
@@ -271,6 +265,12 @@
               @endforeach
             </select>
             @error('safe_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            <div class="form-text mt-1" id="split_safe_availability">
+              <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
+              <strong id="split_safe_availability_value">—</strong>
+              <span id="split_safe_availability_spinner" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+            </div>
+            <div class="text-danger small mt-1 d-none" id="split_safe_error"></div>
           </div>
 
           <div class="col-md-4">
@@ -355,6 +355,15 @@
 
 @push('scripts')
 <script>
+  const availabilityUrl = @json(route('ajax.accounts.availability'));
+  const availabilityErrorText = @json(__('companies::messages.transactions.availability_fetch_error'));
+  const availabilityExceededText = @json(__('companies::messages.transactions.amount_exceeds_availability'));
+  const accountAmountRequiredText = @json(__('companies::messages.transactions.account_amount_required'));
+  const numberFormatter = new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
   document.addEventListener('DOMContentLoaded', () => {
     setupSingleForm();
     setupSplitForm();
@@ -370,6 +379,15 @@
     });
   });
 
+  function formatNumber(value) {
+    const amount = Number.parseFloat(value);
+    if (!Number.isFinite(amount)) {
+      return '—';
+    }
+
+    return numberFormatter.format(amount);
+  }
+
   function setupSingleForm() {
     const accountPicker = document.getElementById('single_account_picker');
     const bankHidden = document.getElementById('single_bank_account_id');
@@ -380,20 +398,44 @@
     const accountError = document.getElementById('single_account_error');
     const availabilityValue = document.getElementById('single_account_availability_value');
     const availabilitySpinner = document.getElementById('single_account_availability_spinner');
-    const availabilityUrl = @json(route('ajax.accounts.availability'));
-    const availabilityError = @json(__('companies::messages.transactions.availability_fetch_error'));
 
-    function resetAvailability() {
+    let currentAvailability = null;
+
+    const highlightAvailability = () => {
+      if (!availabilityValue) {
+        return;
+      }
+
+      const total = Number.parseFloat(totalInput?.value || '0') || 0;
+
+      if (currentAvailability !== null && total > currentAvailability + 0.0001) {
+        availabilityValue.classList.add('text-danger');
+      } else {
+        availabilityValue.classList.remove('text-danger');
+
+        if (accountError && accountError.textContent === availabilityExceededText) {
+          accountError.classList.add('d-none');
+          accountError.textContent = '';
+        }
+      }
+    };
+
+    const resetAvailability = () => {
+      currentAvailability = null;
+
       if (availabilityValue) {
         availabilityValue.textContent = '—';
         availabilityValue.classList.remove('text-danger');
       }
+
       if (availabilitySpinner) {
         availabilitySpinner.classList.add('d-none');
       }
-    }
 
-    async function updateAvailability() {
+      highlightAvailability();
+    };
+
+    const updateAvailability = async () => {
       if (!availabilityValue || !availabilitySpinner) {
         return;
       }
@@ -434,29 +476,51 @@
         const amount = Number.parseFloat(payload?.available);
 
         if (Number.isFinite(amount)) {
-          const formatter = new Intl.NumberFormat(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-          });
-          availabilityValue.textContent = formatter.format(amount);
+          currentAvailability = amount;
+          availabilityValue.textContent = formatNumber(amount);
         } else {
           resetAvailability();
         }
       } catch (error) {
-        availabilityValue.textContent = availabilityError;
+        currentAvailability = null;
+        availabilityValue.textContent = availabilityErrorText;
         availabilityValue.classList.add('text-danger');
       } finally {
         availabilitySpinner.classList.add('d-none');
+        highlightAvailability();
       }
-    }
+    };
 
-    function updateHidden() {
+    const toFixed = (value) => {
+      return Number.parseFloat(value || '0').toFixed(2);
+    };
+
+    const updateAmounts = () => {
+      const total = Number.parseFloat(totalInput?.value || '0') || 0;
+
+      if (bankHidden && bankHidden.value) {
+        if (bankAmountHidden) bankAmountHidden.value = toFixed(total);
+        if (safeAmountHidden) safeAmountHidden.value = '0.00';
+      } else if (safeHidden && safeHidden.value) {
+        if (safeAmountHidden) safeAmountHidden.value = toFixed(total);
+        if (bankAmountHidden) bankAmountHidden.value = '0.00';
+      } else {
+        if (bankAmountHidden) bankAmountHidden.value = '0.00';
+        if (safeAmountHidden) safeAmountHidden.value = '0.00';
+      }
+
+      highlightAvailability();
+    };
+
+    const updateHidden = () => {
       const value = accountPicker ? accountPicker.value : '';
+
       if (!value) {
         if (bankHidden) bankHidden.value = '';
         if (safeHidden) safeHidden.value = '';
       } else {
         const [type, id] = value.split(':');
+
         if (type === 'bank') {
           if (bankHidden) bankHidden.value = id;
           if (safeHidden) safeHidden.value = '';
@@ -465,36 +529,21 @@
           if (bankHidden) bankHidden.value = '';
         }
       }
+
       updateAmounts();
       void updateAvailability();
-    }
-
-    function toFixed(value) {
-      return Number.parseFloat(value).toFixed(2);
-    }
-
-    function updateAmounts() {
-      const total = Number.parseFloat(totalInput.value || '0') || 0;
-      if (bankHidden && bankHidden.value) {
-        bankAmountHidden.value = toFixed(total);
-        safeAmountHidden.value = '0.00';
-      } else if (safeHidden && safeHidden.value) {
-        safeAmountHidden.value = toFixed(total);
-        bankAmountHidden.value = '0.00';
-      } else {
-        bankAmountHidden.value = '0.00';
-        safeAmountHidden.value = '0.00';
-      }
-    }
+    };
 
     if (accountPicker) {
       accountPicker.addEventListener('change', () => {
         updateHidden();
+
         if (accountError) {
           accountError.classList.add('d-none');
           accountError.textContent = '';
         }
       });
+
       updateHidden();
     } else {
       resetAvailability();
@@ -509,13 +558,33 @@
     const form = document.getElementById('companyEntrySingleForm');
     if (form) {
       form.addEventListener('submit', (event) => {
+        let hasError = false;
+
         if (!bankHidden.value && !safeHidden.value) {
-          event.preventDefault();
-          event.stopPropagation();
+          hasError = true;
+
           if (accountError) {
-            accountError.textContent = '{{ __('companies::messages.transactions.account_amount_required') }}';
+            accountError.textContent = accountAmountRequiredText;
             accountError.classList.remove('d-none');
           }
+        }
+
+        const total = Number.parseFloat(totalInput?.value || '0') || 0;
+
+        if (!hasError && currentAvailability !== null && total > currentAvailability + 0.0001) {
+          hasError = true;
+
+          if (accountError) {
+            accountError.textContent = availabilityExceededText;
+            accountError.classList.remove('d-none');
+          }
+
+          highlightAvailability();
+        }
+
+        if (hasError) {
+          event.preventDefault();
+          event.stopPropagation();
         }
       });
     }
@@ -526,32 +595,183 @@
     const bankAmountInput = document.getElementById('split_bank_amount');
     const safeAmountInput = document.getElementById('split_safe_amount');
 
-    const bankInput = document.getElementById('split_bank_account_id');
-    const safeInput = document.getElementById('split_safe_id');
+    const bankSelect = document.getElementById('split_bank_account_id');
+    const safeSelect = document.getElementById('split_safe_id');
 
-    function toNumber(value) {
-      return Number.parseFloat(String(value).replace(',', '.')) || 0;
-    }
+    const bankAvailabilityValue = document.getElementById('split_bank_availability_value');
+    const bankAvailabilitySpinner = document.getElementById('split_bank_availability_spinner');
+    const bankError = document.getElementById('split_bank_error');
 
-    function format(value) {
-      return toNumber(value).toFixed(2);
-    }
+    const safeAvailabilityValue = document.getElementById('split_safe_availability_value');
+    const safeAvailabilitySpinner = document.getElementById('split_safe_availability_spinner');
+    const safeError = document.getElementById('split_safe_error');
 
-    function syncFromBank() {
-      const total = toNumber(totalInput.value);
-      const bank = Math.min(toNumber(bankAmountInput.value), total);
-      bankAmountInput.value = bank.toFixed(2);
+    let bankAvailability = null;
+    let safeAvailability = null;
+
+    const toNumber = (value) => Number.parseFloat(String(value).replace(',', '.')) || 0;
+    const format = (value) => toNumber(value).toFixed(2);
+
+    const resetDisplay = (valueElement, spinnerElement) => {
+      if (valueElement) {
+        valueElement.textContent = '—';
+        valueElement.classList.remove('text-danger');
+      }
+      if (spinnerElement) {
+        spinnerElement.classList.add('d-none');
+      }
+    };
+
+    const highlightBank = () => {
+      if (!bankAvailabilityValue) {
+        return;
+      }
+
+      const bankAmount = toNumber(bankAmountInput?.value || 0);
+
+      if (bankAvailability !== null && bankAmount > bankAvailability + 0.0001) {
+        bankAvailabilityValue.classList.add('text-danger');
+      } else {
+        bankAvailabilityValue.classList.remove('text-danger');
+
+        if (bankError && bankError.textContent === availabilityExceededText) {
+          bankError.classList.add('d-none');
+          bankError.textContent = '';
+        }
+      }
+    };
+
+    const highlightSafe = () => {
+      if (!safeAvailabilityValue) {
+        return;
+      }
+
+      const safeAmount = toNumber(safeAmountInput?.value || 0);
+
+      if (safeAvailability !== null && safeAmount > safeAvailability + 0.0001) {
+        safeAvailabilityValue.classList.add('text-danger');
+      } else {
+        safeAvailabilityValue.classList.remove('text-danger');
+
+        if (safeError && safeError.textContent === availabilityExceededText) {
+          safeError.classList.add('d-none');
+          safeError.textContent = '';
+        }
+      }
+    };
+
+    const updateAvailabilityGeneric = async ({ type, select, valueElement, spinnerElement, onUpdate }) => {
+      if (!valueElement || !spinnerElement || !select) {
+        if (typeof onUpdate === 'function') {
+          onUpdate(null);
+        }
+        return;
+      }
+
+      valueElement.classList.remove('text-danger');
+
+      const id = select.value;
+
+      if (!id) {
+        resetDisplay(valueElement, spinnerElement);
+        if (typeof onUpdate === 'function') {
+          onUpdate(null);
+        }
+        return;
+      }
+
+      spinnerElement.classList.remove('d-none');
+
+      try {
+        const params = new URLSearchParams({
+          account_type: type,
+          account_id: id
+        });
+
+        const response = await fetch(`${availabilityUrl}?${params.toString()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Request failed');
+        }
+
+        const payload = await response.json();
+        const amount = Number.parseFloat(payload?.available);
+
+        if (Number.isFinite(amount)) {
+          valueElement.textContent = formatNumber(amount);
+          if (typeof onUpdate === 'function') {
+            onUpdate(amount);
+          }
+        } else {
+          resetDisplay(valueElement, spinnerElement);
+          if (typeof onUpdate === 'function') {
+            onUpdate(null);
+          }
+        }
+      } catch (error) {
+        valueElement.textContent = availabilityErrorText;
+        valueElement.classList.add('text-danger');
+        if (typeof onUpdate === 'function') {
+          onUpdate(null);
+        }
+      } finally {
+        spinnerElement.classList.add('d-none');
+      }
+    };
+
+    const updateBankAvailability = () => updateAvailabilityGeneric({
+      type: 'bank',
+      select: bankSelect,
+      valueElement: bankAvailabilityValue,
+      spinnerElement: bankAvailabilitySpinner,
+      onUpdate: (value) => {
+        bankAvailability = value;
+        highlightBank();
+      }
+    });
+
+    const updateSafeAvailability = () => updateAvailabilityGeneric({
+      type: 'safe',
+      select: safeSelect,
+      valueElement: safeAvailabilityValue,
+      spinnerElement: safeAvailabilitySpinner,
+      onUpdate: (value) => {
+        safeAvailability = value;
+        highlightSafe();
+      }
+    });
+
+    const syncFromBank = () => {
+      const total = toNumber(totalInput?.value || 0);
+      const bank = Math.min(toNumber(bankAmountInput?.value || 0), total);
+      if (bankAmountInput) {
+        bankAmountInput.value = bank.toFixed(2);
+      }
       const safe = Math.max(total - bank, 0);
-      safeAmountInput.value = safe.toFixed(2);
-    }
+      if (safeAmountInput) {
+        safeAmountInput.value = safe.toFixed(2);
+      }
+      highlightBank();
+      highlightSafe();
+    };
 
-    function syncFromSafe() {
-      const total = toNumber(totalInput.value);
-      const safe = Math.min(toNumber(safeAmountInput.value), total);
-      safeAmountInput.value = safe.toFixed(2);
+    const syncFromSafe = () => {
+      const total = toNumber(totalInput?.value || 0);
+      const safe = Math.min(toNumber(safeAmountInput?.value || 0), total);
+      if (safeAmountInput) {
+        safeAmountInput.value = safe.toFixed(2);
+      }
       const bank = Math.max(total - safe, 0);
-      bankAmountInput.value = bank.toFixed(2);
-    }
+      if (bankAmountInput) {
+        bankAmountInput.value = bank.toFixed(2);
+      }
+      highlightBank();
+      highlightSafe();
+    };
 
     if (totalInput) {
       totalInput.addEventListener('input', () => {
@@ -563,6 +783,7 @@
           syncFromBank();
         }
       });
+      totalInput.addEventListener('blur', syncFromBank);
     }
 
     if (bankAmountInput) {
@@ -583,15 +804,69 @@
 
     syncFromBank();
 
+    if (bankSelect) {
+      bankSelect.addEventListener('change', () => {
+        if (bankError) {
+          bankError.classList.add('d-none');
+          bankError.textContent = '';
+        }
+        updateBankAvailability();
+      });
+      updateBankAvailability();
+    } else {
+      resetDisplay(bankAvailabilityValue, bankAvailabilitySpinner);
+    }
+
+    if (safeSelect) {
+      safeSelect.addEventListener('change', () => {
+        if (safeError) {
+          safeError.classList.add('d-none');
+          safeError.textContent = '';
+        }
+        updateSafeAvailability();
+      });
+      updateSafeAvailability();
+    } else {
+      resetDisplay(safeAvailabilityValue, safeAvailabilitySpinner);
+    }
+
     const form = document.getElementById('companyEntrySplitForm');
     if (form) {
       form.addEventListener('submit', (event) => {
-        const bankAmount = toNumber(bankAmountInput.value);
-        const safeAmount = toNumber(safeAmountInput.value);
-        const total = toNumber(totalInput.value);
+        const total = toNumber(totalInput?.value || 0);
+        const bank = Math.min(toNumber(bankAmountInput?.value || 0), total);
+        const safe = Math.max(total - bank, 0);
 
-        if (bankAmount + safeAmount !== total) {
-          safeAmountInput.value = Math.max(total - bankAmount, 0).toFixed(2);
+        if (bankAmountInput) {
+          bankAmountInput.value = bank.toFixed(2);
+        }
+        if (safeAmountInput) {
+          safeAmountInput.value = safe.toFixed(2);
+        }
+
+        let hasError = false;
+
+        if (bankAvailability !== null && bank > bankAvailability + 0.0001) {
+          hasError = true;
+          if (bankError) {
+            bankError.textContent = availabilityExceededText;
+            bankError.classList.remove('d-none');
+          }
+        }
+
+        if (safeAvailability !== null && safe > safeAvailability + 0.0001) {
+          hasError = true;
+          if (safeError) {
+            safeError.textContent = availabilityExceededText;
+            safeError.classList.remove('d-none');
+          }
+        }
+
+        if (hasError) {
+          highlightBank();
+          highlightSafe();
+          event.preventDefault();
+          event.stopPropagation();
         }
       });
     }
@@ -663,3 +938,4 @@
   }
 </script>
 @endpush
+

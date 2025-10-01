@@ -95,7 +95,6 @@ class CompanyTransactionController extends Controller
 
         $transaction = DB::transaction(function () use ($data) {
             $transaction = CompanyTransaction::create([
-                'reference' => $data['reference'] ?? null,
                 'transaction_date' => $data['transaction_date'],
                 'total_amount' => $data['total_amount'],
                 'company_disbursement_status_id' => $data['company_disbursement_status_id'],
@@ -152,7 +151,6 @@ class CompanyTransactionController extends Controller
 
         DB::transaction(function () use ($companyTransaction, $data) {
             $companyTransaction->update([
-                'reference' => $data['reference'] ?? null,
                 'transaction_date' => $data['transaction_date'],
                 'total_amount' => $data['total_amount'],
                 'company_disbursement_status_id' => $data['company_disbursement_status_id'],
