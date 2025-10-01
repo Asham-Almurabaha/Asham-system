@@ -91,29 +91,6 @@
           <input type="hidden" name="safe_amount" id="single_safe_amount" value="{{ $singleSafeId ? $singleTotalAmount : '0.00' }}">
 
           <div class="col-md-4">
-            <label for="single_transaction_date" class="form-label">{{ __('companies::companies.Transaction Date') }} <span class="text-danger">*</span></label>
-            <input type="date" name="transaction_date" id="single_transaction_date" value="{{ old('transaction_date', $today) }}" class="form-control js-date @error('transaction_date') is-invalid @enderror" required>
-            @error('transaction_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
-            <label for="single_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
-            <input type="number" step="0.01" min="0.01" name="total_amount" id="single_total_amount" value="{{ $singleTotalAmount }}" class="form-control @error('total_amount') is-invalid @enderror" required>
-            @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
-            <label for="single_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
-            <select name="company_disbursement_status_id" id="single_status_id" class="form-select @error('company_disbursement_status_id') is-invalid @enderror" required>
-              <option value="">{{ __('companies::companies.Choose Status') }}</option>
-              @foreach($statuses as $status)
-                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
-              @endforeach
-            </select>
-            @error('company_disbursement_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
             <label for="single_account_picker" class="form-label">{{ __('companies::companies.AccountSourcePicker') }} <span class="text-danger">*</span></label>
             <select id="single_account_picker" class="form-select" required>
               <option value="" {{ $singleAccountValue ? '' : 'selected' }}>{{ __('companies::companies.ChooseAccountSource') }}</option>
@@ -144,6 +121,29 @@
           </div>
 
           <div class="col-md-4">
+            <label for="single_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
+            <input type="number" step="0.01" min="0.01" name="total_amount" id="single_total_amount" value="{{ $singleTotalAmount }}" class="form-control @error('total_amount') is-invalid @enderror" required>
+            @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+          </div>
+
+          <div class="col-md-4">
+            <label for="single_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
+            <select name="company_disbursement_status_id" id="single_status_id" class="form-select @error('company_disbursement_status_id') is-invalid @enderror" required>
+              <option value="">{{ __('companies::companies.Choose Status') }}</option>
+              @foreach($statuses as $status)
+                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
+              @endforeach
+            </select>
+            @error('company_disbursement_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+          </div>
+
+          <div class="col-md-4">
+            <label for="single_transaction_date" class="form-label">{{ __('companies::companies.Transaction Date') }} <span class="text-danger">*</span></label>
+            <input type="date" name="transaction_date" id="single_transaction_date" value="{{ old('transaction_date', $today) }}" class="form-control js-date @error('transaction_date') is-invalid @enderror" required>
+            @error('transaction_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+          </div>
+
+          <div class="col-md-8">
             <label for="single_notes" class="form-label">{{ __('companies::companies.Notes') }}</label>
             <textarea name="notes" id="single_notes" rows="3" class="form-control @error('notes') is-invalid @enderror" placeholder="{{ __('companies::companies.Notes Placeholder') }}">{{ old('notes') }}</textarea>
             @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -217,15 +217,15 @@
           <input type="hidden" name="entry_mode" value="split">
 
           <div class="col-md-4">
-            <label for="split_transaction_date" class="form-label">{{ __('companies::companies.Transaction Date') }} <span class="text-danger">*</span></label>
-            <input type="date" name="transaction_date" id="split_transaction_date" value="{{ $activeMode === 'split' ? old('transaction_date', $today) : $today }}" class="form-control js-date @error('transaction_date') is-invalid @enderror" required>
-            @error('transaction_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
             <label for="split_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.01" min="0.01" name="total_amount" id="split_total_amount" value="{{ $splitTotalAmount }}" class="form-control @error('total_amount') is-invalid @enderror" required>
             @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+          </div>
+
+          <div class="col-md-4">
+            <label for="split_transaction_date" class="form-label">{{ __('companies::companies.Transaction Date') }} <span class="text-danger">*</span></label>
+            <input type="date" name="transaction_date" id="split_transaction_date" value="{{ $activeMode === 'split' ? old('transaction_date', $today) : $today }}" class="form-control js-date @error('transaction_date') is-invalid @enderror" required>
+            @error('transaction_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="col-md-4">
@@ -239,53 +239,74 @@
             @error('company_disbursement_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
-          <div class="col-md-4">
-            <label for="split_bank_account_id" class="form-label">{{ __('companies::companies.Bank Account') }}</label>
-            <select name="bank_account_id" id="split_bank_account_id" class="form-select @error('bank_account_id') is-invalid @enderror">
-              <option value="">{{ __('companies::companies.Choose Bank Account') }}</option>
-              @foreach($bankAccounts as $bankAccount)
-                <option value="{{ $bankAccount->id }}" @selected($activeMode === 'split' && (int) old('bank_account_id') === $bankAccount->id)>{{ $bankAccount->name }}</option>
-              @endforeach
-            </select>
-            @error('bank_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            <div class="form-text mt-1" id="split_bank_availability">
-              <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
-              <strong id="split_bank_availability_value">—</strong>
-              <span id="split_bank_availability_spinner" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+          <div class="col-12">
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <div class="border rounded p-3 h-100">
+                  <h6 class="mb-3">{{ __('companies::companies.SplitBankSectionTitle') }}</h6>
+                  <div class="mb-3">
+                    <label for="split_bank_account_id" class="form-label">{{ __('companies::companies.Bank Account') }}</label>
+                    <select name="bank_account_id" id="split_bank_account_id" class="form-select @error('bank_account_id') is-invalid @enderror">
+                      <option value="">{{ __('companies::companies.Choose Bank Account') }}</option>
+                      @foreach($bankAccounts as $bankAccount)
+                        <option value="{{ $bankAccount->id }}" @selected($activeMode === 'split' && (int) old('bank_account_id') === $bankAccount->id)>{{ $bankAccount->name }}</option>
+                      @endforeach
+                    </select>
+                    @error('bank_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="form-text mt-1" id="split_bank_availability">
+                      <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
+                      <strong id="split_bank_availability_value">—</strong>
+                      <span id="split_bank_availability_spinner" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                    </div>
+                    <div class="text-danger small mt-1 d-none" id="split_bank_error"></div>
+                  </div>
+
+                  <div>
+                    <label for="split_bank_amount" class="form-label">{{ __('companies::companies.BankShareAmount') }}</label>
+                    <input type="number" step="0.01" min="0" name="bank_amount" id="split_bank_amount" value="{{ $splitBankAmount }}" class="form-control @error('bank_amount') is-invalid @enderror">
+                    @error('bank_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="border rounded p-3 h-100">
+                  <h6 class="mb-3">{{ __('companies::companies.SplitSafeSectionTitle') }}</h6>
+                  <div class="mb-3">
+                    <label for="split_safe_id" class="form-label">{{ __('companies::companies.Safe') }}</label>
+                    <select name="safe_id" id="split_safe_id" class="form-select @error('safe_id') is-invalid @enderror">
+                      <option value="">{{ __('companies::companies.Choose Safe') }}</option>
+                      @foreach($safes as $safe)
+                        <option value="{{ $safe->id }}" @selected($activeMode === 'split' && (int) old('safe_id') === $safe->id)>{{ $safe->name }}</option>
+                      @endforeach
+                    </select>
+                    @error('safe_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <div class="form-text mt-1" id="split_safe_availability">
+                      <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
+                      <strong id="split_safe_availability_value">—</strong>
+                      <span id="split_safe_availability_spinner" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+                    </div>
+                    <div class="text-danger small mt-1 d-none" id="split_safe_error"></div>
+                  </div>
+
+                  <div>
+                    <label for="split_safe_amount" class="form-label">{{ __('companies::companies.SafeShareAmount') }}</label>
+                    <input type="number" step="0.01" min="0" name="safe_amount" id="split_safe_amount" value="{{ $splitSafeAmount }}" class="form-control @error('safe_amount') is-invalid @enderror">
+                    @error('safe_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="text-danger small mt-1 d-none" id="split_bank_error"></div>
-          </div>
 
-          <div class="col-md-4">
-            <label for="split_safe_id" class="form-label">{{ __('companies::companies.Safe') }}</label>
-            <select name="safe_id" id="split_safe_id" class="form-select @error('safe_id') is-invalid @enderror">
-              <option value="">{{ __('companies::companies.Choose Safe') }}</option>
-              @foreach($safes as $safe)
-                <option value="{{ $safe->id }}" @selected($activeMode === 'split' && (int) old('safe_id') === $safe->id)>{{ $safe->name }}</option>
-              @endforeach
-            </select>
-            @error('safe_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            <div class="form-text mt-1" id="split_safe_availability">
-              <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
-              <strong id="split_safe_availability_value">—</strong>
-              <span id="split_safe_availability_spinner" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+            <div class="mt-2 small text-muted">
+              {{ __('companies::companies.SplitEntrySumHint') }}
             </div>
-            <div class="text-danger small mt-1 d-none" id="split_safe_error"></div>
+            <div class="small text-muted">
+              {{ __('companies::companies.SplitEntryAutoHint') }}
+            </div>
           </div>
 
-          <div class="col-md-4">
-            <label for="split_bank_amount" class="form-label">{{ __('companies::companies.BankShareAmount') }}</label>
-            <input type="number" step="0.01" min="0" name="bank_amount" id="split_bank_amount" value="{{ $splitBankAmount }}" class="form-control @error('bank_amount') is-invalid @enderror">
-            @error('bank_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
-            <label for="split_safe_amount" class="form-label">{{ __('companies::companies.SafeShareAmount') }}</label>
-            <input type="number" step="0.01" min="0" name="safe_amount" id="split_safe_amount" value="{{ $splitSafeAmount }}" class="form-control @error('safe_amount') is-invalid @enderror">
-            @error('safe_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
-
-          <div class="col-md-4">
+          <div class="col-12">
             <label for="split_notes" class="form-label">{{ __('companies::companies.Notes') }}</label>
             <textarea name="notes" id="split_notes" rows="3" class="form-control @error('notes') is-invalid @enderror" placeholder="{{ __('companies::companies.Notes Placeholder') }}">{{ $activeMode === 'split' ? old('notes') : '' }}</textarea>
             @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
