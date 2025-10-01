@@ -32,7 +32,7 @@
     $singleSafeId = $activeMode === 'single' ? old('safe_id') : null;
     $singleAccountValue = $singleBankId ? 'bank:' . $singleBankId : ($singleSafeId ? 'safe:' . $singleSafeId : '');
 
-    $defaultStatusId = optional($statuses->first())->id;
+    $defaultStatusId = null;
 
     $singleTotalAmount = old('total_amount', '0.00');
     $splitTotalAmount = $activeMode === 'split' ? old('total_amount', '0.00') : '0.00';
