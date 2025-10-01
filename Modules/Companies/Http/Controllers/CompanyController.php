@@ -80,8 +80,12 @@ class CompanyController extends Controller
             'is_active' => (bool) $data['is_active'],
         ]);
 
+        $redirectRoute = $request->user()?->can('companies.show')
+            ? ['companies.show', $company]
+            : ['companies.index'];
+
         return redirect()
-            ->route('companies.show', $company)
+            ->route(...$redirectRoute)
             ->with('success', __('companies::messages.companies.created'));
     }
 
@@ -123,8 +127,12 @@ class CompanyController extends Controller
             'is_active' => (bool) $data['is_active'],
         ])->save();
 
+        $redirectRoute = $request->user()?->can('companies.show')
+            ? ['companies.show', $company]
+            : ['companies.index'];
+
         return redirect()
-            ->route('companies.show', $company)
+            ->route(...$redirectRoute)
             ->with('success', __('companies::messages.companies.updated'));
     }
 
