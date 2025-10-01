@@ -11,8 +11,8 @@ return new class extends Migration {
             $table->id();
             $table->date('transaction_date');
             $table->decimal('total_amount', 18, 2);
-            $table->foreignId('company_disbursement_status_id')
-                ->constrained('statuses')
+            $table->foreignId('status_id')
+                ->constrained('transaction_statuses')
                 ->cascadeOnDelete();
             $table->foreignId('bank_account_id')
                 ->nullable()

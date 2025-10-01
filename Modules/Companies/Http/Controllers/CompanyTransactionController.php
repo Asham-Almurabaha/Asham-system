@@ -11,26 +11,34 @@ use Illuminate\View\View;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Companies\Entities\Company;
-use Modules\Companies\Entities\CompanyDisbursementStatus;
 use Modules\Companies\Entities\CompanyTransaction;
 use Modules\Companies\Entities\CompanyTransactionAllocation;
 use Modules\Companies\Http\Requests\StoreCompanyTransactionRequest;
 use Modules\Companies\Http\Requests\UpdateCompanyTransactionRequest;
+use Modules\Lookups\Entities\TransactionStatus;
 
 class CompanyTransactionController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = CompanyTransaction::query()->with([
-            'status',
-            'bankAccount',
-            'safe',
-            'allocations.company',
-        ])->latest('transaction_date');
+        $categoryId = $this->getCompanyCategoryId();
+        $statuses = $this->getCompanyStatuses($categoryId);
+        $allowedStatusIds = $statuses->pluck('id')->all();
+
+        $query = CompanyTransaction::query()
+            ->with([
+                'status',
+                'bankAccount',
+                'safe',
+                'allocations.company',
+            ])
+            ->when(empty($allowedStatusIds), fn ($builder) => $builder->whereRaw('1=0'))
+            ->when(!empty($allowedStatusIds), fn ($builder) => $builder->whereIn('status_id', $allowedStatusIds))
+            ->latest('transaction_date');
 
         $statusId = (int) $request->input('status_id');
-        if ($statusId > 0) {
-            $query->where('company_disbursement_status_id', $statusId);
+        if ($statusId > 0 && in_array($statusId, $allowedStatusIds, true)) {
+            $query->where('status_id', $statusId);
         }
 
         $companyId = (int) $request->input('company_id');
@@ -50,7 +58,6 @@ class CompanyTransactionController extends Controller
 
         $transactions = $query->paginate(15)->withQueryString();
 
-        $statuses = CompanyDisbursementStatus::orderBy('id')->get();
         $companies = Company::orderBy('name')->get();
 
         $pageCollection = $transactions->getCollection();
@@ -71,7 +78,8 @@ class CompanyTransactionController extends Controller
 
     public function create(): View
     {
-        $statuses = CompanyDisbursementStatus::orderBy('id')->get();
+        $categoryId = $this->getCompanyCategoryId();
+        $statuses = $this->getCompanyStatuses($categoryId);
         $companies = Company::orderBy('name')->get();
         $bankAccounts = BankAccount::where('is_active', true)->orderBy('name')->get();
         $safes = Safe::where('is_active', true)->orderBy('name')->get();
@@ -92,7 +100,7 @@ class CompanyTransactionController extends Controller
             $transaction = CompanyTransaction::create([
                 'transaction_date' => $data['transaction_date'],
                 'total_amount' => $data['total_amount'],
-                'company_disbursement_status_id' => $data['company_disbursement_status_id'],
+                'status_id' => $data['status_id'],
                 'bank_account_id' => $data['bank_account_id'] ?? null,
                 'bank_amount' => $data['bank_amount'] ?? 0,
                 'safe_id' => $data['safe_id'] ?? null,
@@ -126,7 +134,8 @@ class CompanyTransactionController extends Controller
     {
         $companyTransaction->loadMissing(['allocations.company']);
 
-        $statuses = CompanyDisbursementStatus::orderBy('id')->get();
+        $categoryId = $this->getCompanyCategoryId();
+        $statuses = $this->getCompanyStatuses($categoryId);
         $companies = Company::orderBy('name')->get();
         $bankAccounts = BankAccount::where('is_active', true)->orderBy('name')->get();
         $safes = Safe::where('is_active', true)->orderBy('name')->get();
@@ -148,7 +157,7 @@ class CompanyTransactionController extends Controller
             $companyTransaction->update([
                 'transaction_date' => $data['transaction_date'],
                 'total_amount' => $data['total_amount'],
-                'company_disbursement_status_id' => $data['company_disbursement_status_id'],
+                'status_id' => $data['status_id'],
                 'bank_account_id' => $data['bank_account_id'] ?? null,
                 'bank_amount' => $data['bank_amount'] ?? 0,
                 'safe_id' => $data['safe_id'] ?? null,
@@ -171,6 +180,29 @@ class CompanyTransactionController extends Controller
         return redirect()
             ->route('company-transactions.index')
             ->with('success', __('companies::messages.transactions.deleted'));
+    }
+
+    private function getCompanyCategoryId(): ?int
+    {
+        return DB::table('categories')
+            ->whereIn('name', ['الشركات', 'شركات'])
+            ->value('id');
+    }
+
+    private function getCompanyStatuses(?int $categoryId)
+    {
+        if (!$categoryId) {
+            return collect();
+        }
+
+        return TransactionStatus::query()
+            ->whereIn('id', function ($query) use ($categoryId) {
+                $query->select('transaction_status_id')
+                    ->from('category_transaction_status')
+                    ->where('category_id', $categoryId);
+            })
+            ->orderBy('name')
+            ->get();
     }
 
     private function syncAllocations(CompanyTransaction $transaction, array $allocations): void

@@ -22,9 +22,4 @@ return [
         'availability_fetch_error' => 'تعذّر الحصول على المتاح للحساب.',
         'amount_exceeds_availability' => 'لا يمكن صرف مبلغ أكبر من المتاح في الحساب.',
     ],
-    'disbursement_statuses' => [
-        'created' => 'تم إنشاء حالة الصرف بنجاح.',
-        'updated' => 'تم تحديث حالة الصرف بنجاح.',
-        'deleted' => 'تم حذف حالة الصرف بنجاح.',
-    ],
 ];

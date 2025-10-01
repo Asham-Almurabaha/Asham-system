@@ -5,7 +5,7 @@ namespace Modules\Companies\Http\Requests;
 use App\Support\AccountAvailability;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Modules\Companies\Entities\CompanyDisbursementStatus;
+use Illuminate\Support\Facades\DB;
 
 class StoreCompanyTransactionRequest extends FormRequest
 {
@@ -16,15 +16,20 @@ class StoreCompanyTransactionRequest extends FormRequest
 
     public function rules(): array
     {
+        $categoryId = $this->companyCategoryId();
+        $statusRule = Rule::exists('category_transaction_status', 'transaction_status_id');
+
+        if ($categoryId) {
+            $statusRule = $statusRule->where(fn ($query) => $query->where('category_id', $categoryId));
+        } else {
+            $statusRule = $statusRule->where(fn ($query) => $query->whereRaw('1=0'));
+        }
+
         return [
             'transaction_date' => ['required', 'date'],
             'total_amount' => ['required', 'numeric', 'min:0.01'],
             'entry_mode' => ['nullable', Rule::in(['single', 'split'])],
-            'company_disbursement_status_id' => [
-                'required',
-                Rule::exists('statuses', 'id')
-                    ->where(fn ($query) => $query->where('domain', CompanyDisbursementStatus::DOMAIN)),
-            ],
+            'status_id' => ['required', 'integer', $statusRule],
             'bank_account_id' => ['nullable', Rule::exists('bank_accounts', 'id')],
             'safe_id' => ['nullable', Rule::exists('safes', 'id')],
             'bank_amount' => ['nullable', 'numeric', 'min:0'],
@@ -36,6 +41,13 @@ class StoreCompanyTransactionRequest extends FormRequest
             'allocations.*.share_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'allocations.*.notes' => ['nullable', 'string'],
         ];
+    }
+
+    private function companyCategoryId(): ?int
+    {
+        return DB::table('categories')
+            ->whereIn('name', ['الشركات', 'شركات'])
+            ->value('id');
     }
 
     protected function prepareForValidation(): void

@@ -128,13 +128,13 @@
 
           <div class="col-md-4">
             <label for="single_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
-            <select name="company_disbursement_status_id" id="single_status_id" class="form-select @error('company_disbursement_status_id') is-invalid @enderror" required>
+            <select name="status_id" id="single_status_id" class="form-select @error('status_id') is-invalid @enderror" required>
               <option value="">{{ __('companies::companies.Choose Status') }}</option>
               @foreach($statuses as $status)
-                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
+                <option value="{{ $status->id }}" @selected((int) old('status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
               @endforeach
             </select>
-            @error('company_disbursement_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            @error('status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="col-md-4">
@@ -230,13 +230,13 @@
 
           <div class="col-md-4">
             <label for="split_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
-            <select name="company_disbursement_status_id" id="split_status_id" class="form-select @error('company_disbursement_status_id') is-invalid @enderror" required>
+            <select name="status_id" id="split_status_id" class="form-select @error('status_id') is-invalid @enderror" required>
               <option value="">{{ __('companies::companies.Choose Status') }}</option>
               @foreach($statuses as $status)
-                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
+                <option value="{{ $status->id }}" @selected((int) old('status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
               @endforeach
             </select>
-            @error('company_disbursement_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            @error('status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
           <div class="col-12">

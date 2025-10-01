@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
 use Modules\Ledger\Entities\LedgerEntry;
+use Modules\Lookups\Entities\TransactionStatus;
 
 class CompanyTransaction extends Model
 {
@@ -19,7 +20,7 @@ class CompanyTransaction extends Model
     protected $fillable = [
         'transaction_date',
         'total_amount',
-        'company_disbursement_status_id',
+        'status_id',
         'bank_account_id',
         'bank_amount',
         'safe_id',
@@ -36,7 +37,7 @@ class CompanyTransaction extends Model
 
     public function status()
     {
-        return $this->belongsTo(CompanyDisbursementStatus::class, 'company_disbursement_status_id');
+        return $this->belongsTo(TransactionStatus::class, 'status_id');
     }
 
     public function bankAccount()
@@ -80,20 +81,4 @@ class CompanyTransaction extends Model
         return max($balance, 0.0);
     }
 
-    public function refreshStatus(): void
-    {
-        $statuses = CompanyDisbursementStatus::automationStatuses();
-
-        $status = $statuses['pending'] ?? null;
-
-        if ($this->disbursed_amount <= 0.0 || $this->outstanding_amount <= 0.0) {
-            $status = $statuses['settled'] ?? $status ?? $statuses['partial'] ?? null;
-        } elseif ($this->repaid_amount > 0.0 && $this->outstanding_amount > 0.0) {
-            $status = $statuses['partial'] ?? $status ?? $statuses['settled'] ?? null;
-        }
-
-        if ($status && $this->company_disbursement_status_id !== $status->id) {
-            $this->forceFill(['company_disbursement_status_id' => $status->id])->save();
-        }
-    }
 }

@@ -26,7 +26,6 @@
       || $isRoute('expenses.recurrence-periods.*')
       || $isRoute('accounts.bank-accounts.*')
       || $isRoute('accounts.safes.*')
-      || $isRoute('company-disbursement-statuses.*')
       || $isRoute('product_types.*')
       || $isRoute('products.*')
       || $isRoute('product_entries.*')
@@ -306,7 +305,6 @@
       'categories.*',
       'accounts.bank-accounts.*',
       'accounts.safes.*',
-      'company-disbursement-statuses.*',
       'product_types.*',
       'products.*',
       'settings.roles.*',
@@ -336,9 +334,10 @@
   $settingsExpensesPatterns = ['expenses.expense-types.*', 'expenses.recurrence-periods.*'];
   $settingsAccountsPatterns = ['accounts.bank-accounts.*', 'accounts.safes.*'];
   $settingsProductsPatterns = ['product_types.*', 'products.*'];
-  $settingsCompaniesPatterns = array_merge([
-      'company-disbursement-statuses.*',
-  ], $companyCreatePatterns, $companyManagePatterns);
+  $settingsCompaniesPatterns = array_merge(
+      $companyCreatePatterns,
+      $companyManagePatterns
+  );
   $settingsUsersPatterns = [
       'settings.roles.*',
       'settings.roles.permissions*',
@@ -1016,14 +1015,6 @@
       <li>
         <a class="{{ $active($isRoute($companyManagePatterns)) }}" href="{{ route('companies.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Companies')</span>
-        </a>
-      </li>
-      @endroutecanany
-
-      @routecanany('company-disbursement-statuses.*')
-      <li>
-        <a class="{{ $active($isRoute('company-disbursement-statuses.*')) }}" href="{{ route('company-disbursement-statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('companies::companies.Disbursement Statuses')</span>
         </a>
       </li>
       @endroutecanany

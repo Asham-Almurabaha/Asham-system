@@ -22,9 +22,4 @@ return [
         'availability_fetch_error' => 'Unable to fetch availability.',
         'amount_exceeds_availability' => 'Cannot disburse more than the available balance.',
     ],
-    'disbursement_statuses' => [
-        'created' => 'Disbursement status created successfully.',
-        'updated' => 'Disbursement status updated successfully.',
-        'deleted' => 'Disbursement status deleted successfully.',
-    ],
 ];
