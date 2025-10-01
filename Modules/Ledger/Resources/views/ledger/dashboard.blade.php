@@ -100,8 +100,12 @@
     $bankTotalIn  = (float)($bankTotals['in']  ?? $bankAgg->sum('in'));
     $bankTotalOut = (float)($bankTotals['out'] ?? $bankAgg->sum('out'));
     $bankNet      = $bankTotalIn - $bankTotalOut;
-    $bankActiveCount = $bankAgg->filter(fn($row) => ($row['is_active'] ?? true))->count();
-    $bankInactiveCount = max($bankAgg->count() - $bankActiveCount, 0);
+    $bankActiveRows = $bankAgg->filter(fn($row) => ($row['is_active'] ?? true));
+    $bankActiveCount = $bankActiveRows->count();
+    $bankInactiveRows = $bankAgg->reject(fn($row) => ($row['is_active'] ?? true));
+    $bankInactiveCount = $bankInactiveRows->count();
+    $bankActiveNetTotal = (float) $bankActiveRows->sum('net');
+    $bankInactiveNetTotal = (float) $bankInactiveRows->sum('net');
 
     // ==== SAFES ====
     $safesFromSvc = collect($safes ?? []);
@@ -163,8 +167,12 @@
     $safeTotalIn  = (float)($safeTotals['in']  ?? $safeAgg->sum('in'));
     $safeTotalOut = (float)($safeTotals['out'] ?? $safeAgg->sum('out'));
     $safeNet      = $safeTotalIn - $safeTotalOut;
-    $safeActiveCount = $safeAgg->filter(fn($row) => ($row['is_active'] ?? true))->count();
-    $safeInactiveCount = max($safeAgg->count() - $safeActiveCount, 0);
+    $safeActiveRows = $safeAgg->filter(fn($row) => ($row['is_active'] ?? true));
+    $safeActiveCount = $safeActiveRows->count();
+    $safeInactiveRows = $safeAgg->reject(fn($row) => ($row['is_active'] ?? true));
+    $safeInactiveCount = $safeInactiveRows->count();
+    $safeActiveNetTotal = (float) $safeActiveRows->sum('net');
+    $safeInactiveNetTotal = (float) $safeInactiveRows->sum('net');
 
     // ==== KPIs المكتب ====
     $mukatabaTotal = (float)($officeKpis['mukataba']['total'] ?? 0);
@@ -189,6 +197,8 @@
                 <div class="d-flex flex-column align-items-end gap-1 text-nowrap">
                     <span class="chip soft">عدد الحسابات: <strong>{{ $bankAgg->count() }}</strong></span>
                     <span class="chip soft">نشطة: <strong>{{ $bankActiveCount }}</strong> — غير نشطة: <strong>{{ $bankInactiveCount }}</strong></span>
+                    <span class="chip soft">إجمالي النشطة: <strong>{{ number_format($bankActiveNetTotal, 2) }}</strong></span>
+                    <span class="chip soft">إجمالي غير النشطة: <strong>{{ number_format($bankInactiveNetTotal, 2) }}</strong></span>
                 </div>
             </div>
 
@@ -259,6 +269,8 @@
                 <div class="d-flex flex-column align-items-end gap-1 text-nowrap">
                     <span class="chip soft">عدد الخزن: <strong>{{ $safeAgg->count() }}</strong></span>
                     <span class="chip soft">نشطة: <strong>{{ $safeActiveCount }}</strong> — غير نشطة: <strong>{{ $safeInactiveCount }}</strong></span>
+                    <span class="chip soft">إجمالي النشطة: <strong>{{ number_format($safeActiveNetTotal, 2) }}</strong></span>
+                    <span class="chip soft">إجمالي غير النشطة: <strong>{{ number_format($safeInactiveNetTotal, 2) }}</strong></span>
                 </div>
             </div>
 
