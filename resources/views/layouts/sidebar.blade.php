@@ -643,16 +643,6 @@
   </li>
   @endroutecanany
 
-  {{-- المديونيات --}}
-  @routecanany($debtsPatterns)
-  <li class="nav-item">
-    <a class="nav-link {{ $coll($isRoute('debts.*')) }} {{ $active($isRoute('debts.*')) }}"
-       href="{{ route('debts.index') }}">
-      <i class="bi bi-cash-coin"></i><span>@lang('sidebar.Debts')</span>
-    </a>
-  </li>
-  @endroutecanany
-
   @routecanany($companyNavPatterns)
   <li class="nav-item">
     <a class="nav-link {{ $coll($companiesNavOpen) }} {{ $active($companiesNavOpen) }}"
@@ -679,6 +669,17 @@
       @endroutecanany
 
     </ul>
+  </li>
+  @endroutecanany
+
+
+  {{-- المديونيات --}}
+  @routecanany($debtsPatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($isRoute('debts.*')) }} {{ $active($isRoute('debts.*')) }}"
+       href="{{ route('debts.index') }}">
+      <i class="bi bi-cash-coin"></i><span>@lang('sidebar.Debts')</span>
+    </a>
   </li>
   @endroutecanany
 
