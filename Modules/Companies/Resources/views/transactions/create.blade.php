@@ -107,19 +107,18 @@
               <optgroup label="{{ __('companies::companies.Bank Accounts') }}">
                 @foreach($bankAccounts as $bankAccount)
                   <option value="bank:{{ $bankAccount->id }}" @selected($singleAccountValue === 'bank:' . $bankAccount->id)>
-                    {{ $bankAccount->name }}@unless($bankAccount->is_active) — {{ __('companies::companies.Inactive') }}@endunless
+                    {{ $bankAccount->name }}
                   </option>
                 @endforeach
               </optgroup>
               <optgroup label="{{ __('companies::companies.Safes') }}">
                 @foreach($safes as $safe)
                   <option value="safe:{{ $safe->id }}" @selected($singleAccountValue === 'safe:' . $safe->id)>
-                    {{ $safe->name }}@unless($safe->is_active) — {{ __('companies::companies.Inactive') }}@endunless
+                    {{ $safe->name }}
                   </option>
                 @endforeach
               </optgroup>
             </select>
-            <div class="form-text">{{ __('companies::companies.AccountPickerHelp') }}</div>
             <div class="form-text mt-1" id="single_account_availability">
               <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
               <strong id="single_account_availability_value">—</strong>
