@@ -14,8 +14,7 @@ class CompanyDisbursementStatusController extends Controller
     public function index(): View
     {
         $statuses = CompanyDisbursementStatus::query()
-            ->orderByDesc('is_default')
-            ->orderBy('name')
+            ->orderBy('id')
             ->get();
 
         return view('companies::disbursement-statuses.index', compact('statuses'));
@@ -28,11 +27,7 @@ class CompanyDisbursementStatusController extends Controller
 
     public function store(StoreCompanyDisbursementStatusRequest $request): RedirectResponse
     {
-        $status = CompanyDisbursementStatus::create($request->validated());
-
-        if ($status->is_default) {
-            CompanyDisbursementStatus::where('id', '!=', $status->getKey())->update(['is_default' => false]);
-        }
+        CompanyDisbursementStatus::create($request->validated());
 
         return redirect()
             ->route('company-disbursement-statuses.index')
@@ -51,10 +46,6 @@ class CompanyDisbursementStatusController extends Controller
         CompanyDisbursementStatus $companyDisbursementStatus
     ): RedirectResponse {
         $companyDisbursementStatus->update($request->validated());
-
-        if ($companyDisbursementStatus->is_default) {
-            CompanyDisbursementStatus::where('id', '!=', $companyDisbursementStatus->getKey())->update(['is_default' => false]);
-        }
 
         return redirect()
             ->route('company-disbursement-statuses.index')

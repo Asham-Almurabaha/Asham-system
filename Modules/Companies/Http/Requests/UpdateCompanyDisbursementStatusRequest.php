@@ -13,13 +13,6 @@ class UpdateCompanyDisbursementStatusRequest extends FormRequest
         return true;
     }
 
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'is_default' => $this->boolean('is_default'),
-        ]);
-    }
-
     public function rules(): array
     {
         /** @var CompanyDisbursementStatus $status */
@@ -32,8 +25,6 @@ class UpdateCompanyDisbursementStatusRequest extends FormRequest
                 'max:255',
                 Rule::unique('company_disbursement_statuses', 'name')->ignore($status?->id),
             ],
-            'description' => ['nullable', 'string', 'max:255'],
-            'is_default' => ['sometimes', 'boolean'],
         ];
     }
 }

@@ -10,28 +10,15 @@ class CompaniesDatabaseSeeder extends Seeder
     public function run(): void
     {
         $statuses = [
-            [
-                'name' => 'قيد الصرف',
-                'description' => 'عملية صرف لم تُسدَّد بعد بالكامل',
-                'is_default' => true,
-            ],
-            [
-                'name' => 'مسددة جزئياً',
-                'description' => 'تم تحصيل جزء من المبلغ فقط',
-                'is_default' => false,
-            ],
-            [
-                'name' => 'مسددة بالكامل',
-                'description' => 'تم تحصيل كامل المديونية',
-                'is_default' => false,
-            ],
+            'قيد الصرف',
+            'مسددة جزئياً',
+            'مسددة بالكامل',
         ];
 
-        foreach ($statuses as $status) {
-            CompanyDisbursementStatus::query()->updateOrCreate(
-                ['name' => $status['name']],
-                $status
-            );
+        foreach ($statuses as $name) {
+            CompanyDisbursementStatus::query()->firstOrCreate([
+                'name' => $name,
+            ]);
         }
     }
 }

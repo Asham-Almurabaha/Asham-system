@@ -38,20 +38,6 @@
                             @enderror
                         </div>
 
-                        <div class="mb-3">
-                            <label for="description" class="form-label">{{ __('companies::companies.Description') }}</label>
-                            <textarea name="description" id="description" rows="3" class="form-control @error('description') is-invalid @enderror" placeholder="{{ __('companies::companies.Description Placeholder') }}">{{ old('description') }}</textarea>
-                            @error('description')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-check form-switch mb-4">
-                            <input class="form-check-input" type="checkbox" role="switch" id="is_default" name="is_default" value="1" {{ old('is_default', false) ? 'checked' : '' }}>
-                            <label class="form-check-label" for="is_default">{{ __('companies::companies.Default Status') }}</label>
-                            <div class="form-text">{{ __('companies::companies.Default Status Help') }}</div>
-                        </div>
-
                         <div class="d-flex gap-2">
                             <x-button.action type="submit" variant="success">
                                 <i class="bi bi-check2-circle me-1"></i>{{ __('companies::companies.Save Status') }}
@@ -70,8 +56,8 @@
                 <div class="card-body p-4">
                     <h2 class="h6 text-uppercase text-muted mb-3">{{ __('companies::companies.Tips Title') }}</h2>
                     <ul class="small text-muted mb-0 ps-3">
-                        <li>{{ __('companies::companies.TipDefaultInfo') }}</li>
                         <li>{{ __('companies::companies.TipUsage') }}</li>
+                        <li>{{ __('companies::companies.TipOrdering') }}</li>
                     </ul>
                 </div>
             </div>

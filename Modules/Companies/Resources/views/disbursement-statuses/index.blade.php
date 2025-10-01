@@ -28,8 +28,6 @@
                 <tr>
                     <th scope="col" style="width:80px" class="text-center">#</th>
                     <th scope="col">{{ __('companies::companies.Name') }}</th>
-                    <th scope="col">{{ __('companies::companies.Description') }}</th>
-                    <th scope="col" style="width:160px" class="text-center">{{ __('companies::companies.Default Status') }}</th>
                     <th scope="col" style="width:180px" class="text-end">{{ __('companies::companies.Actions') }}</th>
                 </tr>
             </x-slot>
@@ -38,14 +36,6 @@
                 <tr>
                     <td class="text-center">{{ $loop->iteration }}</td>
                     <td class="fw-semibold">{{ $status->name }}</td>
-                    <td>{{ $status->description ?: '—' }}</td>
-                    <td class="text-center">
-                        @if ($status->is_default)
-                            <span class="badge bg-success-subtle text-success fw-semibold">{{ __('companies::companies.Default Badge') }}</span>
-                        @else
-                            <span class="text-muted">{{ __('companies::companies.Not Default') }}</span>
-                        @endif
-                    </td>
                     <td class="text-end">
                         <div class="d-inline-flex gap-2">
                             <x-button.action href="{{ route('company-disbursement-statuses.edit', $status) }}" variant="primary" :outline="true" size="sm">
@@ -63,7 +53,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-4">
+                    <td colspan="3" class="text-center text-muted py-4">
                         <div class="mb-2">{{ __('companies::companies.No Disbursement Statuses Found') }}</div>
                         <x-button.action href="{{ route('company-disbursement-statuses.create') }}" variant="primary" :outline="true">
                             {{ __('companies::companies.Create First Disbursement Status') }}

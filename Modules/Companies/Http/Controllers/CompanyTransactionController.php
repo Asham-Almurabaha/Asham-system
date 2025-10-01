@@ -55,7 +55,7 @@ class CompanyTransactionController extends Controller
 
         $transactions = $query->paginate(15)->withQueryString();
 
-        $statuses = CompanyDisbursementStatus::orderBy('name')->get();
+        $statuses = CompanyDisbursementStatus::orderBy('id')->get();
         $companies = Company::orderBy('name')->get();
 
         $pageCollection = $transactions->getCollection();
@@ -76,7 +76,7 @@ class CompanyTransactionController extends Controller
 
     public function create(): View
     {
-        $statuses = CompanyDisbursementStatus::orderBy('name')->get();
+        $statuses = CompanyDisbursementStatus::orderBy('id')->get();
         $companies = Company::orderBy('name')->get();
         $bankAccounts = BankAccount::where('is_active', true)->orderBy('name')->get();
         $safes = Safe::where('is_active', true)->orderBy('name')->get();
@@ -132,7 +132,7 @@ class CompanyTransactionController extends Controller
     {
         $companyTransaction->loadMissing(['allocations.company']);
 
-        $statuses = CompanyDisbursementStatus::orderBy('name')->get();
+        $statuses = CompanyDisbursementStatus::orderBy('id')->get();
         $companies = Company::orderBy('name')->get();
         $bankAccounts = BankAccount::where('is_active', true)->orderBy('name')->get();
         $safes = Safe::where('is_active', true)->orderBy('name')->get();

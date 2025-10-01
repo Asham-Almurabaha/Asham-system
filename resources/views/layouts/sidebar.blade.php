@@ -655,14 +655,6 @@
       </li>
       @endroutecanany
 
-      @routecanany($companyStatusPatterns)
-      <li>
-        <a class="{{ $active($isRoute($companyStatusPatterns)) }}" href="{{ route('company-disbursement-statuses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('companies::companies.Disbursement Statuses')</span>
-        </a>
-      </li>
-      @endroutecanany
-
       @routecanany($companyTransactionPatterns)
       <li>
         <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">

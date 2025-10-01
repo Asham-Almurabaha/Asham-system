@@ -10,11 +10,7 @@ return new class extends Migration {
         Schema::create('company_disbursement_statuses', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->boolean('is_default')->default(false);
-            $table->string('description')->nullable();
             $table->timestamps();
-
-            $table->index('is_default');
         });
     }
 

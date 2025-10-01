@@ -11,20 +11,7 @@ class CompanyDisbursementStatus extends Model
     use HasFactory;
     use Auditable;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'is_default',
-    ];
-
-    protected $casts = [
-        'is_default' => 'bool',
-    ];
-
-    public function scopeDefault($query)
-    {
-        return $query->where('is_default', true);
-    }
+    protected $guarded = ['id'];
 
     public function transactions()
     {
@@ -34,15 +21,20 @@ class CompanyDisbursementStatus extends Model
     public static function automationStatuses(): array
     {
         $statuses = static::query()
-            ->orderByDesc('is_default')
             ->orderBy('id')
             ->get();
 
-        $pending = $statuses->first(fn ($status) => (bool) $status->is_default);
-        $nonDefault = $statuses->filter(fn ($status) => !(bool) $status->is_default)->values();
+        if ($statuses->isEmpty()) {
+            return [
+                'pending' => null,
+                'partial' => null,
+                'settled' => null,
+            ];
+        }
 
-        $partial = $nonDefault->first();
-        $settled = $nonDefault->count() > 1 ? $nonDefault->last() : $nonDefault->first();
+        $pending = $statuses->get(0);
+        $partial = $statuses->get(1) ?? $pending;
+        $settled = $statuses->get(2) ?? $statuses->last();
 
         return [
             'pending' => $pending,

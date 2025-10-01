@@ -32,6 +32,8 @@
     $singleSafeId = $activeMode === 'single' ? old('safe_id') : null;
     $singleAccountValue = $singleBankId ? 'bank:' . $singleBankId : ($singleSafeId ? 'safe:' . $singleSafeId : '');
 
+    $defaultStatusId = optional($statuses->first())->id;
+
     $singleTotalAmount = old('total_amount', '0.00');
     $splitTotalAmount = $activeMode === 'split' ? old('total_amount', '0.00') : '0.00';
     $splitBankAmount = $activeMode === 'split' ? old('bank_amount', '0.00') : '0.00';
@@ -111,7 +113,7 @@
             <select name="company_disbursement_status_id" id="single_status_id" class="form-select @error('company_disbursement_status_id') is-invalid @enderror" required>
               <option value="">{{ __('companies::companies.Choose Status') }}</option>
               @foreach($statuses as $status)
-                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $statuses->firstWhere('is_default', true)->id ?? null) === $status->id)>{{ $status->name }}</option>
+                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
               @endforeach
             </select>
             @error('company_disbursement_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -243,7 +245,7 @@
             <select name="company_disbursement_status_id" id="split_status_id" class="form-select @error('company_disbursement_status_id') is-invalid @enderror" required>
               <option value="">{{ __('companies::companies.Choose Status') }}</option>
               @foreach($statuses as $status)
-                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $statuses->firstWhere('is_default', true)->id ?? null) === $status->id)>{{ $status->name }}</option>
+                <option value="{{ $status->id }}" @selected((int) old('company_disbursement_status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
               @endforeach
             </select>
             @error('company_disbursement_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
