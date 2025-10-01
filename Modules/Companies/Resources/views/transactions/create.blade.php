@@ -162,8 +162,8 @@
                 <thead class="table-light">
                   <tr>
                     <th style="width:25%">{{ __('companies::companies.Company Name') }}</th>
-                    <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
                     <th style="width:15%">{{ __('companies::companies.Share Percentage') }}</th>
+                    <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
                     <th>{{ __('companies::companies.Notes') }}</th>
                     <th style="width:60px"></th>
                   </tr>
@@ -181,12 +181,12 @@
                         @error("allocations.$index.company_id") <div class="invalid-feedback">{{ $message }}</div> @enderror
                       </td>
                       <td>
-                        <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm @error("allocations.$index.share_amount") is-invalid @enderror" required>
-                        @error("allocations.$index.share_amount") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm allocation-percentage @error("allocations.$index.share_percentage") is-invalid @enderror">
+                        @error("allocations.$index.share_percentage") <div class="invalid-feedback">{{ $message }}</div> @enderror
                       </td>
                       <td>
-                        <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm @error("allocations.$index.share_percentage") is-invalid @enderror">
-                        @error("allocations.$index.share_percentage") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm allocation-amount @error("allocations.$index.share_amount") is-invalid @enderror" required>
+                        @error("allocations.$index.share_amount") <div class="invalid-feedback">{{ $message }}</div> @enderror
                       </td>
                       <td>
                         <input type="text" name="allocations[{{ $index }}][notes]" value="{{ $allocation['notes'] ?? '' }}" class="form-control form-control-sm @error("allocations.$index.notes") is-invalid @enderror" placeholder="{{ __('companies::companies.Optional Note') }}">
@@ -325,8 +325,8 @@
                 <thead class="table-light">
                   <tr>
                     <th style="width:25%">{{ __('companies::companies.Company Name') }}</th>
-                    <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
                     <th style="width:15%">{{ __('companies::companies.Share Percentage') }}</th>
+                    <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
                     <th>{{ __('companies::companies.Notes') }}</th>
                     <th style="width:60px"></th>
                   </tr>
@@ -343,10 +343,10 @@
                         </select>
                       </td>
                       <td>
-                        <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm" required>
+                        <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm allocation-percentage">
                       </td>
                       <td>
-                        <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm">
+                        <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm allocation-amount" required>
                       </td>
                       <td>
                         <input type="text" name="allocations[{{ $index }}][notes]" value="{{ $allocation['notes'] ?? '' }}" class="form-control form-control-sm" placeholder="{{ __('companies::companies.Optional Note') }}">
@@ -391,12 +391,14 @@
 
     setupAllocationsTable({
       tableId: 'singleAllocationsTable',
-      addButtonId: 'singleAddAllocationRow'
+      addButtonId: 'singleAddAllocationRow',
+      totalInputId: 'single_total_amount'
     });
 
     setupAllocationsTable({
       tableId: 'splitAllocationsTable',
-      addButtonId: 'splitAddAllocationRow'
+      addButtonId: 'splitAddAllocationRow',
+      totalInputId: 'split_total_amount'
     });
   });
 
@@ -422,6 +424,33 @@
 
     let currentAvailability = null;
 
+    const enforceAvailability = () => {
+      if (!totalInput) {
+        return;
+      }
+
+      if (currentAvailability !== null) {
+        const maxAmount = Math.max(currentAvailability, 0);
+        totalInput.setAttribute('max', maxAmount.toFixed(2));
+
+        const total = Number.parseFloat(totalInput.value || '0') || 0;
+        const minAmount = Number.parseFloat(totalInput.getAttribute('min') || '0') || 0;
+
+        if (maxAmount < minAmount) {
+          if (total > maxAmount + 0.0001) {
+            totalInput.value = '';
+          }
+          return;
+        }
+
+        if (total > maxAmount + 0.0001) {
+          totalInput.value = maxAmount.toFixed(2);
+        }
+      } else {
+        totalInput.removeAttribute('max');
+      }
+    };
+
     const highlightAvailability = () => {
       if (!availabilityValue) {
         return;
@@ -439,6 +468,8 @@
           accountError.textContent = '';
         }
       }
+
+      enforceAvailability();
     };
 
     const resetAvailability = () => {
@@ -572,7 +603,10 @@
 
     if (totalInput) {
       totalInput.addEventListener('input', updateAmounts);
-      totalInput.addEventListener('blur', updateAmounts);
+      totalInput.addEventListener('blur', () => {
+        updateAmounts();
+        enforceAvailability();
+      });
       updateAmounts();
     }
 
@@ -893,14 +927,146 @@
     }
   }
 
-  function setupAllocationsTable({ tableId, addButtonId }) {
+  function setupAllocationsTable({ tableId, addButtonId, totalInputId }) {
     const table = document.getElementById(tableId);
     const addButton = document.getElementById(addButtonId);
+    const totalInput = totalInputId ? document.getElementById(totalInputId) : null;
+
     if (!table || !addButton) {
       return;
     }
 
     let allocationIndex = table.querySelectorAll('tbody tr').length;
+
+    const parseNumber = (value) => {
+      if (value === null || value === undefined) {
+        return null;
+      }
+
+      const normalized = String(value).trim();
+      if (!normalized) {
+        return null;
+      }
+
+      const numeric = Number.parseFloat(normalized.replace(',', '.'));
+      return Number.isFinite(numeric) ? numeric : null;
+    };
+
+    const formatAmount = (value) => {
+      const numeric = typeof value === 'number' ? value : parseNumber(value);
+      return numeric === null ? '' : numeric.toFixed(2);
+    };
+
+    const formatPercentage = (value) => {
+      const numeric = typeof value === 'number' ? value : parseNumber(value);
+      return numeric === null ? '' : numeric.toFixed(2);
+    };
+
+    const getRowInputs = (row) => {
+      return {
+        percentageInput: row.querySelector('.allocation-percentage'),
+        amountInput: row.querySelector('.allocation-amount')
+      };
+    };
+
+    const syncAmountFromPercentage = (row) => {
+      if (!totalInput) {
+        return;
+      }
+
+      const { percentageInput, amountInput } = getRowInputs(row);
+      if (!percentageInput || !amountInput) {
+        return;
+      }
+
+      const percentage = parseNumber(percentageInput.value);
+      if (percentage === null) {
+        amountInput.value = '';
+        return;
+      }
+
+      const total = parseNumber(totalInput.value);
+      if (total === null || total <= 0) {
+        amountInput.value = '';
+        return;
+      }
+
+      const amount = (total * percentage) / 100;
+      amountInput.value = formatAmount(amount);
+    };
+
+    const syncPercentageFromAmount = (row) => {
+      if (!totalInput) {
+        return;
+      }
+
+      const { percentageInput, amountInput } = getRowInputs(row);
+      if (!percentageInput || !amountInput) {
+        return;
+      }
+
+      const amount = parseNumber(amountInput.value);
+      if (amount === null) {
+        percentageInput.value = '';
+        return;
+      }
+
+      const total = parseNumber(totalInput.value);
+      if (total === null || total <= 0) {
+        percentageInput.value = '';
+        return;
+      }
+
+      const percentage = (amount / total) * 100;
+      percentageInput.value = formatPercentage(percentage);
+    };
+
+    const initializeRow = (row) => {
+      const { percentageInput, amountInput } = getRowInputs(row);
+
+      if (percentageInput) {
+        percentageInput.addEventListener('input', () => {
+          syncAmountFromPercentage(row);
+        });
+        percentageInput.addEventListener('blur', () => {
+          if (percentageInput.value !== '') {
+            percentageInput.value = formatPercentage(percentageInput.value);
+          }
+          syncAmountFromPercentage(row);
+        });
+      }
+
+      if (amountInput) {
+        amountInput.addEventListener('input', () => {
+          syncPercentageFromAmount(row);
+        });
+        amountInput.addEventListener('blur', () => {
+          if (amountInput.value !== '') {
+            amountInput.value = formatAmount(amountInput.value);
+          }
+          syncPercentageFromAmount(row);
+        });
+      }
+    };
+
+    const recalculateFromPercentages = () => {
+      if (!totalInput) {
+        return;
+      }
+
+      table.querySelectorAll('tbody tr').forEach((row) => {
+        const { percentageInput } = getRowInputs(row);
+        if (!percentageInput) {
+          return;
+        }
+
+        if (parseNumber(percentageInput.value) === null) {
+          return;
+        }
+
+        syncAmountFromPercentage(row);
+      });
+    };
 
     addButton.addEventListener('click', () => {
       const tbody = table.querySelector('tbody');
@@ -919,10 +1085,10 @@
           </select>
         </td>
         <td>
-          <input type="number" step="0.01" min="0.01" name="allocations[${allocationIndex}][share_amount]" class="form-control form-control-sm" required>
+          <input type="number" step="0.01" min="0" max="100" name="allocations[${allocationIndex}][share_percentage]" class="form-control form-control-sm allocation-percentage">
         </td>
         <td>
-          <input type="number" step="0.01" min="0" max="100" name="allocations[${allocationIndex}][share_percentage]" class="form-control form-control-sm">
+          <input type="number" step="0.01" min="0.01" name="allocations[${allocationIndex}][share_amount]" class="form-control form-control-sm allocation-amount" required>
         </td>
         <td>
           <input type="text" name="allocations[${allocationIndex}][notes]" class="form-control form-control-sm" placeholder="{{ __('companies::companies.Optional Note') }}">
@@ -934,8 +1100,15 @@
         </td>
       `;
       tbody.appendChild(row);
+      initializeRow(row);
+      syncAmountFromPercentage(row);
       allocationIndex++;
     });
+
+    if (totalInput) {
+      totalInput.addEventListener('input', recalculateFromPercentages);
+      totalInput.addEventListener('blur', recalculateFromPercentages);
+    }
 
     table.addEventListener('click', (event) => {
       if (!(event.target instanceof HTMLElement)) {
@@ -956,6 +1129,12 @@
         row.remove();
       }
     });
+
+    table.querySelectorAll('tbody tr').forEach((row) => {
+      initializeRow(row);
+    });
+
+    recalculateFromPercentages();
   }
 </script>
 @endpush
