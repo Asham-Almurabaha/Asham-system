@@ -85,15 +85,22 @@
       <div class="col-md-4">
         <div class="text-muted small">{{ __('companies::companies.Account Source') }}</div>
         <div>
+          @php($hasSource = false)
           @if($transaction->bankAccount)
+            @php($hasSource = true)
             <span class="d-block text-muted small">{{ __('companies::companies.Bank Account') }}</span>
             <span class="fw-semibold">{{ $transaction->bankAccount->name }}</span>
-          @elseif($transaction->safe)
-            <span class="d-block text-muted small">{{ __('companies::companies.Safe') }}</span>
-            <span class="fw-semibold">{{ $transaction->safe->name }}</span>
-          @else
-            <span class="text-muted">—</span>
+            <span class="d-block text-muted small">{{ number_format((float) $transaction->bank_amount, 2) }}</span>
           @endif
+          @if($transaction->safe)
+            @php($hasSource = true)
+            <span class="d-block text-muted small mt-1">{{ __('companies::companies.Safe') }}</span>
+            <span class="fw-semibold">{{ $transaction->safe->name }}</span>
+            <span class="d-block text-muted small">{{ number_format((float) $transaction->safe_amount, 2) }}</span>
+          @endif
+          @unless($hasSource)
+            <span class="text-muted">—</span>
+          @endunless
         </div>
       </div>
       <div class="col-md-4">

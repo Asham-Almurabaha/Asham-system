@@ -22,13 +22,17 @@ class CompanyTransaction extends Model
         'total_amount',
         'company_disbursement_status_id',
         'bank_account_id',
+        'bank_amount',
         'safe_id',
+        'safe_amount',
         'notes',
     ];
 
     protected $casts = [
         'transaction_date' => 'date',
         'total_amount' => 'decimal:2',
+        'bank_amount' => 'decimal:2',
+        'safe_amount' => 'decimal:2',
     ];
 
     public function status()

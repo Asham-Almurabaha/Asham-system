@@ -116,6 +116,7 @@ return [
     'Office Accounts Deposit' => 'Office Accounts Deposit',
     'Office Accounts Withdrawal' => 'Office Accounts Withdrawal',
     'Office Opening Balance' => 'Office Opening Balance',
+    'Company Ledger Entry' => 'Company Ledger Entry',
     'Goods Entries' => 'Goods Entries',
     'Goods Purchase' => 'Goods Purchase',
     'Goods Sale' => 'Goods Sale',

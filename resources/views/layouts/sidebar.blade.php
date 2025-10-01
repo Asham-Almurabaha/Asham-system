@@ -232,9 +232,15 @@
   $primaryExpenseLink = $expenseNavLinks[0] ?? null;
   $additionalExpenseLinks = $primaryExpenseLink ? array_slice($expenseNavLinks, 1) : [];
 
+  $companyEntryPatterns = [
+      'company-transactions.create',
+      'company-transactions.store',
+  ];
+
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
+      $companyEntryPatterns,
       $investorLedgerPatterns,
       $goodsEntryPatterns,
       $expenseNavPatterns
@@ -547,6 +553,14 @@
       <li>
         <a class="{{ $active($isRoute('ledger.office.shortcuts.opening_balance')) }}" href="{{ route('ledger.office.shortcuts.opening_balance') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Office Opening Balance')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($companyEntryPatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyEntryPatterns)) }}" href="{{ route('company-transactions.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Ledger Entry')</span>
         </a>
       </li>
       @endroutecanany

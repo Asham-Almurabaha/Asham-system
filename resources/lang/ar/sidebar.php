@@ -116,6 +116,7 @@ return array (
   'Office Accounts Deposit' => 'إيداع حسابات المكتب',
   'Office Accounts Withdrawal' => 'سحب حسابات المكتب',
   'Office Opening Balance' => 'رصيد افتتاحي للمكتب',
+  'Company Ledger Entry' => 'قيد الشركات',
   'Goods Entries' => 'قيود البضائع',
   'Goods Purchase' => 'شراء بضائع',
   'Goods Sale' => 'بيع بضائع',

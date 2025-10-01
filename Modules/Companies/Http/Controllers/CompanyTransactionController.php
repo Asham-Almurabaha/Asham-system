@@ -100,7 +100,9 @@ class CompanyTransactionController extends Controller
                 'total_amount' => $data['total_amount'],
                 'company_disbursement_status_id' => $data['company_disbursement_status_id'],
                 'bank_account_id' => $data['bank_account_id'] ?? null,
+                'bank_amount' => $data['bank_amount'] ?? 0,
                 'safe_id' => $data['safe_id'] ?? null,
+                'safe_amount' => $data['safe_amount'] ?? 0,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -155,7 +157,9 @@ class CompanyTransactionController extends Controller
                 'total_amount' => $data['total_amount'],
                 'company_disbursement_status_id' => $data['company_disbursement_status_id'],
                 'bank_account_id' => $data['bank_account_id'] ?? null,
+                'bank_amount' => $data['bank_amount'] ?? 0,
                 'safe_id' => $data['safe_id'] ?? null,
+                'safe_amount' => $data['safe_amount'] ?? 0,
                 'notes' => $data['notes'] ?? null,
             ]);
 
