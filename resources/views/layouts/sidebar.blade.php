@@ -40,10 +40,16 @@
   $contractsOpen = $isRoute('contracts.*');
 
   // فتح مجموعة الحسابات؟
+  $companyExpensePatterns = [
+      'company-transactions.expenses.*',
+      'company-transactions.expenses.payments.*',
+  ];
+
   $accountsOpen = $isRoute('ledger.*')
       || $isRoute('investors.ledger.*')
       || $isRoute('accounts.entries.goods.pay.*')
-      || $isRoute('accounts.entries.goods.sales.*');
+      || $isRoute('accounts.entries.goods.sales.*')
+      || $isRoute($companyExpensePatterns);
 
   // فتح مجموعة استيرادات البيانات؟
   $dataImportsOpen = $isRoute([
@@ -240,6 +246,7 @@
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
       $investorLedgerPatterns,
+      $companyExpensePatterns,
       $goodsEntryPatterns,
       $expenseNavPatterns
   );
@@ -260,8 +267,6 @@
       'company-transactions.edit',
       'company-transactions.update',
       'company-transactions.destroy',
-      'company-transactions.expenses.*',
-      'company-transactions.expenses.payments.*',
   ];
 
   $companiesNavOpen = $isRoute($companyTransactionPatterns);
@@ -593,6 +598,26 @@
       </li>
       @endroutecanany
 
+      @routecanany($companyExpensePatterns)
+      <li class="nav-heading">@lang('sidebar.Company Ledger Entry')</li>
+      @endroutecanany
+
+      @routecanany('company-transactions.expenses.index')
+      <li>
+        <a class="{{ $active($isRoute('company-transactions.expenses.*')) }}" href="{{ route('company-transactions.expenses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expenses')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('company-transactions.expenses.payments.index')
+      <li>
+        <a class="{{ $active($isRoute('company-transactions.expenses.payments.*')) }}" href="{{ route('company-transactions.expenses.payments.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expense Payments')</span>
+        </a>
+      </li>
+      @endroutecanany
+
       @routecanany($goodsEntryPatterns)
       <li class="nav-heading">@lang('sidebar.Goods Entries')</li>
       @endroutecanany
@@ -643,21 +668,6 @@
       </li>
       @endroutecanany
 
-      @routecanany('company-transactions.expenses.index')
-      <li>
-        <a class="{{ $active($isRoute('company-transactions.expenses.*')) }}" href="{{ route('company-transactions.expenses.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expenses')</span>
-        </a>
-      </li>
-      @endroutecanany
-
-      @routecanany('company-transactions.expenses.payments.index')
-      <li>
-        <a class="{{ $active($isRoute('company-transactions.expenses.payments.*')) }}" href="{{ route('company-transactions.expenses.payments.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expense Payments')</span>
-        </a>
-      </li>
-      @endroutecanany
     </ul>
   </li>
   @endroutecanany
