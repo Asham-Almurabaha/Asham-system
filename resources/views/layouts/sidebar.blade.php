@@ -26,6 +26,7 @@
       || $isRoute('expenses.recurrence-periods.*')
       || $isRoute('accounts.bank-accounts.*')
       || $isRoute('accounts.safes.*')
+      || $isRoute('company-disbursement-statuses.*')
       || $isRoute('product_types.*')
       || $isRoute('products.*')
       || $isRoute('product_entries.*')
@@ -239,6 +240,28 @@
       $expenseNavPatterns
   );
 
+  $companyManagePatterns = [
+      'companies.index',
+      'companies.create',
+      'companies.store',
+      'companies.show',
+      'companies.edit',
+      'companies.update',
+      'companies.destroy',
+  ];
+
+  $companyTransactionPatterns = [
+      'company-transactions.index',
+      'company-transactions.create',
+      'company-transactions.store',
+      'company-transactions.show',
+      'company-transactions.edit',
+      'company-transactions.update',
+      'company-transactions.destroy',
+  ];
+
+  $companiesNavOpen = $isRoute(array_merge($companyManagePatterns, $companyTransactionPatterns));
+
   $debtsPatterns = [
       'debts.*',
   ];
@@ -280,6 +303,7 @@
       'categories.*',
       'accounts.bank-accounts.*',
       'accounts.safes.*',
+      'company-disbursement-statuses.*',
       'product_types.*',
       'products.*',
       'settings.roles.*',
@@ -309,6 +333,7 @@
   $settingsExpensesPatterns = ['expenses.expense-types.*', 'expenses.recurrence-periods.*'];
   $settingsAccountsPatterns = ['accounts.bank-accounts.*', 'accounts.safes.*'];
   $settingsProductsPatterns = ['product_types.*', 'products.*'];
+  $settingsCompaniesPatterns = ['company-disbursement-statuses.*'];
   $settingsUsersPatterns = [
       'settings.roles.*',
       'settings.roles.permissions*',
@@ -592,6 +617,34 @@
        href="{{ route('debts.index') }}">
       <i class="bi bi-cash-coin"></i><span>@lang('sidebar.Debts')</span>
     </a>
+  </li>
+  @endroutecanany
+
+  @routecanany(array_merge($companyManagePatterns, $companyTransactionPatterns))
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($companiesNavOpen) }} {{ $active($companiesNavOpen) }}"
+       data-bs-target="#companies-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $companiesNavOpen ? 'true' : 'false' }}">
+      <i class="bi bi-buildings"></i><span>@lang('sidebar.Companies')</span><i class="bi bi-chevron-down ms-auto"></i>
+    </a>
+
+    <ul id="companies-nav" class="nav-content collapse {{ $open($companiesNavOpen) }}" data-bs-parent="#sidebar-nav">
+      @routecanany($companyManagePatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyManagePatterns)) }}" href="{{ route('companies.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Companies')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($companyTransactionPatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Transactions')</span>
+        </a>
+      </li>
+      @endroutecanany
+    </ul>
   </li>
   @endroutecanany
 
@@ -954,6 +1007,18 @@
       <li>
         <a class="{{ $active($isRoute('categories.*')) }}" href="{{ route('categories.index') }}">
           <i class="bi bi-circle"></i><span>@lang('lookups::sidebar.Categories')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($settingsCompaniesPatterns)
+      <li class="nav-heading">@lang('sidebar.Companies Lookups')</li>
+      @endroutecanany
+
+      @routecanany('company-disbursement-statuses.*')
+      <li>
+        <a class="{{ $active($isRoute('company-disbursement-statuses.*')) }}" href="{{ route('company-disbursement-statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('companies::companies.Disbursement Statuses')</span>
         </a>
       </li>
       @endroutecanany

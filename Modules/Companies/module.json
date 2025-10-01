@@ -1,0 +1,11 @@
+{
+    "name": "Companies",
+    "alias": "companies",
+    "description": "",
+    "keywords": [],
+    "version": "1.0.0",
+    "priority": 0,
+    "providers": [
+        "Modules\\Companies\\Providers\\CompaniesServiceProvider"
+    ]
+}

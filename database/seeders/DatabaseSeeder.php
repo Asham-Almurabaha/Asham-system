@@ -6,6 +6,7 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Modules\Accounts\Database\Seeders\AccountsDatabaseSeeder;
+use Modules\Companies\Database\Seeders\CompaniesDatabaseSeeder;
 use Modules\Lookups\Database\Seeders\LookupsDatabaseSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -19,6 +20,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             AccountsDatabaseSeeder::class,
+            CompaniesDatabaseSeeder::class,
             LookupsDatabaseSeeder::class,
             RolesAndPermissionsSeeder::class,
             PermissionsSeeder::class,
