@@ -93,39 +93,45 @@
   </div>
 </div>
 
-<div class="row g-3 mb-3">
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 h-100">
-      <div class="card-body">
-        <div class="text-muted small">{{ __('companies::companies.Total Amount') }}</div>
-        <div class="h4 mb-0">{{ number_format($totals['amount'] ?? 0, 2) }}</div>
+@php
+  $summaryCards = [
+      [
+          'label' => __('companies::companies.Total Amount'),
+          'value' => number_format($totals['amount'] ?? 0, 2),
+          'icon' => 'bi-cash-stack text-primary',
+      ],
+      [
+          'label' => __('companies::companies.Disbursed Share'),
+          'value' => number_format($totals['disbursed'] ?? 0, 2),
+          'icon' => 'bi-arrow-down-right-circle text-success',
+      ],
+      [
+          'label' => __('companies::companies.Repaid Share'),
+          'value' => number_format($totals['repaid'] ?? 0, 2),
+          'icon' => 'bi-arrow-up-right-circle text-info',
+      ],
+      [
+          'label' => __('companies::companies.Outstanding Share'),
+          'value' => number_format($totals['outstanding'] ?? 0, 2),
+          'icon' => 'bi-wallet2 text-warning',
+      ],
+  ];
+@endphp
+
+<div class="row g-3 mb-3" dir="rtl">
+  @foreach($summaryCards as $card)
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="kpi-card p-3 h-100">
+        <div class="d-flex align-items-center gap-3">
+          <div class="kpi-icon"><i class="bi {{ $card['icon'] }} fs-4"></i></div>
+          <div class="flex-grow-1">
+            <div class="subnote">{{ $card['label'] }}</div>
+            <div class="kpi-value fw-bold">{{ $card['value'] }}</div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 h-100">
-      <div class="card-body">
-        <div class="text-muted small">{{ __('companies::companies.Disbursed Share') }}</div>
-        <div class="h4 mb-0">{{ number_format($totals['disbursed'] ?? 0, 2) }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 h-100">
-      <div class="card-body">
-        <div class="text-muted small">{{ __('companies::companies.Repaid Share') }}</div>
-        <div class="h4 mb-0">{{ number_format($totals['repaid'] ?? 0, 2) }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card shadow-sm border-0 h-100">
-      <div class="card-body">
-        <div class="text-muted small">{{ __('companies::companies.Outstanding Share') }}</div>
-        <div class="h4 mb-0">{{ number_format($totals['outstanding'] ?? 0, 2) }}</div>
-      </div>
-    </div>
-  </div>
+  @endforeach
 </div>
 
 <div class="card shadow-sm">
@@ -139,9 +145,6 @@
           <th>{{ __('companies::companies.Account Source') }}</th>
           <th>{{ __('companies::companies.Allocations') }}</th>
           <th class="text-end">{{ __('companies::companies.Total Amount') }}</th>
-          <th class="text-end">{{ __('companies::companies.Disbursed Share') }}</th>
-          <th class="text-end">{{ __('companies::companies.Repaid Share') }}</th>
-          <th class="text-end">{{ __('companies::companies.Outstanding Share') }}</th>
           
         </tr>
       </x-slot>
@@ -183,14 +186,11 @@
             </ul>
           </td>
           <td class="text-end">{{ number_format((float) $transaction->total_amount, 2) }}</td>
-          <td class="text-end">{{ number_format((float) $transaction->disbursed_amount, 2) }}</td>
-          <td class="text-end">{{ number_format((float) $transaction->repaid_amount, 2) }}</td>
-          <td class="text-end fw-semibold">{{ number_format((float) $transaction->outstanding_amount, 2) }}</td>
           
         </tr>
       @empty
         <tr>
-          <td colspan="9" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
+          <td colspan="6" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
         </tr>
       @endforelse
     </x-table>
