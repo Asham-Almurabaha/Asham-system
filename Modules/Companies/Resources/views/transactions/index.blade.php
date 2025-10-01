@@ -28,7 +28,7 @@
       {{ __('companies::companies.Results Count', ['count' => number_format($transactions->total())]) }}
     </span>
 
-    @php($filtersApplied = request()->filled('reference') || request()->filled('status_id') || request()->filled('company_id') || request()->filled('date_from') || request()->filled('date_to'))
+    @php($filtersApplied = request()->filled('status_id') || request()->filled('company_id') || request()->filled('date_from') || request()->filled('date_to'))
     <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse"
       data-bs-target="#transactionFilters" aria-expanded="{{ $filtersApplied ? 'true' : 'false' }}" aria-controls="transactionFilters">
       {{ __('companies::companies.Filter') }}
@@ -38,10 +38,6 @@
   <div class="collapse border-top {{ $filtersApplied ? 'show' : '' }}" id="transactionFilters">
     <div class="card-body">
       <form action="{{ route('company-transactions.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
-        <div class="col-md-3">
-          <label class="form-label mb-1" for="reference">{{ __('companies::companies.Reference') }}</label>
-          <input type="search" name="reference" id="reference" value="{{ request('reference') }}" class="form-control form-control-sm" placeholder="{{ __('companies::companies.Reference Placeholder') }}">
-        </div>
         <div class="col-md-3">
           <label class="form-label mb-1" for="company_id">{{ __('companies::companies.Company Name') }}</label>
           <select name="company_id" id="company_id" class="form-select form-select-sm">
@@ -121,7 +117,6 @@
         <tr>
           <th>#</th>
           <th>{{ __('companies::companies.Transaction Date') }}</th>
-          <th>{{ __('companies::companies.Reference') }}</th>
           <th>{{ __('companies::companies.Status') }}</th>
           <th>{{ __('companies::companies.Account Source') }}</th>
           <th>{{ __('companies::companies.Allocations') }}</th>
@@ -137,7 +132,6 @@
         <tr>
           <td class="text-muted">{{ $loop->iteration + ($transactions->currentPage() - 1) * $transactions->perPage() }}</td>
           <td>{{ optional($transaction->transaction_date)->format('Y-m-d') }}</td>
-          <td>{{ $transaction->reference ?: '—' }}</td>
           <td>{{ $transaction->status?->name ?? '—' }}</td>
           <td>
             @php($hasSource = false)
@@ -187,7 +181,7 @@
         </tr>
       @empty
         <tr>
-          <td colspan="11" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
+          <td colspan="10" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
         </tr>
       @endforelse
     </x-table>

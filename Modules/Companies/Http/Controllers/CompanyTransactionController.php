@@ -28,11 +28,6 @@ class CompanyTransactionController extends Controller
             'allocations.company',
         ])->latest('transaction_date');
 
-        $reference = trim((string) $request->input('reference', ''));
-        if ($reference !== '') {
-            $query->where('reference', 'like', "%{$reference}%");
-        }
-
         $statusId = (int) $request->input('status_id');
         if ($statusId > 0) {
             $query->where('company_disbursement_status_id', $statusId);

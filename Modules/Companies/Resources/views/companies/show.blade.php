@@ -111,7 +111,6 @@
         <tr>
           <th>#</th>
           <th>{{ __('companies::companies.Transaction Date') }}</th>
-          <th>{{ __('companies::companies.Reference') }}</th>
           <th>{{ __('companies::companies.Status') }}</th>
           <th class="text-end">{{ __('companies::companies.Total Amount') }}</th>
           <th class="text-end">{{ __('companies::companies.Allocated Share') }}</th>
@@ -127,7 +126,6 @@
         <tr>
           <td class="text-muted">{{ $loop->iteration + ($transactions->currentPage() - 1) * $transactions->perPage() }}</td>
           <td>{{ optional($transaction->transaction_date)->format('Y-m-d') }}</td>
-          <td>{{ $transaction->reference ?: '—' }}</td>
           <td>{{ $transaction->status?->name ?? '—' }}</td>
           <td class="text-end">{{ number_format((float) $transaction->total_amount, 2) }}</td>
           <td class="text-end">
@@ -152,7 +150,7 @@
         </tr>
       @empty
         <tr>
-          <td colspan="10" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
+          <td colspan="9" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
         </tr>
       @endforelse
     </x-table>

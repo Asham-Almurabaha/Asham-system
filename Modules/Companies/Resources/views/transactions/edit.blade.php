@@ -66,7 +66,7 @@
   <nav>
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ route('company-transactions.index') }}">{{ __('companies::companies.Company Transactions') }}</a></li>
-      <li class="breadcrumb-item"><a href="{{ route('company-transactions.show', $transaction) }}">{{ $transaction->reference ?: __('companies::companies.Transaction #', ['id' => $transaction->id]) }}</a></li>
+      <li class="breadcrumb-item"><a href="{{ route('company-transactions.show', $transaction) }}">{{ __('companies::companies.Transaction #', ['id' => $transaction->id]) }}</a></li>
       <li class="breadcrumb-item active">{{ __('companies::companies.Edit Transaction') }}</li>
     </ol>
   </nav>

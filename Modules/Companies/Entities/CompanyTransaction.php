@@ -17,7 +17,6 @@ class CompanyTransaction extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'reference',
         'transaction_date',
         'total_amount',
         'company_disbursement_status_id',

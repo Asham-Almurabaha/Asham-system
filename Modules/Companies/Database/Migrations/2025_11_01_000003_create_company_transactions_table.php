@@ -9,7 +9,6 @@ return new class extends Migration {
     {
         Schema::create('company_transactions', function (Blueprint $table) {
             $table->id();
-            $table->string('reference')->nullable();
             $table->date('transaction_date');
             $table->decimal('total_amount', 18, 2);
             $table->foreignId('company_disbursement_status_id')

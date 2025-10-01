@@ -1,14 +1,14 @@
 @extends('layouts.master')
 
-@section('title', $transaction->reference ?: __('companies::companies.Transaction #', ['id' => $transaction->id]))
+@section('title', __('companies::companies.Transaction #', ['id' => $transaction->id]))
 
 @section('content')
 <div class="pagetitle mb-3">
-  <h1 class="h3 mb-1">{{ $transaction->reference ?: __('companies::companies.Transaction #', ['id' => $transaction->id]) }}</h1>
+  <h1 class="h3 mb-1">{{ __('companies::companies.Transaction #', ['id' => $transaction->id]) }}</h1>
   <nav>
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ route('company-transactions.index') }}">{{ __('companies::companies.Company Transactions') }}</a></li>
-      <li class="breadcrumb-item active">{{ $transaction->reference ?: __('companies::companies.Transaction #', ['id' => $transaction->id]) }}</li>
+      <li class="breadcrumb-item active">{{ __('companies::companies.Transaction #', ['id' => $transaction->id]) }}</li>
     </ol>
   </nav>
 </div>
@@ -73,10 +73,6 @@
       <div class="col-md-4">
         <div class="text-muted small">{{ __('companies::companies.Transaction Date') }}</div>
         <div class="fw-semibold">{{ optional($transaction->transaction_date)->format('Y-m-d') }}</div>
-      </div>
-      <div class="col-md-4">
-        <div class="text-muted small">{{ __('companies::companies.Reference') }}</div>
-        <div class="fw-semibold">{{ $transaction->reference ?: '—' }}</div>
       </div>
       <div class="col-md-4">
         <div class="text-muted small">{{ __('companies::companies.Status') }}</div>
