@@ -197,8 +197,6 @@
                 <div class="d-flex flex-column align-items-end gap-1 text-nowrap">
                     <span class="chip soft">عدد الحسابات: <strong>{{ $bankAgg->count() }}</strong></span>
                     <span class="chip soft">نشطة: <strong>{{ $bankActiveCount }}</strong> — غير نشطة: <strong>{{ $bankInactiveCount }}</strong></span>
-                    <span class="chip soft">إجمالي النشطة: <strong>{{ number_format($bankActiveNetTotal, 2) }}</strong></span>
-                    <span class="chip soft">إجمالي غير النشطة: <strong>{{ number_format($bankInactiveNetTotal, 2) }}</strong></span>
                 </div>
             </div>
 
@@ -246,6 +244,14 @@
                                 <th class="text-end text-danger">{{ number_format($bankTotalOut,2) }}</th>
                                 <th class="text-end fw-semibold {{ $bankNet>=0?'text-success':'text-danger' }}">{{ number_format($bankNet,2) }}</th>
                             </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي النشطة</th>
+                                <th class="text-end fw-semibold {{ $bankActiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($bankActiveNetTotal, 2) }}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي غير النشطة</th>
+                                <th class="text-end fw-semibold {{ $bankInactiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($bankInactiveNetTotal, 2) }}</th>
+                            </tr>
                         </x-slot>
                     </x-table>
                 @else
@@ -269,8 +275,6 @@
                 <div class="d-flex flex-column align-items-end gap-1 text-nowrap">
                     <span class="chip soft">عدد الخزن: <strong>{{ $safeAgg->count() }}</strong></span>
                     <span class="chip soft">نشطة: <strong>{{ $safeActiveCount }}</strong> — غير نشطة: <strong>{{ $safeInactiveCount }}</strong></span>
-                    <span class="chip soft">إجمالي النشطة: <strong>{{ number_format($safeActiveNetTotal, 2) }}</strong></span>
-                    <span class="chip soft">إجمالي غير النشطة: <strong>{{ number_format($safeInactiveNetTotal, 2) }}</strong></span>
                 </div>
             </div>
 
@@ -317,6 +321,14 @@
                                 <th class="text-end text-success">{{ number_format($safeTotalIn,2) }}</th>
                                 <th class="text-end text-danger">{{ number_format($safeTotalOut,2) }}</th>
                                 <th class="text-end fw-semibold {{ $safeNet>=0?'text-success':'text-danger' }}">{{ number_format($safeNet,2) }}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي النشطة</th>
+                                <th class="text-end fw-semibold {{ $safeActiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($safeActiveNetTotal, 2) }}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي غير النشطة</th>
+                                <th class="text-end fw-semibold {{ $safeInactiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($safeInactiveNetTotal, 2) }}</th>
                             </tr>
                         </x-slot>
                     </x-table>
