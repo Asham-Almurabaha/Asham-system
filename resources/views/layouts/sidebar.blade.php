@@ -232,15 +232,14 @@
   $primaryExpenseLink = $expenseNavLinks[0] ?? null;
   $additionalExpenseLinks = $primaryExpenseLink ? array_slice($expenseNavLinks, 1) : [];
 
-  $companyEntryPatterns = [
-      'company-transactions.create',
-      'company-transactions.store',
+  $companyCreatePatterns = [
+      'companies.create',
+      'companies.store',
   ];
 
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
-      $companyEntryPatterns,
       $investorLedgerPatterns,
       $goodsEntryPatterns,
       $expenseNavPatterns
@@ -248,8 +247,6 @@
 
   $companyManagePatterns = [
       'companies.index',
-      'companies.create',
-      'companies.store',
       'companies.show',
       'companies.edit',
       'companies.update',
@@ -266,11 +263,7 @@
       'company-transactions.destroy',
   ];
 
-  $companyStatusPatterns = [
-      'company-disbursement-statuses.*',
-  ];
-
-  $companiesNavOpen = $isRoute(array_merge($companyManagePatterns, $companyTransactionPatterns, $companyStatusPatterns));
+  $companiesNavOpen = $isRoute($companyTransactionPatterns);
 
   $debtsPatterns = [
       'debts.*',
@@ -343,7 +336,9 @@
   $settingsExpensesPatterns = ['expenses.expense-types.*', 'expenses.recurrence-periods.*'];
   $settingsAccountsPatterns = ['accounts.bank-accounts.*', 'accounts.safes.*'];
   $settingsProductsPatterns = ['product_types.*', 'products.*'];
-  $settingsCompaniesPatterns = ['company-disbursement-statuses.*'];
+  $settingsCompaniesPatterns = array_merge([
+      'company-disbursement-statuses.*',
+  ], $companyCreatePatterns, $companyManagePatterns);
   $settingsUsersPatterns = [
       'settings.roles.*',
       'settings.roles.permissions*',
@@ -561,14 +556,6 @@
       </li>
       @endroutecanany
 
-      @routecanany($companyEntryPatterns)
-      <li>
-        <a class="{{ $active($isRoute($companyEntryPatterns)) }}" href="{{ route('company-transactions.create') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Ledger Entry')</span>
-        </a>
-      </li>
-      @endroutecanany
-
       @routecanany($investorLedgerPatterns)
       <li class="nav-heading">@lang('sidebar.Investor Ledger Entries')</li>
       @endroutecanany
@@ -638,7 +625,7 @@
   </li>
   @endroutecanany
 
-  @routecanany(array_merge($companyManagePatterns, $companyTransactionPatterns, $companyStatusPatterns))
+  @routecanany($companyTransactionPatterns)
   <li class="nav-item">
     <a class="nav-link {{ $coll($companiesNavOpen) }} {{ $active($companiesNavOpen) }}"
        data-bs-target="#companies-nav" data-bs-toggle="collapse" href="#"
@@ -647,14 +634,6 @@
     </a>
 
     <ul id="companies-nav" class="nav-content collapse {{ $open($companiesNavOpen) }}" data-bs-parent="#sidebar-nav">
-      @routecanany($companyManagePatterns)
-      <li>
-        <a class="{{ $active($isRoute($companyManagePatterns)) }}" href="{{ route('companies.index') }}">
-          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Companies')</span>
-        </a>
-      </li>
-      @endroutecanany
-
       @routecanany($companyTransactionPatterns)
       <li>
         <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">
@@ -1031,6 +1010,22 @@
 
       @routecanany($settingsCompaniesPatterns)
       <li class="nav-heading">@lang('sidebar.Companies Lookups')</li>
+      @endroutecanany
+
+      @routecanany($companyManagePatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyManagePatterns)) }}" href="{{ route('companies.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Companies')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($companyCreatePatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyCreatePatterns)) }}" href="{{ route('companies.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('companies::companies.Add Company')</span>
+        </a>
+      </li>
       @endroutecanany
 
       @routecanany('company-disbursement-statuses.*')
