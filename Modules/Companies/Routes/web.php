@@ -5,6 +5,9 @@ use Modules\Companies\Http\Controllers\CompanyController;
 use Modules\Companies\Http\Controllers\CompanyTransactionController;
 
 Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('companies/dashboard', [CompanyController::class, 'dashboard'])
+        ->name('companies.dashboard');
+
     Route::prefix('company-transactions')->name('company-transactions.')->group(function () {
         Route::get('expenses', [CompanyTransactionController::class, 'expenses'])->name('expenses.index');
         Route::get('expenses/create', [CompanyTransactionController::class, 'createExpense'])->name('expenses.create');

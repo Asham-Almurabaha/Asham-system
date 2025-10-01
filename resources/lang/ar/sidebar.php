@@ -15,6 +15,7 @@ return array (
   'Investors Dashboard' => 'لوحة تحكم المستثمرين',
   'Manage Investors' => 'إدارة المستثمرين',
   'Companies' => 'الشركات',
+  'Companies Dashboard' => 'لوحة تحكم الشركات',
   'Manage Companies' => 'إدارة الشركات',
   'Company Transactions' => 'عمليات الشركات',
   'Company Expenses' => 'مصروفات الشركات',

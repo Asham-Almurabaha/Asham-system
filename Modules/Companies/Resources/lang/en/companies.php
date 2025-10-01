@@ -2,6 +2,8 @@
 
 return [
     'Companies' => 'Companies',
+    'Company Dashboard' => 'Company Dashboard',
+    'Company Dashboard Intro' => 'Review company expense statuses and track net balances across bank and safe accounts.',
     'Company Transactions' => 'Company Transactions',
     'Company Expenses Title' => 'Company Expenses',
     'Company Expense Payments Title' => 'Company Expense Payments',
@@ -56,6 +58,14 @@ return [
     'Transaction Date' => 'Transaction date',
     'Total Amount' => 'Total amount',
     'Allocated Share' => 'Allocated share',
+    'Transactions Count' => 'Transactions',
+    'Bank Total' => 'Bank total',
+    'Safe Total' => 'Safe total',
+    'Net Balance' => 'Net balance',
+    'Unassigned Bank Account' => 'Unassigned bank account',
+    'Unassigned Safe' => 'Unassigned safe',
+    'Accounts Breakdown Hint' => 'Per account figures show the impact of this status on each bank or safe.',
+    'No Dashboard Data' => 'No expense transactions found for this company yet.',
     'Actions Short' => 'Actions',
     'No Transactions Yet' => 'No transactions recorded yet.',
     'Delete Confirmation' => 'Are you sure you want to delete this company? This action cannot be undone.',

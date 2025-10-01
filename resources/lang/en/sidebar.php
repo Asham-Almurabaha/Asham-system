@@ -15,6 +15,7 @@ return [
     'Investors Dashboard' => 'Investors Dashboard',
     'Manage Investors' => 'Manage Investors',
     'Companies' => 'Companies',
+    'Companies Dashboard' => 'Companies Dashboard',
     'Manage Companies' => 'Manage Companies',
     'Company Transactions' => 'Company Transactions',
     'Company Expenses' => 'Company Expenses',

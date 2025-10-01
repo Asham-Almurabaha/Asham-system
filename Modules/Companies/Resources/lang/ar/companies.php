@@ -2,6 +2,8 @@
 
 return [
     'Companies' => 'الشركات',
+    'Company Dashboard' => 'لوحة تحكم الشركات',
+    'Company Dashboard Intro' => 'تابع حالات مصروفات الشركات وتعرّف على صافي الأرصدة بين الحسابات والخزن.',
     'Company Transactions' => 'عمليات الشركات',
     'Company Expenses Title' => 'مصروفات الشركات',
     'Company Expense Payments Title' => 'سداد مصروفات الشركات',
@@ -58,6 +60,14 @@ return [
     'Transaction Date' => 'تاريخ العملية',
     'Total Amount' => 'المبلغ الإجمالي',
     'Allocated Share' => 'النصيب المخصص',
+    'Transactions Count' => 'عدد العمليات',
+    'Bank Total' => 'إجمالي البنك',
+    'Safe Total' => 'إجمالي الخزنة',
+    'Net Balance' => 'صافي الرصيد',
+    'Unassigned Bank Account' => 'حساب بنكي غير محدد',
+    'Unassigned Safe' => 'خزنة غير محددة',
+    'Accounts Breakdown Hint' => 'توضح الأرقام التالية تأثير هذه الحالة على كل حساب بنكي أو خزنة.',
+    'No Dashboard Data' => 'لا توجد بيانات مصروفات مسجلة لهذه الشركة بعد.',
     'Actions Short' => 'إجراءات',
     'No Transactions Yet' => 'لم تُسجل عمليات بعد.',
     'Delete Confirmation' => 'هل أنت متأكد من حذف هذه الشركة؟ لا يمكن التراجع عن العملية.',

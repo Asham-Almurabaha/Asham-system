@@ -269,7 +269,9 @@
       'company-transactions.destroy',
   ];
 
-  $companiesNavOpen = $isRoute($companyTransactionPatterns);
+  $companyNavPatterns = array_merge(['companies.dashboard'], $companyTransactionPatterns);
+
+  $companiesNavOpen = $isRoute($companyNavPatterns);
 
   $debtsPatterns = [
       'debts.*',
@@ -651,7 +653,7 @@
   </li>
   @endroutecanany
 
-  @routecanany($companyTransactionPatterns)
+  @routecanany($companyNavPatterns)
   <li class="nav-item">
     <a class="nav-link {{ $coll($companiesNavOpen) }} {{ $active($companiesNavOpen) }}"
        data-bs-target="#companies-nav" data-bs-toggle="collapse" href="#"
@@ -660,9 +662,17 @@
     </a>
 
     <ul id="companies-nav" class="nav-content collapse {{ $open($companiesNavOpen) }}" data-bs-parent="#sidebar-nav">
+      @routecanany('companies.dashboard')
+      <li>
+        <a class="{{ $active($isRoute('companies.dashboard')) }}" href="{{ route('companies.dashboard') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Companies Dashboard')</span>
+        </a>
+      </li>
+      @endroutecanany
+
       @routecanany($companyTransactionPatterns)
       <li>
-      <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">
+        <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Company Transactions')</span>
         </a>
       </li>

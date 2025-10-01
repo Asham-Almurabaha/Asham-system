@@ -153,6 +153,7 @@ trait SeedsRolesAndPermissions
             'company-transactions.expenses.payments.index',
             'company-transactions.expenses.payments.create',
             'company-transactions.expenses.payments.store',
+            'companies.dashboard',
             'customers.create',
             'customers.dashboard',
             'customers.destroy',
