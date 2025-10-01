@@ -36,38 +36,14 @@ class CompanyTransactionController extends Controller
         ]));
     }
 
-    public function expenses(Request $request): View
+    public function expenses(): RedirectResponse
     {
-        $data = $this->prepareTransactionsListing($request, [
-            'status_name' => 'مصروفات شركات',
-        ]);
-
-        return view('companies::transactions.index', array_merge($data, [
-            'pageTitle' => __('companies::companies.Company Expenses Title'),
-            'pageHeading' => __('companies::companies.Company Expenses Title'),
-            'indexRoute' => route('company-transactions.expenses.index'),
-            'createRoute' => route('company-transactions.expenses.create'),
-            'createButtonLabel' => __('companies::companies.New Company Expense'),
-            'showStatusFilter' => false,
-            'fixedStatus' => $data['fixedStatus'] ?? null,
-        ]));
+        return redirect()->route('company-transactions.expenses.create');
     }
 
-    public function expensePayments(Request $request): View
+    public function expensePayments(): RedirectResponse
     {
-        $data = $this->prepareTransactionsListing($request, [
-            'status_name' => 'سداد مصروفات شركات',
-        ]);
-
-        return view('companies::transactions.index', array_merge($data, [
-            'pageTitle' => __('companies::companies.Company Expense Payments Title'),
-            'pageHeading' => __('companies::companies.Company Expense Payments Title'),
-            'indexRoute' => route('company-transactions.expenses.payments.index'),
-            'createRoute' => route('company-transactions.expenses.payments.create'),
-            'createButtonLabel' => __('companies::companies.New Company Expense Payment'),
-            'showStatusFilter' => false,
-            'fixedStatus' => $data['fixedStatus'] ?? null,
-        ]));
+        return redirect()->route('company-transactions.expenses.payments.create');
     }
 
     public function create(): View
@@ -83,7 +59,7 @@ class CompanyTransactionController extends Controller
             'include_inactive_accounts' => true,
             'page_title' => __('companies::companies.New Company Expense'),
             'page_heading' => __('companies::companies.New Company Expense'),
-            'breadcrumb_route' => route('company-transactions.expenses.index'),
+            'breadcrumb_route' => route('company-transactions.expenses.create'),
             'breadcrumb_label' => __('companies::companies.Company Expenses Title'),
             'store_route' => 'company-transactions.expenses.store',
         ]);
@@ -97,7 +73,7 @@ class CompanyTransactionController extends Controller
             'include_inactive_accounts' => true,
             'page_title' => __('companies::companies.New Company Expense Payment'),
             'page_heading' => __('companies::companies.New Company Expense Payment'),
-            'breadcrumb_route' => route('company-transactions.expenses.payments.index'),
+            'breadcrumb_route' => route('company-transactions.expenses.payments.create'),
             'breadcrumb_label' => __('companies::companies.Company Expense Payments Title'),
             'store_route' => 'company-transactions.expenses.payments.store',
         ]);

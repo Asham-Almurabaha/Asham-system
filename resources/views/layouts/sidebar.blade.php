@@ -602,17 +602,17 @@
       <li class="nav-heading">@lang('sidebar.Company Ledger Entry')</li>
       @endroutecanany
 
-      @routecanany('company-transactions.expenses.index')
+      @routecanany(['company-transactions.expenses.create', 'company-transactions.expenses.index'])
       <li>
-        <a class="{{ $active($isRoute('company-transactions.expenses.*')) }}" href="{{ route('company-transactions.expenses.index') }}">
+        <a class="{{ $active($isRoute('company-transactions.expenses.*')) }}" href="{{ route('company-transactions.expenses.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expenses')</span>
         </a>
       </li>
       @endroutecanany
 
-      @routecanany('company-transactions.expenses.payments.index')
+      @routecanany(['company-transactions.expenses.payments.create', 'company-transactions.expenses.payments.index'])
       <li>
-        <a class="{{ $active($isRoute('company-transactions.expenses.payments.*')) }}" href="{{ route('company-transactions.expenses.payments.index') }}">
+        <a class="{{ $active($isRoute('company-transactions.expenses.payments.*')) }}" href="{{ route('company-transactions.expenses.payments.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expense Payments')</span>
         </a>
       </li>
