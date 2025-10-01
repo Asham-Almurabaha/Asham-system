@@ -90,7 +90,7 @@
           <input type="hidden" name="bank_amount" id="single_bank_amount" value="{{ $singleBankId ? $singleTotalAmount : '0.00' }}">
           <input type="hidden" name="safe_amount" id="single_safe_amount" value="{{ $singleSafeId ? $singleTotalAmount : '0.00' }}">
 
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label for="single_account_picker" class="form-label">{{ __('companies::companies.AccountSourcePicker') }} <span class="text-danger">*</span></label>
             <select id="single_account_picker" class="form-select" required>
               <option value="" {{ $singleAccountValue ? '' : 'selected' }}>{{ __('companies::companies.ChooseAccountSource') }}</option>
@@ -120,7 +120,7 @@
             @endif
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label for="single_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.01" min="0.01" name="total_amount" id="single_total_amount" value="{{ $singleTotalAmount }}" class="form-control @error('total_amount') is-invalid @enderror" required>
             @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -172,7 +172,7 @@
                   @foreach($singleAllocations as $index => $allocation)
                     <tr>
                       <td>
-                        <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm @error("allocations.$index.company_id") is-invalid @enderror" required>
+                        <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm allocation-company-select @error("allocations.$index.company_id") is-invalid @enderror" required>
                           <option value="">{{ __('companies::companies.Choose Company') }}</option>
                           @foreach($companies as $company)
                             <option value="{{ $company->id }}" @selected((int) ($allocation['company_id'] ?? 0) === $company->id)>{{ $company->name }}</option>
@@ -216,19 +216,15 @@
           @csrf
           <input type="hidden" name="entry_mode" value="split">
 
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label for="split_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.01" min="0.01" name="total_amount" id="split_total_amount" value="{{ $splitTotalAmount }}" class="form-control @error('total_amount') is-invalid @enderror" required>
             @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
-          <div class="col-md-4">
-            <label for="split_transaction_date" class="form-label">{{ __('companies::companies.Transaction Date') }} <span class="text-danger">*</span></label>
-            <input type="date" name="transaction_date" id="split_transaction_date" value="{{ $activeMode === 'split' ? old('transaction_date', $today) : $today }}" class="form-control js-date @error('transaction_date') is-invalid @enderror" required>
-            @error('transaction_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
+          
 
-          <div class="col-md-4">
+          <div class="col-md-6">
             <label for="split_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
             <select name="status_id" id="split_status_id" class="form-select @error('status_id') is-invalid @enderror" required>
               <option value="">{{ __('companies::companies.Choose Status') }}</option>
@@ -306,6 +302,12 @@
             </div>
           </div>
 
+          <div class="col-md-6">
+            <label for="split_transaction_date" class="form-label">{{ __('companies::companies.Transaction Date') }} <span class="text-danger">*</span></label>
+            <input type="date" name="transaction_date" id="split_transaction_date" value="{{ $activeMode === 'split' ? old('transaction_date', $today) : $today }}" class="form-control js-date @error('transaction_date') is-invalid @enderror" required>
+            @error('transaction_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+          </div>
+
           <div class="col-12">
             <label for="split_notes" class="form-label">{{ __('companies::companies.Notes') }}</label>
             <textarea name="notes" id="split_notes" rows="3" class="form-control @error('notes') is-invalid @enderror" placeholder="{{ __('companies::companies.Notes Placeholder') }}">{{ $activeMode === 'split' ? old('notes') : '' }}</textarea>
@@ -335,7 +337,7 @@
                   @foreach($splitAllocations as $index => $allocation)
                     <tr>
                       <td>
-                        <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm" required>
+                        <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm allocation-company-select" required>
                           <option value="">{{ __('companies::companies.Choose Company') }}</option>
                           @foreach($companies as $company)
                             <option value="{{ $company->id }}" @selected((int) ($allocation['company_id'] ?? 0) === $company->id)>{{ $company->name }}</option>
@@ -962,6 +964,36 @@
       return numeric === null ? '' : numeric.toFixed(2);
     };
 
+    const getCompanySelects = () => Array.from(table.querySelectorAll('.allocation-company-select'));
+
+    const updateCompanySelectOptions = () => {
+      const selectedValues = new Set();
+
+      getCompanySelects().forEach((select) => {
+        if (select.value) {
+          selectedValues.add(select.value);
+        }
+      });
+
+      getCompanySelects().forEach((select) => {
+        const currentValue = select.value;
+
+        select.querySelectorAll('option').forEach((option) => {
+          if (!option.value) {
+            option.disabled = false;
+            return;
+          }
+
+          if (option.value === currentValue) {
+            option.disabled = false;
+            return;
+          }
+
+          option.disabled = selectedValues.has(option.value);
+        });
+      });
+    };
+
     const getRowInputs = (row) => {
       return {
         percentageInput: row.querySelector('.allocation-percentage'),
@@ -1023,6 +1055,7 @@
 
     const initializeRow = (row) => {
       const { percentageInput, amountInput } = getRowInputs(row);
+      const companySelect = row.querySelector('.allocation-company-select');
 
       if (percentageInput) {
         percentageInput.addEventListener('input', () => {
@@ -1045,6 +1078,12 @@
             amountInput.value = formatAmount(amountInput.value);
           }
           syncPercentageFromAmount(row);
+        });
+      }
+
+      if (companySelect) {
+        companySelect.addEventListener('change', () => {
+          updateCompanySelectOptions();
         });
       }
     };
@@ -1077,7 +1116,7 @@
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>
-          <select name="allocations[${allocationIndex}][company_id]" class="form-select form-select-sm" required>
+          <select name="allocations[${allocationIndex}][company_id]" class="form-select form-select-sm allocation-company-select" required>
             <option value="">{{ __('companies::companies.Choose Company') }}</option>
             @foreach($companies as $company)
               <option value="{{ $company->id }}">{{ $company->name }}</option>
@@ -1102,6 +1141,7 @@
       tbody.appendChild(row);
       initializeRow(row);
       syncAmountFromPercentage(row);
+      updateCompanySelectOptions();
       allocationIndex++;
     });
 
@@ -1127,6 +1167,7 @@
       const tbody = row.parentElement;
       if (tbody && tbody.children.length > 1) {
         row.remove();
+        updateCompanySelectOptions();
       }
     });
 
@@ -1135,6 +1176,7 @@
     });
 
     recalculateFromPercentages();
+    updateCompanySelectOptions();
   }
 </script>
 @endpush
