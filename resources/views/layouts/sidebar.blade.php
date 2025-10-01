@@ -260,6 +260,8 @@
       'company-transactions.edit',
       'company-transactions.update',
       'company-transactions.destroy',
+      'company-transactions.expenses.*',
+      'company-transactions.expenses.payments.*',
   ];
 
   $companiesNavOpen = $isRoute($companyTransactionPatterns);
@@ -635,8 +637,24 @@
     <ul id="companies-nav" class="nav-content collapse {{ $open($companiesNavOpen) }}" data-bs-parent="#sidebar-nav">
       @routecanany($companyTransactionPatterns)
       <li>
-        <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">
+      <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Company Transactions')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('company-transactions.expenses.index')
+      <li>
+        <a class="{{ $active($isRoute('company-transactions.expenses.*')) }}" href="{{ route('company-transactions.expenses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expenses')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('company-transactions.expenses.payments.index')
+      <li>
+        <a class="{{ $active($isRoute('company-transactions.expenses.payments.*')) }}" href="{{ route('company-transactions.expenses.payments.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expense Payments')</span>
         </a>
       </li>
       @endroutecanany

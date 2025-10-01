@@ -3,6 +3,8 @@
 return [
     'Companies' => 'Companies',
     'Company Transactions' => 'Company Transactions',
+    'Company Expenses Title' => 'Company Expenses',
+    'Company Expense Payments Title' => 'Company Expense Payments',
     'Company Name' => 'Company Name',
     'Status' => 'Status',
     'Active' => 'Active',
@@ -16,6 +18,8 @@ return [
     'Disbursed vs Repaid' => 'Disbursed: :disbursed • Repaid: :repaid',
     'Add Company' => 'Add company',
     'New Transaction' => 'New transaction',
+    'New Company Expense' => 'New company expense',
+    'New Company Expense Payment' => 'New company expense payment',
     'View Transactions' => 'View transactions',
     'CompanyEntryHint' => 'The transaction will be linked to office ledger entries automatically.',
     'CompanyEntryModeHelp' => 'Choose between a single entry or a split entry to distribute the amount between bank and safe.',

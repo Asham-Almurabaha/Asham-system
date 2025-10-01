@@ -1,6 +1,15 @@
 @extends('layouts.master')
 
 @php
+    $pageTitle = $pageTitle ?? __('companies::companies.New Transaction');
+    $pageHeading = $pageHeading ?? __('companies::companies.New Transaction');
+    $breadcrumbRoute = $breadcrumbRoute ?? route('company-transactions.index');
+    $breadcrumbLabel = $breadcrumbLabel ?? __('companies::companies.Company Transactions');
+    $allowStatusSelection = $allowStatusSelection ?? true;
+    $defaultStatusId = $defaultStatusId ?? null;
+    $includeInactiveAccounts = $includeInactiveAccounts ?? false;
+    $storeRoute = $storeRoute ?? 'company-transactions.store';
+
     $today = now()->format('Y-m-d');
     $activeMode = old('entry_mode', 'single');
     if (!in_array($activeMode, ['single', 'split'], true)) {
@@ -32,23 +41,21 @@
     $singleSafeId = $activeMode === 'single' ? old('safe_id') : null;
     $singleAccountValue = $singleBankId ? 'bank:' . $singleBankId : ($singleSafeId ? 'safe:' . $singleSafeId : '');
 
-    $defaultStatusId = null;
-
     $singleTotalAmount = old('total_amount', '0.00');
     $splitTotalAmount = $activeMode === 'split' ? old('total_amount', '0.00') : '0.00';
     $splitBankAmount = $activeMode === 'split' ? old('bank_amount', '0.00') : '0.00';
     $splitSafeAmount = $activeMode === 'split' ? old('safe_amount', '0.00') : '0.00';
 @endphp
 
-@section('title', __('companies::companies.New Transaction'))
+@section('title', $pageTitle)
 
 @section('content')
 <div class="pagetitle mb-3">
-  <h1 class="h3 mb-1">{{ __('companies::companies.New Transaction') }}</h1>
+  <h1 class="h3 mb-1">{{ $pageHeading }}</h1>
   <nav>
     <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{{ route('company-transactions.index') }}">{{ __('companies::companies.Company Transactions') }}</a></li>
-      <li class="breadcrumb-item active">{{ __('companies::companies.New Transaction') }}</li>
+      <li class="breadcrumb-item"><a href="{{ $breadcrumbRoute }}">{{ $breadcrumbLabel }}</a></li>
+      <li class="breadcrumb-item active">{{ $pageHeading }}</li>
     </ol>
   </nav>
 </div>
@@ -82,7 +89,7 @@
 
     <div class="tab-content pt-3" id="companyEntryTabsContent">
       <div class="tab-pane fade {{ $activeMode === 'single' ? 'show active' : '' }}" id="company-entry-single" role="tabpanel" aria-labelledby="company-entry-single-tab">
-        <form action="{{ route('company-transactions.store') }}" method="POST" class="row g-3" id="companyEntrySingleForm">
+        <form action="{{ route($storeRoute) }}" method="POST" class="row g-3" id="companyEntrySingleForm">
           @csrf
           <input type="hidden" name="entry_mode" value="single">
           <input type="hidden" name="bank_account_id" id="single_bank_account_id" value="{{ $singleBankId }}">
@@ -96,12 +103,16 @@
               <option value="" {{ $singleAccountValue ? '' : 'selected' }}>{{ __('companies::companies.ChooseAccountSource') }}</option>
               <optgroup label="{{ __('companies::companies.Bank Accounts') }}">
                 @foreach($bankAccounts as $bankAccount)
-                  <option value="bank:{{ $bankAccount->id }}" @selected($singleAccountValue === 'bank:' . $bankAccount->id)>{{ $bankAccount->name }}</option>
+                  <option value="bank:{{ $bankAccount->id }}" @selected($singleAccountValue === 'bank:' . $bankAccount->id)>
+                    {{ $bankAccount->name }}@unless($bankAccount->is_active) — {{ __('companies::companies.Inactive') }}@endunless
+                  </option>
                 @endforeach
               </optgroup>
               <optgroup label="{{ __('companies::companies.Safes') }}">
                 @foreach($safes as $safe)
-                  <option value="safe:{{ $safe->id }}" @selected($singleAccountValue === 'safe:' . $safe->id)>{{ $safe->name }}</option>
+                  <option value="safe:{{ $safe->id }}" @selected($singleAccountValue === 'safe:' . $safe->id)>
+                    {{ $safe->name }}@unless($safe->is_active) — {{ __('companies::companies.Inactive') }}@endunless
+                  </option>
                 @endforeach
               </optgroup>
             </select>
@@ -126,16 +137,20 @@
             @error('total_amount') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
-          <div class="col-md-4">
-            <label for="single_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
-            <select name="status_id" id="single_status_id" class="form-select @error('status_id') is-invalid @enderror" required>
-              <option value="">{{ __('companies::companies.Choose Status') }}</option>
-              @foreach($statuses as $status)
-                <option value="{{ $status->id }}" @selected((int) old('status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
-              @endforeach
-            </select>
-            @error('status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
+          @if($allowStatusSelection)
+            <div class="col-md-4">
+              <label for="single_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
+              <select name="status_id" id="single_status_id" class="form-select @error('status_id') is-invalid @enderror" required>
+                <option value="">{{ __('companies::companies.Choose Status') }}</option>
+                @foreach($statuses as $status)
+                  <option value="{{ $status->id }}" @selected((int) old('status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
+                @endforeach
+              </select>
+              @error('status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+          @else
+            <input type="hidden" name="status_id" value="{{ old('status_id', $defaultStatusId) }}">
+          @endif
 
           <div class="col-md-4">
             <label for="single_transaction_date" class="form-label">{{ __('companies::companies.Transaction Date') }} <span class="text-danger">*</span></label>
@@ -206,13 +221,13 @@
 
           <div class="col-12 d-flex align-items-center gap-2 mt-3">
             <x-button.action type="submit" variant="success">{{ __('companies::companies.Save Transaction') }}</x-button.action>
-            <x-button.secondary href="{{ route('company-transactions.index') }}">{{ __('companies::companies.Cancel') }}</x-button.secondary>
+            <x-button.secondary href="{{ $breadcrumbRoute }}">{{ __('companies::companies.Cancel') }}</x-button.secondary>
           </div>
         </form>
       </div>
 
       <div class="tab-pane fade {{ $activeMode === 'split' ? 'show active' : '' }}" id="company-entry-split" role="tabpanel" aria-labelledby="company-entry-split-tab">
-        <form action="{{ route('company-transactions.store') }}" method="POST" class="row g-3" id="companyEntrySplitForm">
+        <form action="{{ route($storeRoute) }}" method="POST" class="row g-3" id="companyEntrySplitForm">
           @csrf
           <input type="hidden" name="entry_mode" value="split">
 
@@ -224,16 +239,20 @@
 
           
 
-          <div class="col-md-6">
-            <label for="split_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
-            <select name="status_id" id="split_status_id" class="form-select @error('status_id') is-invalid @enderror" required>
-              <option value="">{{ __('companies::companies.Choose Status') }}</option>
-              @foreach($statuses as $status)
-                <option value="{{ $status->id }}" @selected((int) old('status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
-              @endforeach
-            </select>
-            @error('status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-          </div>
+          @if($allowStatusSelection)
+            <div class="col-md-6">
+              <label for="split_status_id" class="form-label">{{ __('companies::companies.Status') }} <span class="text-danger">*</span></label>
+              <select name="status_id" id="split_status_id" class="form-select @error('status_id') is-invalid @enderror" required>
+                <option value="">{{ __('companies::companies.Choose Status') }}</option>
+                @foreach($statuses as $status)
+                  <option value="{{ $status->id }}" @selected((int) old('status_id', $defaultStatusId) === $status->id)>{{ $status->name }}</option>
+                @endforeach
+              </select>
+              @error('status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+            </div>
+          @else
+            <input type="hidden" name="status_id" value="{{ old('status_id', $defaultStatusId) }}">
+          @endif
 
           <div class="col-12">
             <div class="row g-3">
@@ -245,7 +264,9 @@
                     <select name="bank_account_id" id="split_bank_account_id" class="form-select @error('bank_account_id') is-invalid @enderror">
                       <option value="">{{ __('companies::companies.Choose Bank Account') }}</option>
                       @foreach($bankAccounts as $bankAccount)
-                        <option value="{{ $bankAccount->id }}" @selected($activeMode === 'split' && (int) old('bank_account_id') === $bankAccount->id)>{{ $bankAccount->name }}</option>
+                        <option value="{{ $bankAccount->id }}" @selected($activeMode === 'split' && (int) old('bank_account_id') === $bankAccount->id)>
+                          {{ $bankAccount->name }}@unless($bankAccount->is_active) — {{ __('companies::companies.Inactive') }}@endunless
+                        </option>
                       @endforeach
                     </select>
                     @error('bank_account_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -273,7 +294,9 @@
                     <select name="safe_id" id="split_safe_id" class="form-select @error('safe_id') is-invalid @enderror">
                       <option value="">{{ __('companies::companies.Choose Safe') }}</option>
                       @foreach($safes as $safe)
-                        <option value="{{ $safe->id }}" @selected($activeMode === 'split' && (int) old('safe_id') === $safe->id)>{{ $safe->name }}</option>
+                        <option value="{{ $safe->id }}" @selected($activeMode === 'split' && (int) old('safe_id') === $safe->id)>
+                          {{ $safe->name }}@unless($safe->is_active) — {{ __('companies::companies.Inactive') }}@endunless
+                        </option>
                       @endforeach
                     </select>
                     @error('safe_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -367,7 +390,7 @@
 
           <div class="col-12 d-flex align-items-center gap-2 mt-3">
             <x-button.action type="submit" variant="success">{{ __('companies::companies.Save Transaction') }}</x-button.action>
-            <x-button.secondary href="{{ route('company-transactions.index') }}">{{ __('companies::companies.Cancel') }}</x-button.secondary>
+            <x-button.secondary href="{{ $breadcrumbRoute }}">{{ __('companies::companies.Cancel') }}</x-button.secondary>
           </div>
         </form>
       </div>

@@ -17,6 +17,8 @@ return array (
   'Companies' => 'الشركات',
   'Manage Companies' => 'إدارة الشركات',
   'Company Transactions' => 'عمليات الشركات',
+  'Company Expenses' => 'مصروفات الشركات',
+  'Company Expense Payments' => 'سداد مصروفات الشركات',
   'Investor Ledger Shortcuts' => 'قيود المستثمرين السريعة',
   'Investor Quick Entries' => 'عمليات المستثمرين السريعة',
   'Investor Capital Entry' => 'إضافة رأس مال مستثمر',

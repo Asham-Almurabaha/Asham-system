@@ -24,101 +24,121 @@ class CompanyTransactionController extends Controller
 {
     public function index(Request $request): View
     {
-        $categoryId = $this->getCompanyCategoryId();
-        $statuses = $this->getCompanyStatuses($categoryId);
-        $allowedStatusIds = $statuses->pluck('id')->all();
+        $data = $this->prepareTransactionsListing($request);
 
-        $query = CompanyTransaction::query()
-            ->with([
-                'status',
-                'bankAccount',
-                'safe',
-                'allocations.company',
-            ])
-            ->when(empty($allowedStatusIds), fn ($builder) => $builder->whereRaw('1=0'))
-            ->when(!empty($allowedStatusIds), fn ($builder) => $builder->whereIn('status_id', $allowedStatusIds))
-            ->latest('transaction_date');
+        return view('companies::transactions.index', array_merge($data, [
+            'pageTitle' => __('companies::companies.Company Transactions'),
+            'pageHeading' => __('companies::companies.Company Transactions'),
+            'indexRoute' => route('company-transactions.index'),
+            'createRoute' => route('company-transactions.create'),
+            'createButtonLabel' => __('companies::companies.New Transaction'),
+            'showStatusFilter' => true,
+        ]));
+    }
 
-        $statusId = (int) $request->input('status_id');
-        if ($statusId > 0 && in_array($statusId, $allowedStatusIds, true)) {
-            $query->where('status_id', $statusId);
-        }
+    public function expenses(Request $request): View
+    {
+        $data = $this->prepareTransactionsListing($request, [
+            'status_name' => 'مصروفات شركات',
+        ]);
 
-        $companyId = (int) $request->input('company_id');
-        if ($companyId > 0) {
-            $query->whereHas('allocations', fn ($builder) => $builder->where('company_id', $companyId));
-        }
+        return view('companies::transactions.index', array_merge($data, [
+            'pageTitle' => __('companies::companies.Company Expenses Title'),
+            'pageHeading' => __('companies::companies.Company Expenses Title'),
+            'indexRoute' => route('company-transactions.expenses.index'),
+            'createRoute' => route('company-transactions.expenses.create'),
+            'createButtonLabel' => __('companies::companies.New Company Expense'),
+            'showStatusFilter' => false,
+            'fixedStatus' => $data['fixedStatus'] ?? null,
+        ]));
+    }
 
-        $dateFrom = $request->input('date_from');
-        if ($dateFrom) {
-            $query->whereDate('transaction_date', '>=', $dateFrom);
-        }
+    public function expensePayments(Request $request): View
+    {
+        $data = $this->prepareTransactionsListing($request, [
+            'status_name' => 'سداد مصروفات شركات',
+        ]);
 
-        $dateTo = $request->input('date_to');
-        if ($dateTo) {
-            $query->whereDate('transaction_date', '<=', $dateTo);
-        }
-
-        $transactions = $query->paginate(15)->withQueryString();
-
-        $companies = Company::orderBy('name')->get();
-
-        $pageCollection = $transactions->getCollection();
-        $totals = [
-            'amount' => round((float) $pageCollection->sum('total_amount'), 2),
-            'disbursed' => round((float) $pageCollection->sum(fn ($tx) => $tx->disbursed_amount), 2),
-            'repaid' => round((float) $pageCollection->sum(fn ($tx) => $tx->repaid_amount), 2),
-            'outstanding' => round((float) $pageCollection->sum(fn ($tx) => $tx->outstanding_amount), 2),
-        ];
-
-        return view('companies::transactions.index', compact(
-            'transactions',
-            'statuses',
-            'companies',
-            'totals'
-        ));
+        return view('companies::transactions.index', array_merge($data, [
+            'pageTitle' => __('companies::companies.Company Expense Payments Title'),
+            'pageHeading' => __('companies::companies.Company Expense Payments Title'),
+            'indexRoute' => route('company-transactions.expenses.payments.index'),
+            'createRoute' => route('company-transactions.expenses.payments.create'),
+            'createButtonLabel' => __('companies::companies.New Company Expense Payment'),
+            'showStatusFilter' => false,
+            'fixedStatus' => $data['fixedStatus'] ?? null,
+        ]));
     }
 
     public function create(): View
     {
-        $categoryId = $this->getCompanyCategoryId();
-        $statuses = $this->getCompanyStatuses($categoryId);
-        $companies = Company::orderBy('name')->get();
-        $bankAccounts = BankAccount::where('is_active', true)->orderBy('name')->get();
-        $safes = Safe::where('is_active', true)->orderBy('name')->get();
+        return $this->renderTransactionForm();
+    }
 
-        return view('companies::transactions.create', compact(
-            'statuses',
-            'companies',
-            'bankAccounts',
-            'safes'
-        ));
+    public function createExpense(): View
+    {
+        return $this->renderTransactionForm([
+            'status_name' => 'مصروفات شركات',
+            'allow_status_selection' => false,
+            'include_inactive_accounts' => true,
+            'page_title' => __('companies::companies.New Company Expense'),
+            'page_heading' => __('companies::companies.New Company Expense'),
+            'breadcrumb_route' => route('company-transactions.expenses.index'),
+            'breadcrumb_label' => __('companies::companies.Company Expenses Title'),
+            'store_route' => 'company-transactions.expenses.store',
+        ]);
+    }
+
+    public function createExpensePayment(): View
+    {
+        return $this->renderTransactionForm([
+            'status_name' => 'سداد مصروفات شركات',
+            'allow_status_selection' => false,
+            'include_inactive_accounts' => true,
+            'page_title' => __('companies::companies.New Company Expense Payment'),
+            'page_heading' => __('companies::companies.New Company Expense Payment'),
+            'breadcrumb_route' => route('company-transactions.expenses.payments.index'),
+            'breadcrumb_label' => __('companies::companies.Company Expense Payments Title'),
+            'store_route' => 'company-transactions.expenses.payments.store',
+        ]);
     }
 
     public function store(StoreCompanyTransactionRequest $request): RedirectResponse
     {
         $data = $request->validated();
 
-        $transaction = DB::transaction(function () use ($data) {
-            $transaction = CompanyTransaction::create([
-                'transaction_date' => $data['transaction_date'],
-                'total_amount' => $data['total_amount'],
-                'status_id' => $data['status_id'],
-                'bank_account_id' => $data['bank_account_id'] ?? null,
-                'bank_amount' => $data['bank_amount'] ?? 0,
-                'safe_id' => $data['safe_id'] ?? null,
-                'safe_amount' => $data['safe_amount'] ?? 0,
-                'notes' => $data['notes'] ?? null,
-            ]);
-
-            $this->syncAllocations($transaction, $data['allocations']);
-            $this->syncLedgerEntries($transaction, $data);
-
-            return $transaction;
-        });
+        $this->createTransaction($data);
 
         return redirect()
             ->route('company-transactions.create')
+            ->with('success', __('companies::messages.transactions.created'));
+    }
+
+    public function storeExpense(StoreCompanyTransactionRequest $request): RedirectResponse
+    {
+        $status = $this->findCompanyStatusByName('مصروفات شركات');
+
+        $data = $request->validated();
+        $data['status_id'] = $status?->id ?? $data['status_id'];
+
+        $this->createTransaction($data);
+
+        return redirect()
+            ->route('company-transactions.expenses.create')
+            ->with('success', __('companies::messages.transactions.created'));
+    }
+
+    public function storeExpensePayment(StoreCompanyTransactionRequest $request): RedirectResponse
+    {
+        $status = $this->findCompanyStatusByName('سداد مصروفات شركات');
+
+        $data = $request->validated();
+        $data['status_id'] = $status?->id ?? $data['status_id'];
+
+        $this->createTransaction($data);
+
+        return redirect()
+            ->route('company-transactions.expenses.payments.create')
             ->with('success', __('companies::messages.transactions.created'));
     }
 
@@ -208,6 +228,176 @@ class CompanyTransactionController extends Controller
             })
             ->orderBy('name')
             ->get();
+    }
+
+    private function prepareTransactionsListing(Request $request, array $options = []): array
+    {
+        $categoryId = $this->getCompanyCategoryId();
+        $statuses = $this->getCompanyStatuses($categoryId);
+        $allowedStatusIds = $statuses->pluck('id')->all();
+
+        $fixedStatus = null;
+        $fixedStatusId = null;
+
+        if (isset($options['status_name'])) {
+            $fixedStatus = $statuses->firstWhere('name', $options['status_name']);
+            $fixedStatusId = $fixedStatus?->id;
+            if (!$fixedStatusId) {
+                $allowedStatusIds = [];
+            }
+        } elseif (isset($options['fixed_status_id'])) {
+            $fixedStatusId = (int) $options['fixed_status_id'];
+            $fixedStatus = $statuses->firstWhere('id', $fixedStatusId);
+        }
+
+        if ($fixedStatusId) {
+            $allowedStatusIds = array_values(array_intersect($allowedStatusIds, [$fixedStatusId]));
+        }
+
+        $query = CompanyTransaction::query()
+            ->with([
+                'status',
+                'bankAccount',
+                'safe',
+                'allocations.company',
+            ])
+            ->when(empty($allowedStatusIds), fn ($builder) => $builder->whereRaw('1=0'))
+            ->when(!empty($allowedStatusIds), fn ($builder) => $builder->whereIn('status_id', $allowedStatusIds))
+            ->latest('transaction_date');
+
+        if ($fixedStatusId) {
+            $query->where('status_id', $fixedStatusId);
+        } else {
+            $statusId = (int) $request->input('status_id');
+            if ($statusId > 0 && in_array($statusId, $allowedStatusIds, true)) {
+                $query->where('status_id', $statusId);
+            }
+        }
+
+        $companyId = (int) $request->input('company_id');
+        if ($companyId > 0) {
+            $query->whereHas('allocations', fn ($builder) => $builder->where('company_id', $companyId));
+        }
+
+        $dateFrom = $request->input('date_from');
+        if ($dateFrom) {
+            $query->whereDate('transaction_date', '>=', $dateFrom);
+        }
+
+        $dateTo = $request->input('date_to');
+        if ($dateTo) {
+            $query->whereDate('transaction_date', '<=', $dateTo);
+        }
+
+        $transactions = $query->paginate(15)->withQueryString();
+
+        $companies = Company::orderBy('name')->get();
+
+        $pageCollection = $transactions->getCollection();
+        $totals = [
+            'amount' => round((float) $pageCollection->sum('total_amount'), 2),
+            'disbursed' => round((float) $pageCollection->sum(fn ($tx) => $tx->disbursed_amount), 2),
+            'repaid' => round((float) $pageCollection->sum(fn ($tx) => $tx->repaid_amount), 2),
+            'outstanding' => round((float) $pageCollection->sum(fn ($tx) => $tx->outstanding_amount), 2),
+        ];
+
+        return [
+            'transactions' => $transactions,
+            'statuses' => $statuses,
+            'companies' => $companies,
+            'totals' => $totals,
+            'fixedStatus' => $fixedStatus,
+        ];
+    }
+
+    private function renderTransactionForm(array $options = []): View
+    {
+        $categoryId = $this->getCompanyCategoryId();
+        $statuses = $this->getCompanyStatuses($categoryId);
+
+        $defaultStatus = null;
+        if (isset($options['status_name'])) {
+            $defaultStatus = $statuses->firstWhere('name', $options['status_name']);
+        } elseif (isset($options['default_status_id'])) {
+            $defaultStatus = $statuses->firstWhere('id', (int) $options['default_status_id']);
+        }
+
+        $includeInactiveAccounts = (bool) ($options['include_inactive_accounts'] ?? false);
+        $allowStatusSelection = (bool) ($options['allow_status_selection'] ?? true);
+
+        if (!$allowStatusSelection && !$defaultStatus) {
+            abort(404);
+        }
+
+        $companies = Company::orderBy('name')->get();
+
+        $bankAccountsQuery = BankAccount::query();
+        $safesQuery = Safe::query();
+
+        if (!$includeInactiveAccounts) {
+            $bankAccountsQuery->where('is_active', true)->orderBy('name');
+            $safesQuery->where('is_active', true)->orderBy('name');
+        } else {
+            $bankAccountsQuery->orderByDesc('is_active')->orderBy('name');
+            $safesQuery->orderByDesc('is_active')->orderBy('name');
+        }
+
+        $bankAccounts = $bankAccountsQuery->get();
+        $safes = $safesQuery->get();
+
+        return view('companies::transactions.create', [
+            'statuses' => $statuses,
+            'companies' => $companies,
+            'bankAccounts' => $bankAccounts,
+            'safes' => $safes,
+            'defaultStatusId' => $defaultStatus?->id,
+            'allowStatusSelection' => $allowStatusSelection,
+            'pageTitle' => $options['page_title'] ?? null,
+            'pageHeading' => $options['page_heading'] ?? null,
+            'includeInactiveAccounts' => $includeInactiveAccounts,
+            'breadcrumbRoute' => $options['breadcrumb_route'] ?? route('company-transactions.index'),
+            'breadcrumbLabel' => $options['breadcrumb_label'] ?? __('companies::companies.Company Transactions'),
+            'storeRoute' => $options['store_route'] ?? 'company-transactions.store',
+        ]);
+    }
+
+    private function createTransaction(array $data): CompanyTransaction
+    {
+        return DB::transaction(function () use ($data) {
+            $transaction = CompanyTransaction::create([
+                'transaction_date' => $data['transaction_date'],
+                'total_amount' => $data['total_amount'],
+                'status_id' => $data['status_id'],
+                'bank_account_id' => $data['bank_account_id'] ?? null,
+                'bank_amount' => $data['bank_amount'] ?? 0,
+                'safe_id' => $data['safe_id'] ?? null,
+                'safe_amount' => $data['safe_amount'] ?? 0,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            $this->syncAllocations($transaction, $data['allocations']);
+            $this->syncLedgerEntries($transaction, $data);
+
+            return $transaction;
+        });
+    }
+
+    private function findCompanyStatusByName(string $name): ?TransactionStatus
+    {
+        $categoryId = $this->getCompanyCategoryId();
+
+        if (!$categoryId) {
+            return null;
+        }
+
+        return TransactionStatus::query()
+            ->where('name', $name)
+            ->whereIn('id', function ($query) use ($categoryId) {
+                $query->select('transaction_status_id')
+                    ->from('category_transaction_status')
+                    ->where('category_id', $categoryId);
+            })
+            ->first();
     }
 
     private function syncAllocations(CompanyTransaction $transaction, array $allocations): void

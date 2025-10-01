@@ -17,6 +17,8 @@ return [
     'Companies' => 'Companies',
     'Manage Companies' => 'Manage Companies',
     'Company Transactions' => 'Company Transactions',
+    'Company Expenses' => 'Company Expenses',
+    'Company Expense Payments' => 'Company Expense Payments',
     'Investor Ledger Shortcuts' => 'Investor Ledger Shortcuts',
     'Investor Quick Entries' => 'Investor Quick Entries',
     'Investor Capital Entry' => 'Investor Capital Entry',

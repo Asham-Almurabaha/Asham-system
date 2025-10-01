@@ -1,14 +1,28 @@
 @extends('layouts.master')
 
-@section('title', __('companies::companies.Company Transactions'))
+@php
+    $pageTitle = $pageTitle ?? __('companies::companies.Company Transactions');
+    $pageHeading = $pageHeading ?? $pageTitle;
+    $indexRoute = $indexRoute ?? route('company-transactions.index');
+    $createRoute = $createRoute ?? route('company-transactions.create');
+    $createButtonLabel = $createButtonLabel ?? __('companies::companies.New Transaction');
+    $showStatusFilter = $showStatusFilter ?? true;
+    $fixedStatus = $fixedStatus ?? null;
+    $filtersApplied = ($showStatusFilter && request()->filled('status_id'))
+        || request()->filled('company_id')
+        || request()->filled('date_from')
+        || request()->filled('date_to');
+@endphp
+
+@section('title', $pageTitle)
 
 @section('content')
 <div class="pagetitle mb-3">
-  <h1 class="h3 mb-1">{{ __('companies::companies.Company Transactions') }}</h1>
+  <h1 class="h3 mb-1">{{ $pageHeading }}</h1>
   <nav>
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{{ route('companies.index') }}">{{ __('companies::companies.Companies') }}</a></li>
-      <li class="breadcrumb-item active">{{ __('companies::companies.Company Transactions') }}</li>
+      <li class="breadcrumb-item active">{{ $pageHeading }}</li>
     </ol>
   </nav>
 </div>
@@ -16,8 +30,8 @@
 <div class="card shadow-sm mb-3">
   <div class="card-body d-flex flex-wrap gap-2 align-items-center">
     <div class="btn-group" role="group">
-      <x-button.action href="{{ route('company-transactions.create') }}" variant="success">
-        <i class="bi bi-plus-lg"></i> {{ __('companies::companies.New Transaction') }}
+      <x-button.action href="{{ $createRoute }}" variant="success">
+        <i class="bi bi-plus-lg"></i> {{ $createButtonLabel }}
       </x-button.action>
       <x-button.action href="{{ route('companies.index') }}" variant="secondary" :outline="true">
         <i class="bi bi-buildings"></i> {{ __('companies::companies.Manage Companies') }}
@@ -27,8 +41,10 @@
     <span class="ms-auto small text-muted">
       {{ __('companies::companies.Results Count', ['count' => number_format($transactions->total())]) }}
     </span>
+    @if($fixedStatus)
+      <span class="badge bg-primary rounded-pill">{{ $fixedStatus->name }}</span>
+    @endif
 
-    @php($filtersApplied = request()->filled('status_id') || request()->filled('company_id') || request()->filled('date_from') || request()->filled('date_to'))
     <x-button.action type="button" variant="secondary" :outline="true" size="sm" data-bs-toggle="collapse"
       data-bs-target="#transactionFilters" aria-expanded="{{ $filtersApplied ? 'true' : 'false' }}" aria-controls="transactionFilters">
       {{ __('companies::companies.Filter') }}
@@ -37,7 +53,7 @@
 
   <div class="collapse border-top {{ $filtersApplied ? 'show' : '' }}" id="transactionFilters">
     <div class="card-body">
-      <form action="{{ route('company-transactions.index') }}" method="GET" class="row gy-2 gx-2 align-items-end">
+      <form action="{{ $indexRoute }}" method="GET" class="row gy-2 gx-2 align-items-end">
         <div class="col-md-3">
           <label class="form-label mb-1" for="company_id">{{ __('companies::companies.Company Name') }}</label>
           <select name="company_id" id="company_id" class="form-select form-select-sm">
@@ -47,15 +63,17 @@
             @endforeach
           </select>
         </div>
-        <div class="col-md-3">
-          <label class="form-label mb-1" for="status_id">{{ __('companies::companies.Status') }}</label>
-          <select name="status_id" id="status_id" class="form-select form-select-sm">
-            <option value="">{{ __('companies::companies.All Statuses') }}</option>
-            @foreach($statuses as $status)
-              <option value="{{ $status->id }}" @selected((int) request('status_id') === $status->id)>{{ $status->name }}</option>
-            @endforeach
-          </select>
-        </div>
+        @if($showStatusFilter)
+          <div class="col-md-3">
+            <label class="form-label mb-1" for="status_id">{{ __('companies::companies.Status') }}</label>
+            <select name="status_id" id="status_id" class="form-select form-select-sm">
+              <option value="">{{ __('companies::companies.All Statuses') }}</option>
+              @foreach($statuses as $status)
+                <option value="{{ $status->id }}" @selected((int) request('status_id') === $status->id)>{{ $status->name }}</option>
+              @endforeach
+            </select>
+          </div>
+        @endif
         <div class="col-md-3">
           <label class="form-label mb-1" for="date_from">{{ __('companies::companies.Date From') }}</label>
           <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" class="form-control form-control-sm">
@@ -68,7 +86,7 @@
           <x-button.action type="submit" variant="primary" size="sm" class="w-100">{{ __('companies::companies.Apply Filter') }}</x-button.action>
         </div>
         <div class="col-md-2">
-          <x-button.action href="{{ route('company-transactions.index') }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('companies::companies.Reset') }}</x-button.action>
+          <x-button.action href="{{ $indexRoute }}" variant="secondary" :outline="true" size="sm" class="w-100">{{ __('companies::companies.Reset') }}</x-button.action>
         </div>
       </form>
     </div>

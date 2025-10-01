@@ -3,6 +3,8 @@
 return [
     'Companies' => 'الشركات',
     'Company Transactions' => 'عمليات الشركات',
+    'Company Expenses Title' => 'مصروفات الشركات',
+    'Company Expense Payments Title' => 'سداد مصروفات الشركات',
     'Company Name' => 'اسم الشركة',
     'Status' => 'الحالة',
     'Active' => 'نشطة',
@@ -16,6 +18,8 @@ return [
     'Disbursed vs Repaid' => 'المصروف: :disbursed • المحصل: :repaid',
     'Add Company' => 'إضافة شركة',
     'New Transaction' => 'عملية جديدة',
+    'New Company Expense' => 'مصروف شركات جديد',
+    'New Company Expense Payment' => 'سداد مصروف شركات جديد',
     'View Transactions' => 'عرض العمليات',
     'CompanyEntryHint' => 'سيتم إنشاء العملية وربطها بقيود المكتب بشكل مباشر.',
     'CompanyEntryModeHelp' => 'اختر بين قيد عادي أو قيد مُجزّأ لتوزيع المبلغ بين البنك والخزنة.',
