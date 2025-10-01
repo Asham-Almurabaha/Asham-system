@@ -274,6 +274,16 @@
         $openingSafes   = (float)($safesWithOpen->sum('opening_balance') ?? 0);
         $openingTotal   = $openingBanks + $openingSafes;
 
+        // إجمالي الحسابات حسب حالة التفعيل
+        $activeAccountsTotal = (float) (
+            ($banksWithOpen->where('is_active', true)->sum('balance') ?? 0)
+          + ($safesWithOpen->where('is_active', true)->sum('balance') ?? 0)
+        );
+        $inactiveAccountsTotal = (float) (
+            ($banksWithOpen->where('is_active', false)->sum('balance') ?? 0)
+          + ($safesWithOpen->where('is_active', false)->sum('balance') ?? 0)
+        );
+
         // إجمالي داخل/خارج للفترة الحالية (تتأثر بالنطاق)
         $periodIn       = (float)array_sum($timeSeries['in']  ?? []);
         $periodOut      = (float)array_sum($timeSeries['out'] ?? []);
@@ -320,6 +330,26 @@
                 </div>
                 <div class="kpi-value fw-bold {{ $mukatabaTotal>=0?'text-pos':'text-neg' }}">{{ number_format($mukatabaTotal, 2) }}</div>
                 <div class="small text-muted mt-2">{{ __('dashboard.Total Mukataba') }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-check-circle fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Active Accounts Total') }}</div>
+                </div>
+                <div class="kpi-value fw-bold {{ $activeAccountsTotal>=0?'text-pos':'text-neg' }}">{{ number_format($activeAccountsTotal, 2) }}</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Sum of estimated balances in active accounts') }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <div class="kpi-card p-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="kpi-icon"><i class="bi bi-slash-circle fs-5 text-primary"></i></div>
+                    <div class="fw-bold text-muted">{{ __('dashboard.Inactive Accounts Total') }}</div>
+                </div>
+                <div class="kpi-value fw-bold {{ $inactiveAccountsTotal>=0?'text-pos':'text-neg' }}">{{ number_format($inactiveAccountsTotal, 2) }}</div>
+                <div class="small text-muted mt-2">{{ __('dashboard.Sum of estimated balances in inactive accounts') }}</div>
             </div>
         </div>
     </div>

@@ -114,6 +114,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'البضائع', 'is_protected' => true],
             ['name' => 'المكتب', 'is_protected' => true],
             ['name' => 'الاقساط', 'is_protected' => true],
+            ['name' => 'الشركات', 'is_protected' => true],
         ], $now);
 
         $this->syncNamedRecords('product_types', [
@@ -204,6 +205,8 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'مديونية', 'type' => 'سحب'],
             ['name' => 'سداد مديونية', 'type' => 'إيداع'],
             ['name' => 'مصروفات', 'type' => 'سحب'],
+            ['name' => 'سداد مصروفات شركات', 'type' => 'إيداع'],
+            ['name' => 'مصروفات شركات', 'type' => 'سحب'],
 
         ];
 
@@ -255,6 +258,8 @@ class LookupsDatabaseSeeder extends Seeder
             ['status' => 'سداد مديونية', 'category' => 'المكتب'],
             ['status' => 'سداد مديونية', 'category' => 'المستثمرين'],
             ['status' => 'مصروفات', 'category' => 'المكتب'],
+            ['status' => 'سداد مصروفات شركات', 'category' => 'الشركات'],
+            ['status' => 'مصروفات شركات', 'category' => 'الشركات'],
 
 
         ];
