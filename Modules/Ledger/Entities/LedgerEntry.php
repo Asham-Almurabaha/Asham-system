@@ -42,6 +42,15 @@ class LedgerEntry extends Model
         'amount'     => 'decimal:2',
     ];
 
+    public function getPartyCategoryAttribute(): string
+    {
+        if (!is_null($this->company_transaction_id)) {
+            return 'companies';
+        }
+
+        return $this->is_office ? 'office' : 'investors';
+    }
+
     // علاقات
     public function investor()         { return $this->belongsTo(Investor::class); }
     public function contract()         { return $this->belongsTo(Contract::class); }

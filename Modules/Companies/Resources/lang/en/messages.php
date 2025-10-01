@@ -21,5 +21,12 @@ return [
         'allocation_total_mismatch' => 'The total of allocation amounts must equal the transaction total.',
         'availability_fetch_error' => 'Unable to fetch availability.',
         'amount_exceeds_availability' => 'Cannot disburse more than the available balance.',
+        'ledger' => [
+            'notes' => [
+                'generic' => 'Company transaction #:id entry',
+                'bank' => 'Company transaction #:id (bank entry)',
+                'safe' => 'Company transaction #:id (safe entry)',
+            ],
+        ],
     ],
 ];

@@ -2,8 +2,10 @@
 
 return array (
   'Category' => 'الفئة',
+  'Companies' => 'الشركات',
   'Investor' => 'المستثمر',
   'Status' => 'الحالة',
+  'Office' => 'المكتب',
   'Account' => 'الحساب',
   'Amount' => 'المبلغ',
   'Total Amount' => 'إجمالي المبلغ',

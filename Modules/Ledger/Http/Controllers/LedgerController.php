@@ -64,14 +64,16 @@ class LedgerController extends Controller
 
     private function buildFilterData(Request $request): array
     {
-        $investors         = Investor::orderBy('name')->get();
-        $statusesInvestors = $this->statusesForCategory($this->CAT_INVESTORS);
-        $statusesOffice    = $this->statusesForCategory($this->CAT_OFFICE);
+        $investors          = Investor::orderBy('name')->get();
+        $statusesInvestors  = $this->statusesForCategory($this->CAT_INVESTORS);
+        $statusesOffice     = $this->statusesForCategory($this->CAT_OFFICE);
+        $statusesCompanies  = $this->statusesForCategory($this->getCompanyCategoryId());
 
         return [
-            'investors'         => $investors,
-            'statusesInvestors' => $statusesInvestors,
-            'statusesOffice'    => $statusesOffice,
+            'investors'          => $investors,
+            'statusesInvestors'  => $statusesInvestors,
+            'statusesOffice'     => $statusesOffice,
+            'statusesCompanies'  => $statusesCompanies,
             'filters' => [
                 'party_category' => $request->party_category,
                 'investor_id'    => $request->investor_id,
@@ -95,7 +97,9 @@ class LedgerController extends Controller
                 if ($request->party_category === 'investors') {
                     $q->where('is_office', false);
                 } elseif ($request->party_category === 'office') {
-                    $q->where('is_office', true);
+                    $q->where('is_office', true)->whereNull('company_transaction_id');
+                } elseif ($request->party_category === 'companies') {
+                    $q->whereNotNull('company_transaction_id');
                 }
             })
 
@@ -117,6 +121,25 @@ class LedgerController extends Controller
             // التاريخ (شامل اليومين)
             ->when($request->filled('from'), fn ($q) => $q->whereDate('entry_date', '>=', $request->from))
             ->when($request->filled('to'),   fn ($q) => $q->whereDate('entry_date', '<=', $request->to));
+    }
+
+    private function getCompanyCategoryId(): ?int
+    {
+        static $categoryId;
+
+        if ($categoryId !== null) {
+            return $categoryId;
+        }
+
+        if (!Schema::hasTable('categories')) {
+            return $categoryId = null;
+        }
+
+        $categoryId = DB::table('categories')
+            ->whereIn('name', ['الشركات', 'شركات'])
+            ->value('id');
+
+        return $categoryId ? (int) $categoryId : null;
     }
 
     public function index(Request $request)
@@ -802,8 +825,12 @@ class LedgerController extends Controller
     // Helpers
     // =======================
     /** جلب الحالات المرتبطة بفئة محددة */
-    private function statusesForCategory(int $categoryId)
+    private function statusesForCategory(?int $categoryId)
     {
+        if (!$categoryId) {
+            return collect();
+        }
+
         return TransactionStatus::whereIn('id', function ($q) use ($categoryId) {
                 $q->select('transaction_status_id')
                   ->from('category_transaction_status')

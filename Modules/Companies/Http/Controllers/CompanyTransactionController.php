@@ -5,8 +5,10 @@ namespace Modules\Companies\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
@@ -15,6 +17,7 @@ use Modules\Companies\Entities\CompanyTransaction;
 use Modules\Companies\Entities\CompanyTransactionAllocation;
 use Modules\Companies\Http\Requests\StoreCompanyTransactionRequest;
 use Modules\Companies\Http\Requests\UpdateCompanyTransactionRequest;
+use Modules\Ledger\Entities\LedgerEntry;
 use Modules\Lookups\Entities\TransactionStatus;
 
 class CompanyTransactionController extends Controller
@@ -109,6 +112,7 @@ class CompanyTransactionController extends Controller
             ]);
 
             $this->syncAllocations($transaction, $data['allocations']);
+            $this->syncLedgerEntries($transaction, $data);
 
             return $transaction;
         });
@@ -166,6 +170,7 @@ class CompanyTransactionController extends Controller
             ]);
 
             $this->syncAllocations($companyTransaction, $data['allocations']);
+            $this->syncLedgerEntries($companyTransaction, $data);
         });
 
         return redirect()
@@ -259,5 +264,102 @@ class CompanyTransactionController extends Controller
         }
 
         return 0.0;
+    }
+
+    private function syncLedgerEntries(CompanyTransaction $transaction, array $data): void
+    {
+        if (!Schema::hasTable('ledger_entries')) {
+            return;
+        }
+
+        $transaction->loadMissing('status.transactionType');
+
+        $status = $transaction->status;
+        if (!$status || !$status->transaction_type_id) {
+            return;
+        }
+
+        $entryDate = $this->resolveEntryDate($transaction);
+        $direction = $this->resolveLedgerDirection($status);
+
+        $basePayload = [
+            'entry_date' => $entryDate,
+            'investor_id' => null,
+            'is_office' => true,
+            'transaction_status_id' => $status->id,
+            'transaction_type_id' => $status->transaction_type_id,
+            'company_transaction_id' => $transaction->id,
+            'direction' => $direction,
+        ];
+
+        $this->upsertLedgerEntry($transaction, 'bank', $data['bank_amount'] ?? 0, $data['bank_account_id'] ?? null, $basePayload);
+        $this->upsertLedgerEntry($transaction, 'safe', $data['safe_amount'] ?? 0, $data['safe_id'] ?? null, $basePayload);
+    }
+
+    private function resolveEntryDate(CompanyTransaction $transaction): string
+    {
+        $date = $transaction->transaction_date;
+
+        if ($date instanceof Carbon) {
+            return $date->toDateString();
+        }
+
+        if (is_string($date) && $date !== '') {
+            return $date;
+        }
+
+        return now()->toDateString();
+    }
+
+    private function resolveLedgerDirection(TransactionStatus $status): string
+    {
+        $typeName = $status->transactionType?->name;
+
+        if ($typeName === 'إيداع') {
+            return 'in';
+        }
+
+        return 'out';
+    }
+
+    private function upsertLedgerEntry(CompanyTransaction $transaction, string $channel, $amount, $accountId, array $basePayload): void
+    {
+        $amount = round((float) $amount, 2);
+        $accountId = $accountId ? (int) $accountId : null;
+        $ref = sprintf('COMP-TX-%d-%s', $transaction->id, strtoupper($channel));
+
+        if ($amount <= 0 || !$accountId) {
+            LedgerEntry::query()
+                ->where('company_transaction_id', $transaction->id)
+                ->where('ref', $ref)
+                ->delete();
+
+            return;
+        }
+
+        $payload = array_merge($basePayload, [
+            'amount' => $amount,
+            'ref' => $ref,
+            'bank_account_id' => $channel === 'bank' ? $accountId : null,
+            'safe_id' => $channel === 'safe' ? $accountId : null,
+            'notes' => $this->ledgerNote($transaction, $channel),
+        ]);
+
+        LedgerEntry::updateOrCreate(
+            [
+                'company_transaction_id' => $transaction->id,
+                'ref' => $ref,
+            ],
+            $payload
+        );
+    }
+
+    private function ledgerNote(CompanyTransaction $transaction, string $channel): string
+    {
+        return match ($channel) {
+            'bank' => __('companies::messages.transactions.ledger.notes.bank', ['id' => $transaction->id]),
+            'safe' => __('companies::messages.transactions.ledger.notes.safe', ['id' => $transaction->id]),
+            default => __('companies::messages.transactions.ledger.notes.generic', ['id' => $transaction->id]),
+        };
     }
 }

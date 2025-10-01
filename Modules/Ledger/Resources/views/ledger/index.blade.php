@@ -40,6 +40,7 @@
                         <option value="">الكل</option>
                         <option value="investors" @selected(($filters['party_category'] ?? '') === 'investors')>المستثمرون</option>
                         <option value="office"    @selected(($filters['party_category'] ?? '') === 'office')>المكتب</option>
+                        <option value="companies" @selected(($filters['party_category'] ?? '') === 'companies')>{{ __('ledger::ledger.Companies') }}</option>
                     </select>
                 </div>
 
@@ -73,6 +74,16 @@
                                 @endif
                             @endforeach
                         </optgroup>
+
+                        @if(($statusesCompanies ?? collect())->isNotEmpty())
+                            <optgroup label="حالات الشركات" data-cat="companies">
+                                @foreach($statusesCompanies as $st)
+                                    @if(($st->transaction_type_id ?? null) != 3)
+                                        <option value="{{ $st->id }}" data-cat="companies" data-type="{{ $st->transaction_type_id }}" @selected((string)($filters['status_id'] ?? '') === (string)$st->id)>{{ $st->name }}</option>
+                                    @endif
+                                @endforeach
+                            </optgroup>
+                        @endif
                     </select>
                 </div>
 
@@ -126,8 +137,11 @@
                 <tr>
                     <td>{{ $e->entry_date?->format('Y-m-d') }}</td>
                     <td>
-                        @if($isOffice($e))
-                            <span class="badge bg-secondary">المكتب</span>
+                        @php $isCompany = !empty($e->company_transaction_id); @endphp
+                        @if($isCompany)
+                            <span class="badge bg-info text-dark">{{ __('ledger::ledger.Companies') }}</span>
+                        @elseif($isOffice($e))
+                            <span class="badge bg-secondary">{{ __('ledger::ledger.Office') }}</span>
                         @else
                             {{ $e->investor->name ?? '-' }}
                         @endif

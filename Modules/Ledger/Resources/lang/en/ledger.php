@@ -2,8 +2,10 @@
 
 return array (
   'Category' => 'Category',
+  'Companies' => 'Companies',
   'Investor' => 'Investor',
   'Status' => 'Status',
+  'Office' => 'Office',
   'Account' => 'Account',
   'Amount' => 'Amount',
   'Total Amount' => 'Total Amount',
