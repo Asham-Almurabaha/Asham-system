@@ -64,6 +64,13 @@ class StoreCompanyTransactionRequest extends FormRequest
             'bank_amount' => $bankAmount,
             'safe_amount' => $safeAmount,
         ]);
+
+        $allocations = $this->input('allocations');
+        if (is_array($allocations)) {
+            $this->merge([
+                'allocations' => $this->normalizeAllocationAmounts($allocations),
+            ]);
+        }
     }
 
     public function withValidator($validator): void
@@ -152,5 +159,71 @@ class StoreCompanyTransactionRequest extends FormRequest
     private function round2($value): float
     {
         return round((float) $value, 2);
+    }
+
+    private function normalizeAllocationAmounts(array $allocations): array
+    {
+        $totalAmount = $this->toFloat($this->input('total_amount', 0));
+
+        if ($totalAmount <= 0) {
+            return $allocations;
+        }
+
+        $currentSum = 0.0;
+        $hasAmount = false;
+
+        foreach ($allocations as $allocation) {
+            if (isset($allocation['share_amount']) && $allocation['share_amount'] !== '') {
+                $currentSum += $this->toFloat($allocation['share_amount']);
+                $hasAmount = true;
+            }
+        }
+
+        if ($hasAmount && abs($currentSum - $totalAmount) <= 0.01) {
+            return $allocations;
+        }
+
+        $percentages = [];
+        $totalPercentage = 0.0;
+
+        foreach ($allocations as $index => $allocation) {
+            if (!isset($allocation['share_percentage']) || $allocation['share_percentage'] === '') {
+                continue;
+            }
+
+            $percentage = max(0.0, $this->toFloat($allocation['share_percentage']));
+            $percentages[$index] = $percentage;
+            $totalPercentage += $percentage;
+        }
+
+        if ($totalPercentage <= 0) {
+            return $allocations;
+        }
+
+        $remaining = $totalAmount;
+        $lastIndex = array_key_last($percentages);
+
+        foreach ($percentages as $index => $percentage) {
+            if ($totalPercentage <= 0) {
+                break;
+            }
+
+            if ($index === $lastIndex) {
+                $amount = $this->round2($remaining);
+            } else {
+                $ratio = $percentage / $totalPercentage;
+                $amount = $this->round2($totalAmount * $ratio);
+                $remaining -= $amount;
+            }
+
+            $allocations[$index]['share_amount'] = number_format($amount, 2, '.', '');
+
+            if ($totalAmount > 0) {
+                $normalizedPercentage = $this->round2(($amount / $totalAmount) * 100);
+                $allocations[$index]['share_percentage'] = number_format($normalizedPercentage, 2, '.', '');
+            }
+        }
+
+        return $allocations;
     }
 }
