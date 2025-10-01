@@ -28,16 +28,7 @@
 </div>
 
 <div class="card shadow-sm mb-3">
-  <div class="card-body d-flex flex-wrap gap-2 align-items-center">
-    <div class="btn-group" role="group">
-      <x-button.action href="{{ $createRoute }}" variant="success">
-        <i class="bi bi-plus-lg"></i> {{ $createButtonLabel }}
-      </x-button.action>
-      <x-button.action href="{{ route('companies.index') }}" variant="secondary" :outline="true">
-        <i class="bi bi-buildings"></i> {{ __('companies::companies.Manage Companies') }}
-      </x-button.action>
-    </div>
-
+  <div class="card-body d-flex flex-wrap gap-2 align-items-center  p-20">
     <span class="ms-auto small text-muted">
       {{ __('companies::companies.Results Count', ['count' => number_format($transactions->total())]) }}
     </span>
@@ -76,11 +67,11 @@
         @endif
         <div class="col-md-3">
           <label class="form-label mb-1" for="date_from">{{ __('companies::companies.Date From') }}</label>
-          <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" class="form-control form-control-sm">
+          <input type="date" name="date_from" id="date_from" value="{{ request('date_from') }}" class="form-control form-control-sm js-date">
         </div>
         <div class="col-md-3">
           <label class="form-label mb-1" for="date_to">{{ __('companies::companies.Date To') }}</label>
-          <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" class="form-control form-control-sm">
+          <input type="date" name="date_to" id="date_to" value="{{ request('date_to') }}" class="form-control form-control-sm js-date">
         </div>
         <div class="col-md-2">
           <x-button.action type="submit" variant="primary" size="sm" class="w-100">{{ __('companies::companies.Apply Filter') }}</x-button.action>
@@ -144,6 +135,7 @@
           <th>{{ __('companies::companies.Status') }}</th>
           <th>{{ __('companies::companies.Account Source') }}</th>
           <th>{{ __('companies::companies.Allocations') }}</th>
+          <th>{{ __('companies::companies.Notes') }}</th>
           <th class="text-end">{{ __('companies::companies.Total Amount') }}</th>
           
         </tr>
@@ -185,12 +177,13 @@
               @endforeach
             </ul>
           </td>
+          <td>{{ $transaction->notes ?: '—' }}</td>
           <td class="text-end">{{ number_format((float) $transaction->total_amount, 2) }}</td>
-          
+
         </tr>
       @empty
         <tr>
-          <td colspan="6" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
+          <td colspan="7" class="py-5 text-center text-muted">{{ __('companies::companies.No Transactions Yet') }}</td>
         </tr>
       @endforelse
     </x-table>
