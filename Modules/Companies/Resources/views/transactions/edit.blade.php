@@ -155,6 +155,11 @@
               </optgroup>
             </select>
             <div class="form-text">{{ __('companies::companies.AccountPickerHelp') }}</div>
+            <div class="form-text mt-1" id="edit_single_account_availability">
+              <span class="text-muted">{{ __('ledger::ledger.Account Availability') }}</span>
+              <strong id="edit_single_account_availability_value">—</strong>
+              <span id="edit_single_account_availability_spinner" class="spinner-border spinner-border-sm align-middle d-none" role="status" aria-hidden="true"></span>
+            </div>
             <div class="text-danger small mt-1 d-none" id="edit_single_account_error"></div>
             @if($activeMode === 'single')
               @error('bank_account_id') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
@@ -394,6 +399,77 @@
     const safeAmountHidden = document.getElementById('edit_single_safe_amount');
     const totalInput = document.getElementById('edit_single_total_amount');
     const accountError = document.getElementById('edit_single_account_error');
+    const availabilityValue = document.getElementById('edit_single_account_availability_value');
+    const availabilitySpinner = document.getElementById('edit_single_account_availability_spinner');
+    const availabilityUrl = @json(route('ajax.accounts.availability'));
+    const availabilityError = @json(__('companies::messages.transactions.availability_fetch_error'));
+
+    function resetAvailability() {
+      if (availabilityValue) {
+        availabilityValue.textContent = '—';
+        availabilityValue.classList.remove('text-danger');
+      }
+      if (availabilitySpinner) {
+        availabilitySpinner.classList.add('d-none');
+      }
+    }
+
+    async function updateAvailability() {
+      if (!availabilityValue || !availabilitySpinner) {
+        return;
+      }
+
+      const value = accountPicker ? accountPicker.value : '';
+      availabilityValue.classList.remove('text-danger');
+
+      if (!value) {
+        resetAvailability();
+        return;
+      }
+
+      const [type, id] = value.split(':');
+      if (!type || !id) {
+        resetAvailability();
+        return;
+      }
+
+      availabilitySpinner.classList.remove('d-none');
+
+      try {
+        const params = new URLSearchParams({
+          account_type: type,
+          account_id: id
+        });
+
+        const response = await fetch(`${availabilityUrl}?${params.toString()}`, {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Request failed');
+        }
+
+        const payload = await response.json();
+        const amount = Number.parseFloat(payload?.available);
+
+        if (Number.isFinite(amount)) {
+          const formatter = new Intl.NumberFormat(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          });
+          availabilityValue.textContent = formatter.format(amount);
+        } else {
+          resetAvailability();
+        }
+      } catch (error) {
+        availabilityValue.textContent = availabilityError;
+        availabilityValue.classList.add('text-danger');
+      } finally {
+        availabilitySpinner.classList.add('d-none');
+      }
+    }
 
     function updateHidden() {
       const value = accountPicker ? accountPicker.value : '';
@@ -411,6 +487,7 @@
         }
       }
       updateAmounts();
+      void updateAvailability();
     }
 
     function toFixed(value) {
@@ -440,6 +517,8 @@
         }
       });
       updateHidden();
+    } else {
+      resetAvailability();
     }
 
     if (totalInput) {

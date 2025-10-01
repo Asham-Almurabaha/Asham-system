@@ -19,6 +19,7 @@ return [
         'single_mode_conflict' => 'لا يمكن تقسيم القيد في وضع القيد العادي.',
         'allocations_required' => 'أضف توزيعاً واحداً على الأقل للشركات.',
         'allocation_total_mismatch' => 'يجب أن يساوي مجموع التوزيعات إجمالي مبلغ العملية.',
+        'availability_fetch_error' => 'تعذّر الحصول على المتاح للحساب.',
     ],
     'disbursement_statuses' => [
         'created' => 'تم إنشاء حالة الصرف بنجاح.',

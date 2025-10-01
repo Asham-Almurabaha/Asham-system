@@ -21,4 +21,5 @@ return array (
   'To' => 'إلى',
   'Export Ledger Entries' => 'تصدير القيود (Excel)',
   'View Dashboard' => 'عرض لوحة التحكم',
+  'Account Availability' => 'المتاح في الحساب:',
 );

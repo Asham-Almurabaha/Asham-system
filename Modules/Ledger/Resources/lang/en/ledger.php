@@ -21,4 +21,5 @@ return array (
   'To' => 'To',
   'Export Ledger Entries' => 'Export Ledger Entries (Excel)',
   'View Dashboard' => 'View Dashboard',
+  'Account Availability' => 'Account availability:',
 );

@@ -266,7 +266,11 @@
       'company-transactions.destroy',
   ];
 
-  $companiesNavOpen = $isRoute(array_merge($companyManagePatterns, $companyTransactionPatterns));
+  $companyStatusPatterns = [
+      'company-disbursement-statuses.*',
+  ];
+
+  $companiesNavOpen = $isRoute(array_merge($companyManagePatterns, $companyTransactionPatterns, $companyStatusPatterns));
 
   $debtsPatterns = [
       'debts.*',
@@ -634,7 +638,7 @@
   </li>
   @endroutecanany
 
-  @routecanany(array_merge($companyManagePatterns, $companyTransactionPatterns))
+  @routecanany(array_merge($companyManagePatterns, $companyTransactionPatterns, $companyStatusPatterns))
   <li class="nav-item">
     <a class="nav-link {{ $coll($companiesNavOpen) }} {{ $active($companiesNavOpen) }}"
        data-bs-target="#companies-nav" data-bs-toggle="collapse" href="#"
@@ -647,6 +651,14 @@
       <li>
         <a class="{{ $active($isRoute($companyManagePatterns)) }}" href="{{ route('companies.index') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Companies')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($companyStatusPatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyStatusPatterns)) }}" href="{{ route('company-disbursement-statuses.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('companies::companies.Disbursement Statuses')</span>
         </a>
       </li>
       @endroutecanany

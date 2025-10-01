@@ -19,6 +19,7 @@ return [
         'single_mode_conflict' => 'Split amounts are not allowed in the standard entry mode.',
         'allocations_required' => 'Add at least one company allocation.',
         'allocation_total_mismatch' => 'The total of allocation amounts must equal the transaction total.',
+        'availability_fetch_error' => 'Unable to fetch availability.',
     ],
     'disbursement_statuses' => [
         'created' => 'Disbursement status created successfully.',
