@@ -44,6 +44,7 @@ return [
     'Manage Roles' => 'Manage Roles',
     'Manage Role Permissions' => 'Manage Role Permissions',
     'Manage Permissions' => 'Manage Permissions',
+    'Manage Sidebar Permissions' => 'Manage Sidebar Permissions',
     'Assign Roles to Users' => 'Assign Roles to Users',
     'Lookup Tables' => 'Lookup Tables',
     'People & Customers' => 'People & Customers',

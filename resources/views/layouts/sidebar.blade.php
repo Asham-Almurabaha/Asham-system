@@ -328,6 +328,7 @@
       'settings.roles.*',
       'settings.roles.permissions*',
       'settings.permissions.*',
+      'settings.sidebar-permissions.*',
       'users.*',
       'expenses.expense-types.*',
       'expenses.recurrence-periods.*',
@@ -359,6 +360,7 @@
   $settingsUsersPatterns = [
       'settings.roles.*',
       'settings.roles.permissions*',
+      'settings.sidebar-permissions.*',
       'settings.permissions.*',
       'users.*',
   ];
@@ -1135,6 +1137,14 @@
       <li>
         <a class="{{ $active($isRoute('settings.roles.permissions*')) }}" href="{{ route('settings.roles.permissions') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Role Permissions')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('settings.sidebar-permissions.*')
+      <li>
+        <a class="{{ $active($isRoute('settings.sidebar-permissions.*')) }}" href="{{ route('settings.sidebar-permissions.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Sidebar Permissions')</span>
         </a>
       </li>
       @endroutecanany

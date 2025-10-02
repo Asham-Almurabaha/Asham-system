@@ -44,6 +44,7 @@ return array (
   'Manage Roles' => 'إدارة الأدوار',
   'Manage Role Permissions' => 'إدارة صلاحيات الأدوار',
   'Manage Permissions' => 'إدارة الصلاحيات',
+  'Manage Sidebar Permissions' => 'إدارة صلاحيات القائمة الجانبية',
   'Assign Roles to Users' => 'تعيين الأدوار للمستخدمين',
   'Lookup Tables' => 'جداول التعاريف',
   'People & Customers' => 'الأشخاص والعملاء',

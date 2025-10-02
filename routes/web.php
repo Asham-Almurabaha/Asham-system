@@ -15,6 +15,7 @@ use App\Http\Controllers\Setting\RoleManagementController;
 use App\Http\Controllers\Setting\RolePermissionController;
 use App\Http\Controllers\Setting\SettingController;
 use App\Http\Controllers\Setting\AccountSettingsController;
+use App\Http\Controllers\Setting\SidebarPermissionController;
 use App\Http\Controllers\UserRoleController; // ✅ لإدارة أدوار المستخدمين
 use App\Http\Controllers\NoteController;
 use App\Models\Setting;
@@ -173,6 +174,11 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
             ->name('settings.roles.permissions');
         Route::put('/settings/roles-permissions/{role}', [RolePermissionController::class, 'update'])
             ->name('settings.roles.permissions.update');
+
+        Route::get('/settings/sidebar-permissions', [SidebarPermissionController::class, 'index'])
+            ->name('settings.sidebar-permissions.index');
+        Route::post('/settings/sidebar-permissions', [SidebarPermissionController::class, 'update'])
+            ->name('settings.sidebar-permissions.update');
 
         Route::get('/users',               [UserRoleController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/roles',  [UserRoleController::class, 'edit'])->name('users.roles.edit');
