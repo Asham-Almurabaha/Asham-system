@@ -17,23 +17,8 @@ class PermissionsSeeder extends Seeder
     {
         $this->seedRolesAndPermissions();
 
-        $adminUser = User::firstOrCreate(
-            ['email' => 'admin@admin.com'],
-            [
-                'name'              => 'Admin',
-                'password'          => Hash::make('admin@123'),
-                'email_verified_at' => now(),
-            ]
-        );
-
-        $testUser = User::firstOrCreate(
-            ['email' => 'test@test.com'],
-            [
-                'name'              => 'Test',
-                'password'          => Hash::make('test@123'),
-                'email_verified_at' => now(),
-            ]
-        );
+        $adminUser = $this->firstOrCreateUser('admin@admin.com', 'Admin', 'admin@123');
+        $testUser  = $this->firstOrCreateUser('test@test.com', 'Test', 'test@123');
 
         $adminRole = Role::where('name', 'admin')
             ->where('guard_name', $this->guardName())
@@ -50,5 +35,21 @@ class PermissionsSeeder extends Seeder
         if ($viewerRole && !$testUser->hasRole($viewerRole)) {
             $testUser->assignRole($viewerRole);
         }
+    }
+
+    private function firstOrCreateUser(string $email, string $name, string $password): User
+    {
+        $user = User::where('email', $email)->first();
+
+        if ($user) {
+            return $user;
+        }
+
+        return User::create([
+            'name'              => $name,
+            'email'             => $email,
+            'password'          => Hash::make($password),
+            'email_verified_at' => now(),
+        ]);
     }
 }

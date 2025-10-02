@@ -23,12 +23,24 @@ trait SeedsRolesAndPermissions
         $guard       = $this->guardName();
 
         foreach ($permissions as $name) {
-            Permission::findOrCreate($name, $guard);
+            Permission::firstOrCreate(
+                ['name' => $name, 'guard_name' => $guard],
+                ['name' => $name, 'guard_name' => $guard]
+            );
         }
 
         foreach ($this->rolePermissionMap($permissions) as $roleName => $rolePermissions) {
-            $role = Role::findOrCreate($roleName, $guard);
-            $role->syncPermissions($rolePermissions);
+            $role = Role::firstOrCreate(
+                ['name' => $roleName, 'guard_name' => $guard],
+                ['name' => $roleName, 'guard_name' => $guard]
+            );
+
+            $existingPermissions = $role->permissions()->pluck('name')->all();
+            $missingPermissions  = array_diff($rolePermissions, $existingPermissions);
+
+            if ($missingPermissions) {
+                $role->givePermissionTo($missingPermissions);
+            }
         }
 
         return $permissions;
