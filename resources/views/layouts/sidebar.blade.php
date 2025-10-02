@@ -39,11 +39,20 @@
   // فتح مجموعة العقود؟
   $contractsOpen = $isRoute('contracts.*');
 
-  // فتح مجموعة الحسابات؟
-  $companyExpensePatterns = [
-      'company-transactions.expenses.*',
-      'company-transactions.expenses.payments.*',
+  $companyExpenseEntryPatterns = [
+      'company-transactions.expenses.index',
+      'company-transactions.expenses.create',
+      'company-transactions.expenses.store',
   ];
+
+  $companyExpensePaymentPatterns = [
+      'company-transactions.expenses.payments.index',
+      'company-transactions.expenses.payments.create',
+      'company-transactions.expenses.payments.store',
+  ];
+
+  // فتح مجموعة الحسابات؟
+  $companyExpensePatterns = array_merge($companyExpenseEntryPatterns, $companyExpensePaymentPatterns);
 
   $accountsOpen = $isRoute('ledger.*')
       || $isRoute('investors.ledger.*')
@@ -606,7 +615,7 @@
 
       @routecanany(['company-transactions.expenses.create', 'company-transactions.expenses.index'])
       <li>
-        <a class="{{ $active($isRoute('company-transactions.expenses.*')) }}" href="{{ route('company-transactions.expenses.create') }}">
+        <a class="{{ $active($isRoute($companyExpenseEntryPatterns)) }}" href="{{ route('company-transactions.expenses.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expenses')</span>
         </a>
       </li>
@@ -614,7 +623,7 @@
 
       @routecanany(['company-transactions.expenses.payments.create', 'company-transactions.expenses.payments.index'])
       <li>
-        <a class="{{ $active($isRoute('company-transactions.expenses.payments.*')) }}" href="{{ route('company-transactions.expenses.payments.create') }}">
+        <a class="{{ $active($isRoute($companyExpensePaymentPatterns)) }}" href="{{ route('company-transactions.expenses.payments.create') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expense Payments')</span>
         </a>
       </li>
