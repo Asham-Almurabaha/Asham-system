@@ -25,9 +25,14 @@ return [
         'paid_at' => 'Payment date',
         'bank_account_id' => 'Bank account',
         'safe_id' => 'Safe',
+        'account_choice' => 'Payment source',
         'notes' => 'Notes',
-        'account_placeholder' => 'Select a bank account',
+        'account_placeholder' => 'Select a bank account or safe',
         'safe_placeholder' => 'Select a safe',
+    ],
+    'groups' => [
+        'banks' => 'Bank accounts',
+        'safes' => 'Safes',
     ],
     'history' => [
         'heading' => 'Payment history',
@@ -45,6 +50,7 @@ return [
     'hints' => [
         'account_choice' => 'Choose a bank account or safe to record the payment.',
         'account_available' => 'Available balance:',
+        'account_availability' => 'Available balance in account',
     ],
     'ledger' => [
         'notes' => 'Expense payment #:id (:title)',
