@@ -12,6 +12,8 @@
     $entryHint = $entryHint ?? __('companies::companies.CompanyEntryHint');
     $entryModeHelp = $entryModeHelp ?? __('companies::companies.CompanyEntryModeHelp');
     $categoryLabel = $categoryLabel ?? __('companies::companies.OfficeCategoryLabel');
+    $singleCompanyMode = (bool) ($singleCompanyMode ?? false);
+    $companySummaries = collect($companySummaries ?? []);
 
     $today = now()->format('Y-m-d');
     $activeMode = old('entry_mode', 'single');
@@ -19,26 +21,55 @@
         $activeMode = 'single';
     }
 
+    $preselectedCompany = (int) request('company_id');
+    if ($preselectedCompany <= 0) {
+        $preselectedCompany = null;
+    }
+
     $oldAllocations = old('allocations', []);
     if (empty($oldAllocations)) {
-        $preselectedCompany = (int) request('company_id');
         $oldAllocations = [[
-            'company_id' => $preselectedCompany > 0 ? $preselectedCompany : null,
+            'company_id' => $preselectedCompany,
             'share_amount' => old('total_amount'),
             'share_percentage' => null,
             'notes' => null,
         ]];
     }
 
-    $defaultAllocationRow = [
-        'company_id' => null,
-        'share_amount' => null,
-        'share_percentage' => null,
-        'notes' => null,
-    ];
+    $primaryCompanyId = null;
+    $initialShareAmount = '';
+    $initialSharePercentage = number_format(100, 2, '.', '');
 
-    $singleAllocations = $activeMode === 'split' ? [$defaultAllocationRow] : $oldAllocations;
-    $splitAllocations = $activeMode === 'split' ? $oldAllocations : [$defaultAllocationRow];
+    if ($singleCompanyMode) {
+        $primaryCompanyId = (int) ($oldAllocations[0]['company_id'] ?? 0) ?: null;
+
+        if (!$primaryCompanyId && $preselectedCompany) {
+            $primaryCompanyId = $preselectedCompany;
+        }
+
+        $initialShareAmountValue = $oldAllocations[0]['share_amount'] ?? old('total_amount');
+        if (!is_null($initialShareAmountValue) && $initialShareAmountValue !== '') {
+            $initialShareAmount = number_format((float) $initialShareAmountValue, 2, '.', '');
+        }
+
+        $initialSharePercentageValue = $oldAllocations[0]['share_percentage'] ?? 100;
+        if (!is_null($initialSharePercentageValue) && $initialSharePercentageValue !== '') {
+            $initialSharePercentage = number_format((float) $initialSharePercentageValue, 2, '.', '');
+        }
+
+        $singleAllocations = [];
+        $splitAllocations = [];
+    } else {
+        $defaultAllocationRow = [
+            'company_id' => null,
+            'share_amount' => null,
+            'share_percentage' => null,
+            'notes' => null,
+        ];
+
+        $singleAllocations = $activeMode === 'split' ? [$defaultAllocationRow] : $oldAllocations;
+        $splitAllocations = $activeMode === 'split' ? $oldAllocations : [$defaultAllocationRow];
+    }
 
     $singleBankId = $activeMode === 'single' ? old('bank_account_id') : null;
     $singleSafeId = $activeMode === 'single' ? old('safe_id') : null;
@@ -99,6 +130,35 @@
           <input type="hidden" name="safe_id" id="single_safe_id" value="{{ $singleSafeId }}">
           <input type="hidden" name="bank_amount" id="single_bank_amount" value="{{ $singleBankId ? $singleTotalAmount : '0.00' }}">
           <input type="hidden" name="safe_amount" id="single_safe_amount" value="{{ $singleSafeId ? $singleTotalAmount : '0.00' }}">
+
+          @if($singleCompanyMode)
+            <input type="hidden" name="allocations[0][company_id]" id="single_allocation_company_id" value="{{ $primaryCompanyId }}">
+            <input type="hidden" name="allocations[0][share_amount]" id="single_allocation_share_amount" value="{{ $initialShareAmount }}">
+            <input type="hidden" name="allocations[0][share_percentage]" id="single_allocation_share_percentage" value="{{ $initialSharePercentage }}">
+            <input type="hidden" name="allocations[0][notes]" value="">
+
+            <div class="col-12">
+              <label for="single_company_selector" class="form-label">{{ __('companies::companies.Company Name') }} <span class="text-danger">*</span></label>
+              <select id="single_company_selector" name="primary_company_id" class="form-select @error('allocations.0.company_id') is-invalid @enderror" data-role="company-selector" required>
+                <option value="">{{ __('companies::companies.Choose Company') }}</option>
+                @foreach($companies as $company)
+                  <option value="{{ $company->id }}" @selected($primaryCompanyId === $company->id)>{{ $company->name }}</option>
+                @endforeach
+              </select>
+              @error('allocations.0.company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              @if($activeMode === 'single')
+                @error('allocations') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+              @endif
+            </div>
+
+            <div class="col-12">
+              @include('companies::transactions.partials.company-status-preview', [
+                  'companyStatusSummaries' => $companySummaries,
+                  'selectedCompanyId' => $primaryCompanyId,
+                  'previewId' => 'single_company_status_preview'
+              ])
+            </div>
+          @endif
 
           <div class="col-md-6">
             <label for="single_account_picker" class="form-label">{{ __('companies::companies.AccountSourcePicker') }} <span class="text-danger">*</span></label>
@@ -166,60 +226,62 @@
             @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
-          <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h2 class="h5 mb-0">{{ __('companies::companies.Allocations') }}</h2>
-              <x-button.action type="button" variant="secondary" :outline="true" size="sm" id="singleAddAllocationRow">
-                <i class="bi bi-plus-lg"></i> {{ __('companies::companies.Add Allocation') }}
-              </x-button.action>
-            </div>
-            @error('allocations') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
-            <div class="table-responsive">
-              <table class="table table-bordered align-middle" id="singleAllocationsTable">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width:25%">{{ __('companies::companies.Company Name') }}</th>
-                    <th style="width:15%">{{ __('companies::companies.Share Percentage') }}</th>
-                    <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
-                    <th>{{ __('companies::companies.Notes') }}</th>
-                    <th style="width:60px"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach($singleAllocations as $index => $allocation)
+          @unless($singleCompanyMode)
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h5 mb-0">{{ __('companies::companies.Allocations') }}</h2>
+                <x-button.action type="button" variant="secondary" :outline="true" size="sm" id="singleAddAllocationRow">
+                  <i class="bi bi-plus-lg"></i> {{ __('companies::companies.Add Allocation') }}
+                </x-button.action>
+              </div>
+              @error('allocations') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="singleAllocationsTable">
+                  <thead class="table-light">
                     <tr>
-                      <td>
-                        <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm allocation-company-select @error("allocations.$index.company_id") is-invalid @enderror" required>
-                          <option value="">{{ __('companies::companies.Choose Company') }}</option>
-                          @foreach($companies as $company)
-                            <option value="{{ $company->id }}" @selected((int) ($allocation['company_id'] ?? 0) === $company->id)>{{ $company->name }}</option>
-                          @endforeach
-                        </select>
-                        @error("allocations.$index.company_id") <div class="invalid-feedback">{{ $message }}</div> @enderror
-                      </td>
-                      <td>
-                        <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm allocation-percentage @error("allocations.$index.share_percentage") is-invalid @enderror">
-                        @error("allocations.$index.share_percentage") <div class="invalid-feedback">{{ $message }}</div> @enderror
-                      </td>
-                      <td>
-                        <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm allocation-amount @error("allocations.$index.share_amount") is-invalid @enderror" required>
-                        @error("allocations.$index.share_amount") <div class="invalid-feedback">{{ $message }}</div> @enderror
-                      </td>
-                      <td>
-                        <input type="text" name="allocations[{{ $index }}][notes]" value="{{ $allocation['notes'] ?? '' }}" class="form-control form-control-sm @error("allocations.$index.notes") is-invalid @enderror" placeholder="{{ __('companies::companies.Optional Note') }}">
-                        @error("allocations.$index.notes") <div class="invalid-feedback">{{ $message }}</div> @enderror
-                      </td>
-                      <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-allocation" title="{{ __('companies::companies.Remove Allocation') }}">
-                          <i class="bi bi-x-lg"></i>
-                        </button>
-                      </td>
+                      <th style="width:25%">{{ __('companies::companies.Company Name') }}</th>
+                      <th style="width:15%">{{ __('companies::companies.Share Percentage') }}</th>
+                      <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
+                      <th>{{ __('companies::companies.Notes') }}</th>
+                      <th style="width:60px"></th>
                     </tr>
-                  @endforeach
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    @foreach($singleAllocations as $index => $allocation)
+                      <tr>
+                        <td>
+                          <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm allocation-company-select @error("allocations.$index.company_id") is-invalid @enderror" required>
+                            <option value="">{{ __('companies::companies.Choose Company') }}</option>
+                            @foreach($companies as $company)
+                              <option value="{{ $company->id }}" @selected((int) ($allocation['company_id'] ?? 0) === $company->id)>{{ $company->name }}</option>
+                            @endforeach
+                          </select>
+                          @error("allocations.$index.company_id") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm allocation-percentage @error("allocations.$index.share_percentage") is-invalid @enderror">
+                          @error("allocations.$index.share_percentage") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm allocation-amount @error("allocations.$index.share_amount") is-invalid @enderror" required>
+                          @error("allocations.$index.share_amount") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </td>
+                        <td>
+                          <input type="text" name="allocations[{{ $index }}][notes]" value="{{ $allocation['notes'] ?? '' }}" class="form-control form-control-sm @error("allocations.$index.notes") is-invalid @enderror" placeholder="{{ __('companies::companies.Optional Note') }}">
+                          @error("allocations.$index.notes") <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-sm btn-outline-danger remove-allocation" title="{{ __('companies::companies.Remove Allocation') }}">
+                            <i class="bi bi-x-lg"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          @endunless
 
           <div class="col-12 d-flex align-items-center gap-2 mt-3">
             <x-button.action type="submit" variant="success">{{ __('companies::companies.Save Transaction') }}</x-button.action>
@@ -232,6 +294,35 @@
         <form action="{{ route($storeRoute) }}" method="POST" class="row g-3" id="companyEntrySplitForm">
           @csrf
           <input type="hidden" name="entry_mode" value="split">
+
+          @if($singleCompanyMode)
+            <input type="hidden" name="allocations[0][company_id]" id="split_allocation_company_id" value="{{ $primaryCompanyId }}">
+            <input type="hidden" name="allocations[0][share_amount]" id="split_allocation_share_amount" value="{{ $initialShareAmount }}">
+            <input type="hidden" name="allocations[0][share_percentage]" id="split_allocation_share_percentage" value="{{ $initialSharePercentage }}">
+            <input type="hidden" name="allocations[0][notes]" value="">
+
+            <div class="col-12">
+              <label for="split_company_selector" class="form-label">{{ __('companies::companies.Company Name') }} <span class="text-danger">*</span></label>
+              <select id="split_company_selector" name="primary_company_id" class="form-select @error('allocations.0.company_id') is-invalid @enderror" data-role="company-selector" required>
+                <option value="">{{ __('companies::companies.Choose Company') }}</option>
+                @foreach($companies as $company)
+                  <option value="{{ $company->id }}" @selected($primaryCompanyId === $company->id)>{{ $company->name }}</option>
+                @endforeach
+              </select>
+              @error('allocations.0.company_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+              @if($activeMode === 'split')
+                @error('allocations') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+              @endif
+            </div>
+
+            <div class="col-12">
+              @include('companies::transactions.partials.company-status-preview', [
+                  'companyStatusSummaries' => $companySummaries,
+                  'selectedCompanyId' => $primaryCompanyId,
+                  'previewId' => 'split_company_status_preview'
+              ])
+            </div>
+          @endif
 
           <div class="col-md-6">
             <label for="split_total_amount" class="form-label">{{ __('companies::companies.Total Amount') }} <span class="text-danger">*</span></label>
@@ -339,56 +430,58 @@
             @error('notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
           </div>
 
-          <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h2 class="h5 mb-0">{{ __('companies::companies.Allocations') }}</h2>
-              <x-button.action type="button" variant="secondary" :outline="true" size="sm" id="splitAddAllocationRow">
-                <i class="bi bi-plus-lg"></i> {{ __('companies::companies.Add Allocation') }}
-              </x-button.action>
-            </div>
-            @error('allocations') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
-            <div class="table-responsive">
-              <table class="table table-bordered align-middle" id="splitAllocationsTable">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width:25%">{{ __('companies::companies.Company Name') }}</th>
-                    <th style="width:15%">{{ __('companies::companies.Share Percentage') }}</th>
-                    <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
-                    <th>{{ __('companies::companies.Notes') }}</th>
-                    <th style="width:60px"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @foreach($splitAllocations as $index => $allocation)
+          @unless($singleCompanyMode)
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h5 mb-0">{{ __('companies::companies.Allocations') }}</h2>
+                <x-button.action type="button" variant="secondary" :outline="true" size="sm" id="splitAddAllocationRow">
+                  <i class="bi bi-plus-lg"></i> {{ __('companies::companies.Add Allocation') }}
+                </x-button.action>
+              </div>
+              @error('allocations') <div class="alert alert-danger py-2">{{ $message }}</div> @enderror
+              <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="splitAllocationsTable">
+                  <thead class="table-light">
                     <tr>
-                      <td>
-                        <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm allocation-company-select" required>
-                          <option value="">{{ __('companies::companies.Choose Company') }}</option>
-                          @foreach($companies as $company)
-                            <option value="{{ $company->id }}" @selected((int) ($allocation['company_id'] ?? 0) === $company->id)>{{ $company->name }}</option>
-                          @endforeach
-                        </select>
-                      </td>
-                      <td>
-                        <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm allocation-percentage">
-                      </td>
-                      <td>
-                        <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm allocation-amount" required>
-                      </td>
-                      <td>
-                        <input type="text" name="allocations[{{ $index }}][notes]" value="{{ $allocation['notes'] ?? '' }}" class="form-control form-control-sm" placeholder="{{ __('companies::companies.Optional Note') }}">
-                      </td>
-                      <td class="text-center">
-                        <button type="button" class="btn btn-sm btn-outline-danger remove-allocation" title="{{ __('companies::companies.Remove Allocation') }}">
-                          <i class="bi bi-x-lg"></i>
-                        </button>
-                      </td>
+                      <th style="width:25%">{{ __('companies::companies.Company Name') }}</th>
+                      <th style="width:15%">{{ __('companies::companies.Share Percentage') }}</th>
+                      <th style="width:15%">{{ __('companies::companies.Share Amount') }}</th>
+                      <th>{{ __('companies::companies.Notes') }}</th>
+                      <th style="width:60px"></th>
                     </tr>
-                  @endforeach
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    @foreach($splitAllocations as $index => $allocation)
+                      <tr>
+                        <td>
+                          <select name="allocations[{{ $index }}][company_id]" class="form-select form-select-sm allocation-company-select" required>
+                            <option value="">{{ __('companies::companies.Choose Company') }}</option>
+                            @foreach($companies as $company)
+                              <option value="{{ $company->id }}" @selected((int) ($allocation['company_id'] ?? 0) === $company->id)>{{ $company->name }}</option>
+                            @endforeach
+                          </select>
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" min="0" max="100" name="allocations[{{ $index }}][share_percentage]" value="{{ $allocation['share_percentage'] ?? '' }}" class="form-control form-control-sm allocation-percentage">
+                        </td>
+                        <td>
+                          <input type="number" step="0.01" min="0.01" name="allocations[{{ $index }}][share_amount]" value="{{ $allocation['share_amount'] ?? '' }}" class="form-control form-control-sm allocation-amount" required>
+                        </td>
+                        <td>
+                          <input type="text" name="allocations[{{ $index }}][notes]" value="{{ $allocation['notes'] ?? '' }}" class="form-control form-control-sm" placeholder="{{ __('companies::companies.Optional Note') }}">
+                        </td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-sm btn-outline-danger remove-allocation" title="{{ __('companies::companies.Remove Allocation') }}">
+                            <i class="bi bi-x-lg"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    @endforeach
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          @endunless
 
           <div class="col-12 d-flex align-items-center gap-2 mt-3">
             <x-button.action type="submit" variant="success">{{ __('companies::companies.Save Transaction') }}</x-button.action>
@@ -403,6 +496,7 @@
 
 @push('scripts')
 <script>
+  const singleCompanyMode = Boolean(@json($singleCompanyMode));
   const availabilityUrl = @json(route('ajax.accounts.availability'));
   const availabilityErrorText = @json(__('companies::messages.transactions.availability_fetch_error'));
   const availabilityExceededText = @json(__('companies::messages.transactions.amount_exceeds_availability'));
@@ -411,22 +505,27 @@
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
+  const companyPickerControllers = [];
 
   document.addEventListener('DOMContentLoaded', () => {
     setupSingleForm();
     setupSplitForm();
 
-    setupAllocationsTable({
-      tableId: 'singleAllocationsTable',
-      addButtonId: 'singleAddAllocationRow',
-      totalInputId: 'single_total_amount'
-    });
+    if (singleCompanyMode) {
+      setupSingleCompanyMode();
+    } else {
+      setupAllocationsTable({
+        tableId: 'singleAllocationsTable',
+        addButtonId: 'singleAddAllocationRow',
+        totalInputId: 'single_total_amount'
+      });
 
-    setupAllocationsTable({
-      tableId: 'splitAllocationsTable',
-      addButtonId: 'splitAddAllocationRow',
-      totalInputId: 'split_total_amount'
-    });
+      setupAllocationsTable({
+        tableId: 'splitAllocationsTable',
+        addButtonId: 'splitAddAllocationRow',
+        totalInputId: 'split_total_amount'
+      });
+    }
   });
 
   function formatNumber(value) {
@@ -436,6 +535,138 @@
     }
 
     return numberFormatter.format(amount);
+  }
+
+  function broadcastCompanySelection(value, sourceController) {
+    companyPickerControllers.forEach((controller) => {
+      if (!controller || controller === sourceController) {
+        return;
+      }
+
+      if (typeof controller.setValue === 'function') {
+        controller.setValue(value, { skipNotify: true });
+      }
+    });
+  }
+
+  function setupCompanyPicker({ selectId, hiddenCompanyInputId, hiddenAmountInputId, hiddenPercentageInputId, totalInputId, previewContainerId }) {
+    const select = document.getElementById(selectId);
+    const hiddenCompanyInput = document.getElementById(hiddenCompanyInputId);
+    const hiddenAmountInput = document.getElementById(hiddenAmountInputId);
+    const hiddenPercentageInput = document.getElementById(hiddenPercentageInputId);
+    const totalInput = document.getElementById(totalInputId);
+    const previewContainer = document.getElementById(previewContainerId);
+    const hint = previewContainer ? previewContainer.querySelector('[data-role="hint"]') : null;
+
+    const togglePreview = (value) => {
+      if (!previewContainer) {
+        return;
+      }
+
+      const normalized = value === undefined || value === null ? '' : String(value);
+      const cards = previewContainer.querySelectorAll('[data-company-id]');
+
+      cards.forEach((card) => {
+        const cardId = card.getAttribute('data-company-id');
+        if (normalized && cardId === normalized) {
+          card.classList.remove('d-none');
+        } else {
+          card.classList.add('d-none');
+        }
+      });
+
+      if (hint) {
+        if (normalized) {
+          hint.classList.add('d-none');
+        } else {
+          hint.classList.remove('d-none');
+        }
+      }
+    };
+
+    const syncCompanyValue = (value) => {
+      const normalized = value === undefined || value === null ? '' : String(value);
+      if (hiddenCompanyInput) {
+        hiddenCompanyInput.value = normalized;
+      }
+      togglePreview(normalized);
+    };
+
+    const syncAmountValue = () => {
+      if (!hiddenAmountInput || !totalInput) {
+        return;
+      }
+
+      const amount = Number.parseFloat(totalInput.value);
+      if (Number.isFinite(amount)) {
+        hiddenAmountInput.value = amount.toFixed(2);
+      } else {
+        hiddenAmountInput.value = '';
+      }
+    };
+
+    if (hiddenPercentageInput) {
+      const percentage = Number.parseFloat(hiddenPercentageInput.value);
+      if (Number.isFinite(percentage)) {
+        hiddenPercentageInput.value = percentage.toFixed(2);
+      } else {
+        hiddenPercentageInput.value = '100.00';
+      }
+    }
+
+    const controller = {
+      setValue(value, { skipNotify = false } = {}) {
+        const normalized = value === undefined || value === null ? '' : String(value);
+
+        if (select && select.value !== normalized) {
+          select.value = normalized;
+        }
+
+        syncCompanyValue(normalized);
+
+        if (!skipNotify) {
+          broadcastCompanySelection(normalized, controller);
+        }
+      },
+      syncAmount: syncAmountValue,
+    };
+
+    if (select) {
+      select.addEventListener('change', () => {
+        controller.setValue(select.value, { skipNotify: false });
+      });
+    }
+
+    if (totalInput) {
+      totalInput.addEventListener('input', syncAmountValue);
+      totalInput.addEventListener('blur', syncAmountValue);
+      syncAmountValue();
+    }
+
+    controller.setValue(select ? select.value : '', { skipNotify: true });
+    companyPickerControllers.push(controller);
+
+    return controller;
+  }
+
+  function setupSingleCompanyMode() {
+    setupCompanyPicker({
+      selectId: 'single_company_selector',
+      hiddenCompanyInputId: 'single_allocation_company_id',
+      hiddenAmountInputId: 'single_allocation_share_amount',
+      hiddenPercentageInputId: 'single_allocation_share_percentage',
+      totalInputId: 'single_total_amount',
+      previewContainerId: 'single_company_status_preview'
+    });
+
+    setupCompanyPicker({
+      selectId: 'split_company_selector',
+      hiddenCompanyInputId: 'split_allocation_company_id',
+      hiddenAmountInputId: 'split_allocation_share_amount',
+      hiddenPercentageInputId: 'split_allocation_share_percentage',
+      totalInputId: 'split_total_amount',
+      previewContainerId: 'split_company_status_preview'
+    });
   }
 
   function setupSingleForm() {
