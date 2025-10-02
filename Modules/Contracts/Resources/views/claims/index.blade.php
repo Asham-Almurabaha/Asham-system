@@ -239,7 +239,7 @@
 
                 @empty
                     <tr>
-                        <td colspan="9" class="py-4">
+                        <td colspan="12" class="py-4">
                             <div class="text-muted">{{ __('contracts::claims.no_results') }}</div>
                         </td>
                     </tr>

@@ -2,27 +2,33 @@
   {{-- العميل + الكفيل --}}
   <div class="col-md-6">
     <label for="customer_id" class="form-label">العميل <span class="text-danger">*</span></label>
-    <select name="customer_id" id="customer_id" class="form-select @error('customer_id') is-invalid @enderror" required>
+    <div data-searchable-select-wrapper>
+      <select name="customer_id" id="customer_id" class="form-select @error('customer_id') is-invalid @enderror"
+              data-searchable-select data-searchable-placeholder="ابحث عن العميل" required>
       <option value="">اختر العميل</option>
       @foreach($customers as $customer)
         <option value="{{ $customer->id }}" {{ old('customer_id', ($contract->customer_id ?? null)) == $customer->id ? 'selected' : '' }}>
           {{ $customer->name }}
         </option>
       @endforeach
-    </select>
+      </select>
+    </div>
     @error('customer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 
   <div class="col-md-6">
     <label for="guarantor_id" class="form-label">الكفيل</label>
-    <select name="guarantor_id" id="guarantor_id" class="form-select @error('guarantor_id') is-invalid @enderror">
+    <div data-searchable-select-wrapper>
+      <select name="guarantor_id" id="guarantor_id" class="form-select @error('guarantor_id') is-invalid @enderror"
+              data-searchable-select data-searchable-placeholder="ابحث عن الكفيل">
       <option value="">بدون كفيل</option>
       @foreach($guarantors as $guarantor)
         <option value="{{ $guarantor->id }}" {{ old('guarantor_id', ($contract->guarantor_id ?? null)) == $guarantor->id ? 'selected' : '' }}>
           {{ $guarantor->name }}
         </option>
       @endforeach
-    </select>
+      </select>
+    </div>
     @error('guarantor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 

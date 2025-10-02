@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Modules\Accounts\Database\Seeders\AccountsDatabaseSeeder;
 use Modules\Lookups\Database\Seeders\LookupsDatabaseSeeder;
 
@@ -24,10 +25,14 @@ class DatabaseSeeder extends Seeder
             PermissionsSeeder::class,
         ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name'              => 'Test User',
+                'password'          => Hash::make('password'),
+                'email_verified_at' => now(),
+            ]
+        );
 
     }
 }

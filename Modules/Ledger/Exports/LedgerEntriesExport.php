@@ -58,7 +58,9 @@ class LedgerEntriesExport implements FromQuery, WithHeadings, WithMapping, Shoul
         if ($category === 'investors') {
             $query->where('is_office', false);
         } elseif ($category === 'office') {
-            $query->where('is_office', true);
+            $query->where('is_office', true)->whereNull('company_transaction_id');
+        } elseif ($category === 'companies') {
+            $query->whereNotNull('company_transaction_id');
         }
 
         if (!empty($this->filters['investor_id'])) {
@@ -108,7 +110,7 @@ class LedgerEntriesExport implements FromQuery, WithHeadings, WithMapping, Shoul
 
         return [
             $entry->id,
-            $entry->is_office ? 'office' : 'investors',
+            $entry->party_category,
             $entry->investor_id,
             optional($entry->investor)->name,
             $entry->transaction_status_id,

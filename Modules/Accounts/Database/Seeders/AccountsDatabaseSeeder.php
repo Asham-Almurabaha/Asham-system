@@ -60,14 +60,14 @@ class AccountsDatabaseSeeder extends Seeder
         foreach ($records as $record) {
             $existing = DB::table('bank_accounts')->where('name', $record['name'])->first();
 
-            $payload = array_merge($record, ['updated_at' => $now]);
-
             if ($existing) {
-                DB::table('bank_accounts')->where('id', $existing->id)->update($payload);
                 continue;
             }
 
-            DB::table('bank_accounts')->insert(array_merge($payload, ['created_at' => $now]));
+            DB::table('bank_accounts')->insert(array_merge($record, [
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]));
         }
     }
 
@@ -103,14 +103,14 @@ class AccountsDatabaseSeeder extends Seeder
         foreach ($records as $record) {
             $existing = DB::table('safes')->where('name', $record['name'])->first();
 
-            $payload = array_merge($record, ['updated_at' => $now]);
-
             if ($existing) {
-                DB::table('safes')->where('id', $existing->id)->update($payload);
                 continue;
             }
 
-            DB::table('safes')->insert(array_merge($payload, ['created_at' => $now]));
+            DB::table('safes')->insert(array_merge($record, [
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]));
         }
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Accounts\Entities\BankAccount;
 use Modules\Accounts\Entities\Safe;
+use Modules\Companies\Entities\CompanyTransaction;
 use Modules\Contracts\Entities\Contract;
 use Modules\Contracts\Entities\ContractInstallment;
 use Modules\Investors\Entities\Investor;
@@ -28,6 +29,7 @@ class LedgerEntry extends Model
         'safe_id',
         'contract_id',
         'installment_id',
+        'company_transaction_id',
         'amount',
         'direction',
         'ref',
@@ -40,6 +42,15 @@ class LedgerEntry extends Model
         'amount'     => 'decimal:2',
     ];
 
+    public function getPartyCategoryAttribute(): string
+    {
+        if (!is_null($this->company_transaction_id)) {
+            return 'companies';
+        }
+
+        return $this->is_office ? 'office' : 'investors';
+    }
+
     // علاقات
     public function investor()         { return $this->belongsTo(Investor::class); }
     public function contract()         { return $this->belongsTo(Contract::class); }
@@ -49,6 +60,7 @@ class LedgerEntry extends Model
     public function status()           { return $this->belongsTo(TransactionStatus::class, 'transaction_status_id'); }
     public function type()             { return $this->belongsTo(TransactionType::class, 'transaction_type_id'); }
     public function productTransactions(){return $this->hasMany(ProductTransaction::class);}
+    public function companyTransaction(){ return $this->belongsTo(CompanyTransaction::class); }
 
 
     // مقدار موقّع (مفيد للعرض)

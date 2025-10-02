@@ -98,7 +98,7 @@ class CashAccountsDataService
         }
 
         // ===== أسماء الحسابات والحالات
-        [$bankNames, $safeNames, $statusNames] = $this->fetchNamesMaps(
+        [$bankMeta, $safeMeta, $statusNames] = $this->fetchNamesMaps(
             $bankRows->pluck('bank_account_id')->filter()->unique()->values(),
             $safeRows->pluck('safe_id')->filter()->unique()->values(),
             collect()
@@ -150,7 +150,8 @@ class CashAccountsDataService
 
             $banks[] = [
                 'id'       => $id,
-                'name'     => $bankNames[$id] ?? ('#'.$id),
+                'name'     => $bankMeta[$id]['name'] ?? ('#'.$id),
+                'is_active' => (bool)($bankMeta[$id]['is_active'] ?? true),
                 'in'       => $in,
                 'out'      => $out,
                 'net'      => $net,
@@ -205,7 +206,8 @@ class CashAccountsDataService
 
             $safes[] = [
                 'id'       => $id,
-                'name'     => $safeNames[$id] ?? ('#'.$id),
+                'name'     => $safeMeta[$id]['name'] ?? ('#'.$id),
+                'is_active' => (bool)($safeMeta[$id]['is_active'] ?? true),
                 'in'       => $in,
                 'out'      => $out,
                 'net'      => $net,
@@ -291,24 +293,38 @@ class CashAccountsDataService
     /**
      * يجلب خرائط الأسماء للحسابات البنكية والخزن والحالات.
      *
-     * @return array{0: array<int,string>, 1: array<int,string>, 2: array<int,string>}
+     * @return array{0: array<int,array{name:string,is_active:bool}>, 1: array<int,array{name:string,is_active:bool}>, 2: array<int,string>}
      */
     private function fetchNamesMaps(Collection $bankIds, Collection $safeIds, Collection $statusIds): array
     {
-        $bankNames = [];
-        $safeNames = [];
+        $bankMeta = [];
+        $safeMeta = [];
         $statusNames = [];
 
         if ($bankIds->isNotEmpty()) {
-            $bankNames = BankAccount::whereIn('id', $bankIds)->pluck('name', 'id')->toArray();
+            $bankMeta = BankAccount::whereIn('id', $bankIds)
+                ->get(['id', 'name', 'is_active'])
+                ->mapWithKeys(fn($bank) => [
+                    (int) $bank->id => [
+                        'name'      => (string) $bank->name,
+                        'is_active' => (bool) $bank->is_active,
+                    ],
+                ])->toArray();
         }
         if ($safeIds->isNotEmpty()) {
-            $safeNames = Safe::whereIn('id', $safeIds)->pluck('name', 'id')->toArray();
+            $safeMeta = Safe::whereIn('id', $safeIds)
+                ->get(['id', 'name', 'is_active'])
+                ->mapWithKeys(fn($safe) => [
+                    (int) $safe->id => [
+                        'name'      => (string) $safe->name,
+                        'is_active' => (bool) $safe->is_active,
+                    ],
+                ])->toArray();
         }
         if ($statusIds->isNotEmpty()) {
             $statusNames = TransactionStatus::whereIn('id', $statusIds)->pluck('name', 'id')->toArray();
         }
 
-        return [$bankNames, $safeNames, $statusNames];
+        return [$bankMeta, $safeMeta, $statusNames];
     }
 }

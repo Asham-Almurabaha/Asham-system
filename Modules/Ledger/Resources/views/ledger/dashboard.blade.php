@@ -47,6 +47,9 @@
         $in   = (float)(is_array($b) ? ($b['in']   ?? $b['total_in']  ?? 0) : ($b->in   ?? 0));
         $out  = (float)(is_array($b) ? ($b['out']  ?? $b['total_out'] ?? 0) : ($b->out  ?? 0));
         $flow = max($in + $out, 0.00001);
+        $isActive = is_array($b)
+            ? (bool)($b['is_active'] ?? true)
+            : (bool)($b->is_active ?? true);
         return [
             'name'    => $name,
             'in'      => $in,
@@ -54,6 +57,7 @@
             'net'     => $in - $out,
             'in_pct'  => round($in  / $flow * 100, 1),
             'out_pct' => round($out / $flow * 100, 1),
+            'is_active' => $isActive,
         ];
     });
 
@@ -61,6 +65,7 @@
         // Fallback من القيود
         $bankAgg = collect();
         $bankBucket = [];
+        $bankActiveMap = collect();
         $entriesCollection = collect();
         if (isset($entries)) {
             $entriesCollection = $entries instanceof \Illuminate\Pagination\LengthAwarePaginator ? $entries->getCollection() : collect($entries);
@@ -72,7 +77,12 @@
             if ($e->direction === 'in')  $bankBucket[$key]['in']  += (float)$e->amount;
             if ($e->direction === 'out') $bankBucket[$key]['out'] += (float)$e->amount;
         }
-        foreach ($bankBucket as $b) {
+        if (!empty($bankBucket)) {
+            $bankActiveMap = \Modules\Accounts\Entities\BankAccount::whereIn('id', array_map('intval', array_keys($bankBucket)))
+                ->pluck('is_active', 'id')
+                ->mapWithKeys(fn($value, $id) => [(string)$id => (bool)$value]);
+        }
+        foreach ($bankBucket as $id => $b) {
             $flow = max(($b['in']+$b['out']), 0.00001);
             $bankAgg->push([
                 'name'=>$b['name'],
@@ -81,6 +91,7 @@
                 'net'=>$b['in']-$b['out'],
                 'in_pct'=>round($b['in']/$flow*100,1),
                 'out_pct'=>round($b['out']/$flow*100,1),
+                'is_active' => (bool)($bankActiveMap[(string)$id] ?? true),
             ]);
         }
         $bankAgg = $bankAgg->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
@@ -89,6 +100,12 @@
     $bankTotalIn  = (float)($bankTotals['in']  ?? $bankAgg->sum('in'));
     $bankTotalOut = (float)($bankTotals['out'] ?? $bankAgg->sum('out'));
     $bankNet      = $bankTotalIn - $bankTotalOut;
+    $bankActiveRows = $bankAgg->filter(fn($row) => ($row['is_active'] ?? true));
+    $bankActiveCount = $bankActiveRows->count();
+    $bankInactiveRows = $bankAgg->reject(fn($row) => ($row['is_active'] ?? true));
+    $bankInactiveCount = $bankInactiveRows->count();
+    $bankActiveNetTotal = (float) $bankActiveRows->sum('net');
+    $bankInactiveNetTotal = (float) $bankInactiveRows->sum('net');
 
     // ==== SAFES ====
     $safesFromSvc = collect($safes ?? []);
@@ -97,6 +114,9 @@
         $in   = (float)(is_array($s) ? ($s['in']   ?? $s['total_in']  ?? 0) : ($s->in   ?? 0));
         $out  = (float)(is_array($s) ? ($s['out']  ?? $s['total_out'] ?? 0) : ($s->out  ?? 0));
         $flow = max($in + $out, 0.00001);
+        $isActive = is_array($s)
+            ? (bool)($s['is_active'] ?? true)
+            : (bool)($s->is_active ?? true);
         return [
             'name'    => $name,
             'in'      => $in,
@@ -104,6 +124,7 @@
             'net'     => $in - $out,
             'in_pct'  => round($in  / $flow * 100, 1),
             'out_pct' => round($out / $flow * 100, 1),
+            'is_active' => $isActive,
         ];
     });
 
@@ -111,6 +132,7 @@
         // Fallback من القيود
         $safeAgg = collect();
         $safeBucket = [];
+        $safeActiveMap = collect();
         $entriesCollection = collect();
         if (isset($entries)) {
             $entriesCollection = $entries instanceof \Illuminate\Pagination\LengthAwarePaginator ? $entries->getCollection() : collect($entries);
@@ -122,7 +144,12 @@
             if ($e->direction === 'in')  $safeBucket[$key]['in']  += (float)$e->amount;
             if ($e->direction === 'out') $safeBucket[$key]['out'] += (float)$e->amount;
         }
-        foreach ($safeBucket as $s) {
+        if (!empty($safeBucket)) {
+            $safeActiveMap = \Modules\Accounts\Entities\Safe::whereIn('id', array_map('intval', array_keys($safeBucket)))
+                ->pluck('is_active', 'id')
+                ->mapWithKeys(fn($value, $id) => [(string)$id => (bool)$value]);
+        }
+        foreach ($safeBucket as $id => $s) {
             $flow = max(($s['in']+$s['out']), 0.00001);
             $safeAgg->push([
                 'name'=>$s['name'],
@@ -131,6 +158,7 @@
                 'net'=>$s['in']-$s['out'],
                 'in_pct'=>round($s['in']/$flow*100,1),
                 'out_pct'=>round($s['out']/$flow*100,1),
+                'is_active' => (bool)($safeActiveMap[(string)$id] ?? true),
             ]);
         }
         $safeAgg = $safeAgg->sortBy('name', SORT_NATURAL|SORT_FLAG_CASE)->values();
@@ -139,6 +167,12 @@
     $safeTotalIn  = (float)($safeTotals['in']  ?? $safeAgg->sum('in'));
     $safeTotalOut = (float)($safeTotals['out'] ?? $safeAgg->sum('out'));
     $safeNet      = $safeTotalIn - $safeTotalOut;
+    $safeActiveRows = $safeAgg->filter(fn($row) => ($row['is_active'] ?? true));
+    $safeActiveCount = $safeActiveRows->count();
+    $safeInactiveRows = $safeAgg->reject(fn($row) => ($row['is_active'] ?? true));
+    $safeInactiveCount = $safeInactiveRows->count();
+    $safeActiveNetTotal = (float) $safeActiveRows->sum('net');
+    $safeInactiveNetTotal = (float) $safeInactiveRows->sum('net');
 
     // ==== KPIs المكتب ====
     $mukatabaTotal = (float)($officeKpis['mukataba']['total'] ?? 0);
@@ -160,7 +194,10 @@
                         <div class="subnote">ضمن النتائج الحالية</div>
                     </div>
                 </div>
-                <span class="chip soft">عدد الحسابات: <strong>{{ $bankAgg->count() }}</strong></span>
+                <div class="d-flex flex-column align-items-end gap-1 text-nowrap">
+                    <span class="chip soft">عدد الحسابات: <strong>{{ $bankAgg->count() }}</strong></span>
+                    <span class="chip soft">نشطة: <strong>{{ $bankActiveCount }}</strong> — غير نشطة: <strong>{{ $bankInactiveCount }}</strong></span>
+                </div>
             </div>
 
             <div class="p-3 pt-2">
@@ -207,6 +244,14 @@
                                 <th class="text-end text-danger">{{ number_format($bankTotalOut,2) }}</th>
                                 <th class="text-end fw-semibold {{ $bankNet>=0?'text-success':'text-danger' }}">{{ number_format($bankNet,2) }}</th>
                             </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي النشطة</th>
+                                <th class="text-end fw-semibold {{ $bankActiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($bankActiveNetTotal, 2) }}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي غير النشطة</th>
+                                <th class="text-end fw-semibold {{ $bankInactiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($bankInactiveNetTotal, 2) }}</th>
+                            </tr>
                         </x-slot>
                     </x-table>
                 @else
@@ -227,7 +272,10 @@
                         <div class="subnote">ضمن النتائج الحالية</div>
                     </div>
                 </div>
-                <span class="chip soft">عدد الخزن: <strong>{{ $safeAgg->count() }}</strong></span>
+                <div class="d-flex flex-column align-items-end gap-1 text-nowrap">
+                    <span class="chip soft">عدد الخزن: <strong>{{ $safeAgg->count() }}</strong></span>
+                    <span class="chip soft">نشطة: <strong>{{ $safeActiveCount }}</strong> — غير نشطة: <strong>{{ $safeInactiveCount }}</strong></span>
+                </div>
             </div>
 
             <div class="p-3 pt-2">
@@ -273,6 +321,14 @@
                                 <th class="text-end text-success">{{ number_format($safeTotalIn,2) }}</th>
                                 <th class="text-end text-danger">{{ number_format($safeTotalOut,2) }}</th>
                                 <th class="text-end fw-semibold {{ $safeNet>=0?'text-success':'text-danger' }}">{{ number_format($safeNet,2) }}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي النشطة</th>
+                                <th class="text-end fw-semibold {{ $safeActiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($safeActiveNetTotal, 2) }}</th>
+                            </tr>
+                            <tr>
+                                <th colspan="4" class="text-end text-muted">إجمالي غير النشطة</th>
+                                <th class="text-end fw-semibold {{ $safeInactiveNetTotal>=0?'text-success':'text-danger' }}">{{ number_format($safeInactiveNetTotal, 2) }}</th>
                             </tr>
                         </x-slot>
                     </x-table>

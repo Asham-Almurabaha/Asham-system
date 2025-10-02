@@ -25,9 +25,14 @@ return [
         'paid_at' => 'تاريخ السداد',
         'bank_account_id' => 'الحساب البنكي',
         'safe_id' => 'الخزانة',
+        'account_choice' => 'مصدر السداد',
         'notes' => 'ملاحظات',
-        'account_placeholder' => 'اختر حسابًا بنكيًا',
+        'account_placeholder' => 'اختر حسابًا بنكيًا أو خزانة',
         'safe_placeholder' => 'اختر خزانة',
+    ],
+    'groups' => [
+        'banks' => 'الحسابات البنكية',
+        'safes' => 'الخزائن',
     ],
     'history' => [
         'heading' => 'سجل السدادات',
@@ -45,6 +50,7 @@ return [
     'hints' => [
         'account_choice' => 'اختر حسابًا بنكيًا أو خزانة لتسجيل السداد.',
         'account_available' => 'المتاح في الحساب:',
+        'account_availability' => 'الرصيد المتاح في الحساب',
     ],
     'placeholders' => [
         'notes' => 'أدخل ملاحظات إضافية (اختياري)',

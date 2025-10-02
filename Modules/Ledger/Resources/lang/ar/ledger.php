@@ -2,8 +2,10 @@
 
 return array (
   'Category' => 'الفئة',
+  'Companies' => 'الشركات',
   'Investor' => 'المستثمر',
   'Status' => 'الحالة',
+  'Office' => 'المكتب',
   'Account' => 'الحساب',
   'Amount' => 'المبلغ',
   'Total Amount' => 'إجمالي المبلغ',
@@ -21,4 +23,5 @@ return array (
   'To' => 'إلى',
   'Export Ledger Entries' => 'تصدير القيود (Excel)',
   'View Dashboard' => 'عرض لوحة التحكم',
+  'Account Availability' => 'المتاح في الحساب:',
 );

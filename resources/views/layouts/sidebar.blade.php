@@ -39,11 +39,26 @@
   // فتح مجموعة العقود؟
   $contractsOpen = $isRoute('contracts.*');
 
+  $companyExpenseEntryPatterns = [
+      'company-transactions.expenses.index',
+      'company-transactions.expenses.create',
+      'company-transactions.expenses.store',
+  ];
+
+  $companyExpensePaymentPatterns = [
+      'company-transactions.expenses.payments.index',
+      'company-transactions.expenses.payments.create',
+      'company-transactions.expenses.payments.store',
+  ];
+
   // فتح مجموعة الحسابات؟
+  $companyExpensePatterns = array_merge($companyExpenseEntryPatterns, $companyExpensePaymentPatterns);
+
   $accountsOpen = $isRoute('ledger.*')
       || $isRoute('investors.ledger.*')
       || $isRoute('accounts.entries.goods.pay.*')
-      || $isRoute('accounts.entries.goods.sales.*');
+      || $isRoute('accounts.entries.goods.sales.*')
+      || $isRoute($companyExpensePatterns);
 
   // فتح مجموعة استيرادات البيانات؟
   $dataImportsOpen = $isRoute([
@@ -231,13 +246,41 @@
   $primaryExpenseLink = $expenseNavLinks[0] ?? null;
   $additionalExpenseLinks = $primaryExpenseLink ? array_slice($expenseNavLinks, 1) : [];
 
+  $companyCreatePatterns = [
+      'companies.create',
+      'companies.store',
+  ];
+
   $accountsNavPatterns = array_merge(
       $accountsLedgerPatterns,
       $accountsOfficeShortcutPatterns,
       $investorLedgerPatterns,
+      $companyExpensePatterns,
       $goodsEntryPatterns,
       $expenseNavPatterns
   );
+
+  $companyManagePatterns = [
+      'companies.index',
+      'companies.show',
+      'companies.edit',
+      'companies.update',
+      'companies.destroy',
+  ];
+
+  $companyTransactionPatterns = [
+      'company-transactions.index',
+      'company-transactions.create',
+      'company-transactions.store',
+      'company-transactions.show',
+      'company-transactions.edit',
+      'company-transactions.update',
+      'company-transactions.destroy',
+  ];
+
+  $companyNavPatterns = array_merge(['companies.dashboard'], $companyTransactionPatterns);
+
+  $companiesNavOpen = $isRoute($companyNavPatterns);
 
   $debtsPatterns = [
       'debts.*',
@@ -285,6 +328,7 @@
       'settings.roles.*',
       'settings.roles.permissions*',
       'settings.permissions.*',
+      'settings.sidebar-permissions.*',
       'users.*',
       'expenses.expense-types.*',
       'expenses.recurrence-periods.*',
@@ -309,9 +353,14 @@
   $settingsExpensesPatterns = ['expenses.expense-types.*', 'expenses.recurrence-periods.*'];
   $settingsAccountsPatterns = ['accounts.bank-accounts.*', 'accounts.safes.*'];
   $settingsProductsPatterns = ['product_types.*', 'products.*'];
+  $settingsCompaniesPatterns = array_merge(
+      $companyCreatePatterns,
+      $companyManagePatterns
+  );
   $settingsUsersPatterns = [
       'settings.roles.*',
       'settings.roles.permissions*',
+      'settings.sidebar-permissions.*',
       'settings.permissions.*',
       'users.*',
   ];
@@ -562,6 +611,26 @@
       </li>
       @endroutecanany
 
+      @routecanany($companyExpensePatterns)
+      <li class="nav-heading">@lang('sidebar.Company Ledger Entry')</li>
+      @endroutecanany
+
+      @routecanany(['company-transactions.expenses.create', 'company-transactions.expenses.index'])
+      <li>
+        <a class="{{ $active($isRoute($companyExpenseEntryPatterns)) }}" href="{{ route('company-transactions.expenses.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expenses')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany(['company-transactions.expenses.payments.create', 'company-transactions.expenses.payments.index'])
+      <li>
+        <a class="{{ $active($isRoute($companyExpensePaymentPatterns)) }}" href="{{ route('company-transactions.expenses.payments.create') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Expense Payments')</span>
+        </a>
+      </li>
+      @endroutecanany
+
       @routecanany($goodsEntryPatterns)
       <li class="nav-heading">@lang('sidebar.Goods Entries')</li>
       @endroutecanany
@@ -584,6 +653,36 @@
     </ul>
   </li>
   @endroutecanany
+
+  @routecanany($companyNavPatterns)
+  <li class="nav-item">
+    <a class="nav-link {{ $coll($companiesNavOpen) }} {{ $active($companiesNavOpen) }}"
+       data-bs-target="#companies-nav" data-bs-toggle="collapse" href="#"
+       aria-expanded="{{ $companiesNavOpen ? 'true' : 'false' }}">
+      <i class="bi bi-buildings"></i><span>@lang('sidebar.Companies')</span><i class="bi bi-chevron-down ms-auto"></i>
+    </a>
+
+    <ul id="companies-nav" class="nav-content collapse {{ $open($companiesNavOpen) }}" data-bs-parent="#sidebar-nav">
+      @routecanany('companies.dashboard')
+      <li>
+        <a class="{{ $active($isRoute('companies.dashboard')) }}" href="{{ route('companies.dashboard') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Companies Dashboard')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany($companyTransactionPatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyTransactionPatterns)) }}" href="{{ route('company-transactions.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Company Transactions')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+    </ul>
+  </li>
+  @endroutecanany
+
 
   {{-- المديونيات --}}
   @routecanany($debtsPatterns)
@@ -958,6 +1057,18 @@
       </li>
       @endroutecanany
 
+      @routecanany($settingsCompaniesPatterns)
+      <li class="nav-heading">@lang('sidebar.Companies Lookups')</li>
+      @endroutecanany
+
+      @routecanany($companyManagePatterns)
+      <li>
+        <a class="{{ $active($isRoute($companyManagePatterns)) }}" href="{{ route('companies.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Companies')</span>
+        </a>
+      </li>
+      @endroutecanany
+
       @routecanany($settingsExpensesPatterns)
       <li class="nav-heading">@lang('sidebar.Expenses')</li>
       @endroutecanany
@@ -1026,6 +1137,14 @@
       <li>
         <a class="{{ $active($isRoute('settings.roles.permissions*')) }}" href="{{ route('settings.roles.permissions') }}">
           <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Role Permissions')</span>
+        </a>
+      </li>
+      @endroutecanany
+
+      @routecanany('settings.sidebar-permissions.*')
+      <li>
+        <a class="{{ $active($isRoute('settings.sidebar-permissions.*')) }}" href="{{ route('settings.sidebar-permissions.index') }}">
+          <i class="bi bi-circle"></i><span>@lang('sidebar.Manage Sidebar Permissions')</span>
         </a>
       </li>
       @endroutecanany

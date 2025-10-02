@@ -114,6 +114,7 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'البضائع', 'is_protected' => true],
             ['name' => 'المكتب', 'is_protected' => true],
             ['name' => 'الاقساط', 'is_protected' => true],
+            ['name' => 'الشركات', 'is_protected' => true],
         ], $now);
 
         $this->syncNamedRecords('product_types', [
@@ -204,6 +205,8 @@ class LookupsDatabaseSeeder extends Seeder
             ['name' => 'مديونية', 'type' => 'سحب'],
             ['name' => 'سداد مديونية', 'type' => 'إيداع'],
             ['name' => 'مصروفات', 'type' => 'سحب'],
+            ['name' => 'سداد مصروفات شركات', 'type' => 'إيداع'],
+            ['name' => 'مصروفات شركات', 'type' => 'سحب'],
 
         ];
 
@@ -255,6 +258,8 @@ class LookupsDatabaseSeeder extends Seeder
             ['status' => 'سداد مديونية', 'category' => 'المكتب'],
             ['status' => 'سداد مديونية', 'category' => 'المستثمرين'],
             ['status' => 'مصروفات', 'category' => 'المكتب'],
+            ['status' => 'سداد مصروفات شركات', 'category' => 'الشركات'],
+            ['status' => 'مصروفات شركات', 'category' => 'الشركات'],
 
 
         ];
@@ -267,29 +272,22 @@ class LookupsDatabaseSeeder extends Seeder
                 continue;
             }
 
-            $existing = DB::table('category_transaction_status')
+            $exists = DB::table('category_transaction_status')
                 ->where('transaction_status_id', $statusId)
                 ->where('category_id', $categoryId)
-                ->first();
+                ->exists();
 
-            $payload = [
-                'is_protected' => true,
-                'updated_at' => $now,
-            ];
-
-            if ($existing) {
-                DB::table('category_transaction_status')
-                    ->where('id', $existing->id)
-                    ->update($payload);
-
+            if ($exists) {
                 continue;
             }
 
-            DB::table('category_transaction_status')->insert(array_merge($payload, [
+            DB::table('category_transaction_status')->insert([
                 'transaction_status_id' => $statusId,
                 'category_id' => $categoryId,
+                'is_protected' => true,
                 'created_at' => $now,
-            ]));
+                'updated_at' => $now,
+            ]);
         }
     }
 
@@ -312,21 +310,20 @@ class LookupsDatabaseSeeder extends Seeder
             $key = $record[$uniqueKey];
             $attributes = [$uniqueKey => $key];
             $values = array_diff_key($record, [$uniqueKey => null]);
-            $values['updated_at'] = $now;
 
             $existing = DB::table($table)->where($uniqueKey, $key)->first();
 
             if ($existing) {
-                DB::table($table)
-                    ->where('id', $existing->id)
-                    ->update($values);
-
                 $ids[(string) $key] = (int) $existing->id;
                 continue;
             }
 
-            $values['created_at'] = $now;
-            $id = DB::table($table)->insertGetId(array_merge($attributes, $values));
+            $timestampedValues = array_merge($values, [
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            $id = DB::table($table)->insertGetId(array_merge($attributes, $timestampedValues));
             $ids[(string) $key] = (int) $id;
         }
 
