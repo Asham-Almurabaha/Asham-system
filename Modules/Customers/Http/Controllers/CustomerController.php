@@ -26,6 +26,8 @@ use Modules\Investors\Support\InvestorContractPaymentAggregator;
 use Modules\Lookups\Entities\TransactionStatus;
 use Maatwebsite\Excel\Facades\Excel;
 use Modules\Customers\Exports\CustomersExport;
+use Modules\Accounts\Entities\BankAccount;
+use Modules\Accounts\Entities\Safe;
 
 
 class CustomerController extends Controller
@@ -640,6 +642,8 @@ class CustomerController extends Controller
             'periodMonths'      => $periodMonths,
             'periodYears'       => $periodYears,
             'monthlyPaymentReport' => $monthlyPaymentReport,
+            'banks'             => BankAccount::orderBy('name')->get(['id', 'name']),
+            'safes'             => Safe::orderBy('name')->get(['id', 'name']),
         ]);
     }
 

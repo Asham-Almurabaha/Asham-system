@@ -12,6 +12,8 @@ class ContractBrief
     public int $product_type_id;
     public ?string $product_type_name;
 
+    public float $installment_value;
+
     public int $products_count;
     public float $purchase_price;
     public float $sale_price;
@@ -42,6 +44,7 @@ class ContractBrief
         ?string $status_name,
         int $product_type_id,
         ?string $product_type_name,
+        float $installment_value,
         int $products_count,
         float $purchase_price,
         float $sale_price,
@@ -63,6 +66,7 @@ class ContractBrief
         $this->id=$id; $this->contract_number=$contract_number; $this->start_date=$start_date;
         $this->status_id=$status_id; $this->status_name=$status_name;
         $this->product_type_id=$product_type_id; $this->product_type_name=$product_type_name;
+        $this->installment_value=round($installment_value,2);
 
         $this->products_count=$products_count;
         $this->purchase_price=round($purchase_price,2);
@@ -95,6 +99,7 @@ class ContractBrief
             'start_date'=>$this->start_date,
             'status'=>['id'=>$this->status_id,'name'=>$this->status_name],
             'product_type'=>['id'=>$this->product_type_id,'name'=>$this->product_type_name],
+            'installment_value'=>$this->installment_value,
 
             'products_count'=>$this->products_count,
             'purchase_price'=>$this->purchase_price,
@@ -125,6 +130,7 @@ class ContractBrief
 
             'remaining_amount'=>$this->remaining_amount,
             'remaining_formatted'=>number_format($this->remaining_amount,2),
+            'installment_value_formatted'=>number_format($this->installment_value,2),
         ];
     }
 }

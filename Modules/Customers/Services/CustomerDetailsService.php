@@ -198,6 +198,7 @@ class CustomerDetailsService
                 $statusName ?: null,
                 (int) $c->product_type_id,
                 $c->productType->name ?? null,
+                (float) ($c->installment_value ?? 0),
                 (int) ($c->products_count ?? 0),
                 (float) $c->purchase_price,
                 (float) $c->sale_price,
