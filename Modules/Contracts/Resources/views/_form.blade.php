@@ -1,34 +1,65 @@
 ﻿<div class="row g-3">
   {{-- العميل + الكفيل --}}
+  @php
+      $selectedCustomerId = old('customer_id', ($contract->customer_id ?? null));
+      $selectedCustomerName = old('customer_name_display');
+
+      if ($selectedCustomerName === null && !empty($selectedCustomerId)) {
+          $selectedCustomerName = optional($customers->firstWhere('id', (int) $selectedCustomerId))->name;
+      }
+
+      $selectedGuarantorId = old('guarantor_id', ($contract->guarantor_id ?? null));
+      $selectedGuarantorName = old('guarantor_name_display');
+
+      if ($selectedGuarantorName === null && !empty($selectedGuarantorId)) {
+          $selectedGuarantorName = optional($guarantors->firstWhere('id', (int) $selectedGuarantorId))->name;
+      }
+  @endphp
+
   <div class="col-md-6">
-    <label for="customer_id" class="form-label">العميل <span class="text-danger">*</span></label>
-    <div data-searchable-select-wrapper>
-      <select name="customer_id" id="customer_id" class="form-select @error('customer_id') is-invalid @enderror"
-              data-searchable-select data-searchable-placeholder="ابحث عن العميل" required>
-      <option value="">اختر العميل</option>
+    <label for="customer_name_display" class="form-label">العميل <span class="text-danger">*</span></label>
+    <input type="hidden" name="customer_id" id="customer_id" value="{{ $selectedCustomerId }}">
+    <input type="text"
+           name="customer_name_display"
+           id="customer_name_display"
+           class="form-control @error('customer_id') is-invalid @enderror"
+           value="{{ old('customer_name_display', $selectedCustomerName) }}"
+           list="customer_name_options"
+           placeholder="ابحث عن العميل"
+           data-autocomplete-input
+           data-autocomplete-hidden-input="customer_id"
+           data-autocomplete-options="customer_name_options"
+           autocomplete="off"
+           required>
+    <datalist id="customer_name_options">
       @foreach($customers as $customer)
-        <option value="{{ $customer->id }}" {{ old('customer_id', ($contract->customer_id ?? null)) == $customer->id ? 'selected' : '' }}>
-          {{ $customer->name }}
-        </option>
+        <option value="{{ $customer->name }}" data-id="{{ $customer->id }}"></option>
       @endforeach
-      </select>
-    </div>
+    </datalist>
     @error('customer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 
   <div class="col-md-6">
-    <label for="guarantor_id" class="form-label">الكفيل</label>
-    <div data-searchable-select-wrapper>
-      <select name="guarantor_id" id="guarantor_id" class="form-select @error('guarantor_id') is-invalid @enderror"
-              data-searchable-select data-searchable-placeholder="ابحث عن الكفيل">
-      <option value="">بدون كفيل</option>
+    <label for="guarantor_name_display" class="form-label">الكفيل</label>
+    <input type="hidden" name="guarantor_id" id="guarantor_id" value="{{ $selectedGuarantorId }}">
+    <input type="text"
+           name="guarantor_name_display"
+           id="guarantor_name_display"
+           class="form-control @error('guarantor_id') is-invalid @enderror"
+           value="{{ old('guarantor_name_display', $selectedGuarantorName) }}"
+           list="guarantor_name_options"
+           placeholder="بدون كفيل"
+           data-autocomplete-input
+           data-autocomplete-hidden-input="guarantor_id"
+           data-autocomplete-options="guarantor_name_options"
+           data-autocomplete-allow-empty="true"
+           autocomplete="off">
+    <datalist id="guarantor_name_options">
+      <option value="بدون كفيل" data-id=""></option>
       @foreach($guarantors as $guarantor)
-        <option value="{{ $guarantor->id }}" {{ old('guarantor_id', ($contract->guarantor_id ?? null)) == $guarantor->id ? 'selected' : '' }}>
-          {{ $guarantor->name }}
-        </option>
+        <option value="{{ $guarantor->name }}" data-id="{{ $guarantor->id }}"></option>
       @endforeach
-      </select>
-    </div>
+    </datalist>
     @error('guarantor_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
   </div>
 
