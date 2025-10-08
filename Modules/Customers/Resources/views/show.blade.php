@@ -480,7 +480,7 @@
                         <tr>
                             <th style="width:140px">{{ __('Contract Number') }}</th>
                             <th style="width:120px">{{ __('Start Date') }}</th>
-                            <th>{{ __('Product Type') }}</th>
+                            <th class="text-end" style="width:130px">{{ __('Installment Value') }}</th>
                             <th class="text-end" style="width:140px">{{ __('Total Due') }}</th>
                             <th class="text-end" style="width:140px">{{ __('Paid') }}</th>
                             <th class="text-end" style="width:140px">{{ __('Remaining') }}</th>
@@ -493,9 +493,9 @@
                             $cid     = $isObj ? ($row->id ?? null) : ($row['id'] ?? null);
                             $cno     = $isObj ? ($row->contract_number ?? '') : ($row['contract_number'] ?? '');
                             $sdate   = $isObj ? ($row->start_date ?? null)     : ($row['start_date'] ?? null);
-                            $ptype   = $isObj
-                                        ? ($row->product_type_name ?? ($row->product_type->name ?? null))
-                                        : ($row['product_type_name'] ?? ($row['product_type']['name'] ?? null));
+                            $installmentValue = $isObj
+                                        ? ($row->installment_value ?? null)
+                                        : ($row['installment_value'] ?? null);
                     
                             // Reading values whether they are direct properties or within installments[]
                             $due     = $isObj ? ($row->due_sum ?? 0)     : ($row['due_sum'] ?? ($row['installments']['due_sum'] ?? 0));
@@ -516,7 +516,7 @@
                                 @endif
                             </td>
                             <td>{{ $sdate ? \Carbon\Carbon::parse($sdate)->format('Y-m-d') : '—' }}</td>
-                            <td class="text-truncate" style="max-width:240px">{{ $ptype ?? '—' }}</td>
+                            <td class="text-end">{{ $nf($installmentValue) }}</td>
                             <td class="text-end">{{ $nf($due) }}</td>
                             <td class="text-end text-success">{{ $nf($paid) }}</td>
                             <td class="text-end {{ ($remain ?? 0)>0 ? 'text-danger' : 'text-muted' }}">{{ $nf($remain) }}</td>
