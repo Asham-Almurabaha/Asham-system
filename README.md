@@ -58,9 +58,9 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 ## Database backup upload limits
 
-This project includes a database backup tool that exports the database contents to a raw `.sql` dump and can import fairly larg
-e archives. To keep the upload workflow from failing with `POST Content-Length of ... exceeds the limit` errors you should keep
-the PHP limits, Laravel validation rule, and UI help text in sync:
+This project includes a database backup tool that exports the database contents, encrypts the resulting `.sql` file, and
+delivers it as an `.enc` archive. The importer expects the encrypted payload and can handle fairly large uploads.
+To keep the upload workflow from failing with `POST Content-Length of ... exceeds the limit` errors you should keep the PHP limits, Laravel validation rule, and UI help text in sync:
 
 - `.env` &rarr; adjust `DB_BACKUP_UPLOAD_MAX_FILESIZE`, `DB_BACKUP_POST_MAX_SIZE`, and `DB_BACKUP_IMPORT_MAX_KB` to the limits
   you want to enforce within Laravel.

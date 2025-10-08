@@ -21,9 +21,14 @@ use App\Http\Controllers\NoteController;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
-if (!App::runningInConsole() && Schema::hasTable('settings')) {
+if (!app()->runningInConsole() && Schema::hasTable('settings')) {
     $settings = Setting::first();
+} else {
+    $settings = null;
+}
+
 // لغة الواجهة
 Route::post('/lang/toggle', [LanguageController::class, 'toggle'])->name('lang.toggle');
 Route::get('/lang/{locale}', [LanguageController::class, 'switch'])->name('lang.switch');
@@ -36,7 +41,7 @@ Route::get('/', function () {
 });
 
 Route::view('/loading', 'loading', [
-    'setting' => Setting::first(),
+    'setting' => $settings,
 ])->name('loading');
 
 Route::middleware(['auth', 'permission.route'])->group(function () {
@@ -45,7 +50,7 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
         ->name('global-search');
 
     Route::get('/home', function () {
-        return Setting::count() > 0
+        return Schema::hasTable('settings') && Setting::count() > 0
             ? redirect()->route('dashboard')
             : redirect()->route('settings.create');
     })->name('home');
@@ -187,4 +192,3 @@ Route::middleware(['auth', 'permission.route'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
-}

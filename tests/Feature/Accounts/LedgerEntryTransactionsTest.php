@@ -120,10 +120,22 @@ class LedgerEntryTransactionsTest extends TestCase
 
         $entries = LedgerEntry::orderBy('id')->get();
         $this->assertCount(2, $entries);
-        foreach ($entries as $entry) {
+        $entries->each(function (LedgerEntry $entry) use ($transaction) {
             $this->assertSame('IT-' . $transaction->id, $entry->ref);
             $this->assertFalse($entry->is_office);
-        }
+        });
+
+        $bankEntry = $entries->firstWhere('bank_account_id', $bank->id);
+        $this->assertNotNull($bankEntry);
+        $this->assertEquals(300.00, (float) $bankEntry->amount);
+        $this->assertNull($bankEntry->safe_id);
+        $this->assertSame($investor->id, $bankEntry->investor_id);
+
+        $safeEntry = $entries->firstWhere('safe_id', $safe->id);
+        $this->assertNotNull($safeEntry);
+        $this->assertEquals(200.00, (float) $safeEntry->amount);
+        $this->assertNull($safeEntry->bank_account_id);
+        $this->assertSame($investor->id, $safeEntry->investor_id);
     }
 
     public function test_split_store_creates_office_transaction_and_updates_refs(): void
@@ -153,9 +165,20 @@ class LedgerEntryTransactionsTest extends TestCase
 
         $entries = LedgerEntry::orderBy('id')->get();
         $this->assertCount(2, $entries);
-        foreach ($entries as $entry) {
+        $entries->each(function (LedgerEntry $entry) use ($transaction) {
             $this->assertSame('OT-' . $transaction->id, $entry->ref);
             $this->assertTrue($entry->is_office);
-        }
+            $this->assertNull($entry->investor_id);
+        });
+
+        $bankEntry = $entries->firstWhere('bank_account_id', $bank->id);
+        $this->assertNotNull($bankEntry);
+        $this->assertEquals(450.00, (float) $bankEntry->amount);
+        $this->assertNull($bankEntry->safe_id);
+
+        $safeEntry = $entries->firstWhere('safe_id', $safe->id);
+        $this->assertNotNull($safeEntry);
+        $this->assertEquals(450.00, (float) $safeEntry->amount);
+        $this->assertNull($safeEntry->bank_account_id);
     }
 }
