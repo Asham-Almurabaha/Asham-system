@@ -68,6 +68,7 @@ Route::prefix('contracts/{contract}/notes')->name('contracts.notes.')->group(fun
 Route::prefix('installments')->name('installments.')->group(function () {
     Route::post('/pay', [ContractInstallmentController::class, 'payInstallment'])->name('pay');
     Route::post('/{installment}/cancel-payment', [ContractInstallmentController::class, 'cancelInstallmentPayment'])
+        ->middleware('role:admin')
         ->name('cancel_payment');
     Route::post('/contracts/{contract}/early-settle', [ContractInstallmentController::class, 'earlySettle'])->name('early_settle');
 });
