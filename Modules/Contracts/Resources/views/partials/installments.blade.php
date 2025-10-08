@@ -137,6 +137,14 @@
             
                     {{-- الإجراءات --}}
                     <td>
+                        @if($inst->payment_amount > 0 && $canCancelInstallment)
+                            <x-button.action type="button" variant="danger" :outline="true" size="sm"
+                                             class="cancel-payment-btn"
+                                             data-cancel-url="{{ route('installments.cancel_payment', $inst) }}">
+                                ❌ إلغاء سداد القسط
+                            </x-button.action>
+                        @endif
+
                         @unless($isEarlySettlement)
                             {{-- زر التأجيل --}}
                             @if($isThisMonth && $inst->payment_amount < $inst->due_amount && $statusName !== 'مؤجل' && $statusName !== 'معتذر')
@@ -158,16 +166,6 @@
                                     🙏 معتذر
                                 </x-button.action>
                             @endif
-
-                            @routecan('installments.cancel_payment')
-                                @if($inst->payment_amount > 0 && $canCancelInstallment)
-                                    <x-button.action type="button" variant="danger" :outline="true" size="sm"
-                                                     class="cancel-payment-btn"
-                                                     data-cancel-url="{{ route('installments.cancel_payment', $inst) }}">
-                                        ❌ إلغاء سداد القسط
-                                    </x-button.action>
-                                @endif
-                            @endroutecan
                         @endunless
                     </td>
                 </tr>
