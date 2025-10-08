@@ -16,6 +16,11 @@
          * - $installments: Modules\Customers\DTOS\InstallmentsSummary (object)
          */
 
+        $banks = collect($banks ?? []);
+        $safes = collect($safes ?? []);
+        $hasPaymentAccounts = $banks->count() > 0 || $safes->count() > 0;
+        $defaultPayDate = now()->format('Y-m-d');
+
         // ====== Quick summary from service data ======
         $cs = $contractsSummary ?? ['total'=>0,'active'=>0,'finished'=>0,'other'=>0];
         $contractsCount       = (int)($cs['total']    ?? 0);
@@ -479,6 +484,7 @@
                             <th class="text-end" style="width:140px">{{ __('Total Due') }}</th>
                             <th class="text-end" style="width:140px">{{ __('Paid') }}</th>
                             <th class="text-end" style="width:140px">{{ __('Remaining') }}</th>
+                            <th class="text-center" style="width:150px">{{ __('Actions') }}</th>
                         </tr>
                     </x-slot>
                     @foreach($activeList as $row)
@@ -514,6 +520,25 @@
                             <td class="text-end">{{ $nf($due) }}</td>
                             <td class="text-end text-success">{{ $nf($paid) }}</td>
                             <td class="text-end {{ ($remain ?? 0)>0 ? 'text-danger' : 'text-muted' }}">{{ $nf($remain) }}</td>
+                            <td class="text-center">
+                                @if($cid && ($remain ?? 0) > 0)
+                                    <x-button.action
+                                        type="button"
+                                        variant="success"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#customerContractPayModal"
+                                        data-contract-id="{{ $cid }}"
+                                        data-contract-number="{{ $cno }}"
+                                        data-contract-remaining="{{ number_format((float) $remain, 2, '.', '') }}"
+                                        data-contract-due="{{ number_format((float) $due, 2, '.', '') }}"
+                                        data-contract-paid="{{ number_format((float) $paid, 2, '.', '') }}"
+                                    >
+                                        💰 سداد
+                                    </x-button.action>
+                                @else
+                                    <span class="text-muted small">—</span>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                     <x-slot name="footer">
@@ -522,6 +547,7 @@
                             <th class="text-end">{{ $nf($totDue) }}</th>
                             <th class="text-end text-success">{{ $nf($totPaid) }}</th>
                             <th class="text-end {{ $totRemain>0 ? 'text-danger' : 'text-muted' }}">{{ $nf($totRemain) }}</th>
+                            <th></th>
                         </tr>
                     </x-slot>
                 </x-table>
@@ -531,6 +557,247 @@
         </div>
     </div>
     {{-- ====== End of active contracts table ====== --}}
+
+    {{-- ====== Pay contract modal (mirrors contracts show payment logic) ====== --}}
+    <div class="modal fade" id="customerContractPayModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="customerContractPayForm" action="{{ route('installments.pay') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="contract_id" id="customer_pay_contract_id">
+                    <div class="modal-header">
+                        <h5 class="modal-title">💰 سداد العقد</h5>
+                        <x-button.action type="button" :unstyled="true" class="btn-close" data-bs-dismiss="modal"></x-button.action>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-light border">
+                            <div class="fw-semibold">رقم العقد: <span id="customer_pay_contract_number">—</span></div>
+                            <div class="small text-muted mt-2">
+                                <div>إجمالي مستحق: <span id="customer_pay_due">0.00</span></div>
+                                <div>المدفوع: <span id="customer_pay_paid">0.00</span></div>
+                                <div>المتبقي: <span id="customer_pay_remaining">0.00</span></div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">المبلغ المدفوع</label>
+                            <input
+                                type="number"
+                                name="payment_amount"
+                                id="customer_pay_amount"
+                                step="0.01"
+                                min="0"
+                                class="form-control"
+                                value="0.00"
+                                required
+                            >
+                            <small class="text-muted" id="customer_pay_amount_hint">أقصى مبلغ مسموح: <span id="customer_pay_amount_max">0.00</span></small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">تاريخ السداد</label>
+                            <input
+                                type="text"
+                                name="payment_date"
+                                id="customer_pay_date"
+                                class="form-control js-date"
+                                value="{{ $defaultPayDate }}"
+                                data-default-date="{{ $defaultPayDate }}"
+                                placeholder="YYYY-MM-DD"
+                                autocomplete="off"
+                                required
+                            >
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="customer_account_picker_pay">الحساب</label>
+                            <select
+                                id="customer_account_picker_pay"
+                                class="form-select"
+                                {{ $hasPaymentAccounts ? 'required' : 'disabled' }}
+                            >
+                                <option value="" selected disabled>اختر حسابًا</option>
+                                <optgroup label="الحسابات البنكية">
+                                    @foreach ($banks as $bank)
+                                        <option value="bank:{{ $bank->id }}">{{ $bank->name }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="الخزن">
+                                    @foreach ($safes as $safe)
+                                        <option value="safe:{{ $safe->id }}">{{ $safe->name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                            <input type="hidden" name="bank_account_id" id="customer_bank_account_id_pay">
+                            <input type="hidden" name="safe_id" id="customer_safe_id_pay">
+                            <div class="form-text">اختر بنكًا أو خزنة — لا يمكن الجمع بينهما في نفس السداد.</div>
+                        </div>
+
+                        @if(!$hasPaymentAccounts)
+                            <div class="alert alert-warning">لا توجد حسابات بنكية أو خزائن مضافة بعد. الرجاء إضافة مصدر تحصيل من الإعدادات المالية.</div>
+                        @endif
+
+                        <div class="mb-3">
+                            <label class="form-label">ملاحظات (اختياري)</label>
+                            <textarea name="notes" id="customer_pay_notes" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <x-button.action type="submit" variant="success">
+                            <i class="bi bi-check2-circle me-1"></i> @lang('app.Save')
+                        </x-button.action>
+                        <x-button.action type="button" variant="secondary" data-bs-dismiss="modal">@lang('app.Cancel')</x-button.action>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.syncAccountHiddenGeneric !== 'function') {
+                window.syncAccountHiddenGeneric = function (pickerId, bankHiddenId, safeHiddenId) {
+                    const picker = document.getElementById(pickerId);
+                    const bankH = document.getElementById(bankHiddenId);
+                    const safeH = document.getElementById(safeHiddenId);
+
+                    if (!picker || !bankH || !safeH) {
+                        return;
+                    }
+
+                    const value = picker.value || '';
+                    bankH.value = '';
+                    safeH.value = '';
+
+                    if (!value) {
+                        return;
+                    }
+
+                    const parts = value.split(':');
+                    const type = parts[0];
+                    const id = parts[1] || '';
+
+                    if (type === 'bank') {
+                        bankH.value = id;
+                    } else if (type === 'safe') {
+                        safeH.value = id;
+                    }
+                };
+            }
+
+            const payModalEl = document.getElementById('customerContractPayModal');
+            if (!payModalEl) {
+                return;
+            }
+
+            const amountInput = document.getElementById('customer_pay_amount');
+            const amountMaxLabel = document.getElementById('customer_pay_amount_max');
+            const contractIdInput = document.getElementById('customer_pay_contract_id');
+            const contractNumberEl = document.getElementById('customer_pay_contract_number');
+            const dueEl = document.getElementById('customer_pay_due');
+            const paidEl = document.getElementById('customer_pay_paid');
+            const remainingEl = document.getElementById('customer_pay_remaining');
+            const accountPicker = document.getElementById('customer_account_picker_pay');
+            const dateInput = document.getElementById('customer_pay_date');
+
+            payModalEl.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) {
+                    return;
+                }
+
+                const contractId = trigger.getAttribute('data-contract-id') || '';
+                const contractNumber = trigger.getAttribute('data-contract-number') || '—';
+                const remaining = parseFloat(trigger.getAttribute('data-contract-remaining') || '0') || 0;
+                const due = parseFloat(trigger.getAttribute('data-contract-due') || '0') || 0;
+                const paid = parseFloat(trigger.getAttribute('data-contract-paid') || '0') || 0;
+
+                contractIdInput.value = contractId;
+                contractNumberEl.textContent = contractNumber;
+                dueEl.textContent = due.toFixed(2);
+                paidEl.textContent = paid.toFixed(2);
+                remainingEl.textContent = remaining.toFixed(2);
+
+                if (amountInput) {
+                    const normalized = remaining > 0 ? remaining : 0;
+                    const normalizedText = normalized.toFixed(2);
+                    amountInput.value = normalizedText;
+                    amountInput.setAttribute('max', normalizedText);
+                    if (amountMaxLabel) {
+                        amountMaxLabel.textContent = normalizedText;
+                    }
+                }
+
+                if (accountPicker) {
+                    accountPicker.value = '';
+                }
+                window.syncAccountHiddenGeneric('customer_account_picker_pay', 'customer_bank_account_id_pay', 'customer_safe_id_pay');
+
+                if (dateInput) {
+                    const defaultDate = dateInput.getAttribute('data-default-date') || '';
+                    if (dateInput._flatpickr) {
+                        dateInput._flatpickr.setDate(defaultDate || '{{ $defaultPayDate }}', true);
+                    } else {
+                        dateInput.value = defaultDate;
+                    }
+                }
+            });
+
+            if (window.flatpickr) {
+                window.flatpickr('#customer_pay_date', {
+                    dateFormat: 'Y-m-d',
+                    locale: 'ar',
+                    defaultDate: '{{ $defaultPayDate }}'
+                });
+            }
+
+            if (accountPicker) {
+                accountPicker.addEventListener('change', function () {
+                    window.syncAccountHiddenGeneric('customer_account_picker_pay', 'customer_bank_account_id_pay', 'customer_safe_id_pay');
+                });
+            }
+
+            const payForm = document.getElementById('customerContractPayForm');
+            if (payForm) {
+                payForm.addEventListener('submit', function (event) {
+                    event.preventDefault();
+
+                    window.syncAccountHiddenGeneric('customer_account_picker_pay', 'customer_bank_account_id_pay', 'customer_safe_id_pay');
+
+                    const formData = new FormData(payForm);
+                    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+                    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+                    fetch(payForm.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: formData,
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data && data.success) {
+                                window.location.reload();
+                            } else {
+                                alert((data && data.message) || 'حدث خطأ أثناء السداد');
+                            }
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                            alert('تعذر الاتصال بالخادم');
+                        });
+
+                    if (window.bootstrap && payModalEl) {
+                        const modalInstance = window.bootstrap.Modal.getInstance(payModalEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 
     {{-- ====== Basic data ====== --}}
     <div class="card shadow-sm mb-3 kpi-card">
