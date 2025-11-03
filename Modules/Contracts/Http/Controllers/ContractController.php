@@ -786,144 +786,130 @@ class ContractController extends Controller
         return $request->validate($rules);
     }
 
+  
     private function normalizeCustomerInput(Request $request): void
-   {
+    {
+        $payload = $request->all();
+
+        $candidates = [
+            $request->input('customer_id'),
+            $request->input('customerId'),
+            $request->input('customerID'),
+            data_get($payload, 'customer.id'),
+            data_get($payload, 'customer.customer_id'),
+            data_get($payload, 'customer.customerId'),
+        ];
 
-       $payload = $request->all();
+        foreach ($candidates as $candidate) {
+            $normalized = $this->extractCustomerId($candidate);
+
+            if ($normalized !== null) {
+                $request->merge(['customer_id' => $normalized]);
 
+                return;
+            }
+        }
 
+        $nameCandidates = [
+            $request->input('customer_name_display'),
+            $request->input('customer_name'),
+            $request->input('customerName'),
+            data_get($payload, 'customer.name'),
+            data_get($payload, 'customer.customer_name'),
+            data_get($payload, 'customer.customerName'),
+        ];
 
-       $candidates = [
+        foreach ($nameCandidates as $nameCandidate) {
+            $resolvedId = $this->resolveCustomerIdByName($nameCandidate);
 
-           $request->input('customer_id'),
+            if ($resolvedId !== null) {
+                $request->merge(['customer_id' => $resolvedId]);
 
-           $request->input('customerId'),
+                return;
+            }
+        }
 
-           $request->input('customerID'),
+        if ($request->has('customer_id')) {
+            $request->merge(['customer_id' => null]);
+        }
+    }
 
-           data_get($payload, 'customer.id'),
 
-           data_get($payload, 'customer.customer_id'),
 
-           data_get($payload, 'customer.customerId'),
+    private function extractCustomerId($value): ?int
+    {
+        if ($value instanceof Customer) {
+            return (int) $value->getKey();
+        }
 
-       ];
+        if (is_array($value)) {
+            foreach (['id', 'customer_id', 'customerId', 'customerID'] as $key) {
+                if (array_key_exists($key, $value)) {
+                    return $this->extractCustomerId($value[$key]);
+                }
+            }
 
+            return null;
+        }
 
+        if (is_object($value)) {
+            foreach (['id', 'customer_id', 'customerId', 'customerID'] as $property) {
+                if (isset($value->{$property})) {
+                    return $this->extractCustomerId($value->{$property});
+                }
+            }
 
-       foreach ($candidates as $candidate) {
+            return null;
+        }
 
-           $normalized = $this->extractCustomerId($candidate);
+        if (is_string($value)) {
+            $value = trim($value);
 
+            if ($value === '') {
+                return null;
+            }
+        }
 
+        if (is_numeric($value)) {
+            $intValue = (int) $value;
 
-           if ($normalized !== null) {
+            return $intValue > 0 ? $intValue : null;
+        }
 
-               $request->merge(['customer_id' => $normalized]);
+        return null;
+    }
 
+    private function resolveCustomerIdByName($name): ?int
+    {
+        if (!is_string($name)) {
+            return null;
+        }
 
+        $trimmed = trim($name);
 
-               return;
+        if ($trimmed === '') {
+            return null;
+        }
 
-           }
+        static $cache = [];
 
-       }
+        $cacheKey = mb_strtolower($trimmed);
 
+        if (array_key_exists($cacheKey, $cache)) {
+            return $cache[$cacheKey];
+        }
 
+        $id = Customer::query()
+            ->whereRaw('LOWER(TRIM(name)) = ?', [mb_strtolower($trimmed)])
+            ->value('id');
 
-       if ($request->has('customer_id')) {
+        $cache[$cacheKey] = $id ? (int) $id : null;
 
-           $request->merge(['customer_id' => null]);
+        return $cache[$cacheKey];
+    }
 
-       }
 
-   }
 
-
-
-   private function extractCustomerId($value): ?int
-
-   {
-
-       if ($value instanceof Customer) {
-
-           return (int) $value->getKey();
-
-       }
-
-
-
-       if (is_array($value)) {
-
-           foreach (['id', 'customer_id', 'customerId', 'customerID'] as $key) {
-
-               if (array_key_exists($key, $value)) {
-
-                   return $this->extractCustomerId($value[$key]);
-
-               }
-
-           }
-
-
-
-           return null;
-
-       }
-
-
-
-       if (is_object($value)) {
-
-           foreach (['id', 'customer_id', 'customerId', 'customerID'] as $property) {
-
-               if (isset($value->{$property})) {
-
-                   return $this->extractCustomerId($value->{$property});
-
-               }
-
-           }
-
-
-
-           return null;
-
-       }
-
-
-
-       if (is_string($value)) {
-
-           $value = trim($value);
-
-
-
-           if ($value === '') {
-
-               return null;
-
-           }
-
-       }
-
-
-
-       if (is_numeric($value)) {
-
-           $intValue = (int) $value;
-
-
-
-           return $intValue > 0 ? $intValue : null;
-
-       }
-
-
-
-       return null;
-
-   }
 
 
 
