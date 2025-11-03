@@ -446,7 +446,8 @@ const initializeAutocompleteInputs = () => {
             item.type = 'button';
             item.classList.add('dropdown-item');
             item.dataset.index = String(index);
-            item.dataset.id = option.dataset.id ?? '';
+            const optionId = option.dataset.id ?? option.getAttribute('data-id') ?? '';
+            item.dataset.id = optionId;
             item.dataset.value = option.value;
             item.id = `${baseIdentifier}_option_${index}`;
             item.textContent = option.value;
@@ -458,7 +459,7 @@ const initializeAutocompleteInputs = () => {
                 element: item,
                 option,
                 normalizedValue: normalizeValue(option.value),
-                id: option.dataset.id ?? '',
+                id: optionId,
             };
 
             item.addEventListener('mousedown', (event) => {
