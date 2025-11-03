@@ -744,6 +744,8 @@ class ContractController extends Controller
 
     private function validateContract(Request $request, bool $isUpdate = false): array
     {
+        $this->normalizeCustomerInput($request); 
+
         $rules = [
             'customer_id'            => ['required','exists:customers,id'],
             'guarantor_id'           => ['nullable','exists:guarantors,id'],
@@ -783,6 +785,150 @@ class ContractController extends Controller
 
         return $request->validate($rules);
     }
+
+    private function normalizeCustomerInput(Request $request): void
+   {
+
+       $payload = $request->all();
+
+
+
+       $candidates = [
+
+           $request->input('customer_id'),
+
+           $request->input('customerId'),
+
+           $request->input('customerID'),
+
+           data_get($payload, 'customer.id'),
+
+           data_get($payload, 'customer.customer_id'),
+
+           data_get($payload, 'customer.customerId'),
+
+       ];
+
+
+
+       foreach ($candidates as $candidate) {
+
+           $normalized = $this->extractCustomerId($candidate);
+
+
+
+           if ($normalized !== null) {
+
+               $request->merge(['customer_id' => $normalized]);
+
+
+
+               return;
+
+           }
+
+       }
+
+
+
+       if ($request->has('customer_id')) {
+
+           $request->merge(['customer_id' => null]);
+
+       }
+
+   }
+
+
+
+   private function extractCustomerId($value): ?int
+
+   {
+
+       if ($value instanceof Customer) {
+
+           return (int) $value->getKey();
+
+       }
+
+
+
+       if (is_array($value)) {
+
+           foreach (['id', 'customer_id', 'customerId', 'customerID'] as $key) {
+
+               if (array_key_exists($key, $value)) {
+
+                   return $this->extractCustomerId($value[$key]);
+
+               }
+
+           }
+
+
+
+           return null;
+
+       }
+
+
+
+       if (is_object($value)) {
+
+           foreach (['id', 'customer_id', 'customerId', 'customerID'] as $property) {
+
+               if (isset($value->{$property})) {
+
+                   return $this->extractCustomerId($value->{$property});
+
+               }
+
+           }
+
+
+
+           return null;
+
+       }
+
+
+
+       if (is_string($value)) {
+
+           $value = trim($value);
+
+
+
+           if ($value === '') {
+
+               return null;
+
+           }
+
+       }
+
+
+
+       if (is_numeric($value)) {
+
+           $intValue = (int) $value;
+
+
+
+           return $intValue > 0 ? $intValue : null;
+
+       }
+
+
+
+       return null;
+
+   }
+
+
+
+
+
 
     private function backfillCalculatedFields(array &$data, Request $request): void
     {
